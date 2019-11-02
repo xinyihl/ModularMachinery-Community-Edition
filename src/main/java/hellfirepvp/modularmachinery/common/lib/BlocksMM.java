@@ -24,6 +24,7 @@ public class BlocksMM {
     public static BlockCasing blockCasing;
 
     public static BlockInputBus itemInputBus;
+    public static BlockRedstoneBus itemRedstoneBus;
     public static BlockOutputBus itemOutputBus;
     public static BlockFluidInputHatch fluidInputHatch;
     public static BlockFluidOutputHatch fluidOutputHatch;

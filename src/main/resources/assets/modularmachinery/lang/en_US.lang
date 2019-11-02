@@ -119,6 +119,7 @@ tooltip.ic2.powertier.12.name=UXV
 item.modularmachinery.itemblueprint.name=Machine Blueprint
 item.modularmachinery.itemmodularium.name=Modularium
 item.modularmachinery.itemconstructtool.name=Construct Selection Tool
+item.modularmachinery.itemredstonesignal.name=Redstone Signal
 
 tile.modularmachinery.blockcontroller.name=Machine Controller
 
@@ -136,6 +137,8 @@ tile.modularmachinery.blockinputbus.reinforced.name=Reinforced Item Input
 tile.modularmachinery.blockinputbus.big.name=Big Item Input
 tile.modularmachinery.blockinputbus.huge.name=Huge Item Input
 tile.modularmachinery.blockinputbus.ludicrous.name=Ludicrous Item Input
+
+tile.modularmachinery.blockredstonebus.tiny.name=Redstone Input
 
 tile.modularmachinery.blockoutputbus.tiny.name=Tiny Item Output
 tile.modularmachinery.blockoutputbus.small.name=Small Item Output

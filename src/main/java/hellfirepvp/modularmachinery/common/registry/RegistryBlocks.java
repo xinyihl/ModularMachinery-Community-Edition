@@ -60,6 +60,8 @@ public class RegistryBlocks {
 
         itemInputBus = prepareRegister(new BlockInputBus());
         prepareItemBlockRegister(itemInputBus);
+        itemRedstoneBus = prepareRegister(new BlockRedstoneBus());
+        prepareItemBlockRegister(itemRedstoneBus);
         itemOutputBus = prepareRegister(new BlockOutputBus());
         prepareItemBlockRegister(itemOutputBus);
         fluidInputHatch = prepareRegister(new BlockFluidInputHatch());
@@ -83,6 +85,8 @@ public class RegistryBlocks {
         registerTile(TileItemInputBus.class);
         registerTile(TileEnergyInputHatch.class);
         registerTile(TileEnergyOutputHatch.class);
+        //yuyu
+        registerTile(TileRedstoneBus.class);
     }
 
     private static void registerBlockModels() {
