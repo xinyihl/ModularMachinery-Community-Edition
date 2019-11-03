@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.block;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
+import hellfirepvp.modularmachinery.common.block.prop.RedstoneBusSize;
 import hellfirepvp.modularmachinery.common.tiles.TileItemInputBus;
 import hellfirepvp.modularmachinery.common.tiles.TileRedstoneBus;
 import hellfirepvp.modularmachinery.common.tiles.base.TileInventory;
@@ -49,7 +50,7 @@ import java.util.List;
  */
 public class BlockRedstoneBus extends BlockMachineComponent implements BlockCustomName, BlockVariants {
 
-    private static final PropertyEnum<ItemBusSize> BUS_TYPE = PropertyEnum.create("size", ItemBusSize.class);
+    private static final PropertyEnum<RedstoneBusSize> BUS_TYPE = PropertyEnum.create("size", RedstoneBusSize.class);
 
     public BlockRedstoneBus() {
         super(Material.IRON);
@@ -67,7 +68,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for (ItemBusSize size : ItemBusSize.values()) {
+        for (RedstoneBusSize size : RedstoneBusSize.values()) {
             items.add(new ItemStack(this, 1, size.ordinal()));
         }
     }
@@ -95,7 +96,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(BUS_TYPE, ItemBusSize.values()[meta]);
+        return getDefaultState().withProperty(BUS_TYPE, RedstoneBusSize.values()[meta]);
     }
 
     @Override
@@ -111,7 +112,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
     @Override
     public Iterable<IBlockState> getValidStates() {
         List<IBlockState> ret = new LinkedList<>();
-        for (ItemBusSize type : ItemBusSize.values()) {
+        for (RedstoneBusSize type : RedstoneBusSize.values()) {
             ret.add(getDefaultState().withProperty(BUS_TYPE, type));
         }
         return ret;

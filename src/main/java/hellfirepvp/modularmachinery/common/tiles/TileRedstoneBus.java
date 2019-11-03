@@ -2,6 +2,7 @@ package hellfirepvp.modularmachinery.common.tiles;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
+import hellfirepvp.modularmachinery.common.block.prop.RedstoneBusSize;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -18,8 +19,8 @@ public class TileRedstoneBus extends TileItemInputBus {
 
     public TileRedstoneBus() {}
 
-    public TileRedstoneBus(ItemBusSize type) {
-        super(type);
+    public TileRedstoneBus(RedstoneBusSize type) {
+        super(ItemBusSize.TINY);
     }
 
     @Override
