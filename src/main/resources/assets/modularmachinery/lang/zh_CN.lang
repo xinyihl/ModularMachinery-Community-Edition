@@ -89,6 +89,7 @@ tooltip.ic2.powertier.12.name=UXV
 item.modularmachinery.itemblueprint.name=机械蓝图
 item.modularmachinery.itemmodularium.name=模块化合金锭
 item.modularmachinery.itemconstructtool.name=建造选择工具
+item.modularmachinery.itemredstonesignal.name=红石信号
 
 tile.modularmachinery.blockcontroller.name=机械控制器
 
@@ -106,6 +107,8 @@ tile.modularmachinery.blockinputbus.reinforced.name=强化物品输入仓
 tile.modularmachinery.blockinputbus.big.name=大型物品输入仓
 tile.modularmachinery.blockinputbus.huge.name=巨型物品输入仓
 tile.modularmachinery.blockinputbus.ludicrous.name=超级物品输入仓
+
+tile.modularmachinery.blockredstonebus.tiny.name=红石控制端口
 
 tile.modularmachinery.blockoutputbus.tiny.name=微型物品输出仓
 tile.modularmachinery.blockoutputbus.small.name=小型物品输出仓

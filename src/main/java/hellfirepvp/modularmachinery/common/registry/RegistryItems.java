@@ -38,6 +38,7 @@ public class RegistryItems {
         modularium = prepareRegister(new ItemModularium());
         constructTool = prepareRegister(new ItemConstructTool());
         redstoneSignal = prepareRegister(new ItemRedstoneSignal());
+        catalyst=prepareRegister(new ItemCatalyst());
 
         registerItemBlocks();
         registerItemModels();

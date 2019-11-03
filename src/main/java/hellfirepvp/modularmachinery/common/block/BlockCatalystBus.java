@@ -10,28 +10,31 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.block.prop.CatalystBusSize;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.block.prop.RedstoneBusSize;
-import hellfirepvp.modularmachinery.common.tiles.TileItemInputBus;
+import hellfirepvp.modularmachinery.common.lib.BlocksMM;
+import hellfirepvp.modularmachinery.common.lib.ItemsMM;
+import hellfirepvp.modularmachinery.common.tiles.TileCatalystBus;
 import hellfirepvp.modularmachinery.common.tiles.TileRedstoneBus;
-import hellfirepvp.modularmachinery.common.tiles.base.TileInventory;
-import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
-import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.RedstoneHelper;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Enchantments;
 import net.minecraft.item.ItemStack;
+import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -48,11 +51,11 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 07.07.2017 / 17:59
  */
-public class BlockRedstoneBus extends BlockMachineComponent implements BlockCustomName, BlockVariants {
+public class BlockCatalystBus extends BlockMachineComponent implements BlockCustomName, BlockVariants {
 
-    private static final PropertyEnum<RedstoneBusSize> BUS_TYPE = PropertyEnum.create("size", RedstoneBusSize.class);
+    private static final PropertyEnum<CatalystBusSize> BUS_TYPE = PropertyEnum.create("size", CatalystBusSize.class);
 
-    public BlockRedstoneBus() {
+    public BlockCatalystBus() {
         super(Material.IRON);
         setHardness(2F);
         setResistance(10F);
@@ -67,8 +70,35 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
     }
 
     @Override
+    public void harvestBlock(World worldIn, EntityPlayer player, BlockPos pos, IBlockState state, @Nullable TileEntity te, ItemStack stack) {
+        player.addStat(StatList.getBlockStats(this));
+        player.addExhaustion(0.005F);
+        boolean isUsed = false;
+        TileCatalystBus tile = (TileCatalystBus) te;
+        for (int i = 0; i < tile.getInventory().getSlots(); i++)
+            isUsed = isUsed || (tile.getInventory().getStackInSlot(i).getCount() < 64);
+
+        //net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(items, worldIn, pos, state, 0, 1.0f, true, player);
+        if(isUsed)spawnAsEntity(worldIn, pos, new ItemStack(BlocksMM.itemCatalystBusBroken,1,getMetaFromState(state)));
+        else spawnAsEntity(worldIn,pos,new ItemStack(BlocksMM.itemCatalystBus,1,getMetaFromState(state)));
+    }
+
+    @Override
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if(worldIn.isRemote)return true;
+        TileCatalystBus tile=(TileCatalystBus) worldIn.getTileEntity(pos);
+        if(tile==null) playerIn.sendMessage(new TextComponentString("Tile Error!"));
+        else {
+            int catalystCount=0;
+            for(int i=0;i<tile.getInventory().getSlots();i++)catalystCount+=tile.getInventory().getStackInSlot(i).getCount();
+            playerIn.sendMessage(new TextComponentString(String.format("Catalyst remaining: %.2f%%",catalystCount*100.0/(tile.getInventory().getSlots()*64))));
+        }
+        return true;
+    }
+
+    @Override
     public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for (RedstoneBusSize size : RedstoneBusSize.values()) {
+        for (CatalystBusSize size : CatalystBusSize.values()) {
             items.add(new ItemStack(this, 1, size.ordinal()));
         }
     }
@@ -91,7 +121,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(BUS_TYPE, RedstoneBusSize.values()[meta]);
+        return getDefaultState().withProperty(BUS_TYPE, CatalystBusSize.values()[meta]);
     }
 
     @Override
@@ -107,7 +137,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
     @Override
     public Iterable<IBlockState> getValidStates() {
         List<IBlockState> ret = new LinkedList<>();
-        for (RedstoneBusSize type : RedstoneBusSize.values()) {
+        for (CatalystBusSize type : CatalystBusSize.values()) {
             ret.add(getDefaultState().withProperty(BUS_TYPE, type));
         }
         return ret;
@@ -136,7 +166,19 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileRedstoneBus(state.getValue(BUS_TYPE));
+        return new TileCatalystBus(state.getValue(BUS_TYPE));
+    }
+
+    @Override
+    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
+        if(!worldIn.isRemote) {
+            TileCatalystBus te = (TileCatalystBus) worldIn.getTileEntity(pos);
+            if (te != null)
+                for (int i = 0; i < ItemBusSize.LUDICROUS.getSlotCount(); i++) {
+                    te.getInventory().setStackInSlot(i, new ItemStack(ItemsMM.catalyst, 64, getMetaFromState(state)));
+                }
+            else ModularMachinery.log.error("te null");
+        }
     }
 
     @Nullable
@@ -150,4 +192,8 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
         return getStateFromMeta(meta).getValue(BUS_TYPE).getName();
     }
 
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
+        tooltip.add(TextFormatting.GRAY + String.valueOf(stack.getMetadata()));
+    }
 }
