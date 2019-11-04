@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.tiles.TileCatalystBus;
 import hellfirepvp.modularmachinery.common.tiles.TileRedstoneBus;
+import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
 import hellfirepvp.modularmachinery.common.util.RedstoneHelper;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -194,6 +195,6 @@ public class BlockCatalystBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
-        tooltip.add(TextFormatting.GRAY + String.valueOf(stack.getMetadata()));
+        tooltip.add(TextFormatting.GRAY + String.valueOf(CatalystNameUtil.getNameAt(stack.getMetadata())));
     }
 }

@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.item;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -35,6 +36,6 @@ public class ItemCatalyst extends Item {
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
-        tooltip.add(String.valueOf(stack.getMetadata()));
+        tooltip.add(String.valueOf(CatalystNameUtil.getNameAt(stack.getMetadata())));
     }
 }

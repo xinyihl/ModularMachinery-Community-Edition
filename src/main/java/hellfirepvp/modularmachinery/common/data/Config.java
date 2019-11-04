@@ -12,6 +12,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
+import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
 import net.minecraftforge.common.config.Configuration;
 
 import java.io.File;
@@ -45,6 +46,7 @@ public class Config {
         FluidHatchSize.loadFromConfig(lastReadConfig);
         EnergyHatchSize.loadFromConfig(lastReadConfig);
         EnergyDisplayUtil.loadFromConfig(lastReadConfig);
+        CatalystNameUtil.loadFromConfig(lastReadConfig);
 
         String strColor = lastReadConfig.getString("general-casing-color", "general", "FF4900", "Defines the _default_ color for machine casings as items or blocks. (Hex color without alpha) Has to be defined both server and clientside!");
         int col = 0xff921e; //TODO uh
