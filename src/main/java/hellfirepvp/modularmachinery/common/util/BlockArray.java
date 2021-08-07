@@ -349,7 +349,7 @@ public class BlockArray {
             }
             ResourceLocation res = new ResourceLocation(strElement);
             Block b = ForgeRegistries.BLOCKS.getValue(res);
-            if(b == null || b == Blocks.AIR) {
+            if(b == null) {
                 throw new JsonParseException("Couldn't find block with registryName '" + res.toString() + "' !");
             }
             if(meta == -1) {
