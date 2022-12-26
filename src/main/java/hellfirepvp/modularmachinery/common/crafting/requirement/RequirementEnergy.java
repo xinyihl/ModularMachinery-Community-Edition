@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeEnergy;
@@ -22,6 +21,7 @@ import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,11 +35,13 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     public final long requirementPerTick;
     private long activeIO;
+    private long remaining;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
         this.requirementPerTick = requirementPerTick;
         this.activeIO = this.requirementPerTick;
+        this.remaining = this.activeIO;
     }
 
     @Override
@@ -104,16 +106,18 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                 if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) {
                     return CraftCheck.success();
                 }
-                break;
+                return CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
-                return CraftCheck.success();
+                this.remaining = handler.getRemainingCapacity();
+                return remaining - this.activeIO < 0 ? CraftCheck.failure("craftcheck.failure.energy.output.space") : CraftCheck.success();
         }
-        return CraftCheck.failure("craftcheck.failure.energy.input");
+
+        return CraftCheck.skipComponent();
     }
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return canStartCrafting(component, context, Lists.newArrayList()).isSuccess();
+        return canStartCrafting(component, context, new ArrayList<>(0)).isSuccess();
     }
 
     @Override
@@ -132,7 +136,14 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     public CraftCheck resetIOTick(RecipeCraftingContext context) {
         boolean enough = this.activeIO <= 0;
         this.activeIO = this.requirementPerTick;
-        return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.input");
+
+        switch (getActionType()) {
+            case INPUT:
+                return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.input");
+            case OUTPUT:
+                return remaining < this.activeIO ? CraftCheck.failure("craftcheck.failure.energy.output.space") : CraftCheck.success();
+        }
+        return CraftCheck.skipComponent();
     }
 
     @Nonnull
@@ -146,15 +157,15 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                     this.activeIO = 0;
                     return CraftCheck.success();
                 } else {
-                    this.activeIO -= handler.getCurrentEnergy();
-                    handler.setCurrentEnergy(0);
+//                    this.activeIO -= handler.getCurrentEnergy();
+//                    handler.setCurrentEnergy(0);
                     return CraftCheck.partialSuccess();
                 }
             case OUTPUT:
-                long remaining = handler.getRemainingCapacity();
-                if (remaining - this.activeIO < 0) {
-                    handler.setCurrentEnergy(handler.getMaxEnergy());
-                    this.activeIO -= remaining;
+                this.remaining = handler.getRemainingCapacity();
+                if (remaining < this.activeIO) {
+//                    handler.setCurrentEnergy(handler.getMaxEnergy());
+//                    this.activeIO -= remaining;
                     return CraftCheck.partialSuccess();
                 }
                 handler.setCurrentEnergy(Math.min(handler.getCurrentEnergy() + this.activeIO, handler.getMaxEnergy()));

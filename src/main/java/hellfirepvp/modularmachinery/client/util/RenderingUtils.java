@@ -144,19 +144,19 @@ public class RenderingUtils {
             float z = 300F;
 
             GlStateManager.disableDepth();
-            drawGradientRect(pX - 3, pY - 4, z, pX + esWidth + 3, pY - 3, color, colorFade);
-            drawGradientRect(pX - 3, pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
-            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX - 4, pY - 3, z, pX - 3, pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX + esWidth + 3, pY - 3, z, pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 3,           pY - 4, z,                 pX + esWidth + 3, pY - 3,                 color, colorFade);
+            drawGradientRect(pX - 3,           pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
+            drawGradientRect(pX - 3,           pY - 3, z,                 pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 4,           pY - 3, z,                 pX - 3,           pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX + esWidth + 3, pY - 3, z,                 pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
 
             int rgb = color.getRGB();
             int col = (rgb & 0x00FFFFFF) | rgb & 0xFF000000;
             Color colOp = new Color(col);
-            drawGradientRect(pX - 3, pY - 3 + 1, z, pX - 3 + 1, pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX + esWidth + 2, pY - 3 + 1, z, pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY - 3 + 1, colOp, colOp);
-            drawGradientRect(pX - 3, pY + sumLineHeight + 2, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, color);
+            drawGradientRect(pX - 3,           pY - 3 + 1, z,              pX - 3 + 1,       pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX + esWidth + 2, pY - 3 + 1, z,              pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX - 3,           pY - 3, z,                  pX + esWidth + 3, pY - 3 + 1,                 colOp, colOp);
+            drawGradientRect(pX - 3,           pY + sumLineHeight + 2, z,  pX + esWidth + 3, pY + sumLineHeight + 3,     color, color);
 
             for (Tuple<ItemStack, String> stackDesc : tooltipData) {
                 if (!stackDesc.getFirst().isEmpty()) {

@@ -105,9 +105,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.activeRecipe == null) {
-                    if (this.ticksExisted % 60 == 0) {
+                    if (this.ticksExisted % 40 == 0) {
                         searchAndUpdateRecipe();
-                        markForUpdate();
                     }
                 } else {
                     RecipeCraftingContext context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
@@ -125,7 +124,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                             this.activeRecipe.complete(context);
                             this.activeRecipe.reset();
                             context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-                            tryStartRecipe(context);
+                            tryRedoRecipe(context);
                         }
                     }
                     markForUpdate();
@@ -137,7 +136,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
         }
     }
 
-    private void tryStartRecipe(RecipeCraftingContext context) {
+    private void tryRedoRecipe(RecipeCraftingContext context) {
         if (singleContextCheckTask != null) {
             if (singleContextCheckTask.isDone()) {
                 singleContextCheckTask = null;
@@ -522,9 +521,13 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
         @Override
         protected void compute() {
-            if (!context.canStartCrafting().isFailure()) {
+            RecipeCraftingContext.CraftingCheckResult tryResult = context.canStartCrafting();
+            if (!tryResult.isFailure()) {
                 activeRecipe = context.getActiveRecipe();
                 recipePrepared = true;
+            } else {
+                activeRecipe = null;
+                craftingStatus = CraftingStatus.failure(Iterables.getFirst(tryResult.getUnlocalizedErrorMessages(), ""));
             }
         }
     }

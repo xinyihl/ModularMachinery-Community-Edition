@@ -75,7 +75,7 @@ public class ActiveMachineRecipe {
             this.tick++;
             return TileMachineController.CraftingStatus.working();
         } else {
-            this.tick = 0;
+//            this.tick = 0;
             return TileMachineController.CraftingStatus.failure(
                     Iterables.getFirst(check.getUnlocalizedErrorMessages(), ""));
         }

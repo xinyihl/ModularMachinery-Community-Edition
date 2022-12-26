@@ -22,7 +22,7 @@ craftcheck.failure.fluid.output.space=Not enough tank space for fluid output(s)!
 craftcheck.failure.gas.input=Missing gas input!
 craftcheck.failure.gas.output.space=Not enough space for gas output(s)!
 craftcheck.failure.energy.input=Not enough energy!
-craftcheck.failure.unprepared=尚未准备好！
+craftcheck.failure.energy.output.space=能源输出仓已满
 
 component.missing.modularmachinery.energy.output=No Energy Output Hatch found!
 component.missing.modularmachinery.energy.input=No Energy Input Hatch found!

@@ -103,6 +103,7 @@ public class RecipeCraftingContext {
     public CraftingCheckResult ioTick(int currentTick) {
         float durMultiplier = this.getDurationMultiplier();
 
+        //Input tick
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
                     requirement.getActionType() == IOType.OUTPUT) continue;
@@ -126,6 +127,7 @@ public class RecipeCraftingContext {
             }
         }
 
+        //Output tick
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
                     requirement.getActionType() == IOType.INPUT) continue;
@@ -140,7 +142,13 @@ public class RecipeCraftingContext {
                     break;
                 }
             }
-            perTickRequirement.resetIOTick(this);
+
+            CraftCheck result = perTickRequirement.resetIOTick(this);
+            if (!result.isSuccess()) {
+                CraftingCheckResult res = new CraftingCheckResult();
+                res.addError(result.getUnlocalizedMessage());
+                return res;
+            }
         }
 
         this.getParentRecipe().getCommandContainer().runTickCommands(this.commandSender, currentTick);
