@@ -3,7 +3,6 @@ package hellfirepvp.modularmachinery.common.block.prop;
 import net.minecraft.util.IStringSerializable;
 
 public enum CatalystBusSize implements IStringSerializable {
-
     catalyst00(32),
     catalyst01(32),
     catalyst02(32),
@@ -21,11 +20,11 @@ public enum CatalystBusSize implements IStringSerializable {
     catalyst14(32),
     catalyst15(32);
 
-    private int slots;
+    private final int slots;
 
     private final int defaultConfigSize;
 
-    private CatalystBusSize(int defaultConfigSize) {
+    CatalystBusSize(int defaultConfigSize) {
         this.defaultConfigSize = defaultConfigSize;
         this.slots = this.defaultConfigSize;
     }

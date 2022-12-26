@@ -27,7 +27,8 @@ import javax.annotation.Nullable;
  */
 public class TileItemOutputBus extends TileItemBus implements MachineComponentTile {
 
-    public TileItemOutputBus() {}
+    public TileItemOutputBus() {
+    }
 
     public TileItemOutputBus(ItemBusSize type) {
         super(type);
@@ -39,7 +40,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
         for (int i = 0; i < size; i++) {
             slots[i] = i;
         }
-        return new IOInventory(tile, new int[] {}, slots);
+        return new IOInventory(tile, new int[]{}, slots);
     }
 
     @Nullable

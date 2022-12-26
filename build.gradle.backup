@@ -1,5 +1,3 @@
-import net.minecraftforge.gradle.common.task.SignJar
-
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
@@ -7,9 +5,10 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:4.+'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:5.+'
     }
 }
+
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'

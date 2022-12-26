@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.client;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.preview.StructurePreviewWrapper;
 import mezz.jei.api.IRecipesGui;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -32,43 +31,45 @@ import java.lang.reflect.Field;
 public class ClientMouseJEIGuiEventHandler {
 
     private static final Field glMouseEventDWheelField;
-    public static int eventDWheelState;
+    public static int eventDWheelState = 0;
+
+    static {
+        Field field = null;
+        try {
+            field = Mouse.class.getDeclaredField("event_dwheel");
+            field.setAccessible(true);
+        } catch (Exception exc) {
+            ModularMachinery.log.error("Couldn't find mouseWheelEvent field in current GL context! Scrolling/Zooming in JEI might be problematic!");
+            exc.printStackTrace();
+        }
+        glMouseEventDWheelField = field;
+    }
 
     @SubscribeEvent
     public void onMouseEventPre(GuiScreenEvent.MouseInputEvent.Pre preMouse) {
-        if(glMouseEventDWheelField == null) return;
+        if (glMouseEventDWheelField == null) return;
 
         GuiScreen cScreen = preMouse.getGui();
-        if(cScreen != null && cScreen instanceof IRecipesGui &&
+        if (cScreen instanceof IRecipesGui &&
                 System.currentTimeMillis() - StructurePreviewWrapper.lastRenderMs <= 200) {
             try {
                 eventDWheelState = Mouse.getEventDWheel();
                 glMouseEventDWheelField.set(null, 0);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
     }
 
     @SubscribeEvent
     public void onMouseEventPost(GuiScreenEvent.MouseInputEvent.Post postMouse) {
-        if(glMouseEventDWheelField == null) return;
+        if (glMouseEventDWheelField == null) return;
 
-        if(eventDWheelState != 0) {
+        if (eventDWheelState != 0) {
             try {
                 glMouseEventDWheelField.set(null, eventDWheelState);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
-    }
-
-    static {
-        Field f = null;
-        try {
-            f = Mouse.class.getDeclaredField("event_dwheel");
-            f.setAccessible(true);
-        } catch (Exception exc) {
-            ModularMachinery.log.error("Couldn't find mouseWheelEvent field in current GL context! Scrolling/Zooming in JEI might be problematic!");
-            exc.printStackTrace();
-        }
-        glMouseEventDWheelField = f;
     }
 
 }

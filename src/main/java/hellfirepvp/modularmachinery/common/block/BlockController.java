@@ -11,9 +11,7 @@ package hellfirepvp.modularmachinery.common.block;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
-import hellfirepvp.modularmachinery.common.tiles.base.TileInventory;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
-import net.minecraft.block.BlockContainer;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
@@ -41,7 +39,7 @@ import javax.annotation.Nullable;
  */
 public class BlockController extends BlockMachineComponent {
 
-    public static PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
+    public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
 
     public BlockController() {
         super(Material.IRON);
@@ -56,11 +54,11 @@ public class BlockController extends BlockMachineComponent {
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
         TileEntity te = worldIn.getTileEntity(pos);
-        if(te != null && te instanceof TileMachineController) {
+        if (te instanceof TileMachineController) {
             IOInventory inv = ((TileMachineController) te).getInventory();
             for (int i = 0; i < inv.getSlots(); i++) {
                 ItemStack stack = inv.getStackInSlot(i);
-                if(!stack.isEmpty()) {
+                if (!stack.isEmpty()) {
                     spawnAsEntity(worldIn, pos, stack);
                     inv.setStackInSlot(i, ItemStack.EMPTY);
                 }
@@ -86,9 +84,9 @@ public class BlockController extends BlockMachineComponent {
 
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(!worldIn.isRemote) {
+        if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
-            if(te != null && te instanceof TileMachineController) {
+            if (te instanceof TileMachineController) {
                 playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.CONTROLLER.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
             }
         }
@@ -102,7 +100,7 @@ public class BlockController extends BlockMachineComponent {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
+        return this.getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
     }
 
     @Override
@@ -118,7 +116,7 @@ public class BlockController extends BlockMachineComponent {
     @Override
     public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos) {
         TileEntity te = worldIn.getTileEntity(pos);
-        if(te instanceof TileMachineController) {
+        if (te instanceof TileMachineController) {
             TileMachineController ctrl = (TileMachineController) te;
             return ctrl.getCraftingStatus().isCrafting() ? 15 : ctrl.getFoundMachine() != null ? 1 : 0;
         }
@@ -127,7 +125,7 @@ public class BlockController extends BlockMachineComponent {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public BlockRenderLayer getBlockLayer() {
+    public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 

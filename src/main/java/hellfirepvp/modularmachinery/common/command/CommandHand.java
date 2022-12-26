@@ -51,23 +51,23 @@ public class CommandHand extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
         ItemStack held = player.getHeldItemMainhand();
-        if(held.isEmpty()) {
+        if (held.isEmpty()) {
             held = player.getHeldItemOffhand();
         }
-        if(held.isEmpty()) {
+        if (held.isEmpty()) {
             player.sendMessage(new TextComponentTranslation("command.modularmachinery.hand.empty"));
             return;
         }
-        Item i = held.getItem();
+        Item heldItem = held.getItem();
         StringBuilder sb = new StringBuilder();
-        sb.append(i.getRegistryName().toString());
-        if(i.getHasSubtypes()) {
+        sb.append(heldItem.getRegistryName().toString());
+        if (heldItem.getHasSubtypes()) {
             sb.append("@").append(held.getItemDamage());
         }
         NBTTagCompound cmp = held.serializeNBT();
-        if(cmp.hasKey("tag")) {
+        if (cmp.hasKey("tag")) {
             String json = NBTJsonSerializer.serializeNBT(cmp.getTag("tag"));
-            if(!json.isEmpty()) {
+            if (!json.isEmpty()) {
                 sb.append(" (with nbt: ").append(json).append(" )");
             }
         }
@@ -77,7 +77,7 @@ public class CommandHand extends CommandBase {
         ModularMachinery.NET_CHANNEL.sendTo(new PktCopyToClipboard(str), player);
 
         int burn = TileEntityFurnace.getItemBurnTime(held);
-        if(burn > 0) {
+        if (burn > 0) {
             player.sendMessage(new TextComponentString("Fuel BurnTime: " + burn));
         }
     }

@@ -27,7 +27,8 @@ import static hellfirepvp.modularmachinery.common.lib.ComponentTypesMM.*;
  */
 public class RegistryComponentTypes {
 
-    private RegistryComponentTypes() {}
+    private RegistryComponentTypes() {
+    }
 
     public static void initialize() {
         COMPONENT_ITEM = register(new ComponentItem(), KEY_COMPONENT_ITEM);
@@ -36,7 +37,7 @@ public class RegistryComponentTypes {
         COMPONENT_GAS = register(new ComponentGas(), KEY_COMPONENT_GAS);
     }
 
-    private static  <T extends ComponentType> T register(T componentType, ResourceLocation registryName) {
+    private static <T extends ComponentType> T register(T componentType, ResourceLocation registryName) {
         componentType.setRegistryName(registryName);
         CommonProxy.registryPrimer.register(componentType);
         return componentType;

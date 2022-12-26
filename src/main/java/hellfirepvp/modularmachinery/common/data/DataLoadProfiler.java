@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class DataLoadProfiler {
 
-    private List<StatusLine> statusLines = new LinkedList<>();
+    private final List<StatusLine> statusLines = new LinkedList<>();
 
     public StatusLine createLine(String name) {
         StatusLine sl = new StatusLine(name);
@@ -38,25 +38,24 @@ public class DataLoadProfiler {
         for (StatusLine sl : statusLines) {
             String out = sl.toString();
             ModularMachinery.log.info(out);
-            if(additionalReceiver != null) {
+            if (additionalReceiver != null) {
                 additionalReceiver.sendMessage(new TextComponentString(out));
             }
         }
     }
 
     public static class StatusLine {
-
-        private List<Status> lineComponents = new LinkedList<>();
-        private String name;
+        private final List<Status> lineComponents = new LinkedList<>();
+        private final String name;
 
         public StatusLine(String name) {
             this.name = name;
         }
 
         public Status appendStatus(String regexName) {
-            Status s = new Status(regexName);
-            lineComponents.add(s);
-            return s;
+            Status status = new Status(regexName);
+            lineComponents.add(status);
+            return status;
         }
 
         @Override
@@ -67,8 +66,8 @@ public class DataLoadProfiler {
 
     public static class Status {
 
-        private int counter = 0;
         private final String name;
+        private int counter = 0;
 
         public Status(String name) {
             this.name = name;
@@ -78,12 +77,12 @@ public class DataLoadProfiler {
             counter++;
         }
 
-        public void setCounter(int counter) {
-            this.counter = counter;
-        }
-
         public int getCounter() {
             return counter;
+        }
+
+        public void setCounter(int counter) {
+            this.counter = counter;
         }
 
         @Override

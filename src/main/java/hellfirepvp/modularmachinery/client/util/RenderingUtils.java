@@ -17,13 +17,10 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.client.event.DrawBlockHighlightEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
@@ -47,7 +44,7 @@ public class RenderingUtils {
         GlStateManager.disableCull();
 
         Entity player = Minecraft.getMinecraft().getRenderViewEntity();
-        if(player == null) {
+        if (player == null) {
             player = Minecraft.getMinecraft().player;
         }
 
@@ -107,7 +104,6 @@ public class RenderingUtils {
     }
 
 
-
     public static void renderBlueStackTooltip(int x, int y, List<Tuple<ItemStack, String>> tooltipData, FontRenderer fr, RenderItem ri) {
         renderStackTooltip(x, y, tooltipData, new Color(0x000037), new Color(0x000000), Color.WHITE, fr, ri);
     }
@@ -122,7 +118,7 @@ public class RenderingUtils {
                     esWidth = width;
             }
             ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-            if(x + 15 + esWidth > sr.getScaledWidth()) {
+            if (x + 15 + esWidth > sr.getScaledWidth()) {
                 x -= esWidth + 24;
             }
             int sumLineHeight = 8;
@@ -137,7 +133,7 @@ public class RenderingUtils {
                 sumLineHeight -= lastAdded;
             }
 
-            if(y + sumLineHeight > sr.getScaledHeight()) {
+            if (y + sumLineHeight > sr.getScaledHeight()) {
                 y = (sr.getScaledHeight() - sumLineHeight);
                 y = Math.max(25, y);
             }
@@ -148,22 +144,22 @@ public class RenderingUtils {
             float z = 300F;
 
             GlStateManager.disableDepth();
-            drawGradientRect(pX - 3,           pY - 4,                 z, pX + esWidth + 3, pY - 3,                 color, colorFade);
-            drawGradientRect(pX - 3,           pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
-            drawGradientRect(pX - 3,           pY - 3,                 z, pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX - 4,           pY - 3,                 z, pX - 3,           pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX + esWidth + 3, pY - 3,                 z, pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 3, pY - 4, z, pX + esWidth + 3, pY - 3, color, colorFade);
+            drawGradientRect(pX - 3, pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
+            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 4, pY - 3, z, pX - 3, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX + esWidth + 3, pY - 3, z, pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
 
             int rgb = color.getRGB();
             int col = (rgb & 0x00FFFFFF) | rgb & 0xFF000000;
             Color colOp = new Color(col);
-            drawGradientRect(pX - 3,           pY - 3 + 1,             z, pX - 3 + 1,       pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX + esWidth + 2, pY - 3 + 1,             z, pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX - 3,           pY - 3,                 z, pX + esWidth + 3, pY - 3 + 1,                 colOp, colOp);
-            drawGradientRect(pX - 3,           pY + sumLineHeight + 2, z, pX + esWidth + 3, pY + sumLineHeight + 3,     color, color);
+            drawGradientRect(pX - 3, pY - 3 + 1, z, pX - 3 + 1, pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX + esWidth + 2, pY - 3 + 1, z, pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY - 3 + 1, colOp, colOp);
+            drawGradientRect(pX - 3, pY + sumLineHeight + 2, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, color);
 
             for (Tuple<ItemStack, String> stackDesc : tooltipData) {
-                if(!stackDesc.getFirst().isEmpty()) {
+                if (!stackDesc.getFirst().isEmpty()) {
                     fr.drawString(stackDesc.getSecond(), pX + 17, pY, strColor.getRGB());
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     GlStateManager.pushMatrix();
@@ -171,7 +167,7 @@ public class RenderingUtils {
                     ri.renderItemAndEffectIntoGUI(stackDesc.getFirst(), pX - 1, pY - 5);
                     GlStateManager.popMatrix();
                     pY += 17;
-                } else if(stackDesc.getSecond().isEmpty()) {
+                } else if (stackDesc.getSecond().isEmpty()) {
                     pY += 6;
                 } else {
                     fr.drawString(stackDesc.getSecond(), pX, pY, strColor.getRGB());
@@ -208,7 +204,7 @@ public class RenderingUtils {
                     esWidth = width;
             }
             ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
-            if(x + 15 + esWidth > sr.getScaledWidth()) {
+            if (x + 15 + esWidth > sr.getScaledWidth()) {
                 x -= esWidth + 24;
             }
 
@@ -217,7 +213,7 @@ public class RenderingUtils {
                 sumLineHeight += 2 + (tooltipData.size() - 1) * 10;
 
 
-            if(y + sumLineHeight > sr.getScaledHeight()) {
+            if (y + sumLineHeight > sr.getScaledHeight()) {
                 y = (sr.getScaledHeight() - sumLineHeight);
                 y = Math.max(25, y);
             }
@@ -227,19 +223,19 @@ public class RenderingUtils {
 
             float z = 300F;
 
-            drawGradientRect(pX - 3,           pY - 4,                 z, pX + esWidth + 3, pY - 3,                 color, colorFade);
-            drawGradientRect(pX - 3,           pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
-            drawGradientRect(pX - 3,           pY - 3,                 z, pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX - 4,           pY - 3,                 z, pX - 3,           pY + sumLineHeight + 3, color, colorFade);
-            drawGradientRect(pX + esWidth + 3, pY - 3,                 z, pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 3, pY - 4, z, pX + esWidth + 3, pY - 3, color, colorFade);
+            drawGradientRect(pX - 3, pY + sumLineHeight + 3, z, pX + esWidth + 3, pY + sumLineHeight + 4, color, colorFade);
+            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX - 4, pY - 3, z, pX - 3, pY + sumLineHeight + 3, color, colorFade);
+            drawGradientRect(pX + esWidth + 3, pY - 3, z, pX + esWidth + 4, pY + sumLineHeight + 3, color, colorFade);
 
             int rgb = color.getRGB();
             int col = (rgb & 0x00FFFFFF) | rgb & 0xFF000000;
             Color colOp = new Color(col);
-            drawGradientRect(pX - 3,           pY - 3 + 1,             z, pX - 3 + 1,       pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX + esWidth + 2, pY - 3 + 1,             z, pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
-            drawGradientRect(pX - 3,           pY - 3,                 z, pX + esWidth + 3, pY - 3 + 1,                 colOp, colOp);
-            drawGradientRect(pX - 3,           pY + sumLineHeight + 2, z, pX + esWidth + 3, pY + sumLineHeight + 3,     color, color);
+            drawGradientRect(pX - 3, pY - 3 + 1, z, pX - 3 + 1, pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX + esWidth + 2, pY - 3 + 1, z, pX + esWidth + 3, pY + sumLineHeight + 3 - 1, color, colOp);
+            drawGradientRect(pX - 3, pY - 3, z, pX + esWidth + 3, pY - 3 + 1, colOp, colOp);
+            drawGradientRect(pX - 3, pY + sumLineHeight + 2, z, pX + esWidth + 3, pY + sumLineHeight + 3, color, color);
 
             GlStateManager.disableDepth();
             for (int i = 0; i < tooltipData.size(); ++i) {
@@ -268,9 +264,9 @@ public class RenderingUtils {
         Tessellator tes = Tessellator.getInstance();
         BufferBuilder vb = tes.getBuffer();
         vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        vb.pos(toX, y,   z).color(color.getRed(),     color.getGreen(),     color.getBlue(),     color.getAlpha())    .endVertex();
-        vb.pos(x,   y,   z).color(color.getRed(),     color.getGreen(),     color.getBlue(),     color.getAlpha())    .endVertex();
-        vb.pos(x,   toY, z).color(colorFade.getRed(), colorFade.getGreen(), colorFade.getBlue(), colorFade.getAlpha()).endVertex();
+        vb.pos(toX, y, z).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+        vb.pos(x, y, z).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()).endVertex();
+        vb.pos(x, toY, z).color(colorFade.getRed(), colorFade.getGreen(), colorFade.getBlue(), colorFade.getAlpha()).endVertex();
         vb.pos(toX, toY, z).color(colorFade.getRed(), colorFade.getGreen(), colorFade.getBlue(), colorFade.getAlpha()).endVertex();
         tes.draw();
         GlStateManager.shadeModel(GL11.GL_FLAT);

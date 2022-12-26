@@ -38,18 +38,15 @@ import java.util.stream.Collectors;
  * Date: 28.06.2017 / 12:23
  */
 public class RecipeCraftingContext {
-
     private static final Random RAND = new Random();
 
     private final ActiveMachineRecipe activeRecipe;
     private final TileMachineController machineController;
     private final ControllerCommandSender commandSender;
-
+    private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
+    private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
+    private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private int currentCraftingTick = 0;
-    private List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
-    private Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
-
-    private List<ComponentOutputRestrictor> currentRestrictions = Lists.newArrayList();
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMachineController controller) {
         this.activeRecipe = activeRecipe;
@@ -69,12 +66,12 @@ public class RecipeCraftingContext {
         return activeRecipe;
     }
 
-    public void setCurrentCraftingTick(int currentCraftingTick) {
-        this.currentCraftingTick = currentCraftingTick;
-    }
-
     public int getCurrentCraftingTick() {
         return currentCraftingTick;
+    }
+
+    public void setCurrentCraftingTick(int currentCraftingTick) {
+        this.currentCraftingTick = currentCraftingTick;
     }
 
     @Nonnull
@@ -93,7 +90,7 @@ public class RecipeCraftingContext {
     }
 
     public Iterable<ProcessingComponent<?>> getComponentsFor(ComponentRequirement<?, ?> requirement, @Nullable ComponentSelectorTag tag) {
-        List<ProcessingComponent<?>> validComponents = this.typeComponents.stream()
+        List<ProcessingComponent<?>> validComponents = this.typeComponents.parallelStream()
                 .filter(comp -> requirement.isValidComponent(comp, this))
                 .collect(Collectors.toList());
         if (tag == null) {
@@ -161,7 +158,7 @@ public class RecipeCraftingContext {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.getTag())) {
-                if(requirement.startCrafting(component, this, chance)) {
+                if (requirement.startCrafting(component, this, chance)) {
                     requirement.endRequirementCheck();
                     break;
                 }
@@ -257,19 +254,15 @@ public class RecipeCraftingContext {
     }
 
     public static class CraftingCheckResult {
-
         private static final CraftingCheckResult SUCCESS = new CraftingCheckResult();
 
-        private Map<String, Integer> unlocErrorMessages = new HashMap<>();
-        private float validity = 0F;
+        private final Map<String, Integer> unlocErrorMessages = new HashMap<>();
+        public float validity = 0F;
 
-        private CraftingCheckResult() {}
-
-        private void setValidity(float validity) {
-            this.validity = validity;
+        public CraftingCheckResult() {
         }
 
-        private void addError(String unlocError) {
+        public void addError(String unlocError) {
             if (!unlocError.isEmpty()) {
                 int count = this.unlocErrorMessages.getOrDefault(unlocError, 0);
                 count++;
@@ -281,10 +274,14 @@ public class RecipeCraftingContext {
             return validity;
         }
 
+        private void setValidity(float validity) {
+            this.validity = validity;
+        }
+
         public List<String> getUnlocalizedErrorMessages() {
             return this.unlocErrorMessages.entrySet()
                     .stream()
-                    .sorted(Comparator.comparing(Map.Entry::getValue))
+                    .sorted(Map.Entry.comparingByValue())
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
         }
@@ -294,5 +291,6 @@ public class RecipeCraftingContext {
         }
 
     }
+
 
 }

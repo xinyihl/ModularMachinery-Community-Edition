@@ -46,7 +46,7 @@ public class TooltipFuelInput extends RequirementTip {
         for (ComponentRequirement<?, ?> fuel : filteredComponents) {
             totalFuelIn += ((RequirementItem) fuel).fuelBurntime;
         }
-        List<String> tooltip = new ArrayList<>();
+        List<String> tooltip = new ArrayList<>(2);
         if (totalFuelIn > 0) {
             tooltip.add(I18n.format("tooltip.machinery.fuel.in"));
             tooltip.add(I18n.format("tooltip.machinery.fuel.in.total", totalFuelIn));

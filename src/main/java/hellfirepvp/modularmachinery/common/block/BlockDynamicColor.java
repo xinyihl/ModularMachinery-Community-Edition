@@ -22,7 +22,6 @@ import javax.annotation.Nullable;
  * Date: 15.08.2017 / 16:26
  */
 public interface BlockDynamicColor {
-
-    public int getColorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex);
+    int getColorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex);
 
 }

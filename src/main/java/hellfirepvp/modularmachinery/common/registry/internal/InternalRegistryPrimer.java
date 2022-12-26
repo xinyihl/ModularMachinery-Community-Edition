@@ -8,11 +8,11 @@
 
 package hellfirepvp.modularmachinery.common.registry.internal;
 
-import com.google.common.collect.Lists;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,15 +25,11 @@ import java.util.Map;
  */
 public class InternalRegistryPrimer {
 
-    private Map<Type, List<IForgeRegistryEntry<?>>> primed = new HashMap<>();
+    private final Map<Type, List<IForgeRegistryEntry<?>>> primed = new HashMap<>();
 
     public <V extends IForgeRegistryEntry<V>> V register(V entry) {
         Class<V> type = entry.getRegistryType();
-        List<IForgeRegistryEntry<?>> entries = primed.get(type);
-        if (entries == null) {
-            entries = Lists.newLinkedList();
-            primed.put(type, entries);
-        }
+        List<IForgeRegistryEntry<?>> entries = primed.computeIfAbsent(type, k -> new LinkedList<>());
         entries.add(entry);
         return entry;
     }

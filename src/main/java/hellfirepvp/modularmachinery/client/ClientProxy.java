@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.client;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.*;
 import hellfirepvp.modularmachinery.client.util.BlockArrayPreviewRenderHelper;
@@ -47,13 +46,11 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import javax.annotation.Nullable;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -65,11 +62,30 @@ import java.util.List;
  */
 public class ClientProxy extends CommonProxy {
 
-    public static ClientScheduler clientScheduler = new ClientScheduler();
-    public static BlockArrayPreviewRenderHelper renderHelper = new BlockArrayPreviewRenderHelper();
+    public static final ClientScheduler clientScheduler = new ClientScheduler();
+    public static final BlockArrayPreviewRenderHelper renderHelper = new BlockArrayPreviewRenderHelper();
 
-    private List<Block> blockModelsToRegister = Lists.newLinkedList();
-    private List<Item> itemModelsToRegister = Lists.newLinkedList();
+    private final List<Block> blockModelsToRegister = new LinkedList<>();
+    private final List<Item> itemModelsToRegister = new LinkedList<>();
+
+    @Optional.Method(modid = "jei")
+    private static void registerJEIEventHandler() {
+        MinecraftForge.EVENT_BUS.register(new ClientMouseJEIGuiEventHandler());
+    }
+
+    private static void registerPendingIBlockColorBlocks() {
+        BlockColors colors = Minecraft.getMinecraft().getBlockColors();
+        for (BlockDynamicColor dynamicColor : RegistryBlocks.pendingIBlockColorBlocks) {
+            colors.registerBlockColorHandler(dynamicColor::getColorMultiplier, (Block) dynamicColor);
+        }
+    }
+
+    private static void registerPendingIItemColorItems() {
+        ItemColors colors = Minecraft.getMinecraft().getItemColors();
+        for (ItemDynamicColor dynamicColor : RegistryItems.pendingDynamicColorItems) {
+            colors.registerItemColorHandler(dynamicColor::getColorFromItemstack, (Item) dynamicColor);
+        }
+    }
 
     @Override
     public void preInit() {
@@ -77,16 +93,11 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new DebugOverlayHelper());
         MinecraftForge.EVENT_BUS.register(new SelectionBoxRenderHelper());
-        if(Mods.JEI.isPresent()) {
+        if (Mods.JEI.isPresent()) {
             registerJEIEventHandler();
         }
 
         super.preInit();
-    }
-
-    @Optional.Method(modid = "jei")
-    private void registerJEIEventHandler() {
-        MinecraftForge.EVENT_BUS.register(new ClientMouseJEIGuiEventHandler());
     }
 
     @SubscribeEvent
@@ -97,7 +108,7 @@ public class ClientProxy extends CommonProxy {
     private void registerModels() {
         for (Block block : blockModelsToRegister) {
             Item i = Item.getItemFromBlock(block);
-            if(block instanceof BlockVariants) {
+            if (block instanceof BlockVariants) {
                 for (IBlockState state : ((BlockVariants) block).getValidStates()) {
                     String unlocName = block.getClass().getSimpleName().toLowerCase();
                     String name = unlocName + "_" + ((BlockVariants) block).getBlockStateName(state);
@@ -113,12 +124,12 @@ public class ClientProxy extends CommonProxy {
         }
         for (Item item : itemModelsToRegister) {
             String name = item.getClass().getSimpleName().toLowerCase();
-            if(item instanceof ItemBlock) {
+            if (item instanceof ItemBlock) {
                 name = ((ItemBlock) item).getBlock().getClass().getSimpleName().toLowerCase();
             }
             NonNullList<ItemStack> list = NonNullList.create();
             item.getSubItems(item.getCreativeTab(), list);
-            if (list.size() > 0) {
+            if (!list.isEmpty()) {
                 for (ItemStack i : list) {
                     ModelLoader.setCustomModelResourceLocation(item, i.getItemDamage(),
                             new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
@@ -127,20 +138,6 @@ public class ClientProxy extends CommonProxy {
                 ModelLoader.setCustomModelResourceLocation(item, 0,
                         new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
             }
-        }
-    }
-
-    private void registerPendingIBlockColorBlocks() {
-        BlockColors colors = Minecraft.getMinecraft().getBlockColors();
-        for (BlockDynamicColor b : RegistryBlocks.pendingIBlockColorBlocks) {
-            colors.registerBlockColorHandler(b::getColorMultiplier, (Block) b);
-        }
-    }
-
-    private void registerPendingIItemColorItems() {
-        ItemColors colors = Minecraft.getMinecraft().getItemColors();
-        for (ItemDynamicColor i : RegistryItems.pendingDynamicColorItems) {
-            colors.registerItemColorHandler(i::getColorFromItemstack, (Item) i);
         }
     }
 
@@ -173,9 +170,9 @@ public class ClientProxy extends CommonProxy {
         GuiType type = GuiType.values()[MathHelper.clamp(ID, 0, GuiType.values().length - 1)];
         Class<? extends TileEntity> required = type.requiredTileEntity;
         TileEntity present = null;
-        if(required != null) {
+        if (required != null) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-            if(te != null && required.isAssignableFrom(te.getClass())) {
+            if (te != null && required.isAssignableFrom(te.getClass())) {
                 present = te;
             } else {
                 return null;
@@ -192,13 +189,13 @@ public class ClientProxy extends CommonProxy {
                 return new GuiContainerEnergyHatch((TileEnergyHatch) present, player);
             case BLUEPRINT_PREVIEW:
                 ItemStack stack;
-                if(x == 0) {
+                if (x == 0) {
                     stack = Minecraft.getMinecraft().player.getHeldItemMainhand();
                 } else {
                     stack = Minecraft.getMinecraft().player.getHeldItemOffhand();
                 }
                 DynamicMachine machine = ItemBlueprint.getAssociatedMachine(stack);
-                if(machine != null) {
+                if (machine != null) {
                     return new GuiScreenBlueprint(machine);
                 }
                 break;

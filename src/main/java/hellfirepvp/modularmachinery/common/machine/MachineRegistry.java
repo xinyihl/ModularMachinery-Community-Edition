@@ -14,9 +14,7 @@ import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.data.DataLoadProfiler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.RegistryNamespacedDefaultedByKey;
 import net.minecraftforge.fml.common.ProgressManager;
-import net.minecraftforge.registries.*;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -31,27 +29,17 @@ import java.util.*;
  */
 public class MachineRegistry implements Iterable<DynamicMachine> {
 
-    private static MachineRegistry INSTANCE = new MachineRegistry();
-    private static Map<ResourceLocation, DynamicMachine> REGISTRY_MACHINERY = new HashMap<>();
+    private static final MachineRegistry INSTANCE = new MachineRegistry();
+    private static final Map<ResourceLocation, DynamicMachine> REGISTRY_MACHINERY = new HashMap<>();
 
-    private MachineRegistry() {}
+    private MachineRegistry() {
+    }
 
     public static MachineRegistry getRegistry() {
         return INSTANCE;
     }
 
-    @Override
-    public Iterator<DynamicMachine> iterator() {
-        return REGISTRY_MACHINERY.values().iterator();
-    }
-
-    @Nullable
-    public DynamicMachine getMachine(@Nullable ResourceLocation name) {
-        if(name == null) return null;
-        return REGISTRY_MACHINERY.get(name);
-    }
-
-    public Collection<DynamicMachine> loadMachines(@Nullable EntityPlayer player) {
+    public static Collection<DynamicMachine> loadMachines(@Nullable EntityPlayer player) {
         ProgressManager.ProgressBar barMachinery = ProgressManager.push("MachineRegistry", 3);
         barMachinery.step("Discovering Files");
         DataLoadProfiler profiler = new DataLoadProfiler();
@@ -69,7 +57,7 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         Map<String, Exception> failures = MachineLoader.captureFailedAttempts();
 
         failed.setCounter(failures.size());
-        if(failures.size() > 0) {
+        if (!failures.isEmpty()) {
             ModularMachinery.log.warn("Encountered " + failures.size() + " problems while loading variables!");
             for (String fileName : failures.keySet()) {
                 ModularMachinery.log.warn("Couldn't load variables of " + fileName);
@@ -86,7 +74,7 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         success.setCounter(found.size());
         failures = MachineLoader.captureFailedAttempts();
         failed.setCounter(failures.size());
-        if(failures.size() > 0) {
+        if (!failures.isEmpty()) {
             ModularMachinery.log.warn("Encountered " + failures.size() + " problems while loading machinery!");
             for (String fileName : failures.keySet()) {
                 ModularMachinery.log.warn("Couldn't load machinery " + fileName);
@@ -98,10 +86,21 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         return ImmutableList.copyOf(found);
     }
 
-    public void registerMachines(Collection<DynamicMachine> machines) {
+    public static void registerMachines(Collection<DynamicMachine> machines) {
         for (DynamicMachine machine : machines) {
             REGISTRY_MACHINERY.put(machine.getRegistryName(), machine);
         }
+    }
+
+    @Nullable
+    public DynamicMachine getMachine(@Nullable ResourceLocation name) {
+        if (name == null) return null;
+        return REGISTRY_MACHINERY.get(name);
+    }
+
+    @Override
+    public Iterator<DynamicMachine> iterator() {
+        return REGISTRY_MACHINERY.values().iterator();
     }
 
 }

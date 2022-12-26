@@ -21,20 +21,18 @@ import net.minecraft.util.ResourceLocation;
  */
 public class RequirementTypesMM {
 
-    private RequirementTypesMM() {}
-
     public static final ResourceLocation KEY_REQUIREMENT_ITEM = new ResourceLocation(ModularMachinery.MODID, "item");
     public static final ResourceLocation KEY_REQUIREMENT_FLUID = new ResourceLocation(ModularMachinery.MODID, "fluid");
     public static final ResourceLocation KEY_REQUIREMENT_GAS = new ResourceLocation(ModularMachinery.MODID, "gas");
     public static final ResourceLocation KEY_REQUIREMENT_ENERGY = new ResourceLocation(ModularMachinery.MODID, "energy");
-
+    //Helper type as target for duration-type recipe modifiers
+    public static final ResourceLocation KEY_REQUIREMENT_DURATION = new ResourceLocation(ModularMachinery.MODID, "duration");
     public static RequirementTypeItem REQUIREMENT_ITEM;
     public static RequirementTypeFluid REQUIREMENT_FLUID;
     public static RequirementTypeEnergy REQUIREMENT_ENERGY;
     public static RequirementTypeGas REQUIREMENT_GAS;
-
-    //Helper type as target for duration-type recipe modifiers
-    public static final ResourceLocation KEY_REQUIREMENT_DURATION = new ResourceLocation(ModularMachinery.MODID, "duration");
     public static RequirementDuration REQUIREMENT_DURATION;
+    private RequirementTypesMM() {
+    }
 
 }

@@ -31,10 +31,20 @@ public class PktCopyToClipboard implements IMessage, IMessageHandler<PktCopyToCl
 
     private String strToCopy;
 
-    public PktCopyToClipboard() {}
+    public PktCopyToClipboard() {
+    }
 
     public PktCopyToClipboard(String strToCopy) {
         this.strToCopy = strToCopy;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void handleCopy(String strToCopy) {
+        Minecraft.getMinecraft().addScheduledTask(() -> {
+            if (Desktop.isDesktopSupported()) {
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(strToCopy), null);
+            }
+        });
     }
 
     @Override
@@ -47,23 +57,14 @@ public class PktCopyToClipboard implements IMessage, IMessageHandler<PktCopyToCl
 
     @Override
     public void toBytes(ByteBuf buf) {
-        byte[] str = strToCopy.getBytes(StandardCharsets.UTF_8);
-        buf.writeInt(str.length);
-        buf.writeBytes(str);
+        byte[] strBytes = strToCopy.getBytes(StandardCharsets.UTF_8);
+        buf.writeInt(strBytes.length);
+        buf.writeBytes(strBytes);
     }
 
     @Override
     public IMessage onMessage(PktCopyToClipboard message, MessageContext ctx) {
         handleCopy(message.strToCopy);
         return null;
-    }
-
-    @SideOnly(Side.CLIENT)
-    private void handleCopy(String strToCopy) {
-        Minecraft.getMinecraft().addScheduledTask(() -> {
-            if(Desktop.isDesktopSupported()) {
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(strToCopy), null);
-            }
-        });
     }
 }

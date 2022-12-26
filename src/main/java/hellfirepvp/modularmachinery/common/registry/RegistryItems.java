@@ -8,13 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.registry;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.item.*;
 import net.minecraft.item.Item;
-import net.minecraftforge.registries.IForgeRegistry;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,16 +28,16 @@ import static hellfirepvp.modularmachinery.common.lib.ItemsMM.*;
  */
 public class RegistryItems {
 
-    private static List<Item> itemModelRegister = Lists.newArrayList();
-    static List<Item> itemBlocks = Lists.newArrayList();
-    public static List<ItemDynamicColor> pendingDynamicColorItems = new LinkedList<>();
+    public static final List<ItemDynamicColor> pendingDynamicColorItems = new LinkedList<>();
+    static final List<Item> itemBlocks = new ArrayList<>();
+    private static final List<Item> itemModelRegister = new ArrayList<>();
 
     public static void initialize() {
         blueprint = prepareRegister(new ItemBlueprint());
         modularium = prepareRegister(new ItemModularium());
         constructTool = prepareRegister(new ItemConstructTool());
         redstoneSignal = prepareRegister(new ItemRedstoneSignal());
-        catalyst=prepareRegister(new ItemCatalyst());
+        catalyst = prepareRegister(new ItemCatalyst());
 
         registerItemBlocks();
         registerItemModels();
@@ -46,14 +45,16 @@ public class RegistryItems {
 
     private static <T extends Item> T prepareRegister(T item) {
         String name = item.getClass().getSimpleName().toLowerCase();
-        item.setRegistryName(name).setUnlocalizedName(ModularMachinery.MODID + '.' + name);
+        item.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
+
+
         return register(item);
     }
 
     private static <T extends Item> T register(T item) {
         itemModelRegister.add(item);
         CommonProxy.registryPrimer.register(item);
-        if(item instanceof ItemDynamicColor) {
+        if (item instanceof ItemDynamicColor) {
             pendingDynamicColorItems.add((ItemDynamicColor) item);
         }
         return item;
@@ -65,7 +66,7 @@ public class RegistryItems {
 
     private static void registerItemModels() {
         itemModelRegister.stream()
-                .filter(i -> !(i instanceof ItemBlockCustomName))
+                .filter(item -> !(item instanceof ItemBlockCustomName))
                 .forEach(ModularMachinery.proxy::registerItemModel);
     }
 

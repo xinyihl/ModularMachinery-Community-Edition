@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
+import cofh.redstoneflux.api.IEnergyConnection;
 import cofh.redstoneflux.api.IEnergyReceiver;
 import cofh.redstoneflux.api.IEnergyStorage;
 import com.brandon3055.draconicevolution.DEFeatures;
@@ -15,6 +16,7 @@ import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore
 import com.google.common.collect.Iterables;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
 import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
@@ -38,6 +40,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.RecursiveTask;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -48,13 +51,25 @@ import java.util.List;
  */
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "ic2")
 public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySource {
-
     private BlockPos foundCore = null;
 
-    public TileEnergyOutputHatch() {}
+    private FindTask findTask = null;
+
+    public TileEnergyOutputHatch() {
+    }
 
     public TileEnergyOutputHatch(EnergyHatchSize size) {
         super(size, IOType.OUTPUT);
+    }
+
+    @Override
+    public boolean canExtract() {
+        return true;
+    }
+
+    @Override
+    public boolean canReceive() {
+        return false;
     }
 
     @Override
@@ -80,17 +95,17 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
                 this.energy -= totalTransferred;
             }
             if (transferCap > 0) {
+                int transferred;
+
                 if (Mods.REDSTONEFLUXAPI.isPresent()) {
-                    int transferred = attemptFERFTransfer(face, convertDownEnergy(transferCap));
-                    transferCap -= transferred;
-                    this.energy -= transferred;
+                    transferred = attemptFERFTransfer(face, convertDownEnergy(transferCap));
                 } else {
-                    int transferred = attemptFETransfer(face, convertDownEnergy(transferCap));
-                    transferCap -= transferred;
-                    this.energy -= transferred;
+                    transferred = attemptFETransfer(face, convertDownEnergy(transferCap));
                 }
+                transferCap -= transferred;
+                this.energy -= transferred;
             }
-            if(transferCap <= 0) {
+            if (transferCap <= 0) {
                 break;
             }
         }
@@ -122,25 +137,25 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
     @Optional.Method(modid = "draconicevolution")
     private BlockPos findCore(BlockPos before) {
-        List<TileEnergyStorageCore> list = new LinkedList<>();
-        int range = 16;
-
-        Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
-
-        for (BlockPos blockPos : positions) {
-            if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
-                TileEntity tile = world.getTileEntity(blockPos);
-                if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
-                    list.add(((TileEnergyStorageCore) tile));
+        if (findTask != null) {
+            if (findTask.isDone()) {
+                BlockPos result;
+                try {
+                    result = findTask.get();
+                } catch (Exception e) {
+                    result = null;
+                    ModularMachinery.log.warn(e);
                 }
+
+                findTask = null;
+                return result;
             }
+        } else {
+            findTask = new FindTask(before);
+            ModularMachinery.FORK_JOIN_POOL.submit(findTask);
         }
-        if (before != null) {
-            list.removeIf(tile -> tile.getPos().equals(before));
-        }
-        Collections.shuffle(list);
-        TileEnergyStorageCore first = Iterables.getFirst(list, null);
-        return first == null ? null : first.getPos();
+
+        return before;
     }
 
     @Optional.Method(modid = "gregtech")
@@ -157,7 +172,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
         TileEntity tileEntity = getWorld().getTileEntity(getPos().offset(face));
         EnumFacing oppositeSide = face.getOpposite();
-        if(tileEntity != null && tileEntity.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, oppositeSide)) {
+        if (tileEntity != null && tileEntity.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, oppositeSide)) {
             IEnergyContainer energyContainer = tileEntity.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, oppositeSide);
             if (energyContainer != null && energyContainer.inputsEnergy(oppositeSide)) {
                 return energyContainer.acceptEnergyFromNetwork(oppositeSide, voltage, transferableAmps)
@@ -173,13 +188,14 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
         int receivedEnergy = 0;
         TileEntity te = world.getTileEntity(at);
-        if(te != null && !(te instanceof TileEnergyHatch)) {
-            if(te.hasCapability(CapabilityEnergy.ENERGY, accessingSide)) {
+        if (te != null && !(te instanceof TileEnergyHatch)) {
+            if (te.hasCapability(CapabilityEnergy.ENERGY, accessingSide)) {
                 net.minecraftforge.energy.IEnergyStorage ce = te.getCapability(CapabilityEnergy.ENERGY, accessingSide);
-                if(ce != null && ce.canReceive()) {
+                if (ce != null && ce.canReceive()) {
                     try {
-                    receivedEnergy = ce.receiveEnergy(maxTransferLeft, false);
-                    } catch (Exception ignored) {}
+                        receivedEnergy = ce.receiveEnergy(maxTransferLeft, false);
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         }
@@ -193,23 +209,26 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
         int receivedEnergy = 0;
         TileEntity te = world.getTileEntity(at);
-        if(te != null && !(te instanceof TileEnergyHatch)) {
-            if(te instanceof cofh.redstoneflux.api.IEnergyReceiver && ((IEnergyReceiver) te).canConnectEnergy(accessingSide)) {
+        if (te != null && !(te instanceof TileEnergyHatch)) {
+            if (te instanceof cofh.redstoneflux.api.IEnergyReceiver && ((IEnergyConnection) te).canConnectEnergy(accessingSide)) {
                 try {
                     receivedEnergy = ((IEnergyReceiver) te).receiveEnergy(accessingSide, maxTransferLeft, false);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
-            if(receivedEnergy <= 0 && te instanceof IEnergyStorage) {
+            if (receivedEnergy <= 0 && te instanceof IEnergyStorage) {
                 try {
                     receivedEnergy = ((IEnergyStorage) te).receiveEnergy(maxTransferLeft, false);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
-            if(receivedEnergy <= 0 && te.hasCapability(CapabilityEnergy.ENERGY, accessingSide)) {
+            if (receivedEnergy <= 0 && te.hasCapability(CapabilityEnergy.ENERGY, accessingSide)) {
                 net.minecraftforge.energy.IEnergyStorage ce = te.getCapability(CapabilityEnergy.ENERGY, accessingSide);
-                if(ce != null && ce.canReceive()) {
+                if (ce != null && ce.canReceive()) {
                     try {
                         receivedEnergy = ce.receiveEnergy(maxTransferLeft, false);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             }
         }
@@ -227,7 +246,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     @Optional.Method(modid = "ic2")
     public void invalidate() {
         super.invalidate();
-        if(!world.isRemote) {
+        if (!world.isRemote) {
             MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
         }
     }
@@ -268,4 +287,35 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         };
     }
 
+    public class FindTask extends RecursiveTask<BlockPos> {
+        private final BlockPos before;
+
+        public FindTask(BlockPos before) {
+            this.before = before;
+        }
+
+        @Optional.Method(modid = "draconicevolution")
+        @Override
+        protected BlockPos compute() {
+            List<TileEnergyStorageCore> list = new LinkedList<>();
+            int range = 16;
+
+            Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
+
+            for (BlockPos blockPos : positions) {
+                if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
+                    TileEntity tile = world.getTileEntity(blockPos);
+                    if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
+                        list.add(((TileEnergyStorageCore) tile));
+                    }
+                }
+            }
+            if (before != null) {
+                list.removeIf(tile -> tile.getPos().equals(before));
+            }
+            Collections.shuffle(list);
+            TileEnergyStorageCore first = Iterables.getFirst(list, null);
+            return first == null ? null : first.getPos();
+        }
+    }
 }

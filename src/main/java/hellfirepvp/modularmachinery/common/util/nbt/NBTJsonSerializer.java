@@ -8,7 +8,10 @@
 
 package hellfirepvp.modularmachinery.common.util.nbt;
 
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.Constants;
 
 import java.util.Set;
@@ -25,32 +28,17 @@ public class NBTJsonSerializer {
     public static String serializeNBT(NBTBase nbtBase) {
         StringBuilder sb = new StringBuilder();
         switch (nbtBase.getId()) {
-            case Constants.NBT.TAG_BYTE: {
-                sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
-            }
-            case Constants.NBT.TAG_SHORT: {
-                sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
-            }
-            case Constants.NBT.TAG_INT: {
-                sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
-            }
-            case Constants.NBT.TAG_LONG: {
-                sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
-            }
-            case Constants.NBT.TAG_FLOAT: {
-                sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
-            }
+            case Constants.NBT.TAG_BYTE:
+            case Constants.NBT.TAG_SHORT:
+            case Constants.NBT.TAG_INT:
+            case Constants.NBT.TAG_LONG:
+            case Constants.NBT.TAG_FLOAT:
             case Constants.NBT.TAG_DOUBLE: {
                 sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
                 break;
             }
             case Constants.NBT.TAG_STRING: {
-                sb.append(nbtBase.toString());
+                sb.append(nbtBase);
                 break;
             }
             case Constants.NBT.TAG_LIST: {

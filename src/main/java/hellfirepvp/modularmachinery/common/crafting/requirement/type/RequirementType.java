@@ -9,10 +9,8 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement.type;
 
 import com.google.gson.JsonObject;
-import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import javax.annotation.Nullable;

@@ -9,15 +9,14 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,27 +33,28 @@ public class FuelItemHelper {
 
     public static void initialize() {
         NonNullList<ItemStack> stacks = NonNullList.create();
-        for (Item i : ForgeRegistries.ITEMS) {
-            CreativeTabs tab = i.getCreativeTab();
-            if(tab != null) {
-                i.getSubItems(tab, stacks);
+        for (Item item : ForgeRegistries.ITEMS) {
+            CreativeTabs tab = item.getCreativeTab();
+            if (tab != null) {
+                item.getSubItems(tab, stacks);
             }
         }
         List<ItemStack> out = new LinkedList<>();
         for (ItemStack stack : stacks) {
             try {
                 int burn = TileEntityFurnace.getItemBurnTime(stack); //Respects vanilla values.
-                if(burn > 0) {
+                if (burn > 0) {
                     out.add(stack);
                 }
-            } catch (Exception exc) {}
+            } catch (Exception exc) {
+            }
         }
         knownFuelStacks = ImmutableList.copyOf(out);
     }
 
     public static List<ItemStack> getFuelItems() {
-        if(knownFuelStacks == null) {
-            return Lists.newArrayList();
+        if (knownFuelStacks == null) {
+            return new ArrayList<>(0);
         }
         return knownFuelStacks;
     }

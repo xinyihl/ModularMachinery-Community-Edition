@@ -8,10 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
 
 /**
@@ -26,15 +24,15 @@ public class CopyHandlerHelper {
     public static HybridTank copyTank(HybridTank tank) {
         NBTTagCompound cmp = new NBTTagCompound();
         tank.writeToNBT(cmp);
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             writeGasTag(tank, cmp);
         }
         HybridTank newTank = new HybridTank(tank.getCapacity());
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             newTank = buildMekGasTank(tank.getCapacity());
         }
         newTank.readFromNBT(cmp);
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             readGasTag(newTank, cmp);
         }
         return newTank;
@@ -47,14 +45,14 @@ public class CopyHandlerHelper {
 
     @Optional.Method(modid = "mekanism")
     private static void writeGasTag(HybridTank tank, NBTTagCompound compound) {
-        if(tank instanceof HybridGasTank) {
+        if (tank instanceof HybridGasTank) {
             ((HybridGasTank) tank).writeGasToNBT(compound);
         }
     }
 
     @Optional.Method(modid = "mekanism")
     private static void readGasTag(HybridTank tank, NBTTagCompound compound) {
-        if(tank instanceof HybridGasTank) {
+        if (tank instanceof HybridGasTank) {
             ((HybridGasTank) tank).readGasFromNBT(compound);
         }
     }

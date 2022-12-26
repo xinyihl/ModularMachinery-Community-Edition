@@ -47,6 +47,12 @@ public class CraftCheck {
         return new CraftCheck(ResultType.FAILURE_MISSING_INPUT, unlocMessage);
     }
 
+    public static CraftCheck deserialize(NBTTagCompound tag) {
+        ResultType type = ResultType.values()[tag.getInteger("type")];
+        String unlocMessage = tag.getString("message");
+        return new CraftCheck(type, unlocMessage);
+    }
+
     public ResultType getType() {
         return type;
     }
@@ -70,13 +76,7 @@ public class CraftCheck {
         return tag;
     }
 
-    public static CraftCheck deserialize(NBTTagCompound tag) {
-        ResultType type = ResultType.values()[tag.getInteger("type")];
-        String unlocMessage = tag.getString("message");
-        return new CraftCheck(type, unlocMessage);
-    }
-
-    public static enum ResultType {
+    public enum ResultType {
 
         //requirement check succeeded.
         SUCCESS,

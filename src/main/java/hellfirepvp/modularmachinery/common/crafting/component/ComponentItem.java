@@ -17,7 +17,6 @@
 package hellfirepvp.modularmachinery.common.crafting.component;
 
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 
 import javax.annotation.Nullable;
 

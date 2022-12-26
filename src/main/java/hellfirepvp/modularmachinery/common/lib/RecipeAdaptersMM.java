@@ -19,8 +19,9 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
  */
 public class RecipeAdaptersMM {
 
-    private RecipeAdaptersMM() {}
-
     public static RecipeAdapter MINECRAFT_FURNACE;
+
+    private RecipeAdaptersMM() {
+    }
 
 }

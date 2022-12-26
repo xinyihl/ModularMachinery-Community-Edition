@@ -18,9 +18,8 @@ import net.minecraft.block.state.IBlockState;
  * Date: 08.07.2017 / 14:59
  */
 public interface BlockVariants {
+    Iterable<IBlockState> getValidStates();
 
-    public Iterable<IBlockState> getValidStates();
-
-    public String getBlockStateName(IBlockState state);
+    String getBlockStateName(IBlockState state);
 
 }

@@ -32,9 +32,11 @@ public class TileEntitySynchronized extends TileEntity {
         readCustomNBT(compound);
     }
 
-    public void readCustomNBT(NBTTagCompound compound) {}
+    public void readCustomNBT(NBTTagCompound compound) {
+    }
 
-    public void readNetNBT(NBTTagCompound compound) {}
+    public void readNetNBT(NBTTagCompound compound) {
+    }
 
     public final NBTTagCompound writeToNBT(NBTTagCompound compound) {
         compound = super.writeToNBT(compound);
@@ -42,9 +44,11 @@ public class TileEntitySynchronized extends TileEntity {
         return compound;
     }
 
-    public void writeCustomNBT(NBTTagCompound compound) {}
+    public void writeCustomNBT(NBTTagCompound compound) {
+    }
 
-    public void writeNetNBT(NBTTagCompound compound) {}
+    public void writeNetNBT(NBTTagCompound compound) {
+    }
 
     @Override
     public final SPacketUpdateTileEntity getUpdatePacket() {

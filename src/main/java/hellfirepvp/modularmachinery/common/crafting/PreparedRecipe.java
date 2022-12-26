@@ -22,20 +22,20 @@ import java.util.List;
  */
 public interface PreparedRecipe {
 
-    public String getFilePath();
+    String getFilePath();
 
-    public ResourceLocation getRecipeRegistryName();
+    ResourceLocation getRecipeRegistryName();
 
-    public ResourceLocation getAssociatedMachineName();
+    ResourceLocation getAssociatedMachineName();
 
-    public int getTotalProcessingTickTime();
+    int getTotalProcessingTickTime();
 
-    public int getPriority();
+    int getPriority();
 
-    default public boolean voidPerTickFailure() {
+    default boolean voidPerTickFailure() {
         return false;
     }
 
-    public List<ComponentRequirement> getComponents();
+    List<ComponentRequirement> getComponents();
 
 }

@@ -33,12 +33,12 @@ public class ItemBlockCustomName extends ItemBlock {
     }
 
     @Override
-    public String getUnlocalizedName(ItemStack stack) {
-        Block b = getBlock();
-        if (b instanceof BlockCustomName) {
-            String identifier = ((BlockCustomName) b).getIdentifierForMeta(stack.getItemDamage());
-            return super.getUnlocalizedName(stack) + "." + identifier;
+    public String getUnlocalizedNameInefficiently(ItemStack stack) {
+        Block block = getBlock();
+        if (block instanceof BlockCustomName) {
+            String identifier = ((BlockCustomName) block).getIdentifierForMeta(stack.getItemDamage());
+            return super.getUnlocalizedNameInefficiently(stack) + "." + identifier;
         }
-        return super.getUnlocalizedName(stack);
+        return super.getUnlocalizedNameInefficiently(stack);
     }
 }

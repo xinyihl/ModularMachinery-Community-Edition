@@ -29,14 +29,14 @@ public class HybridFluid {
     }
 
     public int getAmount() {
-        if(underlyingFluid == null) {
+        if (underlyingFluid == null) {
             return 0;
         }
         return underlyingFluid.amount;
     }
 
     public void setAmount(int amount) {
-        if(underlyingFluid != null) {
+        if (underlyingFluid != null) {
             underlyingFluid.amount = amount;
         }
     }
@@ -47,7 +47,7 @@ public class HybridFluid {
     }
 
     public HybridFluid copy() {
-        if(underlyingFluid == null) {
+        if (underlyingFluid == null) {
             return new HybridFluid(null);
         }
         return new HybridFluid(this.underlyingFluid.copy());

@@ -29,10 +29,10 @@ public class ItemBlockMachineComponentCustomName extends ItemBlockCustomName imp
 
     @Override
     public int getColorFromItemstack(ItemStack stack, int tintIndex) {
-        if(stack.isEmpty()) {
+        if (stack.isEmpty()) {
             return 0;
         }
-        if(stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() instanceof BlockMachineComponent) {
+        if (stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock() instanceof BlockMachineComponent) {
             return Config.machineColor;
         }
         return 0;

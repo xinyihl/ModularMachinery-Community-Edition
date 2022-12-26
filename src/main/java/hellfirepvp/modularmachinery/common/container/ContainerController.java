@@ -44,22 +44,22 @@ public class ContainerController extends ContainerBase<TileMachineController> {
             ItemStack itemstack1 = slot.getStack();
             itemstack = itemstack1.copy();
 
-            if(index >= 0 && index < 36) {
-                if(!itemstack1.isEmpty() && itemstack1.getItem() instanceof ItemBlueprint) {
+            if (index < 36) {
+                if (!itemstack1.isEmpty() && itemstack1.getItem() instanceof ItemBlueprint) {
                     Slot sb = this.inventorySlots.get(this.slotBlueprint.slotNumber);
-                    if(!sb.getHasStack()) {
-                        if(!this.mergeItemStack(itemstack1, sb.slotNumber, sb.slotNumber + 1, false)) {
+                    if (!sb.getHasStack()) {
+                        if (!this.mergeItemStack(itemstack1, sb.slotNumber, sb.slotNumber + 1, false)) {
                             return ItemStack.EMPTY;
                         }
                     }
                 }
             }
 
-            if (index >= 0 && index < 27) {
+            if (index < 27) {
                 if (!this.mergeItemStack(itemstack1, 27, 36, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (index >= 27 && index < 36) {
+            } else if (index < 36) {
                 if (!this.mergeItemStack(itemstack1, 0, 27, false)) {
                     return ItemStack.EMPTY;
                 }
@@ -91,7 +91,7 @@ public class ContainerController extends ContainerBase<TileMachineController> {
 
         @Override
         public boolean isItemValid(@Nonnull ItemStack stack) {
-            if(!(stack.getItem() instanceof ItemBlueprint)) {
+            if (!(stack.getItem() instanceof ItemBlueprint)) {
                 return false;
             }
             return super.isItemValid(stack);

@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.block.prop;
 
 import net.minecraft.util.IStringSerializable;
-import net.minecraftforge.common.config.Configuration;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -28,11 +27,11 @@ public enum ItemBusSize implements IStringSerializable {
     HUGE(16),
     LUDICROUS(32);
 
-    private int slots;
+    private final int slots;
 
     private final int defaultConfigSize;
 
-    private ItemBusSize(int defaultConfigSize) {
+    ItemBusSize(int defaultConfigSize) {
         this.defaultConfigSize = defaultConfigSize;
         this.slots = this.defaultConfigSize; //Temp. TODO configurable and GUI building
     }

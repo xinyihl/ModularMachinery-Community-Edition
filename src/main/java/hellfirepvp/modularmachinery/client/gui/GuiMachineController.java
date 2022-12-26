@@ -33,7 +33,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
 
     public static final ResourceLocation TEXTURES_CONTROLLER = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guicontroller.png");
 
-    private TileMachineController controller;
+    private final TileMachineController controller;
 
     public GuiMachineController(TileMachineController controller, EntityPlayer opening) {
         super(new ContainerController(controller, opening));
@@ -41,7 +41,8 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
     }
 
     @Override
-    protected void setWidthHeight() {}
+    protected void setWidthHeight() {
+    }
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
@@ -57,7 +58,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         FontRenderer fr = this.fontRenderer;
 
         int redstone = controller.getWorld().getStrongPower(controller.getPos());
-        if(redstone > 0) {
+        if (redstone > 0) {
             String drawnStop = I18n.format("gui.controller.status.redstone_stopped");
             List<String> out = fr.listFormattedStringToWidth(drawnStop, MathHelper.floor(135 * (1 / scale)));
             for (String draw : out) {
@@ -71,36 +72,36 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         }
 
         DynamicMachine machine = controller.getBlueprintMachine();
-        if(machine != null) {
-            String drawnHead = I18n.format("gui.controller.blueprint", "");
+        String drawnHead;
+        if (machine != null) {
+            drawnHead = I18n.format("gui.controller.blueprint", "");
             List<String> out = fr.listFormattedStringToWidth(machine.getLocalizedName(), MathHelper.floor(135 * (1 / scale)));
             fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
             for (String draw : out) {
                 offsetY += 10;
                 fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
             }
-            offsetY += 15;
         } else {
-            String drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
+            drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
             fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
-            offsetY += 15;
         }
+        offsetY += 15;
 
         DynamicMachine found = controller.getFoundMachine();
-        if(found != null) {
-            String drawnHead = I18n.format("gui.controller.structure", "");
+
+        if (found != null) {
+            drawnHead = I18n.format("gui.controller.structure", "");
             List<String> out = fr.listFormattedStringToWidth(found.getLocalizedName(), MathHelper.floor(135 * (1 / scale)));
             fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
             for (String draw : out) {
                 offsetY += 10;
                 fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
             }
-            offsetY += 15;
         } else {
-            String drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));
+            drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));
             fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
-            offsetY += 15;
         }
+        offsetY += 15;
 
         String status = I18n.format("gui.controller.status");
         fr.drawString(status, offsetX, offsetY, 0xFFFFFF);

@@ -29,15 +29,13 @@ import java.util.*;
  */
 public class IOInventory implements IItemHandlerModifiable {
 
-    public boolean allowAnySlots = false;
     private final TileEntitySynchronized owner;
-
-    private Map<Integer, Integer> slotLimits = new HashMap<>(); //Value not present means default, aka 64.
-    private Map<Integer, SlotStackHolder> inventory = new HashMap<>();
-    private int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
-
-    private InventoryUpdateListener listener = null;
+    private final Map<Integer, Integer> slotLimits = new HashMap<>(); //Value not present means default, aka 64.
+    private final Map<Integer, SlotStackHolder> inventory = new HashMap<>();
+    public boolean allowAnySlots = false;
     public List<EnumFacing> accessibleSides = new ArrayList<>();
+    private int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
+    private InventoryUpdateListener listener = null;
 
     private IOInventory(TileEntitySynchronized owner) {
         this.owner = owner;
@@ -58,6 +56,46 @@ public class IOInventory implements IItemHandlerModifiable {
             this.inventory.put(slot, new SlotStackHolder(slot));
         }
         this.accessibleSides = Arrays.asList(accessibleFrom);
+    }
+
+    @Nonnull
+    private static ItemStack copyWithSize(@Nonnull ItemStack stack, int amount) {
+        if (stack.isEmpty() || amount <= 0) return ItemStack.EMPTY;
+        ItemStack copiedStack = stack.copy();
+        copiedStack.setCount(Math.min(amount, stack.getMaxStackSize()));
+        return copiedStack;
+    }
+
+    private static boolean arrayContains(int[] array, int i) {
+        return Arrays.binarySearch(array, i) >= 0;
+    }
+
+    private static boolean canMergeItemStacks(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
+        if (stack.isEmpty() || other.isEmpty() || !stack.isStackable() || !other.isStackable()) {
+            return false;
+        }
+        return stack.isItemEqual(other) && ItemStack.areItemStackTagsEqual(stack, other);
+    }
+
+    public static IOInventory deserialize(TileEntitySynchronized owner, NBTTagCompound tag) {
+        IOInventory inv = new IOInventory(owner);
+        inv.readNBT(tag);
+        return inv;
+    }
+
+    public static IOInventory mergeBuild(TileEntitySynchronized tile, IOInventory... inventories) {
+        IOInventory merged = new IOInventory(tile);
+        int slotOffset = 0;
+        for (IOInventory inventory : inventories) {
+            for (Integer key : inventory.inventory.keySet()) {
+                merged.inventory.put(key + slotOffset, inventory.inventory.get(key));
+            }
+            for (Integer key : inventory.slotLimits.keySet()) {
+                merged.slotLimits.put(key + slotOffset, inventory.slotLimits.get(key));
+            }
+            slotOffset += inventory.inventory.size();
+        }
+        return merged;
     }
 
     public IOInventory setMiscSlots(int... miscSlots) {
@@ -90,10 +128,10 @@ public class IOInventory implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        if(this.inventory.containsKey(slot)) {
+        if (this.inventory.containsKey(slot)) {
             this.inventory.get(slot).itemStack = stack;
-            getOwner().markForUpdate();
-            if(listener != null) {
+            owner.markForUpdate();
+            if (listener != null) {
                 listener.onChange();
             }
         }
@@ -106,7 +144,7 @@ public class IOInventory implements IItemHandlerModifiable {
 
     @Override
     public int getSlotLimit(int slot) {
-        if(slotLimits.containsKey(slot)) {
+        if (slotLimits.containsKey(slot)) {
             return slotLimits.get(slot);
         }
         return 64;
@@ -121,7 +159,7 @@ public class IOInventory implements IItemHandlerModifiable {
     @Override
     @Nonnull
     public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-        if(stack.isEmpty()) return stack;
+        if (stack.isEmpty()) return stack;
         if (!allowAnySlots) {
             if (!arrayContains(inSlots, slot)) return stack;
         }
@@ -129,7 +167,7 @@ public class IOInventory implements IItemHandlerModifiable {
 
         SlotStackHolder holder = this.inventory.get(slot);
         ItemStack toInsert = copyWithSize(stack, stack.getCount());
-        if(!holder.itemStack.isEmpty()) {
+        if (!holder.itemStack.isEmpty()) {
             ItemStack existing = copyWithSize(holder.itemStack, holder.itemStack.getCount());
             int max = Math.min(existing.getMaxStackSize(), getSlotLimit(slot));
             if (existing.getCount() >= max || !canMergeItemStacks(existing, toInsert)) {
@@ -138,8 +176,8 @@ public class IOInventory implements IItemHandlerModifiable {
             int movable = Math.min(max - existing.getCount(), stack.getCount());
             if (!simulate) {
                 holder.itemStack.grow(movable);
-                getOwner().markForUpdate();
-                if(listener != null) {
+                owner.markForUpdate();
+                if (listener != null) {
                     listener.onChange();
                 }
             }
@@ -155,8 +193,8 @@ public class IOInventory implements IItemHandlerModifiable {
             if (max >= stack.getCount()) {
                 if (!simulate) {
                     holder.itemStack = stack.copy();
-                    getOwner().markForUpdate();
-                    if(listener != null) {
+                    owner.markForUpdate();
+                    if (listener != null) {
                         listener.onChange();
                     }
                 }
@@ -166,8 +204,8 @@ public class IOInventory implements IItemHandlerModifiable {
                 copy.setCount(max);
                 if (!simulate) {
                     holder.itemStack = copy;
-                    getOwner().markForUpdate();
-                    if(listener != null) {
+                    owner.markForUpdate();
+                    if (listener != null) {
                         listener.onChange();
                     }
                 }
@@ -186,33 +224,18 @@ public class IOInventory implements IItemHandlerModifiable {
         }
         if (!this.inventory.containsKey(slot)) return ItemStack.EMPTY; //Shouldn't happen anymore here tho
         SlotStackHolder holder = this.inventory.get(slot);
-        if(holder.itemStack.isEmpty()) return ItemStack.EMPTY;
+        if (holder.itemStack.isEmpty()) return ItemStack.EMPTY;
 
         ItemStack extract = copyWithSize(holder.itemStack, Math.min(amount, holder.itemStack.getCount()));
-        if(extract.isEmpty()) return ItemStack.EMPTY;
-        if(!simulate) {
+        if (extract.isEmpty()) return ItemStack.EMPTY;
+        if (!simulate) {
             holder.itemStack = copyWithSize(holder.itemStack, holder.itemStack.getCount() - extract.getCount());
-            if(listener != null) {
+            if (listener != null) {
                 listener.onChange();
             }
         }
-        getOwner().markForUpdate();
+        owner.markForUpdate();
         return extract;
-    }
-
-    @Nonnull
-    private ItemStack copyWithSize(@Nonnull ItemStack stack, int amount) {
-        if (stack.isEmpty()|| amount <= 0) return ItemStack.EMPTY;
-        ItemStack s = stack.copy();
-        s.setCount(Math.min(amount, stack.getMaxStackSize()));
-        return s;
-    }
-
-    private boolean arrayContains(int[] array, int i) {
-        for (int id : array) {
-            if(id == i) return true;
-        }
-        return false;
     }
 
     public NBTTagCompound writeNBT() {
@@ -227,7 +250,7 @@ public class IOInventory implements IItemHandlerModifiable {
             NBTTagCompound holderTag = new NBTTagCompound();
             holderTag.setBoolean("holderEmpty", holder.itemStack.isEmpty());
             holderTag.setInteger("holderId", slot);
-            if(!holder.itemStack.isEmpty()) {
+            if (!holder.itemStack.isEmpty()) {
                 holder.itemStack.writeToNBT(holderTag);
             }
             inv.appendTag(holderTag);
@@ -255,7 +278,7 @@ public class IOInventory implements IItemHandlerModifiable {
             int slot = holderTag.getInteger("holderId");
             boolean isEmpty = holderTag.getBoolean("holderEmpty");
             ItemStack stack = ItemStack.EMPTY;
-            if(!isEmpty) {
+            if (!isEmpty) {
                 stack = new ItemStack(holderTag);
             }
             SlotStackHolder holder = new SlotStackHolder(slot);
@@ -268,22 +291,9 @@ public class IOInventory implements IItemHandlerModifiable {
             this.accessibleSides.add(EnumFacing.values()[i]);
         }
 
-        if(listener != null) {
+        if (listener != null) {
             listener.onChange();
         }
-    }
-
-    private boolean canMergeItemStacks(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
-        if (stack.isEmpty() || other.isEmpty() || !stack.isStackable() || !other.isStackable()) {
-            return false;
-        }
-        return stack.isItemEqual(other) && ItemStack.areItemStackTagsEqual(stack, other);
-    }
-
-    public static IOInventory deserialize(TileEntitySynchronized owner, NBTTagCompound tag) {
-        IOInventory inv = new IOInventory(owner);
-        inv.readNBT(tag);
-        return inv;
     }
 
     public boolean hasCapability(EnumFacing facing) {
@@ -291,7 +301,7 @@ public class IOInventory implements IItemHandlerModifiable {
     }
 
     public IItemHandlerModifiable getCapability(EnumFacing facing) {
-        if(hasCapability(facing)) {
+        if (hasCapability(facing)) {
             return this;
         }
         return null;
@@ -310,21 +320,6 @@ public class IOInventory implements IItemHandlerModifiable {
         f = f / (float) getSlots();
         return MathHelper.floor(f * 14.0F) + (i > 0 ? 1 : 0);
 
-    }
-
-    public static IOInventory mergeBuild(TileEntitySynchronized tile, IOInventory... inventories) {
-        IOInventory merged = new IOInventory(tile);
-        int slotOffset = 0;
-        for (IOInventory inventory : inventories) {
-            for (Integer key : inventory.inventory.keySet()) {
-                merged.inventory.put(key + slotOffset, inventory.inventory.get(key));
-            }
-            for (Integer key : inventory.slotLimits.keySet()) {
-                merged.slotLimits.put(key + slotOffset, inventory.slotLimits.get(key));
-            }
-            slotOffset += inventory.inventory.size();
-        }
-        return merged;
     }
 
     private static class SlotStackHolder {

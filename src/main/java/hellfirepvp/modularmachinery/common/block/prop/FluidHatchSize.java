@@ -8,14 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.block.prop;
 
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import hellfirepvp.modularmachinery.common.util.HybridGasTank;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import net.minecraft.util.IStringSerializable;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
 
 /**
@@ -26,7 +24,6 @@ import net.minecraftforge.fml.common.Optional;
  * Date: 07.07.2017 / 18:31
  */
 public enum FluidHatchSize implements IStringSerializable {
-
     TINY(100),
     SMALL(400),
     NORMAL(1000),
@@ -36,17 +33,22 @@ public enum FluidHatchSize implements IStringSerializable {
     LUDICROUS(16000),
     VACUUM(32000);
 
-    private int size;
-
     private final int defaultConfigurationValue;
+    private int size;
 
     FluidHatchSize(int defaultConfigurationValue) {
         this.defaultConfigurationValue = defaultConfigurationValue;
     }
 
+    public static void loadFromConfig(Configuration cfg) {
+        for (FluidHatchSize size : values()) {
+            size.size = cfg.getInt("size", "fluidhatch." + size.name().toUpperCase(), size.defaultConfigurationValue, 1, Integer.MAX_VALUE, "Defines the tank size for the size-type of fluid hatch.");
+        }
+    }
+
     public HybridTank buildTank(TileEntitySynchronized tileEntity, boolean canFill, boolean canDrain) {
         HybridTank tank;
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             tank = buildMekTank(tileEntity);
         } else {
             tank = buildDefaultTank(tileEntity);
@@ -84,12 +86,6 @@ public enum FluidHatchSize implements IStringSerializable {
     @Override
     public String getName() {
         return name().toLowerCase();
-    }
-
-    public static void loadFromConfig(Configuration cfg) {
-        for (FluidHatchSize size : values()) {
-            size.size = cfg.getInt("size", "fluidhatch." + size.name().toUpperCase(), size.defaultConfigurationValue, 1, Integer.MAX_VALUE, "Defines the tank size for the size-type of fluid hatch.");
-        }
     }
 
 }

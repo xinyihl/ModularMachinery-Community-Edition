@@ -17,7 +17,9 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.*;
+import hellfirepvp.modularmachinery.common.util.IOInventory;
+import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -25,6 +27,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -101,10 +104,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 break;
         }
         item.chance = this.chance;
-        if(this.tag != null) {
+        if (this.tag != null) {
             item.tag = this.tag.copy();
         }
-        if(this.previewDisplayTag != null) {
+        if (this.previewDisplayTag != null) {
             item.previewDisplayTag = this.previewDisplayTag.copy();
         }
         return item;
@@ -132,10 +135,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         }
 
         item.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
-        if(this.tag != null) {
+        if (this.tag != null) {
             item.tag = this.tag.copy();
         }
-        if(this.previewDisplayTag != null) {
+        if (this.previewDisplayTag != null) {
             item.previewDisplayTag = this.previewDisplayTag.copy();
         }
         return item;
@@ -177,7 +180,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = this.getRequirementType().getRegistryName();
         return String.format("component.missing.%s.%s.%s",
-                compKey.getResourceDomain(), compKey.getResourcePath(), ioType.name().toLowerCase());
+                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
@@ -192,75 +195,74 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         IOInventory handler = (IOInventory) component.getProvidedComponent();
-        switch (getActionType()) {
-            case INPUT:
-                switch (this.requirementType) {
-                    case ITEMSTACKS:
-                        ItemStack inReq = this.required.copy();
-                        int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false));
-                        inReq.setCount(amt);
-                        if(ItemUtils.consumeFromInventory(handler, inReq, true, this.tag)) {
-                            return CraftCheck.success();
-                        }
-                        break;
-                    case OREDICT:
-                        int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
-                        if(ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag)) {
-                            return CraftCheck.success();
-                        }
-                        break;
-                    case FUEL:
-                        int inFuel = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                        if(ItemUtils.consumeFromInventoryFuel(handler, inFuel, true, this.tag) <= 0) {
-                            return CraftCheck.success();
-                        }
-                        break;
+
+        if (getActionType() == IOType.INPUT) {
+            switch (this.requirementType) {
+                case ITEMSTACKS:
+                    ItemStack inReq = this.required.copy();
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false));
+                    inReq.setCount(amt);
+                    if (ItemUtils.consumeFromInventory(handler, inReq, true, this.tag)) {
+                        return CraftCheck.success();
+                    }
+                    break;
+                case OREDICT:
+                    int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
+                    if (ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag)) {
+                        return CraftCheck.success();
+                    }
+                    break;
+                case FUEL:
+                    int inFuel = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
+                    if (ItemUtils.consumeFromInventoryFuel(handler, inFuel, true, this.tag) <= 0) {
+                        return CraftCheck.success();
+                    }
+                    break;
+            }
+            return CraftCheck.failure("craftcheck.failure.item.input");
+        } else if (getActionType() == IOType.OUTPUT) {
+
+            for (ComponentOutputRestrictor restrictor : restrictions) {
+                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
+                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
+
+                    if (inv.exactComponent.equals(component)) {
+                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+                    }
                 }
-                return CraftCheck.failure("craftcheck.failure.item.input");
-            case OUTPUT:
-                handler = CopyHandlerHelper.copyInventory(handler);
+            }
 
-                for (ComponentOutputRestrictor restrictor : restrictions) {
-                    if(restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
-                        ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
+            ItemStack stack = ItemStack.EMPTY;
+            if (oreDictName != null) {
+                for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
+                    if (!oreInstance.isEmpty()) {
+                        stack = ItemUtils.copyStackWithSize(oreInstance, this.countIOBuffer);
 
-                        if(inv.exactComponent.equals(component)) {
-                            ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+                        if (!stack.isEmpty()) { //Try all options first..
+                            break;
                         }
                     }
                 }
 
-                ItemStack stack = ItemStack.EMPTY;
-                if(oreDictName != null) {
-                    for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
-                        if (!oreInstance.isEmpty()) {
-                            stack = ItemUtils.copyStackWithSize(oreInstance, this.countIOBuffer);
+                if (this.countIOBuffer > 0 && stack.isEmpty()) {
+                    throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
+                }
+            } else {
+                stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
+            }
 
-                            if (!stack.isEmpty()) { //Try all options first..
-                                break;
-                            }
-                        }
-                    }
-
-                    if (this.countIOBuffer > 0 && stack.isEmpty()) {
-                        throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
-                    }
-                } else {
-                    stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
-                }
-
-                if(tag != null) {
-                    stack.setTagCompound(tag.copy());
-                }
-                int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
-                if(inserted > 0) {
-                    context.addRestriction(new ComponentOutputRestrictor.RestrictionInventory(ItemUtils.copyStackWithSize(stack, inserted), component));
-                }
-                this.countIOBuffer -= inserted;
-                if(this.countIOBuffer <= 0) {
-                    return CraftCheck.success();
-                }
-                return CraftCheck.failure("craftcheck.failure.item.output.space");
+            if (tag != null) {
+                stack.setTagCompound(tag.copy());
+            }
+            int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
+            if (inserted > 0) {
+                context.addRestriction(new ComponentOutputRestrictor.RestrictionInventory(ItemUtils.copyStackWithSize(stack, inserted), component));
+            }
+            this.countIOBuffer -= inserted;
+            if (this.countIOBuffer <= 0) {
+                return CraftCheck.success();
+            }
+            return CraftCheck.failure("craftcheck.failure.item.output.space");
         }
         return CraftCheck.skipComponent();
     }
@@ -269,34 +271,33 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         IOInventory handler = (IOInventory) component.getProvidedComponent();
         float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
-        switch (getActionType()) {
-            case INPUT:
-                switch (this.requirementType) {
-                    //If it doesn't consume the item, we only need to see if it's actually there.
-                    case ITEMSTACKS:
-                        ItemStack stackRequired = this.required.copy();
-                        int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false));
-                        stackRequired.setCount(amt);
-                        boolean can = ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
-                        if (chance.canProduce(productionChance)) {
-                            return can;
-                        }
-                        return can && ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
-                    case OREDICT:
-                        int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
-                        can = ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
-                        if (chance.canProduce(productionChance)) {
-                            return can;
-                        }
-                        return can && ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
-                    case FUEL:
-                        int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                        can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, true, this.tag) <= 0;
-                        if (chance.canProduce(productionChance)) {
-                            return can;
-                        }
-                        return can && ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
-                }
+        if (Objects.requireNonNull(getActionType()) == IOType.INPUT) {
+            switch (this.requirementType) {
+                //If it doesn't consume the item, we only need to see if it's actually there.
+                case ITEMSTACKS:
+                    ItemStack stackRequired = this.required.copy();
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false));
+                    stackRequired.setCount(amt);
+                    boolean can = ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
+                    if (chance.canProduce(productionChance)) {
+                        return can;
+                    }
+                    return can && ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
+                case OREDICT:
+                    int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
+                    can = ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
+                    if (chance.canProduce(productionChance)) {
+                        return can;
+                    }
+                    return can && ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
+                case FUEL:
+                    int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
+                    can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, true, this.tag) <= 0;
+                    if (chance.canProduce(productionChance)) {
+                        return can;
+                    }
+                    return can && ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
+            }
         }
         return false;
     }
@@ -304,46 +305,44 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     @Override
     @Nonnull
     public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if(fuelBurntime > 0 && oreDictName == null && required.isEmpty()) {
+        if (fuelBurntime > 0 && oreDictName == null && required.isEmpty()) {
             throw new IllegalStateException("Invalid item output!");
         }
         IOInventory handler = (IOInventory) component.getProvidedComponent();
-        switch (getActionType()) {
-            case OUTPUT:
-                ItemStack stack;
-                if(oreDictName != null) {
-                    stack = Iterables.getFirst(OreDictionary.getOres(oreDictName), ItemStack.EMPTY);
-                    stack = ItemUtils.copyStackWithSize(stack, this.countIOBuffer);
-                } else {
-                    stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
-                }
+        if (Objects.requireNonNull(getActionType()) == IOType.OUTPUT) {
+            ItemStack stack;
+            if (oreDictName != null) {
+                stack = Iterables.getFirst(OreDictionary.getOres(oreDictName), ItemStack.EMPTY);
+                stack = ItemUtils.copyStackWithSize(stack, this.countIOBuffer);
+            } else {
+                stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
+            }
 
-                if(stack.isEmpty()) {
-                    return CraftCheck.success(); //Can't find anything to output. Guess that's a valid state.
-                }
-                if(tag != null) {
-                    stack.setTagCompound(tag);
-                }
-                //If we don't produce the item, we only need to see if there would be space for it at all.
-                int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
-                if (inserted > 0 && chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            if (stack.isEmpty()) {
+                return CraftCheck.success(); //Can't find anything to output. Guess that's a valid state.
+            }
+            if (tag != null) {
+                stack.setTagCompound(tag);
+            }
+            //If we don't produce the item, we only need to see if there would be space for it at all.
+            int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
+            if (inserted > 0 && chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                return CraftCheck.success();
+            }
+            if (inserted > 0) {
+                int actual = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, false);
+                this.countIOBuffer -= actual;
+                if (this.countIOBuffer <= 0) {
                     return CraftCheck.success();
                 }
-                if (inserted > 0) {
-                    int actual = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, false);
-                    this.countIOBuffer -= actual;
-                    if (this.countIOBuffer <= 0) {
-                        return CraftCheck.success();
-                    }
-                    return CraftCheck.partialSuccess();
-                }
-                return CraftCheck.failure("craftcheck.failure.item.output.space");
+                return CraftCheck.partialSuccess();
+            }
+            return CraftCheck.failure("craftcheck.failure.item.output.space");
         }
         return CraftCheck.skipComponent();
     }
 
     public enum ItemRequirementType {
-
         ITEMSTACKS,
         OREDICT,
         FUEL

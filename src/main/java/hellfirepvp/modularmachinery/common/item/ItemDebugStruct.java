@@ -19,7 +19,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -40,23 +39,23 @@ public class ItemDebugStruct extends Item {
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(worldIn.isRemote) return EnumActionResult.SUCCESS;
+        if (worldIn.isRemote) return EnumActionResult.SUCCESS;
         TileEntity te = worldIn.getTileEntity(pos);
-        if(te != null && te instanceof TileMachineController) {
+        if (te instanceof TileMachineController) {
             DynamicMachine dm = ((TileMachineController) te).getBlueprintMachine();
-            if(dm != null) {
+            if (dm != null) {
                 BlockArray pattern = dm.getPattern();
-                if(pattern != null) {
+                if (pattern != null) {
 
                     EnumFacing face = EnumFacing.NORTH;
                     player.sendMessage(new TextComponentString("Attempting structure matching:"));
                     player.sendMessage(new TextComponentString("Structure is facing: " + worldIn.getBlockState(pos).getValue(BlockController.FACING).name()));
                     DynamicMachine.ModifierReplacementMap replacements = dm.getModifiersAsMatchingReplacements();
                     do {
-                        if(face == worldIn.getBlockState(pos).getValue(BlockController.FACING)) {
+                        if (face == worldIn.getBlockState(pos).getValue(BlockController.FACING)) {
                             BlockPos mismatch = pattern.getRelativeMismatchPosition(worldIn, pos, replacements);
-                            if(mismatch != null) {
-                                player.sendMessage(new TextComponentString("Failed at relative position: " + mismatch.toString()));
+                            if (mismatch != null) {
+                                player.sendMessage(new TextComponentString("Failed at relative position: " + mismatch));
                             }
                         }
                         face = face.rotateYCCW();

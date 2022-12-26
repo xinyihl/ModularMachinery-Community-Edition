@@ -50,7 +50,7 @@ public class TooltipEnergyInput extends RequirementTip {
         for (ComponentRequirement<?, ?> energy : filteredComponents) {
             totalEnergyIn += ((RequirementEnergy) energy).getRequiredEnergyPerTick();
         }
-        List<String> tooltip = new ArrayList<>();
+        List<String> tooltip = new ArrayList<>(3);
         if (totalEnergyIn > 0) {
             String energyType = I18n.format(EnergyDisplayUtil.type.getUnlocalizedFormat());
             long energyIn = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyIn);

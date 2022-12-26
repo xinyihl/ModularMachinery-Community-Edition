@@ -41,18 +41,18 @@ public class ContainerItemBus extends ContainerBase<TileItemBus> {
             itemstack = itemstack1.copy();
 
             boolean changed = false;
-            if (index >= 0 && index < 36) {
-                if(this.mergeItemStack(itemstack1, 36, inventorySlots.size(), false)) {
+            if (index < 36) {
+                if (this.mergeItemStack(itemstack1, 36, inventorySlots.size(), false)) {
                     changed = true;
                 }
             }
 
-            if(!changed) {
-                if (index >= 0 && index < 27) {
+            if (!changed) {
+                if (index < 27) {
                     if (!this.mergeItemStack(itemstack1, 27, 36, false)) {
                         return ItemStack.EMPTY;
                     }
-                } else if (index >= 27 && index < 36) {
+                } else if (index < 36) {
                     if (!this.mergeItemStack(itemstack1, 0, 27, false)) {
                         return ItemStack.EMPTY;
                     }

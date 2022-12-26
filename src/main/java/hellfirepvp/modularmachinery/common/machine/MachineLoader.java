@@ -18,13 +18,10 @@ import hellfirepvp.modularmachinery.common.util.BlockInformationVariable;
 import net.minecraft.util.JsonUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -35,18 +32,17 @@ import java.util.Map;
  */
 public class MachineLoader {
 
+    public static final Map<String, BlockArray.BlockInformation> variableContext = new HashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachine.MachineDeserializer())
             .registerTypeHierarchyAdapter(BlockInformationVariable.class, new BlockInformationVariable.Deserializer())
             .registerTypeHierarchyAdapter(ModifierReplacement.class, new ModifierReplacement.Deserializer())
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
             .create();
-
     private static Map<String, Exception> failedAttempts = new HashMap<>();
-    public static Map<String, BlockArray.BlockInformation> variableContext = new HashMap<>();
 
     public static Map<FileType, List<File>> discoverDirectory(File directory) {
-        Map<FileType, List<File>> candidates = new HashMap<>();
+        Map<FileType, List<File>> candidates = new EnumMap<>(FileType.class);
         for (FileType type : FileType.values()) {
             candidates.put(type, Lists.newLinkedList());
         }
@@ -54,15 +50,15 @@ public class MachineLoader {
         directories.add(directory);
         while (!directories.isEmpty()) {
             File dir = directories.remove(0);
-            for (File f : dir.listFiles()) {
-                if(f.isDirectory()) {
-                    directories.addLast(f);
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    directories.addLast(file);
                 } else {
                     //I am *not* taking chances with this ordering
-                    if(FileType.VARIABLES.accepts(f.getName())) {
-                        candidates.get(FileType.VARIABLES).add(f);
-                    } else if(FileType.MACHINE.accepts(f.getName())) {
-                        candidates.get(FileType.MACHINE).add(f);
+                    if (FileType.VARIABLES.accepts(file.getName())) {
+                        candidates.get(FileType.VARIABLES).add(file);
+                    } else if (FileType.MACHINE.accepts(file.getName())) {
+                        candidates.get(FileType.MACHINE).add(file);
                     }
                 }
             }
@@ -73,13 +69,14 @@ public class MachineLoader {
 
     public static List<DynamicMachine> loadMachines(List<File> machineCandidates) {
         List<DynamicMachine> loadedMachines = Lists.newArrayList();
-        for (File f : machineCandidates) {
-            try (InputStreamReader isr = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8)) {
+
+        machineCandidates.forEach(file -> {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 loadedMachines.add(JsonUtils.fromJson(GSON, isr, DynamicMachine.class));
             } catch (Exception exc) {
-                failedAttempts.put(f.getPath(), exc);
+                failedAttempts.put(file.getPath(), exc);
             }
-        }
+        });
         return loadedMachines;
     }
 
@@ -92,19 +89,19 @@ public class MachineLoader {
     public static void prepareContext(List<File> files) {
         variableContext.clear();
 
-        for (File f : files) {
-            try (InputStreamReader isr = new InputStreamReader(new FileInputStream(f))) {
+        files.forEach(file -> {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()))) {
                 Map<String, BlockArray.BlockInformation> variables = JsonUtils.fromJson(GSON, isr, BlockInformationVariable.class).getDefinedVariables();
                 for (String key : variables.keySet()) {
                     variableContext.put(key, variables.get(key));
                 }
             } catch (Exception exc) {
-                failedAttempts.put(f.getPath(), exc);
+                failedAttempts.put(file.getPath(), exc);
             }
-        }
+        });
     }
 
-    public static enum FileType {
+    public enum FileType {
 
         VARIABLES,
         MACHINE;

@@ -11,9 +11,8 @@ package hellfirepvp.modularmachinery.common.crafting.helper;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.*;
+import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -31,8 +30,8 @@ import java.util.List;
 public abstract class ComponentRequirement<T, V extends RequirementType<T, ? extends ComponentRequirement<T, V>>> {
 
     public static final int PRIORITY_WEIGHT_ENERGY = 50_000_000;
-    public static final int PRIORITY_WEIGHT_FLUID  = 100;
-    public static final int PRIORITY_WEIGHT_ITEM   = 50_000;
+    public static final int PRIORITY_WEIGHT_FLUID = 100;
+    public static final int PRIORITY_WEIGHT_ITEM = 50_000;
 
     private final IOType actionType;
     private final V requirementType;
@@ -52,12 +51,12 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         return actionType;
     }
 
-    public final void setTag(ComponentSelectorTag tag) {
-        this.tag = tag;
-    }
-
     public final ComponentSelectorTag getTag() {
         return tag;
+    }
+
+    public final void setTag(ComponentSelectorTag tag) {
+        this.tag = tag;
     }
 
     public int getSortingWeight() {
@@ -69,12 +68,12 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
      * - {@link #startCrafting(ProcessingComponent, RecipeCraftingContext, ResultChance)}
      * - {@link #finishCrafting(ProcessingComponent, RecipeCraftingContext, ResultChance)}
      * - {@link #canStartCrafting(ProcessingComponent, RecipeCraftingContext, List)}
-     *
+     * <p>
      * and for {@link PerTick} instances:
      * - {@link PerTick#doIOTick(ProcessingComponent, RecipeCraftingContext)}
      *
      * @param component The component to test
-     * @param ctx The context to test in
+     * @param ctx       The context to test in
      * @return true, if the component is valid for further processing by the specified methods, false otherwise
      */
     public abstract boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx);
@@ -111,7 +110,13 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     //Also, be sure that this generic T is the *only one* with that type otherwise internally stuff might break...
     public abstract JEIComponent<T> provideJEIComponent();
 
-    public static abstract class JEIComponent<T> {
+    public interface ChancedRequirement {
+
+        void setChance(float chance);
+
+    }
+
+    public abstract static class JEIComponent<T> {
 
         public abstract Class<T> getJEIRequirementClass();
 
@@ -130,7 +135,7 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
     }
 
-    public static abstract class PerTick<T, V extends RequirementType<T, ? extends PerTick<T, V>>> extends ComponentRequirement<T, V> {
+    public abstract static class PerTick<T, V extends RequirementType<T, ? extends PerTick<T, V>>> extends ComponentRequirement<T, V> {
 
         public PerTick(V requirementType, IOType actionType) {
             super(requirementType, actionType);
@@ -149,12 +154,6 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         // or if more components need to be checked.
         @Nonnull
         public abstract CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context);
-
-    }
-
-    public static interface ChancedRequirement {
-
-        public void setChance(float chance);
 
     }
 

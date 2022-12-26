@@ -21,7 +21,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.play.INetHandlerPlayServer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -33,7 +32,7 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -46,30 +45,22 @@ import java.util.*;
  */
 public class PlayerStructureSelectionHelper {
 
+    private static final Map<UUID, StructureSelection> activeSelectionMap = new HashMap<>();
     public static StructureSelection clientSelection = null;
-    private static Map<UUID, StructureSelection> activeSelectionMap = new HashMap<>();
 
     public static void toggleInSelection(EntityPlayer player, BlockPos pos) {
         activeSelectionMap.computeIfAbsent(player.getUniqueID(), uuid -> new StructureSelection()).togglePosition(pos);
     }
 
     public static void purgeSelection(EntityPlayer player) {
-        if(player == null) {
+        if (player == null) {
             return;
         }
         activeSelectionMap.remove(player.getUniqueID());
     }
 
-    @SubscribeEvent
-    public void onDisconnect(FMLNetworkEvent.ServerDisconnectionFromClientEvent event) {
-        INetHandlerPlayServer handlerServer = event.getHandler();
-        if(handlerServer instanceof NetHandlerPlayServer) {
-            purgeSelection(((NetHandlerPlayServer) handlerServer).player);
-        }
-    }
-
     public static void sendSelection(EntityPlayer player) {
-        if(player instanceof EntityPlayerMP) {
+        if (player instanceof EntityPlayerMP) {
             ModularMachinery.NET_CHANNEL.sendTo(
                     new PktSyncSelection(activeSelectionMap.computeIfAbsent(player.getUniqueID(), uuid -> new StructureSelection()).getSelectedPositions()),
                     (EntityPlayerMP) player);
@@ -78,13 +69,13 @@ public class PlayerStructureSelectionHelper {
 
     public static void finalizeSelection(EnumFacing controllerFacing, World world, BlockPos pos, EntityPlayer player) {
         StructureSelection sel = activeSelectionMap.get(player.getUniqueID());
-        if(sel == null || sel.selectedPositions.isEmpty()) {
+        if (sel == null || sel.selectedPositions.isEmpty()) {
             player.sendMessage(new TextComponentTranslation("message.structurebuild.empty"));
             return;
         }
         player.sendMessage(new TextComponentTranslation("message.structurebuild.confirmrotation", controllerFacing.getName()));
         BlockArray out = sel.compressAsArray(world, pos);
-        if(controllerFacing != EnumFacing.NORTH) {
+        if (controllerFacing != EnumFacing.NORTH) {
             int rotation = 0;
             EnumFacing face = controllerFacing;
             while (face != EnumFacing.NORTH) {
@@ -95,10 +86,10 @@ public class PlayerStructureSelectionHelper {
             player.sendMessage(new TextComponentTranslation("message.structurebuild.confirmrotation.rotating", String.valueOf(rotation)));
         }
 
-        if(FMLCommonHandler.instance().getMinecraftServerInstance() != null) {
+        if (FMLCommonHandler.instance().getMinecraftServerInstance() != null) {
             String serializedArray = out.serializeAsMachineJson();
             MinecraftServer ms = FMLCommonHandler.instance().getMinecraftServerInstance();
-            if(ms.isDedicatedServer()) {
+            if (ms.isDedicatedServer()) {
                 player.sendMessage(new TextComponentTranslation("message.structurebuild.warndedicated"));
             }
 
@@ -114,16 +105,24 @@ public class PlayerStructureSelectionHelper {
             }
 
             try {
-                Files.write(serializedArray, machineOut, Charset.forName("UTF-8"));
+                Files.write(serializedArray, machineOut, StandardCharsets.UTF_8);
                 player.sendMessage(new TextComponentTranslation("message.structurebuild.save", machineOut.getName()));
             } catch (IOException e) {
                 e.printStackTrace();
                 player.sendMessage(new TextComponentTranslation("message.structurebuild.fail"));
 
-                if(machineOut.exists()) {
+                if (machineOut.exists()) {
                     machineOut.delete(); //Cleanup erroring/incomplete files.
                 }
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onDisconnect(FMLNetworkEvent.ServerDisconnectionFromClientEvent event) {
+        INetHandlerPlayServer handlerServer = event.getHandler();
+        if (handlerServer instanceof NetHandlerPlayServer) {
+            purgeSelection(((NetHandlerPlayServer) handlerServer).player);
         }
     }
 
@@ -131,7 +130,8 @@ public class PlayerStructureSelectionHelper {
 
         private List<BlockPos> selectedPositions = new LinkedList<>();
 
-        private StructureSelection() {}
+        private StructureSelection() {
+        }
 
         public StructureSelection(List<BlockPos> selectedPositions) {
             this.selectedPositions = selectedPositions;
@@ -142,7 +142,7 @@ public class PlayerStructureSelectionHelper {
         }
 
         private void togglePosition(BlockPos pos) {
-            if(this.selectedPositions.contains(pos)) {
+            if (this.selectedPositions.contains(pos)) {
                 this.selectedPositions.remove(pos);
             } else {
                 this.selectedPositions.add(pos);
@@ -156,7 +156,7 @@ public class PlayerStructureSelectionHelper {
                 BlockArray.IBlockStateDescriptor descr = new BlockArray.IBlockStateDescriptor(state);
                 BlockArray.BlockInformation bi = new BlockArray.BlockInformation(Lists.newArrayList(descr));
                 TileEntity te = world.getTileEntity(pos);
-                if(te != null) {
+                if (te != null) {
                     NBTTagCompound cmp = new NBTTagCompound();
                     te.writeToNBT(cmp);
 

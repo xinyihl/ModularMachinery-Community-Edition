@@ -1,30 +1,24 @@
-/*******************************************************************************
- * HellFirePvP / Modular Machinery 2019
- *
- * This project is licensed under GNU GENERAL PUBLIC LICENSE Version 3.
- * The source code is available on github: https://github.com/HellFirePvP/ModularMachinery
- * For further details, see the License file there.
- ******************************************************************************/
-
 package hellfirepvp.modularmachinery.common.block;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.block.prop.RedstoneBusSize;
-import hellfirepvp.modularmachinery.common.tiles.TileRedstoneBus;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.util.RedstoneHelper;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.NonNullList;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -32,18 +26,10 @@ import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * This class is part of the Modular Machinery Mod
- * The complete source code for this mod can be found on github.
- * Class: BlockInputBus
- * Created by HellFirePvP
- * Date: 07.07.2017 / 17:59
- */
-public class BlockRedstoneBus extends BlockMachineComponent implements BlockCustomName, BlockVariants {
+public abstract class BlockEnergyHatch extends BlockMachineComponent implements BlockCustomName, BlockVariants {
+    protected static final PropertyEnum<EnergyHatchSize> BUS_TYPE = PropertyEnum.create("size", EnergyHatchSize.class);
 
-    private static final PropertyEnum<RedstoneBusSize> BUS_TYPE = PropertyEnum.create("size", RedstoneBusSize.class);
-
-    public BlockRedstoneBus() {
+    public BlockEnergyHatch() {
         super(Material.IRON);
         setHardness(2F);
         setResistance(10F);
@@ -52,14 +38,16 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
+    @Optional.Method(modid = "gregtech")
+    protected abstract void addGTTooltip(List<String> tooltip, EnergyHatchSize size);
+
     @Override
-    public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-        super.breakBlock(worldIn, pos, state);
-    }
+    @SideOnly(Side.CLIENT)
+    public abstract void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced);
 
     @Override
     public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for (RedstoneBusSize size : RedstoneBusSize.values()) {
+        for (EnergyHatchSize size : EnergyHatchSize.values()) {
             items.add(new ItemStack(this, 1, size.ordinal()));
         }
     }
@@ -82,7 +70,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(BUS_TYPE, RedstoneBusSize.values()[meta]);
+        return getDefaultState().withProperty(BUS_TYPE, EnergyHatchSize.values()[meta]);
     }
 
     @Override
@@ -98,7 +86,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
     @Override
     public Iterable<IBlockState> getValidStates() {
         List<IBlockState> ret = new LinkedList<>();
-        for (RedstoneBusSize type : RedstoneBusSize.values()) {
+        for (EnergyHatchSize type : EnergyHatchSize.values()) {
             ret.add(getDefaultState().withProperty(BUS_TYPE, type));
         }
         return ret;
@@ -126,9 +114,7 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
 
     @Nullable
     @Override
-    public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileRedstoneBus(state.getValue(BUS_TYPE));
-    }
+    public abstract TileEntity createTileEntity(World world, IBlockState state);
 
     @Nullable
     @Override
@@ -141,4 +127,14 @@ public class BlockRedstoneBus extends BlockMachineComponent implements BlockCust
         return getStateFromMeta(meta).getValue(BUS_TYPE).getName();
     }
 
+    @Override
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if (!worldIn.isRemote) {
+            TileEntity te = worldIn.getTileEntity(pos);
+            if (te instanceof TileEnergyHatch) {
+                playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ENERGY_INVENTORY.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
+            }
+        }
+        return true;
+    }
 }

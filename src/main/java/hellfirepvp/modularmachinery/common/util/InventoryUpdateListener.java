@@ -17,7 +17,7 @@ package hellfirepvp.modularmachinery.common.util;
  */
 public interface InventoryUpdateListener {
 
-    public void onChange();
+    void onChange();
 
 }
 

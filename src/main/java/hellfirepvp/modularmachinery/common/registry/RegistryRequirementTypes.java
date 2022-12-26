@@ -23,7 +23,8 @@ import static hellfirepvp.modularmachinery.common.lib.RequirementTypesMM.*;
  */
 public class RegistryRequirementTypes {
 
-    private RegistryRequirementTypes() {}
+    private RegistryRequirementTypes() {
+    }
 
     public static void initialize() {
         REQUIREMENT_ITEM = register(new RequirementTypeItem(), KEY_REQUIREMENT_ITEM);

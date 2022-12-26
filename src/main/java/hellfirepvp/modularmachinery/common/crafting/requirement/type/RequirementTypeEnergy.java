@@ -10,12 +10,8 @@ package hellfirepvp.modularmachinery.common.crafting.requirement.type;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
-import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-
-import javax.annotation.Nullable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -28,7 +24,7 @@ public class RequirementTypeEnergy extends RequirementType<Long, RequirementEner
 
     @Override
     public RequirementEnergy createRequirement(IOType type, JsonObject requirement) {
-        if(!requirement.has("energyPerTick") || !requirement.get("energyPerTick").isJsonPrimitive() ||
+        if (!requirement.has("energyPerTick") || !requirement.get("energyPerTick").isJsonPrimitive() ||
                 !requirement.get("energyPerTick").getAsJsonPrimitive().isNumber()) {
             throw new JsonParseException("The ComponentType 'energy' expects an 'energyPerTick'-entry that defines the amount of energy per tick!");
         }

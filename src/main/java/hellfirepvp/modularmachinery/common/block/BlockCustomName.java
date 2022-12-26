@@ -16,7 +16,6 @@ package hellfirepvp.modularmachinery.common.block;
  * Date: 28.06.2017 / 20:58
  */
 public interface BlockCustomName {
-
-    public String getIdentifierForMeta(int meta);
+    String getIdentifierForMeta(int meta);
 
 }

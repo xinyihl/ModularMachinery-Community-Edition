@@ -91,7 +91,7 @@ public class PrimerEventHandler {
 
     private <T extends IForgeRegistryEntry<T>> void fillRegistry(Class<T> registrySuperType, IForgeRegistry<T> forgeRegistry) {
         List<?> entries = registry.getEntries(registrySuperType);
-        if(entries != null) {
+        if (entries != null) {
             entries.forEach((e) -> forgeRegistry.register((T) e));
         }
     }

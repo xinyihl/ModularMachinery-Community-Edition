@@ -9,18 +9,14 @@
 package hellfirepvp.modularmachinery.common.integration.recipe;
 
 import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
-import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.crafting.tooltip.RequirementTip;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import mezz.jei.Internal;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IIngredientType;
 import mezz.jei.api.recipe.IRecipeWrapper;
@@ -44,8 +40,8 @@ import java.util.stream.Collectors;
  */
 public class DynamicRecipeWrapper implements IRecipeWrapper {
 
-    private final MachineRecipe recipe;
     public final Map<IOType, Map<Class<?>, List<ComponentRequirement<?, ?>>>> finalOrderedComponents = new HashMap<>();
+    private final MachineRecipe recipe;
 
     public DynamicRecipeWrapper(MachineRecipe recipe) {
         this.recipe = recipe;
@@ -65,8 +61,8 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     public List<String> getTooltipStrings(int mouseX, int mouseY) {
         List<String> tooltips = Lists.newArrayList();
         CategoryDynamicRecipe recipeCategory = ModIntegrationJEI.getCategory(recipe.getOwningMachine());
-        if(recipeCategory != null) {
-            if(recipeCategory.rectangleProcessArrow.contains(mouseX, mouseY)) {
+        if (recipeCategory != null) {
+            if (recipeCategory.rectangleProcessArrow.contains(mouseX, mouseY)) {
                 tooltips.add(I18n.format("tooltip.machinery.duration", recipe.getRecipeTotalTickTime()));
             }
         }
@@ -77,7 +73,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     @Override
     public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         CategoryDynamicRecipe recipeCategory = ModIntegrationJEI.getCategory(recipe.getOwningMachine());
-        if(recipeCategory == null) return;
+        if (recipeCategory == null) return;
 
         int totalDur = this.recipe.getRecipeTotalTickTime();
         int tick = (int) (ClientScheduler.getClientTick() % totalDur);
@@ -147,7 +143,8 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     public void getIngredients(@Nonnull IIngredients ingredients) {
         Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> componentMap = new HashMap<>();
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements()) {
-            if(req instanceof RequirementEnergy) continue; //Ignore. They're handled differently. I should probably rework this...
+            if (req instanceof RequirementEnergy)
+                continue; //Ignore. They're handled differently. I should probably rework this...
 
             ComponentRequirement.JEIComponent<?> comp = req.provideJEIComponent();
             IIngredientType type = ModIntegrationJEI.ingredientRegistry.getIngredientType(comp.getJEIRequirementClass());

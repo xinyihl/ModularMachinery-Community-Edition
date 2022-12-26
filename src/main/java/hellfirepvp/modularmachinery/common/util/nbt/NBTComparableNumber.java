@@ -21,10 +21,9 @@ import javax.annotation.Nullable;
  */
 public interface NBTComparableNumber {
 
-    public boolean test(NBTPrimitive numberTag);
+    boolean test(NBTPrimitive numberTag);
 
-    public static enum ComparisonMode {
-
+    enum ComparisonMode {
         LESS_EQUAL("<="),
         EQUAL("=="),
         GREATER_EQUAL(">="),
@@ -38,17 +37,11 @@ public interface NBTComparableNumber {
             this.identifier = identifier;
         }
 
-        public String getIdentifier() {
-            return identifier;
-        }
-
         @Nullable
         public static ComparisonMode peekMode(String strModeAndValue) {
             lblModes:
             for (ComparisonMode mode : values()) {
-                String id = mode.getIdentifier();
-
-                char[] charArray = id.toCharArray();
+                char[] charArray = mode.identifier.toCharArray();
                 for (int i = 0; i < charArray.length; i++) {
                     char c = charArray[i];
                     if (strModeAndValue.charAt(i) != c) {
@@ -58,6 +51,10 @@ public interface NBTComparableNumber {
                 return mode;
             }
             return null;
+        }
+
+        public String getIdentifier() {
+            return identifier;
         }
 
         public boolean testByte(byte original, byte toTest) {

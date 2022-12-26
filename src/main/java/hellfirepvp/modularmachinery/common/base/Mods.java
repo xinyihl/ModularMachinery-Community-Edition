@@ -18,7 +18,6 @@ import net.minecraftforge.fml.common.Loader;
  * Date: 02.03.2019 / 17:42
  */
 public enum Mods {
-
     CRAFTTWEAKER("crafttweaker"),
     JEI("jei"),
     GREGTECH("gregtech"),
@@ -30,7 +29,7 @@ public enum Mods {
     public final String modid;
     private final boolean loaded;
 
-    private Mods(String modName) {
+    Mods(String modName) {
         this.modid = modName;
         this.loaded = Loader.isModLoaded(this.modid);
     }

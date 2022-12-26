@@ -35,14 +35,26 @@ import javax.annotation.Nullable;
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "ic2")
 public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink {
 
-    public TileEnergyInputHatch() {}
+    public TileEnergyInputHatch() {
+    }
 
     public TileEnergyInputHatch(EnergyHatchSize size) {
         super(size, IOType.INPUT);
     }
 
     @Override
-    public void update() {}
+    public boolean canExtract() {
+        return false;
+    }
+
+    @Override
+    public boolean canReceive() {
+        return true;
+    }
+
+    @Override
+    public void update() {
+    }
 
     @Override
     @Optional.Method(modid = "ic2")
@@ -55,7 +67,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     @Optional.Method(modid = "ic2")
     public void invalidate() {
         super.invalidate();
-        if(!world.isRemote) {
+        if (!world.isRemote) {
             MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
         }
     }

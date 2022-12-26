@@ -49,7 +49,7 @@ public abstract class GuiContainerBase<T extends ContainerBase> extends GuiConta
     public void updateScreen() {
         super.updateScreen();
 
-        if(!this.container.isValid()) {
+        if (!this.container.isValid()) {
             Minecraft.getMinecraft().player.closeScreen();
         }
     }

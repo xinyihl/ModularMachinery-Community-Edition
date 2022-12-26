@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
@@ -16,6 +15,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.awt.*;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,8 +40,7 @@ public class JEIComponentEnergy extends ComponentRequirement.JEIComponent<Long> 
 
     @Override
     public List<Long> getJEIIORequirements() {
-        long var = requirement.getRequiredEnergyPerTick();
-        return Lists.newArrayList(var);
+        return Collections.singletonList(requirement.getRequiredEnergyPerTick());
     }
 
     @Override

@@ -27,7 +27,8 @@ public abstract class TileInventory extends TileColorableMachineComponent {
 
     protected IOInventory inventory;
 
-    public TileInventory() {}
+    public TileInventory() {
+    }
 
     public TileInventory(int size) {
         this.inventory = buildInventory(this, size);
@@ -61,7 +62,7 @@ public abstract class TileInventory extends TileColorableMachineComponent {
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
-        if(capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return (T) inventory;
         }
         return super.getCapability(capability, facing);

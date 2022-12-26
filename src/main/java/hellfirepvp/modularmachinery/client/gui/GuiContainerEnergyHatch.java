@@ -34,7 +34,7 @@ public class GuiContainerEnergyHatch extends GuiContainerBase<ContainerEnergyHat
 
     public static final ResourceLocation TEXTURES_ENERGY_HATCH = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guibar.png");
 
-    private TileEnergyHatch energyHatch;
+    private final TileEnergyHatch energyHatch;
 
     public GuiContainerEnergyHatch(TileEnergyHatch tileFluidTank, EntityPlayer opening) {
         super(new ContainerEnergyHatch(tileFluidTank, opening));
@@ -42,7 +42,8 @@ public class GuiContainerEnergyHatch extends GuiContainerBase<ContainerEnergyHat
     }
 
     @Override
-    protected void setWidthHeight() {}
+    protected void setWidthHeight() {
+    }
 
     @Override
     protected void renderHoveredToolTip(int x, int z) {
@@ -51,7 +52,7 @@ public class GuiContainerEnergyHatch extends GuiContainerBase<ContainerEnergyHat
         int offsetX = (this.width - this.xSize) / 2;
         int offsetZ = (this.height - this.ySize) / 2;
 
-        if(x >= 15 + offsetX && x <= 35 + offsetX && z >= 10 + offsetZ && z <= 71 + offsetZ) {
+        if (x >= 15 + offsetX && x <= 35 + offsetX && z >= 10 + offsetZ && z <= 71 + offsetZ) {
             long currentEnergy = EnergyDisplayUtil.type.formatEnergyForDisplay(energyHatch.getCurrentEnergy());
             long maxEnergy = EnergyDisplayUtil.type.formatEnergyForDisplay(energyHatch.getMaxEnergy());
 

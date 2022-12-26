@@ -31,7 +31,7 @@ public class ByteBufUtils {
     public static void writeItemStack(ByteBuf byteBuf, @Nonnull ItemStack stack) {
         boolean defined = !stack.isEmpty();
         byteBuf.writeBoolean(defined);
-        if(defined) {
+        if (defined) {
             NBTTagCompound tag = new NBTTagCompound();
             stack.writeToNBT(tag);
             writeNBTTag(byteBuf, tag);
@@ -41,7 +41,7 @@ public class ByteBufUtils {
     @Nonnull
     public static ItemStack readItemStack(ByteBuf byteBuf) {
         boolean defined = byteBuf.readBoolean();
-        if(defined) {
+        if (defined) {
             return new ItemStack(readNBTTag(byteBuf));
         } else {
             return ItemStack.EMPTY;
@@ -51,14 +51,16 @@ public class ByteBufUtils {
     public static void writeNBTTag(ByteBuf byteBuf, @Nonnull NBTTagCompound tag) {
         try (DataOutputStream dos = new DataOutputStream(new ByteBufOutputStream(byteBuf))) {
             CompressedStreamTools.write(tag, dos);
-        } catch (Exception exc) {}
+        } catch (Exception exc) {
+        }
     }
 
     @Nonnull
     public static NBTTagCompound readNBTTag(ByteBuf byteBuf) {
         try (DataInputStream dis = new DataInputStream(new ByteBufInputStream(byteBuf))) {
             return CompressedStreamTools.read(dis);
-        } catch (Exception exc) {}
+        } catch (Exception exc) {
+        }
         throw new IllegalStateException("Could not load NBT Tag from incoming byte buffer!");
     }
 

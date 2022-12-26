@@ -22,13 +22,13 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class ModIntegrationCrafttweaker {
 
     @SubscribeEvent
-    public void onScriptsReloading(ScriptRunEvent.Pre event) {
-        RecipeRegistry.getRegistry().clearLingeringRecipes();
+    public static void onScriptsReloaded(ScriptRunEvent.Post event) {
+        RecipeRegistry.reloadAdapters();
     }
 
     @SubscribeEvent
-    public void onScriptsReloaded(ScriptRunEvent.Post event) {
-        RecipeRegistry.getRegistry().reloadAdapters();
+    public void onScriptsReloading(ScriptRunEvent.Pre event) {
+        RecipeRegistry.getRegistry().clearLingeringRecipes();
     }
 
 }

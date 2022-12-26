@@ -10,8 +10,6 @@ package hellfirepvp.modularmachinery.common.integration.ingredient;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Streams;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import mekanism.api.gas.GasStack;
@@ -24,7 +22,6 @@ import net.minecraftforge.fml.common.Optional;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -43,9 +40,9 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
     @Nullable
     @Override
     public T getMatch(Iterable<T> ingredients, T ingredientToMatch) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             T gasMatch = attemptGasStackMatch(ingredients, ingredientToMatch);
-            if(gasMatch != null) {
+            if (gasMatch != null) {
                 return gasMatch;
             }
         }
@@ -53,20 +50,20 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
     }
 
     private T matchFluidStack(Iterable<T> ingredients, T ingredientToMatch) {
-        if(Iterables.isEmpty(ingredients)) {
+        if (Iterables.isEmpty(ingredients)) {
             return null;
         }
         FluidStack stack = ingredientToMatch.asFluidStack();
-        if(stack == null) {
+        if (stack == null) {
             return null;
         }
         Fluid fluidMatch = stack.getFluid();
         for (T hybridFluid : ingredients) {
             FluidStack hybridFluidStack = hybridFluid.asFluidStack();
-            if(hybridFluidStack == null) {
+            if (hybridFluidStack == null) {
                 continue;
             }
-            if(hybridFluidStack.getFluid() == fluidMatch) {
+            if (hybridFluidStack.getFluid() == fluidMatch) {
                 return hybridFluid;
             }
         }
@@ -75,13 +72,13 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private T attemptGasStackMatch(Iterable<T> ingredients, T ingredientToMatch) {
-        if(ingredientToMatch instanceof HybridFluidGas) {
-            if(!Iterables.isEmpty(ingredients)) {
+        if (ingredientToMatch instanceof HybridFluidGas) {
+            if (!Iterables.isEmpty(ingredients)) {
                 GasStack toMatch = ((HybridFluidGas) ingredientToMatch).asGasStack();
                 for (T hybridFluid : ingredients) {
-                    if(hybridFluid != null && hybridFluid instanceof HybridFluidGas) {
+                    if (hybridFluid instanceof HybridFluidGas) {
                         HybridFluidGas hybridFluidGas = (HybridFluidGas) hybridFluid;
-                        if(hybridFluidGas.asGasStack().getGas() == toMatch.getGas()) { //Identical check to the GasStackHelper in mek
+                        if (hybridFluidGas.asGasStack().getGas() == toMatch.getGas()) { //Identical check to the GasStackHelper in mek
                             return (T) hybridFluidGas;
                         }
                     }
@@ -93,14 +90,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getDisplayName(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String display = getGasDisplayName(ingredient);
-            if(display != null) {
+            if (display != null) {
                 return display;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -109,7 +106,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String getGasDisplayName(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getDisplayName(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -118,14 +115,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getUniqueId(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String uniqueId = gasGasUniqueId(ingredient);
-            if(uniqueId != null) {
+            if (uniqueId != null) {
                 return uniqueId;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -134,7 +131,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String gasGasUniqueId(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getUniqueId(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -143,14 +140,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getWildcardId(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String wildcard = getGasWildcardId(ingredient);
-            if(wildcard != null) {
+            if (wildcard != null) {
                 return wildcard;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -159,7 +156,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String getGasWildcardId(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getWildcardId(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -168,14 +165,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getModId(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String modid = getGasModId(ingredient);
-            if(modid != null) {
+            if (modid != null) {
                 return modid;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -184,7 +181,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String getGasModId(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getModId(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -193,14 +190,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public Iterable<Color> getColors(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             Iterable<Color> gasColors = getGasColors(ingredient);
-            if(gasColors != null) {
+            if (gasColors != null) {
                 return gasColors;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return Lists.newArrayList();
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -209,7 +206,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private Iterable<Color> getGasColors(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getColors(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -218,14 +215,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getResourceId(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String id = getGasResourceId(ingredient);
-            if(id != null) {
+            if (id != null) {
                 return id;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -234,7 +231,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String getGasResourceId(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getResourceId(((HybridFluidGas) ingredient).asGasStack());
         }
@@ -248,14 +245,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public ItemStack cheatIngredient(T ingredient, boolean fullStack) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             ItemStack cheated = getGasCheatIngredient(ingredient, fullStack);
-            if(cheated != null) {
+            if (cheated != null) {
                 return cheated;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return ItemStack.EMPTY;
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -264,7 +261,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private ItemStack getGasCheatIngredient(T ingredient, boolean fullStack) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.cheatIngredient(((HybridFluidGas) ingredient).asGasStack(), fullStack);
         }
@@ -273,14 +270,14 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Override
     public String getErrorInfo(T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             String id = getGasErrorInfo(ingredient);
-            if(id != null) {
+            if (id != null) {
                 return id;
             }
         }
         FluidStack fluidStack = ingredient.asFluidStack();
-        if(fluidStack == null) {
+        if (fluidStack == null) {
             return "";
         }
         IIngredientHelper<FluidStack> fluidHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(FluidStack.class);
@@ -289,7 +286,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
 
     @Optional.Method(modid = "mekanism")
     private String getGasErrorInfo(T ingredient) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientHelper<GasStack> gasHelper = ModIntegrationJEI.ingredientRegistry.getIngredientHelper(GasStack.class);
             return gasHelper.getErrorInfo(((HybridFluidGas) ingredient).asGasStack());
         }

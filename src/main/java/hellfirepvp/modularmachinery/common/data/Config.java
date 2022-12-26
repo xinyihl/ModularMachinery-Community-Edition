@@ -26,10 +26,9 @@ import java.io.File;
  */
 public class Config {
 
+    public static int machineColor;
     private static File lastReadFile;
     private static Configuration lastReadConfig;
-
-    public static int machineColor;
 
     public static void loadFrom(File file) {
         lastReadFile = file;
@@ -37,7 +36,7 @@ public class Config {
 
         load();
 
-        if(lastReadConfig.hasChanged()) {
+        if (lastReadConfig.hasChanged()) {
             lastReadConfig.save();
         }
     }

@@ -17,11 +17,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidActionResult;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -46,6 +44,19 @@ public class PktInteractFluidTankGui implements IMessage, IMessageHandler<PktInt
 
     public PktInteractFluidTankGui(ItemStack held) {
         this.held = held;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void updateClientHand(PktInteractFluidTankGui pkt) {
+        GuiScreen gui = Minecraft.getMinecraft().currentScreen;
+
+        if (gui instanceof GuiContainerFluidHatch) {
+            EntityPlayer player = Minecraft.getMinecraft().player;
+
+            if (!player.inventory.getItemStack().isEmpty()) { //Has to have had an item before... obviously.. right?
+                player.inventory.setItemStack(pkt.held);
+            }
+        }
     }
 
     @Override
@@ -78,18 +89,5 @@ public class PktInteractFluidTankGui implements IMessage, IMessageHandler<PktInt
             updateClientHand(pkt);
         }
         return null;
-    }
-
-    @SideOnly(Side.CLIENT)
-    private void updateClientHand(PktInteractFluidTankGui pkt) {
-        GuiScreen gui = Minecraft.getMinecraft().currentScreen;
-
-        if (gui instanceof GuiContainerFluidHatch) {
-            EntityPlayer player = Minecraft.getMinecraft().player;
-
-            if (!player.inventory.getItemStack().isEmpty()) { //Has to have had an item before... obviously.. right?
-                player.inventory.setItemStack(pkt.held);
-            }
-        }
     }
 }

@@ -19,7 +19,7 @@ import java.util.Random;
  */
 public class ResultChance {
 
-    public static ResultChance GUARANTEED = new ResultChance(0) {
+    public static final ResultChance GUARANTEED = new ResultChance(0) {
         @Override
         public boolean canProduce(float chance) {
             return true;

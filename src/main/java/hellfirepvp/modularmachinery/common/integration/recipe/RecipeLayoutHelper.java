@@ -32,14 +32,14 @@ public class RecipeLayoutHelper {
     static RecipePart PART_PROCESS_ARROW_ACTIVE;
 
     public static void init() {
-        if(PART_TANK_SHELL != null) return;
+        if (PART_TANK_SHELL != null) return;
 
-        PART_TANK_SHELL               = new RecipePart(LOCATION_JEI_ICONS, 0,  0, 22, 63);
-        PART_ENERGY_FOREGROUND        = new RecipePart(LOCATION_JEI_ICONS, 22, 0, 22, 63);
-        PART_ENERGY_BACKGROUND        = new RecipePart(LOCATION_JEI_ICONS, 44, 0, 22, 63);
-        PART_INVENTORY_CELL           = new RecipePart(LOCATION_JEI_ICONS, 66, 0, 18, 18);
-        PART_PROCESS_ARROW            = new RecipePart(LOCATION_JEI_ICONS, 84, 0, 22, 15);
-        PART_PROCESS_ARROW_ACTIVE     = new RecipePart(LOCATION_JEI_ICONS, 84, 15, 22, 15);
+        PART_TANK_SHELL = new RecipePart(LOCATION_JEI_ICONS, 0, 0, 22, 63);
+        PART_ENERGY_FOREGROUND = new RecipePart(LOCATION_JEI_ICONS, 22, 0, 22, 63);
+        PART_ENERGY_BACKGROUND = new RecipePart(LOCATION_JEI_ICONS, 44, 0, 22, 63);
+        PART_INVENTORY_CELL = new RecipePart(LOCATION_JEI_ICONS, 66, 0, 18, 18);
+        PART_PROCESS_ARROW = new RecipePart(LOCATION_JEI_ICONS, 84, 0, 22, 15);
+        PART_PROCESS_ARROW_ACTIVE = new RecipePart(LOCATION_JEI_ICONS, 84, 15, 22, 15);
     }
 
     public static class RecipePart {

@@ -35,7 +35,7 @@ public class RecipeAdapterRegistry {
                                                              List<RecipeModifier> modifiers,
                                                              List<ComponentRequirement<?, ?>> additionalRequirements) {
         RecipeAdapter adapter = RegistriesMM.ADAPTER_REGISTRY.getValue(adapterKey);
-        if(adapter == null) {
+        if (adapter == null) {
             return null;
         }
         return adapter.createRecipesFor(owningMachine, modifiers, additionalRequirements);

@@ -27,7 +27,7 @@ public abstract class ContainerBase<T extends TileEntity> extends Container {
 
     public ContainerBase(T owner, EntityPlayer opening) {
         this.owner = owner;
-        
+
         addPlayerSlots(opening);
     }
 

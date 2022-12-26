@@ -44,12 +44,25 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     private IOType ioType;
     private FluidHatchSize hatchSize;
 
-    public TileFluidTank() {}
+    public TileFluidTank() {
+    }
 
     public TileFluidTank(FluidHatchSize size, IOType type) {
         this.tank = size.buildTank(this, type == IOType.INPUT, type == IOType.OUTPUT);
         this.hatchSize = size;
         this.ioType = type;
+    }
+
+    @Optional.Method(modid = "mekanism")
+    private static boolean checkMekanismGasCapabilitiesPresence(Capability<?> capability, @Nullable EnumFacing facing) {
+        return checkMekanismGasCapabilities(capability, facing);
+    }
+
+    @Optional.Method(modid = "mekanism")
+    private static boolean checkMekanismGasCapabilities(Capability<?> capability, @Nullable EnumFacing facing) {
+        String gasType = IGasHandler.class.getName().intern();
+        String tubeConnectionName = ITubeConnection.class.getName().intern();
+        return capability != null && (capability.getName().equals(gasType) || capability.getName().equals(tubeConnectionName));
     }
 
     public HybridTank getTank() {
@@ -58,11 +71,11 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
-        if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return true;
         }
-        if(Mods.MEKANISM.isPresent()) {
-            if(checkMekanismGasCapabilitiesPresence(capability, facing)) {
+        if (Mods.MEKANISM.isPresent()) {
+            if (checkMekanismGasCapabilitiesPresence(capability, facing)) {
                 return true;
             }
         }
@@ -72,27 +85,15 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
-        if(capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+        if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return (T) tank;
         }
-        if(Mods.MEKANISM.isPresent()) {
-            if(checkMekanismGasCapabilities(capability, facing)) {
+        if (Mods.MEKANISM.isPresent()) {
+            if (checkMekanismGasCapabilities(capability, facing)) {
                 return (T) this;
             }
         }
         return super.getCapability(capability, facing);
-    }
-
-    @Optional.Method(modid = "mekanism")
-    private boolean checkMekanismGasCapabilitiesPresence(Capability<?> capability, @Nullable EnumFacing facing) {
-        return checkMekanismGasCapabilities(capability, facing);
-    }
-
-    @Optional.Method(modid = "mekanism")
-    private boolean checkMekanismGasCapabilities(Capability<?> capability, @Nullable EnumFacing facing) {
-        String gasType = IGasHandler.class.getName().intern();
-        String tubeConnectionName = ITubeConnection.class.getName().intern();
-        return capability != null && (capability.getName().equals(gasType) || capability.getName().equals(tubeConnectionName));
     }
 
     @Override
@@ -105,7 +106,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
         NBTTagCompound tankTag = compound.getCompoundTag("tank");
         newTank.readFromNBT(tankTag);
         this.tank = newTank;
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             this.readMekGasData(tankTag);
         }
     }
@@ -118,7 +119,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
         compound.setInteger("size", this.hatchSize.ordinal());
         NBTTagCompound tankTag = new NBTTagCompound();
         this.tank.writeToNBT(tankTag);
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             this.writeMekGasData(tankTag);
         }
         compound.setTag("tank", tankTag);
@@ -146,14 +147,14 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Optional.Method(modid = "mekanism")
     private void writeMekGasData(NBTTagCompound compound) {
-        if(this.tank instanceof HybridGasTank) {
+        if (this.tank instanceof HybridGasTank) {
             ((HybridGasTank) this.tank).writeGasToNBT(compound);
         }
     }
 
     @Optional.Method(modid = "mekanism")
     private void readMekGasData(NBTTagCompound compound) {
-        if(this.tank instanceof HybridGasTank) {
+        if (this.tank instanceof HybridGasTank) {
             ((HybridGasTank) this.tank).readGasFromNBT(compound);
         }
     }
@@ -161,8 +162,8 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     @Override
     @Optional.Method(modid = "mekanism")
     public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
-        if(this.tank instanceof HybridGasTank) {
-            return ((HybridGasTank) this.tank).receiveGas(side, stack, doTransfer);
+        if (this.tank instanceof HybridGasTank) {
+            return ((IGasHandler) this.tank).receiveGas(side, stack, doTransfer);
         }
         return 0;
     }
@@ -170,8 +171,8 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     @Override
     @Optional.Method(modid = "mekanism")
     public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
-        if(this.tank instanceof HybridGasTank) {
-            return ((HybridGasTank) this.tank).drawGas(side, amount, doTransfer);
+        if (this.tank instanceof HybridGasTank) {
+            return ((IGasHandler) this.tank).drawGas(side, amount, doTransfer);
         }
         return null;
     }
@@ -179,12 +180,12 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     @Override
     @Optional.Method(modid = "mekanism")
     public boolean canReceiveGas(EnumFacing side, Gas type) {
-        return this.tank instanceof HybridGasTank && ((HybridGasTank) this.tank).canReceiveGas(side, type);
+        return this.tank instanceof HybridGasTank && ((IGasHandler) this.tank).canReceiveGas(side, type);
     }
 
     @Override
     @Optional.Method(modid = "mekanism")
     public boolean canDrawGas(EnumFacing side, Gas type) {
-        return this.tank instanceof HybridGasTank && ((HybridGasTank) this.tank).canDrawGas(side, type);
+        return this.tank instanceof HybridGasTank && ((IGasHandler) this.tank).canDrawGas(side, type);
     }
 }

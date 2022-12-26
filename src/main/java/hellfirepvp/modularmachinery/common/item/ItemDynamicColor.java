@@ -18,7 +18,6 @@ import net.minecraft.item.ItemStack;
  * Date: 15.08.2017 / 16:31
  */
 public interface ItemDynamicColor {
-
-    public int getColorFromItemstack(ItemStack stack, int tintIndex);
+    int getColorFromItemstack(ItemStack stack, int tintIndex);
 
 }

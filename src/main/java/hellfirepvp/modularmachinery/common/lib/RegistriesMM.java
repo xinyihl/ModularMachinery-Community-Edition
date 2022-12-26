@@ -15,7 +15,6 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.type.Requirement
 import hellfirepvp.modularmachinery.common.crafting.tooltip.RequirementTip;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryModifiable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -26,16 +25,15 @@ import net.minecraftforge.registries.IForgeRegistryModifiable;
  */
 public class RegistriesMM {
 
-    private RegistriesMM() {}
-
-    public static ResourceLocation ADAPTER_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "recipeadapters");
-    public static ResourceLocation COMPONENT_TYPE_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "componenttypes");
-    public static ResourceLocation REQUIREMENT_TYPE_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "requirementtypes");
-    public static ResourceLocation REQUIREMENT_TIPS_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "requirementtips");
-
+    public static final ResourceLocation ADAPTER_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "recipeadapters");
+    public static final ResourceLocation COMPONENT_TYPE_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "componenttypes");
+    public static final ResourceLocation REQUIREMENT_TYPE_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "requirementtypes");
+    public static final ResourceLocation REQUIREMENT_TIPS_REGISTRY_NAME = new ResourceLocation(ModularMachinery.MODID, "requirementtips");
     public static ForgeRegistry<RecipeAdapter> ADAPTER_REGISTRY;
     public static ForgeRegistry<ComponentType> COMPONENT_TYPE_REGISTRY;
     public static ForgeRegistry<RequirementType<?, ?>> REQUIREMENT_TYPE_REGISTRY;
     public static ForgeRegistry<RequirementTip> REQUIREMENT_TIPS_REGISTRY;
+    private RegistriesMM() {
+    }
 
 }

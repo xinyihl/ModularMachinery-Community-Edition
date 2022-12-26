@@ -29,7 +29,8 @@ public class PktSyncSelection implements IMessage, IMessageHandler<PktSyncSelect
 
     private List<BlockPos> positions = new ArrayList<>();
 
-    public PktSyncSelection() {}
+    public PktSyncSelection() {
+    }
 
     public PktSyncSelection(List<BlockPos> positions) {
         this.positions = positions;

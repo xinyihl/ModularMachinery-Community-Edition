@@ -12,8 +12,6 @@ import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.tiles.TileEnergyInputHatch;
-import hellfirepvp.modularmachinery.common.tiles.TileEnergyOutputHatch;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.nbt.NBTBase;
@@ -43,21 +41,31 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     private GTEnergyContainer energyContainer;
 
-    public TileEnergyHatch() {}
+    public TileEnergyHatch() {
+    }
 
     public TileEnergyHatch(EnergyHatchSize size, IOType ioType) {
         this.size = size;
         this.energyContainer = new GTEnergyContainer(this, ioType);
     }
 
+    @Optional.Method(modid = "gregtech")
+    private static Capability<?> getGTEnergyCapability() {
+        return GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER;
+    }
+
+    protected static int convertDownEnergy(long energy) {
+        return energy >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) energy;
+    }
+
     @Override
     public int receiveEnergy(int maxReceive, boolean simulate) {
-        if(!canReceive()) {
+        if (!canReceive()) {
             return 0;
         }
         int insertable = this.energy + maxReceive > this.size.maxEnergy ? convertDownEnergy(this.size.maxEnergy - this.energy) : maxReceive;
         insertable = Math.min(insertable, convertDownEnergy(size.transferLimit));
-        if(!simulate) {
+        if (!simulate) {
             this.energy = MiscUtils.clamp(this.energy + insertable, 0, this.size.maxEnergy);
             markForUpdate();
         }
@@ -66,12 +74,12 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public int extractEnergy(int maxExtract, boolean simulate) {
-        if(!canExtract()) {
+        if (!canExtract()) {
             return 0;
         }
         int extractable = this.energy - maxExtract < 0 ? convertDownEnergy(this.energy) : maxExtract;
         extractable = Math.min(extractable, convertDownEnergy(size.transferLimit));
-        if(!simulate) {
+        if (!simulate) {
             this.energy = MiscUtils.clamp(this.energy - extractable, 0, this.size.maxEnergy);
             markForUpdate();
         }
@@ -89,14 +97,10 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     }
 
     @Override
-    public boolean canExtract() {
-        return this instanceof TileEnergyOutputHatch;
-    }
+    public abstract boolean canExtract();
 
     @Override
-    public boolean canReceive() {
-        return this instanceof TileEnergyInputHatch;
-    }
+    public abstract boolean canReceive();
 
     @Override
     public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
@@ -110,7 +114,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     @Nullable
     @Override
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
-        if(capability == CapabilityEnergy.ENERGY) {
+        if (capability == CapabilityEnergy.ENERGY) {
             return (T) this;
         }
         if (Mods.GREGTECH.isPresent() &&
@@ -119,11 +123,6 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         }
 
         return super.getCapability(capability, facing);
-    }
-
-    @Optional.Method(modid = "gregtech")
-    private Capability<?> getGTEnergyCapability() {
-        return GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER;
     }
 
     @Override
@@ -143,10 +142,6 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
         compound.setLong("energy", this.energy);
         compound.setInteger("hatchSize", this.size.ordinal());
-    }
-
-    protected int convertDownEnergy(long energy) {
-        return energy >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) energy;
     }
 
     //MM stuff

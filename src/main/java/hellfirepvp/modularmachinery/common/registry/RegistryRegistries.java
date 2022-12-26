@@ -13,7 +13,9 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.crafting.tooltip.RequirementTip;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.registries.*;
+import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryBuilder;
+import net.minecraftforge.registries.RegistryManager;
 
 import static hellfirepvp.modularmachinery.common.lib.RegistriesMM.*;
 
@@ -26,7 +28,8 @@ import static hellfirepvp.modularmachinery.common.lib.RegistriesMM.*;
  */
 public class RegistryRegistries {
 
-    private RegistryRegistries() {}
+    private RegistryRegistries() {
+    }
 
     public static void buildRegistries() {
         makeRegistry(REQUIREMENT_TYPE_REGISTRY_NAME, RequirementType.class).create();
@@ -34,8 +37,8 @@ public class RegistryRegistries {
         makeRegistry(ADAPTER_REGISTRY_NAME, RecipeAdapter.class).create();
         makeRegistry(REQUIREMENT_TIPS_REGISTRY_NAME, RequirementTip.class).create();
 
-        ADAPTER_REGISTRY          = RegistryManager.ACTIVE.getRegistry(ADAPTER_REGISTRY_NAME);
-        COMPONENT_TYPE_REGISTRY   = RegistryManager.ACTIVE.getRegistry(COMPONENT_TYPE_REGISTRY_NAME);
+        ADAPTER_REGISTRY = RegistryManager.ACTIVE.getRegistry(ADAPTER_REGISTRY_NAME);
+        COMPONENT_TYPE_REGISTRY = RegistryManager.ACTIVE.getRegistry(COMPONENT_TYPE_REGISTRY_NAME);
         REQUIREMENT_TYPE_REGISTRY = RegistryManager.ACTIVE.getRegistry(REQUIREMENT_TYPE_REGISTRY_NAME);
         REQUIREMENT_TIPS_REGISTRY = RegistryManager.ACTIVE.getRegistry(REQUIREMENT_TIPS_REGISTRY_NAME);
     }

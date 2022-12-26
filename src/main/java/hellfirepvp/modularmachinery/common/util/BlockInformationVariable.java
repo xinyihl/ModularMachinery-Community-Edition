@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.Lists;
 import com.google.gson.*;
-import net.minecraft.block.state.IBlockState;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -26,7 +25,7 @@ import java.util.Map;
  */
 public class BlockInformationVariable {
 
-    private Map<String, BlockArray.BlockInformation> variables = new HashMap<>();
+    private final Map<String, BlockArray.BlockInformation> variables = new HashMap<>();
 
     public Map<String, BlockArray.BlockInformation> getDefinedVariables() {
         return variables;
@@ -40,18 +39,18 @@ public class BlockInformationVariable {
             JsonObject root = json.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
                 JsonElement variableElement = entry.getValue();
-                if(variableElement.isJsonArray()) {
+                if (variableElement.isJsonArray()) {
                     List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
                     JsonArray elements = variableElement.getAsJsonArray();
                     for (int i = 0; i < elements.size(); i++) {
                         JsonElement p = elements.get(i);
-                        if(!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
+                        if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
                             throw new JsonParseException("Elements of a variable have to be Blockstate descriptions! You cannot nest variables!");
                         }
                         descriptors.add(BlockArray.BlockInformation.getDescriptor(p.getAsString()));
                     }
                     var.variables.put(entry.getKey(), new BlockArray.BlockInformation(descriptors));
-                } else if(variableElement.isJsonPrimitive() && variableElement.getAsJsonPrimitive().isString()) {
+                } else if (variableElement.isJsonPrimitive() && variableElement.getAsJsonPrimitive().isString()) {
                     var.variables.put(entry.getKey(), new BlockArray.BlockInformation(
                             Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(variableElement.getAsString()))));
                 } else {

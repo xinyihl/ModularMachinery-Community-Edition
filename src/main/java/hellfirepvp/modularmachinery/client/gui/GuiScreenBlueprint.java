@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.client.gui;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
@@ -43,15 +42,17 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.UniversalBucket;
+import net.minecraftforge.fluids.IFluidBlock;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -62,16 +63,14 @@ import java.util.List;
  */
 public class GuiScreenBlueprint extends GuiScreen {
 
-    private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
     public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint.png");
-
-    protected int guiLeft;
-    protected int guiTop;
-    protected int xSize = 176;
-    protected int ySize = 144;
-
+    private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
+    protected final int xSize = 176;
+    protected final int ySize = 144;
     private final DynamicMachine machine;
     private final DynamicMachineRenderContext renderContext;
+    protected int guiLeft;
+    protected int guiTop;
     private int frameCount = 0;
 
     public GuiScreenBlueprint(DynamicMachine machine) {
@@ -102,7 +101,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         int z = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(x, z, 0, 0, this.xSize, this.ySize);
 
-        if(renderContext.doesRenderIn3D()) {
+        if (renderContext.doesRenderIn3D()) {
             if (Mouse.isButtonDown(0) && frameCount > 20) {
                 renderContext.rotateRender(0.25 * Mouse.getDY(), 0.25 * Mouse.getDX(), 0);
             }
@@ -111,15 +110,15 @@ public class GuiScreenBlueprint extends GuiScreen {
                 renderContext.moveRender(0.25 * Mouse.getDX(), 0, -0.25 * Mouse.getDY());
             }
         }
-        int dwheel = Mouse.getDWheel();
-        if(dwheel < 0) {
+        int dWheel = Mouse.getDWheel();
+        if (dWheel < 0) {
             renderContext.zoomOut();
-        } else if(dwheel > 0) {
+        } else if (dWheel > 0) {
             renderContext.zoomIn();
         }
 
-        if(GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
-            if(renderContext.getShiftSnap() == -1) {
+        if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
+            if (renderContext.getShiftSnap() == -1) {
                 renderContext.snapSamples();
             }
         } else {
@@ -138,7 +137,7 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         drawButtons(mouseX, mouseY);
 
-        if(!machine.getModifiers().isEmpty()) {
+        if (!machine.getModifiers().isEmpty()) {
             this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
             this.drawTexturedModalRect(guiLeft + 5, guiTop + 124, 0, 145, 100, 15);
 
@@ -147,7 +146,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             fontRenderer.drawString(reqBlueprint, this.guiLeft + 10, this.guiTop + 127, 0x444444);
             GlStateManager.enableDepth();
 
-            if(mouseX >= guiLeft + 5 && mouseX <= guiLeft + 105 &&
+            if (mouseX >= guiLeft + 5 && mouseX <= guiLeft + 105 &&
                     mouseY >= guiTop + 124 && mouseY <= guiTop + 139) {
                 List<Tuple<ItemStack, String>> descriptionList = new LinkedList<>();
                 boolean first = true;
@@ -157,7 +156,7 @@ public class GuiScreenBlueprint extends GuiScreen {
                         if (description.isEmpty()) {
                             continue;
                         }
-                        if(!first) {
+                        if (!first) {
                             descriptionList.add(new Tuple<>(ItemStack.EMPTY, ""));
                         }
                         first = false;
@@ -179,14 +178,14 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         GlStateManager.disableDepth();
         fontRenderer.drawStringWithShadow(machine.getLocalizedName(), this.guiLeft + 10, this.guiTop + 11, 0xFFFFFFFF);
-        if(machine.requiresBlueprint()) {
+        if (machine.requiresBlueprint()) {
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
             fontRenderer.drawString(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0x444444);
         }
         GlStateManager.enableDepth();
 
         scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
-        if(!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
+        if (!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
             render2DHover(mouseX, mouseY, x, z);
         }
     }
@@ -197,14 +196,14 @@ public class GuiScreenBlueprint extends GuiScreen {
         int jumpWidth = 14;
         double scaleJump = jumpWidth * scale;
         Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(renderContext.getRenderSlice());
-        if(renderContext.getRenderSlice() == 0) {
+        if (renderContext.getRenderSlice() == 0) {
             slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new BlockArray.IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
         }
         for (BlockPos pos : slice.keySet()) {
             int xMod = pos.getX() + 1 + this.renderContext.getMoveOffset().getX();
             int zMod = pos.getZ() + 1 + this.renderContext.getMoveOffset().getZ();
             Rectangle.Double rct = new Rectangle2D.Double(offset.x - xMod * scaleJump, offset.y - zMod * scaleJump, scaleJump, scaleJump);
-            if(rct.contains(mouseX, mouseY)) {
+            if (rct.contains(mouseX, mouseY)) {
                 IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
                 Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).matchingTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
@@ -212,45 +211,48 @@ public class GuiScreenBlueprint extends GuiScreen {
                 Block type = state.getBlock();
                 int meta = type.getMetaFromState(state);
 
-                ItemStack s = ItemStack.EMPTY;
-                try {
-                    if(ic2TileBlock.equals(type.getRegistryName())) {
-                        s = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
-                    } else {
-                        s = state.getBlock().getPickBlock(state, null, null, pos, null);
-                    }
-                } catch (Exception exc) {}
+                ItemStack stack = ItemStack.EMPTY;
 
-                if(s.isEmpty()) {
-                    if(type instanceof BlockFluidBase) {
-                        s = FluidUtil.getFilledBucket(new FluidStack(((BlockFluidBase) type).getFluid(), 1000));
-                    } else if(type instanceof BlockLiquid) {
-                        Material m = state.getMaterial();
-                        if(m == Material.WATER) {
-                            s = new ItemStack(Items.WATER_BUCKET);
-                        } else if(m == Material.LAVA) {
-                            s = new ItemStack(Items.LAVA_BUCKET);
+                //TODO 意义不明的 catch 块
+                try {
+                    if (ic2TileBlock.equals(type.getRegistryName())) {
+                        stack = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
+                    } else {
+                        stack = state.getBlock().getPickBlock(state, null, null, pos, null);
+                    }
+                } catch (Exception exc) {
+                }
+
+                if (stack.isEmpty()) {
+                    if (type instanceof BlockFluidBase) {
+                        stack = FluidUtil.getFilledBucket(new FluidStack(((IFluidBlock) type).getFluid(), 1000));
+                    } else if (type instanceof BlockLiquid) {
+                        Material material = state.getMaterial();
+                        if (material == Material.WATER) {
+                            stack = new ItemStack(Items.WATER_BUCKET);
+                        } else if (material == Material.LAVA) {
+                            stack = new ItemStack(Items.LAVA_BUCKET);
                         } else {
-                            s = ItemStack.EMPTY;
+                            stack = ItemStack.EMPTY;
                         }
                     } else {
-                        Item i = Item.getItemFromBlock(type);
-                        if(i == Items.AIR) continue;
-                        if(i.getHasSubtypes()) {
-                            s = new ItemStack(i, 1, meta);
+                        Item item = Item.getItemFromBlock(type);
+                        if (item == Items.AIR) continue;
+                        if (item.getHasSubtypes()) {
+                            stack = new ItemStack(item, 1, meta);
                         } else {
-                            s = new ItemStack(i);
+                            stack = new ItemStack(item);
                         }
                     }
                 }
 
-                List<String> tooltip = s.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
+                List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
                         ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
                 List<Tuple<ItemStack, String>> stacks = new LinkedList<>();
                 boolean first = true;
                 for (String str : tooltip) {
-                    if(first) {
-                        stacks.add(new Tuple<>(s, str));
+                    if (first) {
+                        stacks.add(new Tuple<>(stack, str));
                         first = false;
                     } else {
                         stacks.add(new Tuple<>(ItemStack.EMPTY, str));
@@ -278,8 +280,8 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         //3D view
         int add = 0;
-        if(!renderContext.doesRenderIn3D()) {
-            if(mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+        if (!renderContext.doesRenderIn3D()) {
+            if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
                     mouseY >= this.guiTop + 106 && mouseY < this.guiTop + 106 + 16) {
                 add = 16;
             }
@@ -290,9 +292,9 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         //Pop out
         add = 0;
-        if(mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
+        if (mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
                 mouseY >= this.guiTop + 106 && mouseY < this.guiTop + 106 + 16) {
-            if(GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
+            if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
                 add = 16;
             }
             drawPopoutInfo = true;
@@ -301,8 +303,8 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         //2D view
         add = 0;
-        if(renderContext.doesRenderIn3D()) {
-            if(mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+        if (renderContext.doesRenderIn3D()) {
+            if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
                     mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
                 add = 16;
             }
@@ -313,29 +315,29 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         //Show amount
         add = 0;
-        if(mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
+        if (mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
                 mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
             add = 16;
             drawContents = true;
         }
         this.drawTexturedModalRect(guiLeft + 116, guiTop + 122, 176 + add, 64, 16, 16);
 
-        if(renderContext.doesRenderIn3D()) {
+        if (renderContext.doesRenderIn3D()) {
             GlStateManager.color(0.3F, 0.3F, 0.3F, 1.0F);
         } else {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         }
 
-        if(renderContext.hasSliceUp()) {
-            if(!renderContext.doesRenderIn3D() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+        if (renderContext.hasSliceUp()) {
+            if (!renderContext.doesRenderIn3D() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
                     mouseY >= this.guiTop + 102 && mouseY <= this.guiTop + 102 + 16) {
                 GlStateManager.color(0.7F, 0.7F, 1.0F, 1.0F);
             }
             this.drawTexturedModalRect(guiLeft + 150, guiTop + 102, 192, 0, 16, 16);
             GlStateManager.color(1F, 1F, 1F, 1F);
         }
-        if(renderContext.hasSliceDown()) {
-            if(!renderContext.doesRenderIn3D() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+        if (renderContext.hasSliceDown()) {
+            if (!renderContext.doesRenderIn3D() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
                     mouseY >= this.guiTop + 124 && mouseY <= this.guiTop + 124 + 16) {
                 GlStateManager.color(0.7F, 0.7F, 1.0F, 1.0F);
             }
@@ -345,14 +347,14 @@ public class GuiScreenBlueprint extends GuiScreen {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         int width = fontRenderer.getStringWidth(String.valueOf(renderContext.getRenderSlice()));
         fontRenderer.drawString(String.valueOf(renderContext.getRenderSlice()), guiLeft + 159 - (width / 2), guiTop + 118, 0x222222);
-        if(drawPopoutInfo) {
+        if (drawPopoutInfo) {
             ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
             List<String> out = fontRenderer.listFormattedStringToWidth(
                     I18n.format("gui.blueprint.popout.info"),
                     Math.min(res.getScaledWidth() - mouseX, 200));
             RenderingUtils.renderBlueTooltip(mouseX, mouseY, out, fontRenderer);
         }
-        if(drawContents) {
+        if (drawContents) {
             List<ItemStack> contents = this.renderContext.getDescriptiveStacks();
             List<Tuple<ItemStack, String>> contentMap = Lists.newArrayList();
             ItemStack ctrl = new ItemStack(BlocksMM.blockController);
@@ -373,34 +375,34 @@ public class GuiScreenBlueprint extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
 
-        if(mouseButton == 0) {
-            if(!renderContext.doesRenderIn3D()) {
-                if(mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+        if (mouseButton == 0) {
+            if (!renderContext.doesRenderIn3D()) {
+                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
                         mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
                     renderContext.setTo3D();
                 }
-                if(renderContext.hasSliceUp() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+                if (renderContext.hasSliceUp() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
                         mouseY >= this.guiTop + 102 && mouseY <= this.guiTop + 102 + 16) {
                     renderContext.sliceUp();
                 }
-                if(renderContext.hasSliceDown() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+                if (renderContext.hasSliceDown() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
                         mouseY >= this.guiTop + 124 && mouseY <= this.guiTop + 124 + 16) {
                     renderContext.sliceDown();
                 }
             } else {
-                if(mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
                         mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
                     renderContext.setTo2D();
                 }
             }
-            if(GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&
+            if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&
                     mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
                     mouseY >= this.guiTop + 106 && mouseY < this.guiTop + 106 + 16) {
-                if(ClientProxy.renderHelper.startPreview(this.renderContext)) {
+                if (ClientProxy.renderHelper.startPreview(this.renderContext)) {
                     Minecraft.getMinecraft().displayGuiScreen(null);
                 }
             }
-        } else if(mouseButton == 1) {
+        } else if (mouseButton == 1) {
             Minecraft.getMinecraft().displayGuiScreen(null);
         }
     }

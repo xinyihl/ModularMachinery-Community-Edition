@@ -26,7 +26,8 @@ import static hellfirepvp.modularmachinery.common.lib.RequirementTipsMM.*;
  */
 public class RegistryRequirementTips {
 
-    private RegistryRequirementTips() {}
+    private RegistryRequirementTips() {
+    }
 
     public static void initialize() {
         TIP_ENERGY_INPUT = register(new TooltipEnergyInput(), TIP_ENERGY_INPUT_NAME);

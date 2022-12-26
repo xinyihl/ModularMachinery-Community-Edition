@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.container;
 
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.tileentity.TileEntity;
 
 /**
  * This class is part of the Modular Machinery Mod

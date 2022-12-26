@@ -23,13 +23,15 @@ import java.util.Map;
  * Date: 27.06.2017 / 11:32
  */
 public class ClientScheduler {
-
-    private static long clientTick = 0;
     private static final Object lock = new Object();
-
+    private static long clientTick = 0;
+    private final Map<Runnable, Counter> queuedRunnables = new HashMap<>();
+    private final Map<Runnable, Integer> waitingRunnables = new HashMap<>();
     private boolean inTick = false;
-    private Map<Runnable, Counter> queuedRunnables = new HashMap<>();
-    private Map<Runnable, Integer> waitingRunnables = new HashMap<>();
+
+    public static long getClientTick() {
+        return clientTick;
+    }
 
     @SubscribeEvent
     public void tick(TickEvent.ClientTickEvent event) {
@@ -48,7 +50,7 @@ public class ClientScheduler {
                 Runnable r = iterator.next();
                 Counter delay = queuedRunnables.get(r);
                 delay.decrement();
-                if(delay.value <= 0) {
+                if (delay.value <= 0) {
                     r.run();
                     iterator.remove();
                 }
@@ -61,13 +63,9 @@ public class ClientScheduler {
         waitingRunnables.clear();
     }
 
-    public static long getClientTick() {
-        return clientTick;
-    }
-
     public void addRunnable(Runnable r, int tickDelay) {
         synchronized (lock) {
-            if(inTick) {
+            if (inTick) {
                 waitingRunnables.put(r, tickDelay);
             } else {
                 queuedRunnables.put(r, new Counter(tickDelay));
@@ -76,7 +74,6 @@ public class ClientScheduler {
     }
 
     public static class Counter {
-
         public int value;
 
         public Counter(int value) {
@@ -92,6 +89,5 @@ public class ClientScheduler {
         }
 
     }
-
 
 }

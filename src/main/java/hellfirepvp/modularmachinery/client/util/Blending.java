@@ -34,7 +34,7 @@ public enum Blending {
     public final int sfactor;
     public final int dfactor;
 
-    private Blending(int s, int d) {
+    Blending(int s, int d) {
         sfactor = s;
         dfactor = d;
     }

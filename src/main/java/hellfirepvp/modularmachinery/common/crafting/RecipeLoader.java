@@ -19,9 +19,9 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.JsonUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.*;
 
 /**
@@ -33,6 +33,7 @@ import java.util.*;
  */
 public class RecipeLoader {
 
+    public static final List<RecipeAdapterAccessor> recipeAdapters = new LinkedList<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(MachineRecipe.MachineRecipeContainer.class, new MachineRecipe.Deserializer())
             .registerTypeHierarchyAdapter(ComponentRequirement.class, new MachineRecipe.ComponentDeserializer())
@@ -40,13 +41,11 @@ public class RecipeLoader {
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
             .registerTypeHierarchyAdapter(RecipeRunnableCommand.class, new RecipeRunnableCommand.Deserializer())
             .create();
-
-    public static List<RecipeAdapterAccessor> recipeAdapters = new LinkedList<>();
-    private static Map<String, Exception> failedAttempts = new HashMap<>();
     public static String currentlyReadingPath = null;
+    private static Map<String, Exception> failedAttempts = new HashMap<>();
 
     public static Map<FileType, List<File>> discoverDirectory(File directory) {
-        Map<FileType, List<File>> candidates = new HashMap<>();
+        Map<FileType, List<File>> candidates = new EnumMap<>(FileType.class);
         for (FileType type : FileType.values()) {
             candidates.put(type, Lists.newLinkedList());
         }
@@ -55,12 +54,12 @@ public class RecipeLoader {
         while (!directories.isEmpty()) {
             File dir = directories.remove(0);
             for (File f : dir.listFiles()) {
-                if(f.isDirectory()) {
+                if (f.isDirectory()) {
                     directories.addLast(f);
                 } else {
-                    if(FileType.ADAPTER.accepts(f.getName())) {
+                    if (FileType.ADAPTER.accepts(f.getName())) {
                         candidates.get(FileType.ADAPTER).add(f);
-                    } else if(FileType.RECIPE.accepts(f.getName())) {
+                    } else if (FileType.RECIPE.accepts(f.getName())) {
                         candidates.get(FileType.RECIPE).add(f);
                     }
                 }
@@ -75,7 +74,7 @@ public class RecipeLoader {
         List<MachineRecipe> loadedRecipes = Lists.newArrayList();
         for (File f : recipeCandidates) {
             currentlyReadingPath = f.getPath();
-            try (InputStreamReader isr = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8)) {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()), StandardCharsets.UTF_8)) {
                 MachineRecipe.MachineRecipeContainer container = JsonUtils.fromJson(GSON, isr, MachineRecipe.MachineRecipeContainer.class);
                 loadedRecipes.addAll(container.getRecipes());
             } catch (Exception exc) {
@@ -93,10 +92,10 @@ public class RecipeLoader {
     public static List<MachineRecipe> loadAdapterRecipes(List<File> adapterCandidates) {
         List<MachineRecipe> loadedRecipes = Lists.newArrayList();
         for (File f : adapterCandidates) {
-            try (InputStreamReader isr = new InputStreamReader(new FileInputStream(f))) {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()))) {
                 RecipeAdapterAccessor accessor = JsonUtils.fromJson(GSON, isr, RecipeAdapterAccessor.class);
                 Collection<MachineRecipe> recipes = accessor.loadRecipesForAdapter();
-                if(recipes.isEmpty()) {
+                if (recipes.isEmpty()) {
                     ModularMachinery.log.warn("Adapter with name " + accessor.getAdapterKey().toString() + " didn't provide have any recipes!");
                 } else {
                     loadedRecipes.addAll(recipes);
@@ -123,7 +122,7 @@ public class RecipeLoader {
         return failed;
     }
 
-    public static enum FileType {
+    public enum FileType {
 
         ADAPTER,
         RECIPE;

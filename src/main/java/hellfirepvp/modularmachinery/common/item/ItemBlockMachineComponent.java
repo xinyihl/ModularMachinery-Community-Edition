@@ -28,7 +28,7 @@ public class ItemBlockMachineComponent extends ItemBlock implements ItemDynamicC
 
     @Override
     public int getColorFromItemstack(ItemStack stack, int tintIndex) {
-        if(stack.isEmpty()) {
+        if (stack.isEmpty()) {
             return 0;
         }
         return Config.machineColor;

@@ -13,9 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
@@ -55,8 +53,8 @@ public class ItemUtils {
 
         for (int slot : contents.keySet()) {
             ItemStack inSlot = contents.get(slot);
-            if(inSlot.getItem().hasContainerItem(inSlot)) {
-                if(inSlot.getCount() > 1) {
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
                 ItemStack stack = ForgeHooks.getContainerItem(inSlot);
@@ -73,7 +71,7 @@ public class ItemUtils {
             int fuelMod = fuelAmtToConsume % fuelPer;
 
             int toConsume = toConsumeDiv + (fuelMod > 0 ? 1 : 0);
-            int toRemove = toConsume > inSlot.getCount() ? inSlot.getCount() : toConsume;
+            int toRemove = Math.min(toConsume, inSlot.getCount());
 
             fuelAmtToConsume -= toRemove * fuelPer;
             if (!simulate) {
@@ -93,8 +91,8 @@ public class ItemUtils {
         int cAmt = toConsume.getCount();
         for (int slot : contents.keySet()) {
             ItemStack inSlot = contents.get(slot);
-            if(inSlot.getItem().hasContainerItem(inSlot)) {
-                if(inSlot.getCount() > 1) {
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
                 ItemStack stack = ForgeHooks.getContainerItem(inSlot);
@@ -106,7 +104,7 @@ public class ItemUtils {
                     break;
                 }
             }
-            int toRemove = cAmt > inSlot.getCount() ? inSlot.getCount() : cAmt;
+            int toRemove = Math.min(cAmt, inSlot.getCount());
             cAmt -= toRemove;
             if (!simulate) {
                 handler.setStackInSlot(slot, copyStackWithSize(inSlot, inSlot.getCount() - toRemove));
@@ -125,8 +123,8 @@ public class ItemUtils {
         int cAmt = amount;
         for (int slot : contents.keySet()) {
             ItemStack inSlot = contents.get(slot);
-            if(inSlot.getItem().hasContainerItem(inSlot)) {
-                if(inSlot.getCount() > 1) {
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
                 ItemStack stack = ForgeHooks.getContainerItem(inSlot);
@@ -138,7 +136,7 @@ public class ItemUtils {
                     break;
                 }
             }
-            int toRemove = cAmt > inSlot.getCount() ? inSlot.getCount() : cAmt;
+            int toRemove = Math.min(cAmt, inSlot.getCount());
             cAmt -= toRemove;
             if (!simulate) {
                 handler.setStackInSlot(slot, copyStackWithSize(inSlot, inSlot.getCount() - toRemove));
@@ -168,7 +166,7 @@ public class ItemUtils {
             if (in.isEmpty()) {
                 int added = Math.min(stack.getCount(), max);
                 stack.setCount(stack.getCount() - added);
-                if(!simulate) {
+                if (!simulate) {
                     handler.setStackInSlot(i, copyStackWithSize(toAdd, added));
                 }
                 insertedAmt += added;
@@ -180,7 +178,7 @@ public class ItemUtils {
                     int added = Math.min(stack.getCount(), space);
                     insertedAmt += added;
                     stack.setCount(stack.getCount() - added);
-                    if(!simulate) {
+                    if (!simulate) {
                         handler.getStackInSlot(i).setCount(handler.getStackInSlot(i).getCount() + added);
                     }
                     if (stack.getCount() <= 0)
@@ -208,7 +206,7 @@ public class ItemUtils {
         return size <= 0;
     }
 
-    public static boolean stackEqualsNonNBT(@Nonnull ItemStack stack, @Nonnull  ItemStack other) {
+    public static boolean stackEqualsNonNBT(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
         if (stack.isEmpty() && other.isEmpty())
             return true;
         if (stack.isEmpty() || other.isEmpty())
@@ -225,7 +223,7 @@ public class ItemUtils {
         }
     }
 
-    public static boolean matchTags(@Nonnull ItemStack stack, @Nonnull  ItemStack other) {
+    public static boolean matchTags(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
         return ItemStack.areItemStackTagsEqual(stack, other);
     }
 
@@ -252,10 +250,10 @@ public class ItemUtils {
         Map<Integer, ItemStack> stacksOut = new HashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
-            if(s.isEmpty()) continue;
+            if (s.isEmpty()) continue;
             int[] ids = OreDictionary.getOreIDs(s);
             for (int id : ids) {
-                if(OreDictionary.getOreName(id).equals(oreDict) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
+                if (OreDictionary.getOreName(id).equals(oreDict) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
                     stacksOut.put(j, s.copy());
                 }
             }
@@ -274,12 +272,12 @@ public class ItemUtils {
         return stacksOut;
     }
 
-    public static boolean matchStacks(@Nonnull ItemStack stack, @Nonnull  ItemStack other) {
+    public static boolean matchStacks(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
         if (!ItemStack.areItemsEqual(stack, other)) return false;
         return ItemStack.areItemStackTagsEqual(stack, other);
     }
 
-    public static boolean matchStackLoosely(@Nonnull ItemStack stack, @Nonnull  ItemStack other) {
+    public static boolean matchStackLoosely(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
         if (stack.isEmpty()) return other.isEmpty();
         return OreDictionary.itemMatches(other, stack, false);
     }

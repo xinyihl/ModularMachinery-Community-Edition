@@ -18,5 +18,4 @@ package hellfirepvp.modularmachinery.common.modifier;
 public class ModifierRegistry {
 
 
-
 }

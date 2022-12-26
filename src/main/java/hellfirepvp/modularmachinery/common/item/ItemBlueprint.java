@@ -45,45 +45,6 @@ public class ItemBlueprint extends Item {
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
-    @Override
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
-        if(isInCreativeTab(tab)) {
-            for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-                ItemStack i = new ItemStack(this);
-                setAssociatedMachine(i, machine);
-                items.add(i);
-            }
-        }
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        DynamicMachine machine = getAssociatedMachine(stack);
-        if(machine == null) {
-            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.empty"));
-        } else {
-            tooltip.add(TextFormatting.GRAY + machine.getLocalizedName());
-        }
-    }
-
-    @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(worldIn.isRemote && getAssociatedMachine(player.getHeldItem(hand)) != null) {
-            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.BLUEPRINT_PREVIEW.ordinal(), worldIn, hand == EnumHand.MAIN_HAND ? 0 : 1, 0, 0);
-        }
-        return EnumActionResult.SUCCESS;
-    }
-
-    @Override
-    public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand hand) {
-        ItemStack held = player.getHeldItem(hand);
-        if(worldIn.isRemote && getAssociatedMachine(held) != null) {
-            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.BLUEPRINT_PREVIEW.ordinal(), worldIn, hand == EnumHand.MAIN_HAND ? 0 : 1, 0, 0);
-        }
-        return new ActionResult<>(EnumActionResult.PASS, held);
-    }
-
     @Nullable
     public static DynamicMachine getAssociatedMachine(ItemStack stack) {
         return MachineRegistry.getRegistry().getMachine(getAssociatedMachineKey(stack));
@@ -91,10 +52,10 @@ public class ItemBlueprint extends Item {
 
     @Nullable
     public static ResourceLocation getAssociatedMachineKey(ItemStack stack) {
-        if(!stack.hasTagCompound()) {
+        if (!stack.hasTagCompound()) {
             return null;
         }
-        if(!stack.getTagCompound().hasKey(DYNAMIC_MACHINE_NBT_KEY)) {
+        if (!stack.getTagCompound().hasKey(DYNAMIC_MACHINE_NBT_KEY)) {
             return null;
         }
         return new ResourceLocation(stack.getTagCompound().getString(DYNAMIC_MACHINE_NBT_KEY));
@@ -105,10 +66,49 @@ public class ItemBlueprint extends Item {
     }
 
     public static void setAssociatedMachine(ItemStack stack, ResourceLocation machineKey) {
-        if(!stack.hasTagCompound()) {
+        if (!stack.hasTagCompound()) {
             stack.setTagCompound(new NBTTagCompound());
         }
         stack.getTagCompound().setString(DYNAMIC_MACHINE_NBT_KEY, machineKey.toString());
+    }
+
+    @Override
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+        if (isInCreativeTab(tab)) {
+            for (DynamicMachine machine : MachineRegistry.getRegistry()) {
+                ItemStack stack = new ItemStack(this);
+                setAssociatedMachine(stack, machine);
+                items.add(stack);
+            }
+        }
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        DynamicMachine machine = getAssociatedMachine(stack);
+        if (machine == null) {
+            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.empty"));
+        } else {
+            tooltip.add(TextFormatting.GRAY + machine.getLocalizedName());
+        }
+    }
+
+    @Override
+    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+        if (worldIn.isRemote && getAssociatedMachine(player.getHeldItem(hand)) != null) {
+            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.BLUEPRINT_PREVIEW.ordinal(), worldIn, hand == EnumHand.MAIN_HAND ? 0 : 1, 0, 0);
+        }
+        return EnumActionResult.SUCCESS;
+    }
+
+    @Override
+    public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer player, EnumHand hand) {
+        ItemStack held = player.getHeldItem(hand);
+        if (worldIn.isRemote && getAssociatedMachine(held) != null) {
+            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.BLUEPRINT_PREVIEW.ordinal(), worldIn, hand == EnumHand.MAIN_HAND ? 0 : 1, 0, 0);
+        }
+        return new ActionResult<>(EnumActionResult.PASS, held);
     }
 
 }

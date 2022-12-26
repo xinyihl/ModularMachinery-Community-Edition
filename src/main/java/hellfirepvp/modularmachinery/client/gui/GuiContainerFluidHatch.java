@@ -26,10 +26,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.client.config.GuiUtils;
 import net.minecraftforge.fml.common.Optional;
 
 import java.io.IOException;
@@ -46,7 +43,7 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
 
     public static final ResourceLocation TEXTURES_FLUID_HATCH = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guibar.png");
 
-    private TileFluidTank tank;
+    private final TileFluidTank tank;
 
     public GuiContainerFluidHatch(TileFluidTank tileFluidTank, EntityPlayer opening) {
         super(new ContainerFluidHatch(tileFluidTank, opening));
@@ -54,7 +51,8 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
     }
 
     @Override
-    protected void setWidthHeight() {}
+    protected void setWidthHeight() {
+    }
 
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
@@ -80,15 +78,15 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
         int offsetX = (this.width - this.xSize) / 2;
         int offsetZ = (this.height - this.ySize) / 2;
 
-        if(x >= 15 + offsetX && x <= 35 + offsetX && z >= 10 + offsetZ && z <= 71 + offsetZ) {
-            if(Mods.MEKANISM.isPresent()) {
+        if (x >= 15 + offsetX && x <= 35 + offsetX && z >= 10 + offsetZ && z <= 71 + offsetZ) {
+            if (Mods.MEKANISM.isPresent()) {
                 drawMekTooltip(x, z);
             } else {
                 List<String> text = Lists.newArrayList();
 
                 FluidStack content = tank.getTank().getFluid();
                 int amt;
-                if(content == null || content.amount <= 0) {
+                if (content == null || content.amount <= 0) {
                     text.add(I18n.format("tooltip.fluidhatch.empty"));
                     amt = 0;
                 } else {
@@ -109,15 +107,15 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
 
         FluidStack content = tank.getTank().getFluid();
         int amt;
-        if(content == null || content.amount <= 0) {
-            if(tank.getTank() instanceof HybridGasTank) {
+        if (content == null || content.amount <= 0) {
+            if (tank.getTank() instanceof HybridGasTank) {
                 GasStack gasContent = ((HybridGasTank) tank.getTank()).getGas();
-                if(gasContent == null || gasContent.amount <= 0) {
+                if (gasContent == null || gasContent.amount <= 0) {
                     text.add(I18n.format("tooltip.fluidhatch.empty"));
                     amt = 0;
                     text.add(I18n.format("tooltip.fluidhatch.tank", String.valueOf(amt), String.valueOf(tank.getTank().getCapacity())));
                 } else {
-                    if(Mods.MEKANISM.isPresent()) {
+                    if (Mods.MEKANISM.isPresent()) {
                         text.add(I18n.format("tooltip.fluidhatch.gas"));
                     }
                     text.add(gasContent.getGas().getLocalizedName());
@@ -130,7 +128,7 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
                 text.add(I18n.format("tooltip.fluidhatch.tank", String.valueOf(amt), String.valueOf(tank.getTank().getCapacity())));
             }
         } else {
-            if(Mods.MEKANISM.isPresent()) {
+            if (Mods.MEKANISM.isPresent()) {
                 text.add(I18n.format("tooltip.fluidhatch.fluid"));
             }
             text.add(content.getLocalizedName());
@@ -147,11 +145,11 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
         super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 
         FluidStack content = tank.getTank().getFluid();
-        if(content != null && content.amount > 0) {
+        if (content != null && content.amount > 0) {
             int fluidColor = content.getFluid().getColor(content);
-            float red   = (fluidColor >> 16 & 0xFF) / 255F;
-            float green = (fluidColor >>  8 & 0xFF) / 255F;
-            float blue  = (fluidColor       & 0xFF) / 255F;
+            float red = (fluidColor >> 16 & 0xFF) / 255F;
+            float green = (fluidColor >> 8 & 0xFF) / 255F;
+            float blue = (fluidColor & 0xFF) / 255F;
 
             float percFilled = ((float) content.amount) / ((float) tank.getTank().getCapacity());
             percFilled = MathHelper.clamp(percFilled, 0F, 1F);
@@ -159,12 +157,12 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
             GlStateManager.color(red, green, blue, 1.0F);
             ResourceLocation rl = content.getFluid().getStill(content);
             TextureAtlasSprite tas = Minecraft.getMinecraft().getTextureMapBlocks().getTextureExtry(rl.toString());
-            if(tas == null) {
+            if (tas == null) {
                 tas = Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
             }
             this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             drawTexturedModalRect(15, 10 + 61 - pxFilled, tas, 20, pxFilled);
-        } else if (Mods.MEKANISM.isPresent()){
+        } else if (Mods.MEKANISM.isPresent()) {
             drawMekGasContent();
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -174,15 +172,15 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
 
     @Optional.Method(modid = "mekanism")
     private void drawMekGasContent() {
-        if(tank.getTank() instanceof HybridGasTank) {
+        if (tank.getTank() instanceof HybridGasTank) {
             GasStack gasContent = ((HybridGasTank) tank.getTank()).getGas();
-            if(gasContent != null && gasContent.amount > 0) {
+            if (gasContent != null && gasContent.amount > 0) {
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
                 float percFilled = ((float) gasContent.amount) / ((float) tank.getTank().getCapacity());
                 percFilled = MathHelper.clamp(percFilled, 0F, 1F);
                 int pxFilled = MathHelper.ceil(percFilled * 61F);
                 TextureAtlasSprite tas = gasContent.getGas().getSprite();
-                if(tas == null) {
+                if (tas == null) {
                     tas = Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
                 }
                 this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);

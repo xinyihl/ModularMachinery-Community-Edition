@@ -32,10 +32,10 @@ import java.util.List;
 public class RecipeAdapterAccessor {
 
     private final ResourceLocation owningMachine, adapterKey;
-    private List<RecipeModifier> modifiers = new ArrayList<>();
-    private List<ComponentRequirement<?, ?>> additionalRecipeRequirements = new ArrayList<>();
+    private final List<RecipeModifier> modifiers = new ArrayList<>();
+    private final List<ComponentRequirement<?, ?>> additionalRecipeRequirements = new ArrayList<>();
 
-    private List<MachineRecipe> cacheLoaded = new LinkedList<>();
+    private final List<MachineRecipe> cacheLoaded = new LinkedList<>();
 
     private RecipeAdapterAccessor(ResourceLocation owningMachine, ResourceLocation adapterKey) {
         this.owningMachine = owningMachine;
@@ -61,7 +61,7 @@ public class RecipeAdapterAccessor {
     public List<MachineRecipe> loadRecipesForAdapter() {
         cacheLoaded.clear();
         Collection<MachineRecipe> recipes = RecipeAdapterRegistry.createRecipesFor(owningMachine, adapterKey, modifiers, additionalRecipeRequirements);
-        if(recipes != null) {
+        if (recipes != null) {
             cacheLoaded.addAll(recipes);
         }
         return cacheLoaded;
@@ -76,18 +76,18 @@ public class RecipeAdapterAccessor {
         @Override
         public RecipeAdapterAccessor deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             JsonObject root = json.getAsJsonObject();
-            if(!root.has("machine")) {
+            if (!root.has("machine")) {
                 throw new JsonParseException("No 'machine'-entry specified!");
             }
-            if(!root.has("adapter")) {
+            if (!root.has("adapter")) {
                 throw new JsonParseException("No 'adapter'-entry specified!");
             }
             JsonElement elementMachine = root.get("machine");
-            if(!elementMachine.isJsonPrimitive() || !elementMachine.getAsJsonPrimitive().isString()) {
+            if (!elementMachine.isJsonPrimitive() || !elementMachine.getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'machine' has to have as value only a String that defines its owning machine!");
             }
             JsonElement elementAdapter = root.get("adapter");
-            if(!elementAdapter.isJsonPrimitive() || !elementAdapter.getAsJsonPrimitive().isString()) {
+            if (!elementAdapter.isJsonPrimitive() || !elementAdapter.getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'adapter' has to have as value only a String that defines the name of the adapter!");
             }
             ResourceLocation owningMachineKey = new ResourceLocation(ModularMachinery.MODID, elementMachine.getAsJsonPrimitive().getAsString());

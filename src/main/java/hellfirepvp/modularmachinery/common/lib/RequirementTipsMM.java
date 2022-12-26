@@ -21,14 +21,13 @@ import net.minecraft.util.ResourceLocation;
  */
 public class RequirementTipsMM {
 
-    private RequirementTipsMM() {}
-
-    public static ResourceLocation TIP_ENERGY_INPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "energyin");
-    public static ResourceLocation TIP_ENERGY_OUTPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "energyout");
-    public static ResourceLocation TIP_FUEL_INPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "fuelin");
-
+    public static final ResourceLocation TIP_ENERGY_INPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "energyin");
+    public static final ResourceLocation TIP_ENERGY_OUTPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "energyout");
+    public static final ResourceLocation TIP_FUEL_INPUT_NAME = new ResourceLocation(ModularMachinery.MODID, "fuelin");
     public static RequirementTip TIP_ENERGY_INPUT;
     public static RequirementTip TIP_ENERGY_OUTPUT;
     public static RequirementTip TIP_FUEL_INPUT;
+    private RequirementTipsMM() {
+    }
 
 }

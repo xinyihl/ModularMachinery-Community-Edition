@@ -18,7 +18,6 @@ import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -59,9 +58,9 @@ public class ModifierReplacement {
         public ModifierReplacement deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             NBTTagCompound match = null;
             JsonObject part = json.getAsJsonObject();
-            if(part.has("nbt")) {
+            if (part.has("nbt")) {
                 JsonElement je = part.get("nbt");
-                if(!je.isJsonObject()) {
+                if (!je.isJsonObject()) {
                     throw new JsonParseException("The ComponentType 'nbt' expects a json compound that defines the NBT tag to match the tileentity's nbt against!");
                 }
                 String jsonStr = je.toString();
@@ -71,43 +70,43 @@ public class ModifierReplacement {
                     throw new JsonParseException("Error trying to parse NBTTag! Rethrowing exception...", exc);
                 }
             }
-            if(!part.has("elements")) {
+            if (!part.has("elements")) {
                 throw new JsonParseException("Modifier-tag contained no element!");
             }
             BlockArray.BlockInformation blockInfo;
             JsonElement partElement = part.get("elements");
-            if(partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
+            if (partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
                 String strDesc = partElement.getAsString();
                 blockInfo = MachineLoader.variableContext.get(strDesc);
-                if(blockInfo == null) {
+                if (blockInfo == null) {
                     blockInfo = new BlockArray.BlockInformation(Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(partElement.getAsString())));
                 } else {
                     blockInfo = blockInfo.copy(); //Avoid NBT-definitions bleed into variable context
                 }
-                if(match != null) {
+                if (match != null) {
                     blockInfo.setMatchingTag(match);
                 }
-            } else if(partElement.isJsonArray()) {
+            } else if (partElement.isJsonArray()) {
                 JsonArray elementArray = partElement.getAsJsonArray();
                 List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
                 for (int xx = 0; xx < elementArray.size(); xx++) {
                     JsonElement p = elementArray.get(xx);
-                    if(!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
+                    if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
                         throw new JsonParseException("Part elements of 'elements' have to be blockstate descriptions!");
                     }
                     String prim = p.getAsString();
                     BlockArray.BlockInformation descr = MachineLoader.variableContext.get(prim);
-                    if(descr != null) {
+                    if (descr != null) {
                         descriptors.addAll(descr.copy().matchingStates);
                     } else {
                         descriptors.add(BlockArray.BlockInformation.getDescriptor(prim));
                     }
                 }
-                if(descriptors.isEmpty()) {
+                if (descriptors.isEmpty()) {
                     throw new JsonParseException("'elements' array didn't contain any blockstate descriptors!");
                 }
                 blockInfo = new BlockArray.BlockInformation(descriptors);
-                if(match != null) {
+                if (match != null) {
                     blockInfo.setMatchingTag(match);
                 }
             } else {
@@ -134,7 +133,7 @@ public class ModifierReplacement {
                 throw new JsonParseException("'modifiers' tag needs to be either a single modifier object or an array of modifier objects!");
             }
 
-            
+
             String description = part.has("description") ? part.getAsJsonPrimitive("description").getAsString() : "";
             return new ModifierReplacement(blockInfo, modifiers, description);
         }

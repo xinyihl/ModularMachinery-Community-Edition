@@ -56,10 +56,8 @@ public abstract class RecipeAdapter implements IForgeRegistryEntry<RecipeAdapter
 
     @Nonnull
     public MachineRecipe createRecipeShell(ResourceLocation uniqueRecipeName, ResourceLocation owningMachineName, int tickTime, int priority, boolean voidPerTickFailure) {
-        return new MachineRecipe("internal/adapter/" + registryName.getResourceDomain() + "/" + registryName.getResourcePath(),
+        return new MachineRecipe("internal/adapter/" + registryName.getNamespace() + "/" + registryName.getPath(),
                 uniqueRecipeName, owningMachineName, tickTime, priority, voidPerTickFailure);
     }
-
-
 
 }

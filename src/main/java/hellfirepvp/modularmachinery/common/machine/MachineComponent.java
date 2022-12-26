@@ -37,7 +37,7 @@ public abstract class MachineComponent<T> {
 
     public abstract T getContainerProvider();
 
-    public static abstract class ItemBus extends MachineComponent<IOInventory> {
+    public abstract static class ItemBus extends MachineComponent<IOInventory> {
 
         public ItemBus(IOType ioType) {
             super(ioType);
@@ -50,7 +50,8 @@ public abstract class MachineComponent<T> {
 
     }
 
-    public static abstract class FluidHatch extends MachineComponent<HybridTank> {
+
+    public abstract static class FluidHatch extends MachineComponent<HybridTank> {
 
         public FluidHatch(IOType ioType) {
             super(ioType);
@@ -63,7 +64,7 @@ public abstract class MachineComponent<T> {
 
     }
 
-    public static abstract class EnergyHatch extends MachineComponent<IEnergyHandler> {
+    public abstract static class EnergyHatch extends MachineComponent<IEnergyHandler> {
 
         public EnergyHatch(IOType ioType) {
             super(ioType);

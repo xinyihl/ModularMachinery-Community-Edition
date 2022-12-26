@@ -53,34 +53,33 @@ import java.io.File;
  */
 public class CommonProxy implements IGuiHandler {
 
+    public static final ModDataHolder dataHolder = new ModDataHolder();
     public static CreativeTabs creativeTabModularMachinery;
-    public static ModDataHolder dataHolder = new ModDataHolder();
-
     public static InternalRegistryPrimer registryPrimer;
-
-    public void loadModData(File configDir) {
-        dataHolder.setup(configDir);
-        if(dataHolder.requiresDefaultMachinery()) {
-            dataHolder.copyDefaultMachinery();
-        }
-    }
 
     public CommonProxy() {
         registryPrimer = new InternalRegistryPrimer();
         MinecraftForge.EVENT_BUS.register(new PrimerEventHandler(registryPrimer));
     }
 
+    public void loadModData(File configDir) {
+        dataHolder.setup(configDir);
+        if (dataHolder.requiresDefaultMachinery()) {
+            dataHolder.copyDefaultMachinery();
+        }
+    }
+
     public void preInit() {
         creativeTabModularMachinery = new CreativeTabs(ModularMachinery.MODID) {
             @Override
-            public ItemStack getTabIconItem() {
+            public ItemStack createIcon() {
                 return new ItemStack(BlocksMM.blockController);
             }
         };
 
         NetworkRegistry.INSTANCE.registerGuiHandler(ModularMachinery.MODID, this);
 
-        if(Mods.CRAFTTWEAKER.isPresent()) {
+        if (Mods.CRAFTTWEAKER.isPresent()) {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
     }
@@ -90,17 +89,20 @@ public class CommonProxy implements IGuiHandler {
         IntegrationTypeHelper.filterModIdComponents();
         IntegrationTypeHelper.filterModIdRequirementTypes();
 
-        MachineRegistry.getRegistry().registerMachines(MachineRegistry.getRegistry().loadMachines(null));
+        MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
     }
 
-    public void postInit() {}
+    public void postInit() {
+    }
 
-    public void registerBlockModel(Block block) {}
+    public void registerBlockModel(Block block) {
+    }
 
-    public void registerItemModel(Item item) {}
+    public void registerItemModel(Item item) {
+    }
 
     @Nullable
     @Override
@@ -108,9 +110,9 @@ public class CommonProxy implements IGuiHandler {
         GuiType type = GuiType.values()[MathHelper.clamp(ID, 0, GuiType.values().length - 1)];
         Class<? extends TileEntity> required = type.requiredTileEntity;
         TileEntity present = null;
-        if(required != null) {
+        if (required != null) {
             TileEntity te = world.getTileEntity(new BlockPos(x, y, z));
-            if(te != null && required.isAssignableFrom(te.getClass())) {
+            if (te != null && required.isAssignableFrom(te.getClass())) {
                 present = te;
             } else {
                 return null;
@@ -137,7 +139,7 @@ public class CommonProxy implements IGuiHandler {
         return null;
     }
 
-    public static enum GuiType {
+    public enum GuiType {
 
         CONTROLLER(TileMachineController.class),
         BUS_INVENTORY(TileItemBus.class),
@@ -147,7 +149,7 @@ public class CommonProxy implements IGuiHandler {
 
         public final Class<? extends TileEntity> requiredTileEntity;
 
-        private GuiType(@Nullable Class<? extends TileEntity> requiredTileEntity) {
+        GuiType(@Nullable Class<? extends TileEntity> requiredTileEntity) {
             this.requiredTileEntity = requiredTileEntity;
         }
     }

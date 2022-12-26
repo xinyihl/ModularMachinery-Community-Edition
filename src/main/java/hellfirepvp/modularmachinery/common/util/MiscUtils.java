@@ -10,13 +10,10 @@ package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.Lists;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -75,7 +72,7 @@ public class MiscUtils {
     @Nullable
     public static <T> T iterativeSearch(Collection<T> collection, Predicate<T> matchingFct) {
         for (T element : collection) {
-            if(matchingFct.test(element)) {
+            if (matchingFct.test(element)) {
                 return element;
             }
         }
@@ -86,7 +83,7 @@ public class MiscUtils {
         if (num < min) {
             return min;
         } else {
-            return num > max ? max : num;
+            return Math.min(num, max);
         }
     }
 

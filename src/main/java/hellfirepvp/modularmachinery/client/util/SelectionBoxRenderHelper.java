@@ -11,12 +11,7 @@ package hellfirepvp.modularmachinery.client.util;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.common.item.ItemConstructTool;
 import hellfirepvp.modularmachinery.common.selection.PlayerStructureSelectionHelper;
-import hellfirepvp.modularmachinery.common.util.BlockArray;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GLAllocation;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.math.BlockPos;
@@ -25,11 +20,8 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
-import org.lwjgl.opengl.GL11;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -40,18 +32,17 @@ import java.util.stream.Collectors;
  * Date: 22.08.2017 / 23:05
  */
 public class SelectionBoxRenderHelper {
-
     @SubscribeEvent
     public void onRenderLast(RenderWorldLastEvent event) {
-        if(Minecraft.getMinecraft().player == null) return;
+        if (Minecraft.getMinecraft().player == null) return;
 
         ItemStack held = Minecraft.getMinecraft().player.getHeldItemMainhand();
-        if(held.isEmpty()) {
+        if (held.isEmpty()) {
             held = Minecraft.getMinecraft().player.getHeldItemOffhand();
         }
-        if(!held.isEmpty() && held.getItem() instanceof ItemConstructTool) {
+        if (!held.isEmpty() && held.getItem() instanceof ItemConstructTool) {
             PlayerStructureSelectionHelper.StructureSelection sel = PlayerStructureSelectionHelper.clientSelection;
-            if(sel != null) {
+            if (sel != null) {
                 List<BlockPos> toRender = sel.getSelectedPositions().stream()
                         .filter((pos) -> pos.distanceSq(Minecraft.getMinecraft().player.getPosition()) <= 1024)
                         .collect(Collectors.toList());
@@ -64,13 +55,13 @@ public class SelectionBoxRenderHelper {
 
     @SubscribeEvent
     public void onRightClick(PlayerInteractEvent event) {
-        if(event.getEntityPlayer().equals(Minecraft.getMinecraft().player) &&
+        if (event.getEntityPlayer().equals(Minecraft.getMinecraft().player) &&
                 (event instanceof PlayerInteractEvent.RightClickBlock ||
-                event instanceof PlayerInteractEvent.RightClickEmpty ||
-                event instanceof PlayerInteractEvent.RightClickItem)) {
-            if(ClientProxy.renderHelper.placePreview()) {
+                        event instanceof PlayerInteractEvent.RightClickEmpty ||
+                        event instanceof PlayerInteractEvent.RightClickItem)) {
+            if (ClientProxy.renderHelper.placePreview()) {
                 event.setCancellationResult(EnumActionResult.FAIL);
-                if(event.isCancelable()) {
+                if (event.isCancelable()) {
                     event.setCanceled(true);
                 }
             }
@@ -85,7 +76,7 @@ public class SelectionBoxRenderHelper {
 
     @SubscribeEvent
     public void onWorldChange(WorldEvent.Unload unload) {
-        if(unload.getWorld().isRemote) {
+        if (unload.getWorld().isRemote) {
             ClientProxy.renderHelper.unloadWorld();
         }
     }

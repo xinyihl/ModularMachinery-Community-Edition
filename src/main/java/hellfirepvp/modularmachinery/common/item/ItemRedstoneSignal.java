@@ -22,11 +22,9 @@ public class ItemRedstoneSignal extends Item {
         return damage;
     }
 
-    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items){
-        if (this.isInCreativeTab(tab))
-        {
-            for (int i = 0; i < 16; ++i)
-            {
+    public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
+        if (this.isInCreativeTab(tab)) {
+            for (int i = 0; i < 16; ++i) {
                 items.add(new ItemStack(this, 1, i));
             }
         }

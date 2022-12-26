@@ -6,11 +6,11 @@ public enum RedstoneBusSize implements IStringSerializable {
 
     TINY(1);
 
-    private int slots;
+    private final int slots;
 
     private final int defaultConfigSize;
 
-    private RedstoneBusSize(int defaultConfigSize) {
+    RedstoneBusSize(int defaultConfigSize) {
         this.defaultConfigSize = defaultConfigSize;
         this.slots = this.defaultConfigSize;
     }

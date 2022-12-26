@@ -36,18 +36,18 @@ public class ModDataHolder {
 
     public void setup(File configDir) {
         mainDir = new File(configDir, ModularMachinery.MODID);
-        if(!mainDir.exists()) {
+        if (!mainDir.exists()) {
             requiresDefaultMachinery = true;
             mainDir.mkdirs();
         }
 
         machineryDir = new File(mainDir, "machinery");
-        if(!machineryDir.exists()) {
+        if (!machineryDir.exists()) {
             machineryDir.mkdirs();
         }
 
         recipeDir = new File(mainDir, "recipes");
-        if(!recipeDir.exists()) {
+        if (!recipeDir.exists()) {
             recipeDir.mkdirs();
         }
 
@@ -73,7 +73,7 @@ public class ModDataHolder {
         copy("default_recipes", recipeDir);
 
         File defaultVariableDir = new File(machineryDir, "variables");
-        if(!defaultVariableDir.exists()) {
+        if (!defaultVariableDir.exists()) {
             defaultVariableDir.mkdirs();
         }
         copy("default_variables", defaultVariableDir);
@@ -81,13 +81,13 @@ public class ModDataHolder {
 
     private void copy(String assetDirFrom, File directoryTo) {
         ModContainer thisMod = Loader.instance().getIndexedModList().get(ModularMachinery.MODID);
-        if(thisMod == null) {
+        if (thisMod == null) {
             ModContainer active = Loader.instance().activeModContainer();
-            if(active != null && active.getModId().equalsIgnoreCase(ModularMachinery.MODID)) {
+            if (active != null && active.getModId().equalsIgnoreCase(ModularMachinery.MODID)) {
                 thisMod = active;
             }
         }
-        if(thisMod == null) {
+        if (thisMod == null) {
             return;
         }
         FileSystem fs = null;
@@ -115,9 +115,9 @@ public class ModDataHolder {
                 ModularMachinery.log.error("Error iterating through " + assetDirFrom + " Skipping copying default setup!", e);
                 return;
             }
-            while (itr != null && itr.hasNext()) {
+            while (itr.hasNext()) {
                 Path filePath = itr.next();
-                if(!filePath.getFileName().toString().endsWith(".json")) continue;
+                if (!filePath.getFileName().toString().endsWith(".json")) continue;
 
                 File target = new File(directoryTo, filePath.getFileName().toString());
                 try (FileOutputStream fos = new FileOutputStream(target)) {

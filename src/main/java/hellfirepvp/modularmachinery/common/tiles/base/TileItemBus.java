@@ -23,7 +23,8 @@ public abstract class TileItemBus extends TileInventory {
 
     private ItemBusSize size;
 
-    public TileItemBus() {}
+    public TileItemBus() {
+    }
 
     public TileItemBus(ItemBusSize size) {
         super(size.getSlotCount());

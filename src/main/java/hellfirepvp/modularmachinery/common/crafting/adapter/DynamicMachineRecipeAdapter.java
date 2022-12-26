@@ -13,7 +13,6 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.ResourceLocation;
 
@@ -43,12 +42,12 @@ public class DynamicMachineRecipeAdapter extends RecipeAdapter {
     public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName,
                                                       List<RecipeModifier> modifiers,
                                                       List<ComponentRequirement<?, ?>> additionalRequirements) {
-        String newIdentifier = owningMachineName.getResourceDomain() + "." + owningMachineName.getResourcePath();
+        String newIdentifier = owningMachineName.getNamespace() + "." + owningMachineName.getPath();
 
         List<MachineRecipe> recipesNew = new ArrayList<>();
-        for (MachineRecipe recipe : RecipeRegistry.getRegistry().getRecipesFor(this.originalMachine)) {
+        for (MachineRecipe recipe : RecipeRegistry.getRecipesFor(this.originalMachine)) {
             MachineRecipe newRecipe = recipe.copy(
-                    (res) -> new ResourceLocation(ModularMachinery.MODID, res.getResourcePath() + ".copy." + newIdentifier),
+                    (res) -> new ResourceLocation(ModularMachinery.MODID, res.getPath() + ".copy." + newIdentifier),
                     owningMachineName,
                     modifiers);
             for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {

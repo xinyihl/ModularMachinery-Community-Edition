@@ -10,13 +10,11 @@ package hellfirepvp.modularmachinery.common.integration.preview;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
-import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiItemStackGroup;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 
@@ -34,7 +32,10 @@ public class CategoryStructurePreview implements IRecipeCategory<StructurePrevie
 
     public CategoryStructurePreview() {
         ResourceLocation location = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint.png");
-        this.background = ModIntegrationJEI.jeiHelpers.getGuiHelper().createDrawable(location, 4, 4, 168, 136, 6, 0,0,0);
+        this.background = ModIntegrationJEI.jeiHelpers.getGuiHelper()
+                .drawableBuilder(location, 4, 4, 168, 136)
+                .addPadding(6, 0, 0, 0)
+                .build();
         this.trTitle = I18n.format("jei.category.preview");
     }
 

@@ -51,7 +51,7 @@ public class RecipePrimer implements PreparedRecipe {
     private final int tickTime, priority;
     private final boolean doesVoidPerTick;
 
-    private List<ComponentRequirement> components = new LinkedList<>();
+    private final List<ComponentRequirement> components = new LinkedList<>();
     private ComponentRequirement lastComponent = null;
 
     public RecipePrimer(ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean doesVoidPerTick) {
@@ -64,8 +64,8 @@ public class RecipePrimer implements PreparedRecipe {
 
     @ZenMethod
     public RecipePrimer setChance(float chance) {
-        if(lastComponent != null) {
-            if(lastComponent instanceof ComponentRequirement.ChancedRequirement) {
+        if (lastComponent != null) {
+            if (lastComponent instanceof ComponentRequirement.ChancedRequirement) {
                 ((ComponentRequirement.ChancedRequirement) lastComponent).setChance(chance);
             } else {
                 CraftTweakerAPI.logWarning("Cannot set chance for not-chance-based Component: " + lastComponent.getClass().toString());
@@ -76,7 +76,7 @@ public class RecipePrimer implements PreparedRecipe {
 
     @ZenMethod
     public RecipePrimer setTag(String selectorTag) {
-        if(lastComponent != null) {
+        if (lastComponent != null) {
             lastComponent.setTag(new ComponentSelectorTag(selectorTag));
         }
         return this;
@@ -190,11 +190,11 @@ public class RecipePrimer implements PreparedRecipe {
 
     private void requireFluid(IOType ioType, ILiquidStack stack) {
         FluidStack mcFluid = CraftTweakerMC.getLiquidStack(stack);
-        if(mcFluid == null) {
+        if (mcFluid == null) {
             CraftTweakerAPI.logError("FluidStack not found/unknown fluid: " + stack.toString());
             return;
         }
-        if(stack.getTag() != null) {
+        if (stack.getTag() != null) {
             mcFluid.tag = CraftTweakerMC.getNBTCompound(stack.getTag());
         }
         RequirementFluid rf = new RequirementFluid(ioType, mcFluid);
@@ -208,8 +208,8 @@ public class RecipePrimer implements PreparedRecipe {
             CraftTweakerAPI.logError("GasStack not found/unknown gas: " + gasName);
             return;
         }
-        amount = Math.max(0, amount);
-        GasStack gasStack = new GasStack(gas, amount);
+        int max = Math.max(0, amount);
+        GasStack gasStack = new GasStack(gas, max);
         RequirementFluid req = RequirementFluid.createMekanismGasRequirement(RequirementTypesMM.REQUIREMENT_GAS, ioType, gasStack);
         appendComponent(req);
     }
@@ -220,12 +220,12 @@ public class RecipePrimer implements PreparedRecipe {
 
     private void requireItem(IOType ioType, IItemStack stack) {
         ItemStack mcStack = CraftTweakerMC.getItemStack(stack);
-        if(mcStack.isEmpty()) {
+        if (mcStack.isEmpty()) {
             CraftTweakerAPI.logError("ItemStack not found/unknown item: " + stack.toString());
             return;
         }
         RequirementItem ri = new RequirementItem(ioType, mcStack);
-        if(stack.getTag().length() > 0) {
+        if (stack.getTag().length() > 0) {
             ri.tag = CraftTweakerMC.getNBTCompound(stack.getTag());
             ri.previewDisplayTag = CraftTweakerMC.getNBTCompound(stack.getTag());
         }

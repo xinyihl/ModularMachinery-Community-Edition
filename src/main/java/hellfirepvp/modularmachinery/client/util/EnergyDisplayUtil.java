@@ -11,8 +11,6 @@ package hellfirepvp.modularmachinery.client.util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.config.Configuration;
 
-import java.util.function.Function;
-
 /**
  * This class is part of the Modular Machinery Mod
  * The complete source code for this mod can be found on github.
@@ -37,7 +35,7 @@ public class EnergyDisplayUtil {
         type = EnergyType.getType(cfg.getString("Display_Energy_Type", "display.energy", type.name(), "Available options: 'FE', 'IC2_EU', 'GT_EU' - Default: FE - Set this to one of those 3 types to have GUI, recipe preview and energy be displayed in that type of energy in ALL ModularMachinery things."));
     }
 
-    public static enum EnergyType {
+    public enum EnergyType {
 
         FE(1),
         IC2_EU(0.25F),
@@ -51,21 +49,22 @@ public class EnergyDisplayUtil {
             this.unlocalizedFormat = "tooltip.energy.type." + name().toLowerCase();
         }
 
+        public static EnergyType getType(String configValue) {
+            EnergyType type = FE;
+            try {
+                type = EnergyType.valueOf(configValue);
+            } catch (Exception ignored) {
+            }
+
+            return type;
+        }
+
         public long formatEnergyForDisplay(long energy) {
             return MathHelper.lfloor(energy * multiplier);
         }
 
         public String getUnlocalizedFormat() {
             return unlocalizedFormat;
-        }
-
-        public static EnergyType getType(String configValue) {
-            EnergyType type = FE;
-            try {
-                type = EnergyType.valueOf(configValue);
-            } catch (Exception ignored) {}
-
-            return type;
         }
 
     }

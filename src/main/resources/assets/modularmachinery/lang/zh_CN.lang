@@ -12,9 +12,26 @@ gui.controller.status=状态：
 gui.controller.status.redstone_stopped=机器因红石信号停止工作
 gui.controller.status.missing_structure=结构不完整
 gui.controller.status.no_recipe=没有相匹配的配方
-gui.controller.status.no_energy=能量不足，不能继续工作
 gui.controller.status.crafting=工作中……
 gui.controller.status.crafting.progress=进度：%s
+
+craftcheck.failure.item.input=Missing input item!
+craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!
+craftcheck.failure.fluid.input=Missing fluid input!
+craftcheck.failure.fluid.output.space=Not enough tank space for fluid output(s)!
+craftcheck.failure.gas.input=Missing gas input!
+craftcheck.failure.gas.output.space=Not enough space for gas output(s)!
+craftcheck.failure.energy.input=Not enough energy!
+craftcheck.failure.unprepared=尚未准备好！
+
+component.missing.modularmachinery.energy.output=No Energy Output Hatch found!
+component.missing.modularmachinery.energy.input=No Energy Input Hatch found!
+component.missing.modularmachinery.fluid.output=No Fluid Output Hatch found!
+component.missing.modularmachinery.fluid.input=No Fluid Input Hatch found!
+component.missing.modularmachinery.gas.output=No Fluid Output Hatch found!
+component.missing.modularmachinery.gas.input=No Fluid Input Hatch found!
+component.missing.modularmachinery.item.output=No Item Output found!
+component.missing.modularmachinery.item.input=No Item Input found!
 
 gui.blueprint.popout.info=潜行以将当前预览锁定在当前世界中。
 gui.blueprint.popout.place=右击以显示预览；远离或放置其他结构预览（蓝图）将会清除此前世界中的结构预览。
@@ -29,23 +46,32 @@ message.structurebuild.save=机器配置已保存在机器文件夹下的 '%s' �
 message.structurebuild.fail=机器配置保存失败！请查阅日志文件获取详细信息！
 
 tooltip.machinery.empty=空
+
 tooltip.machinery.fuel=接受任意燃料。
 tooltip.machinery.fuel.item=燃烧时间：%s
 tooltip.machinery.fuel.in=合计需要的燃料燃烧时间：
 tooltip.machinery.fuel.in.total=%s tick。
+
 tooltip.machinery.blueprint.required=需要蓝图
 tooltip.machinery.blueprint.upgrades=升级
+
 tooltip.machinery.duration=加工时间：%s tick
+
 tooltip.machinery.chance.in=有 %s 概率被消耗
 tooltip.machinery.chance.out=有 %s 概率产出
 tooltip.machinery.chance.in.never=不被消耗。
 tooltip.machinery.chance.out.never=不产出。
+
 tooltip.machinery.energy.in=能量消耗：
 tooltip.machinery.energy.in.tick=平均：%s FE/t
 tooltip.machinery.energy.in.total=总计：%s FE
 tooltip.machinery.energy.out=能量产出：
 tooltip.machinery.energy.out.tick=平均：%s FE/t
 tooltip.machinery.energy.out.total=总计：%s FE
+
+tooltip.energy.type.fe=FE
+tooltip.energy.type.ic2_eu=EU
+tooltip.energy.type.gt_eu=EU
 
 tooltip.constructtool.creative=创造模式用机械结构到 JSON 转换工具
 
@@ -72,6 +98,11 @@ tooltip.energyhatch.ic2.out.transfer=输出功率：%s %s
 tooltip.energyhatch.ic2.in.voltage=输入电压：%s
 tooltip.energyhatch.ic2.in.transfer=输入功率：%s %s
 
+tooltip.energyhatch.gregtech.voltage.in=Voltage IN: §a%s §7(§a%s§7)
+tooltip.energyhatch.gregtech.voltage.out=Voltage OUT: §a%s §7(§a%s§7)
+tooltip.energyhatch.gregtech.amperage=Amperage: §e%s
+tooltip.energyhatch.gregtech.storage=Internal Energy Capacity: §9%s
+
 tooltip.ic2.powertier.0.name=ULV
 tooltip.ic2.powertier.1.name=LV
 tooltip.ic2.powertier.2.name=MV
@@ -90,6 +121,7 @@ item.modularmachinery.itemblueprint.name=机械蓝图
 item.modularmachinery.itemmodularium.name=模块化合金锭
 item.modularmachinery.itemconstructtool.name=建造选择工具
 item.modularmachinery.itemredstonesignal.name=红石信号
+item.modularmachinery.itemcatalyst.name=Solid Catalyst (Solid Catalyst Container)
 
 tile.modularmachinery.blockcontroller.name=机械控制器
 
@@ -109,6 +141,40 @@ tile.modularmachinery.blockinputbus.huge.name=巨型物品输入仓
 tile.modularmachinery.blockinputbus.ludicrous.name=超级物品输入仓
 
 tile.modularmachinery.blockredstonebus.tiny.name=红石控制端口
+
+tile.modularmachinery.blockcatalystbus.catalyst00.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst01.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst02.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst03.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst04.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst05.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst06.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst07.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst08.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst09.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst10.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst11.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst12.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst13.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst14.name=Solid Catalyst Container
+tile.modularmachinery.blockcatalystbus.catalyst15.name=Solid Catalyst Container
+
+tile.modularmachinery.blockcatalystbusbroken.catalyst00.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst01.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst02.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst03.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst04.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst05.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst06.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst07.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst08.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst09.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst10.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst11.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst12.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst13.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst14.name=Solid Catalyst Container (Deactivate)
+tile.modularmachinery.blockcatalystbusbroken.catalyst15.name=Solid Catalyst Container (Deactivate)
 
 tile.modularmachinery.blockoutputbus.tiny.name=微型物品输出仓
 tile.modularmachinery.blockoutputbus.small.name=小型物品输出仓
@@ -152,4 +218,3 @@ tile.modularmachinery.blockenergyoutputhatch.reinforced.name=强化能源输出�
 tile.modularmachinery.blockenergyoutputhatch.big.name=大型能源输出仓
 tile.modularmachinery.blockenergyoutputhatch.huge.name=巨型能源输出仓
 tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=超级能源输出仓
-tile.modularmachinery.blockenergyoutputhatch.ultimate.name=终极能源输出仓

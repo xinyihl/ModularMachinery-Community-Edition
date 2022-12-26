@@ -35,7 +35,8 @@ public class GuiContainerItemBus extends GuiContainerBase<ContainerItemBus> {
     }
 
     @Override
-    protected void setWidthHeight() {}
+    protected void setWidthHeight() {
+    }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {

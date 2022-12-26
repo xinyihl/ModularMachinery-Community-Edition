@@ -12,7 +12,7 @@ import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.crafting.adapter.AdapterMinecraftFurnace;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 
-import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.*;
+import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.MINECRAFT_FURNACE;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -23,7 +23,8 @@ import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.*;
  */
 public class RegistryRecipeAdapters {
 
-    private RegistryRecipeAdapters() {}
+    private RegistryRecipeAdapters() {
+    }
 
     public static void initialize() {
         MINECRAFT_FURNACE = register(new AdapterMinecraftFurnace());

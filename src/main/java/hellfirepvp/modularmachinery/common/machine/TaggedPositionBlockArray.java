@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class TaggedPositionBlockArray extends BlockArray {
 
-    private Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
+    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
 
     public void setTag(BlockPos pos, ComponentSelectorTag tag) {
         this.taggedPositions.put(pos, tag);

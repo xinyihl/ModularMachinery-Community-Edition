@@ -12,12 +12,11 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.prop.CatalystBusSize;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
-import hellfirepvp.modularmachinery.common.block.prop.RedstoneBusSize;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.tiles.TileCatalystBus;
-import hellfirepvp.modularmachinery.common.tiles.TileRedstoneBus;
 import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
+import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.RedstoneHelper;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -26,10 +25,8 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
@@ -76,23 +73,31 @@ public class BlockCatalystBus extends BlockMachineComponent implements BlockCust
         player.addExhaustion(0.005F);
         boolean isUsed = false;
         TileCatalystBus tile = (TileCatalystBus) te;
-        for (int i = 0; i < tile.getInventory().getSlots(); i++)
-            isUsed = isUsed || (tile.getInventory().getStackInSlot(i).getCount() < 64);
+
+        IOInventory inventory = tile.getInventory();
+
+        for (int i = 0; i < inventory.getSlots(); i++) {
+            isUsed = isUsed || (inventory.getStackInSlot(i).getCount() < 64);
+        }
 
         //net.minecraftforge.event.ForgeEventFactory.fireBlockHarvesting(items, worldIn, pos, state, 0, 1.0f, true, player);
-        if(isUsed)spawnAsEntity(worldIn, pos, new ItemStack(BlocksMM.itemCatalystBusBroken,1,getMetaFromState(state)));
-        else spawnAsEntity(worldIn,pos,new ItemStack(BlocksMM.itemCatalystBus,1,getMetaFromState(state)));
+        if (isUsed) {
+            spawnAsEntity(worldIn, pos, new ItemStack(BlocksMM.itemCatalystBusBroken, 1, getMetaFromState(state)));
+        } else {
+            spawnAsEntity(worldIn, pos, new ItemStack(BlocksMM.itemCatalystBus, 1, getMetaFromState(state)));
+        }
     }
 
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(worldIn.isRemote)return true;
-        TileCatalystBus tile=(TileCatalystBus) worldIn.getTileEntity(pos);
-        if(tile==null) playerIn.sendMessage(new TextComponentString("Tile Error!"));
+        if (worldIn.isRemote) return true;
+        TileCatalystBus tile = (TileCatalystBus) worldIn.getTileEntity(pos);
+        if (tile == null) playerIn.sendMessage(new TextComponentString("Tile Error!"));
         else {
-            int catalystCount=0;
-            for(int i=0;i<tile.getInventory().getSlots();i++)catalystCount+=tile.getInventory().getStackInSlot(i).getCount();
-            playerIn.sendMessage(new TextComponentString(String.format("Catalyst remaining: %.2f%%",catalystCount*100.0/(tile.getInventory().getSlots()*64))));
+            int catalystCount = 0;
+            for (int i = 0; i < tile.getInventory().getSlots(); i++)
+                catalystCount += tile.getInventory().getStackInSlot(i).getCount();
+            playerIn.sendMessage(new TextComponentString(String.format("Catalyst remaining: %.2f%%", catalystCount * 100.0 / (tile.getInventory().getSlots() * 64))));
         }
         return true;
     }
@@ -111,7 +116,7 @@ public class BlockCatalystBus extends BlockMachineComponent implements BlockCust
 
     @Override
     @SideOnly(Side.CLIENT)
-    public BlockRenderLayer getBlockLayer() {
+    public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
@@ -172,7 +177,7 @@ public class BlockCatalystBus extends BlockMachineComponent implements BlockCust
 
     @Override
     public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-        if(!worldIn.isRemote) {
+        if (!worldIn.isRemote) {
             TileCatalystBus te = (TileCatalystBus) worldIn.getTileEntity(pos);
             if (te != null)
                 for (int i = 0; i < ItemBusSize.LUDICROUS.getSlotCount(); i++) {

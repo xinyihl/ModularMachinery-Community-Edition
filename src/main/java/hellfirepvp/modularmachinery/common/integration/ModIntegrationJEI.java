@@ -27,26 +27,18 @@ import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import mekanism.api.gas.Gas;
-import mekanism.api.gas.GasRegistry;
-import mekanism.api.gas.GasStack;
 import mezz.jei.api.*;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IModIngredientRegistration;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
 import mezz.jei.api.recipe.IStackHelper;
-import net.minecraft.block.Block;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.*;
 import net.minecraftforge.fml.common.Optional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -59,7 +51,7 @@ import java.util.stream.Collectors;
 public class ModIntegrationJEI implements IModPlugin {
 
     public static final String CATEGORY_PREVIEW = "modularmachinery.preview";
-    private static Map<DynamicMachine, CategoryDynamicRecipe> recipeCategories = new HashMap<>();
+    private static final Map<DynamicMachine, CategoryDynamicRecipe> recipeCategories = new HashMap<>();
 
     public static IStackHelper stackHelper;
     public static IJeiHelpers jeiHelpers;
@@ -67,18 +59,23 @@ public class ModIntegrationJEI implements IModPlugin {
     public static IRecipeRegistry recipeRegistry;
 
     public static String getCategoryStringFor(DynamicMachine machine) {
-        return "modularmachinery.recipes." + machine.getRegistryName().getResourcePath();
+        return "modularmachinery.recipes." + machine.getRegistryName().getPath();
     }
 
     public static CategoryDynamicRecipe getCategory(DynamicMachine machine) {
         return recipeCategories.get(machine);
     }
 
+    @Optional.Method(modid = "mekanism")
+    private static void registerHybridGas(IModIngredientRegistration registry) {
+        registry.register(() -> HybridFluidGas.class, new ArrayList<>(0), new HybridStackHelper<>(), new HybridFluidRenderer<>());
+    }
+
     @Override
     public void registerItemSubtypes(ISubtypeRegistry subtypeRegistry) {
         subtypeRegistry.registerSubtypeInterpreter(ItemsMM.blueprint, (s) -> {
             DynamicMachine machine = ItemBlueprint.getAssociatedMachine(s);
-            if(machine == null) {
+            if (machine == null) {
                 return ISubtypeRegistry.ISubtypeInterpreter.NONE;
             }
             return machine.getRegistryName().toString();
@@ -89,7 +86,7 @@ public class ModIntegrationJEI implements IModPlugin {
     public void registerIngredients(IModIngredientRegistration registry) {
         try {
             registry.register(() -> HybridFluid.class, Lists.newArrayList(), new HybridStackHelper<>(), new HybridFluidRenderer<>());
-            if(Mods.MEKANISM.isPresent()) {
+            if (Mods.MEKANISM.isPresent()) {
                 registerHybridGas(registry);
             }
         } catch (Exception exc) {
@@ -97,11 +94,6 @@ public class ModIntegrationJEI implements IModPlugin {
             exc.printStackTrace();
             throw exc;
         }
-    }
-
-    @Optional.Method(modid = "mekanism")
-    private void registerHybridGas(IModIngredientRegistration registry) {
-        registry.register(() -> HybridFluidGas.class, Lists.newArrayList(), new HybridStackHelper<>(), new HybridFluidRenderer<>());
     }
 
     @Override
@@ -138,7 +130,7 @@ public class ModIntegrationJEI implements IModPlugin {
         registry.addRecipes(previews, CATEGORY_PREVIEW);
 
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-            Iterable<MachineRecipe> recipes = RecipeRegistry.getRegistry().getRecipesFor(machine);
+            Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(machine);
             List<DynamicRecipeWrapper> recipeWrappers = new ArrayList<>();
             for (MachineRecipe recipe : recipes) {
                 recipeWrappers.add(new DynamicRecipeWrapper(recipe));

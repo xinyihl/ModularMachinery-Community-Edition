@@ -13,22 +13,22 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.crafting.tooltip.RequirementTip;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import mezz.jei.api.gui.*;
+import mezz.jei.api.gui.IDrawable;
+import mezz.jei.api.gui.IGuiIngredientGroup;
+import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -40,18 +40,15 @@ import java.util.stream.Collectors;
  */
 public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapper> {
 
+    final int realHeight;
+    final LinkedList<RecipeLayoutPart<?>> inputComponents = Lists.newLinkedList();
+    final LinkedList<RecipeLayoutPart<?>> outputComponents = Lists.newLinkedList();
     private final DynamicMachine machine;
     private final String category;
     private final String title;
     private final IDrawable sizeEmptyDrawable;
-
-    final int realHeight;
-
-    LinkedList<RecipeLayoutPart<?>> inputComponents  = Lists.newLinkedList();
-    LinkedList<RecipeLayoutPart<?>> outputComponents = Lists.newLinkedList();
-
-    private Point offsetProcessArrow;
     Rectangle rectangleProcessArrow;
+    private Point offsetProcessArrow;
 
     public CategoryDynamicRecipe(DynamicMachine machine) {
         this.machine = machine;
@@ -64,8 +61,8 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
     }
 
     private Point buildRecipeComponents() {
-        Iterable<MachineRecipe> recipes = RecipeRegistry.getRegistry().getRecipesFor(this.machine);
-        Map<IOType, Map<Class<?>, Integer>> componentCounts = new HashMap<>();
+        Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(this.machine);
+        Map<IOType, Map<Class<?>, Integer>> componentCounts = new EnumMap<>(IOType.class);
         Map<Class<?>, ComponentRequirement.JEIComponent<?>> componentsFound = new HashMap<>();
         FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
         int offsetX = 8;
@@ -75,7 +72,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         int widestTooltip = 0;
 
         for (MachineRecipe recipe : recipes) {
-            Map<IOType, Map<Class<?>, Integer>> tempComp = new HashMap<>();
+            Map<IOType, Map<Class<?>, Integer>> tempComp = new EnumMap<>(IOType.class);
             for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
                 ComponentRequirement.JEIComponent<?> jeiComp = req.provideJEIComponent();
                 int amt = tempComp.computeIfAbsent(req.getActionType(), ioType -> new HashMap<>())
@@ -84,7 +81,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 tempComp.get(req.getActionType()).put(jeiComp.getJEIRequirementClass(), amt);
 
 
-                if(!componentsFound.containsKey(jeiComp.getJEIRequirementClass())) {
+                if (!componentsFound.containsKey(jeiComp.getJEIRequirementClass())) {
                     componentsFound.put(jeiComp.getJEIRequirementClass(), jeiComp);
                 }
             }
@@ -92,7 +89,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 for (Map.Entry<Class<?>, Integer> cntEntry : cmpEntry.getValue().entrySet()) {
                     int current = componentCounts.computeIfAbsent(cmpEntry.getKey(), ioType -> new HashMap<>())
                             .computeIfAbsent(cntEntry.getKey(), clazz -> 0);
-                    if(cntEntry.getValue() > current) {
+                    if (cntEntry.getValue() > current) {
                         componentCounts.get(cmpEntry.getKey()).put(cntEntry.getKey(), cntEntry.getValue());
                     }
                 }
@@ -120,7 +117,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             }
         }
 
-        List<Class<?>> classes = Lists.newLinkedList(componentsFound.keySet());
+        List<Class<?>> classes = new LinkedList<>(componentsFound.keySet());
         classes.sort((o1, o2) -> {
             RecipeLayoutPart<?> part1 = componentsFound.get(o1).getTemplateLayout();
             RecipeLayoutPart<?> part2 = componentsFound.get(o2).getTemplateLayout();
@@ -129,7 +126,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
 
         for (Class<?> clazz : classes) {
             Map<Class<?>, Integer> compMap = componentCounts.get(IOType.INPUT);
-            if(compMap != null && compMap.containsKey(clazz)) {
+            if (compMap != null && compMap.containsKey(clazz)) {
                 ComponentRequirement.JEIComponent<?> component = componentsFound.get(clazz);
                 RecipeLayoutPart<?> layoutHelper = component.getTemplateLayout();
                 int amt = compMap.get(clazz);
@@ -138,16 +135,16 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 int originalOffsetX = offsetX;
                 int partOffsetY = offsetY;
                 for (int i = 0; i < amt; i++) {
-                    if(i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
+                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
                         partOffsetY += layoutHelper.getComponentHeight() + layoutHelper.getComponentVerticalGap();
                         partOffsetX = originalOffsetX;
                     }
                     inputComponents.add(component.getLayoutPart(new Point(partOffsetX, partOffsetY)));
                     partOffsetX += layoutHelper.getComponentWidth() + layoutHelper.getComponentHorizontalGap();
-                    if(partOffsetX > offsetX) {
+                    if (partOffsetX > offsetX) {
                         offsetX = partOffsetX;
                     }
-                    if(partOffsetY + layoutHelper.getComponentHeight() > highestY) {
+                    if (partOffsetY + layoutHelper.getComponentHeight() > highestY) {
                         highestY = partOffsetY + layoutHelper.getComponentHeight();
                     }
                 }
@@ -159,7 +156,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         offsetX += RecipeLayoutHelper.PART_PROCESS_ARROW.xSize;
         offsetX += 4;
 
-        classes = Lists.newLinkedList(componentsFound.keySet());
+        classes = new LinkedList<>(componentsFound.keySet());
         classes.sort((o1, o2) -> {
             RecipeLayoutPart<?> part1 = componentsFound.get(o1).getTemplateLayout();
             RecipeLayoutPart<?> part2 = componentsFound.get(o2).getTemplateLayout();
@@ -168,7 +165,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
 
         for (Class<?> clazz : classes) {
             Map<Class<?>, Integer> compMap = componentCounts.get(IOType.OUTPUT);
-            if(compMap != null && compMap.containsKey(clazz)) {
+            if (compMap != null && compMap.containsKey(clazz)) {
                 ComponentRequirement.JEIComponent<?> component = componentsFound.get(clazz);
                 RecipeLayoutPart<?> layoutHelper = component.getTemplateLayout();
                 int amt = compMap.get(clazz);
@@ -177,16 +174,16 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 int originalOffsetX = offsetX;
                 int partOffsetY = offsetY;
                 for (int i = 0; i < amt; i++) {
-                    if(i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
+                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
                         partOffsetY += layoutHelper.getComponentHeight() + layoutHelper.getComponentVerticalGap();
                         partOffsetX = originalOffsetX;
                     }
                     outputComponents.add(component.getLayoutPart(new Point(partOffsetX, partOffsetY)));
                     partOffsetX += layoutHelper.getComponentWidth() + layoutHelper.getComponentHorizontalGap();
-                    if(partOffsetX > offsetX) {
+                    if (partOffsetX > offsetX) {
                         offsetX = partOffsetX;
                     }
-                    if(partOffsetY + layoutHelper.getComponentHeight() > highestY) {
+                    if (partOffsetY + layoutHelper.getComponentHeight() > highestY) {
                         highestY = partOffsetY + layoutHelper.getComponentHeight();
                     }
                 }
@@ -233,32 +230,31 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
     @Override
     public void drawExtras(Minecraft minecraft) {
         RecipeLayoutHelper.PART_PROCESS_ARROW.drawable.draw(minecraft, offsetProcessArrow.x, offsetProcessArrow.y);
-        for (RecipeLayoutPart slot : this.inputComponents) {
-            slot.drawBackground(minecraft);
-        }
-        for (RecipeLayoutPart slot : this.outputComponents) {
-            slot.drawBackground(minecraft);
-        }
+
+        inputComponents.forEach(slot -> slot.drawBackground(minecraft));
+        outputComponents.forEach(slot -> slot.drawBackground(minecraft));
     }
 
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, DynamicRecipeWrapper recipeWrapper, IIngredients ingredients) {
         List<Class<?>> foundClasses = new LinkedList<>();
+
         for (IOType type : IOType.values()) {
             for (Class<?> clazz : recipeWrapper.finalOrderedComponents.get(type).keySet()) {
-                if(clazz.equals(Long.class)) { //Nope nope nope, fck you, Energy-component.
+                if (clazz.equals(Long.class)) { //Nope nope nope, fck you, Energy-component.
                     continue;
                 }
-                if(!foundClasses.contains(clazz)) {
+                if (!foundClasses.contains(clazz)) {
                     foundClasses.add(clazz);
                 }
             }
         }
 
-        for (Class<?> clazz : foundClasses) {
+        foundClasses.forEach(clazz -> {
             int amtCompInputs = 0;
             IGuiIngredientGroup<?> clazzGroup = recipeLayout.getIngredientsGroup(clazz);
             int compSlotIndex = 0;
+
             for (RecipeLayoutPart slot : this.inputComponents
                     .stream()
                     .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))
@@ -276,6 +272,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 compSlotIndex++;
                 amtCompInputs++;
             }
+
             for (RecipeLayoutPart slot : this.outputComponents
                     .stream()
                     .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))
@@ -299,17 +296,17 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             clazzGroup.addTooltipCallback((slotIndex, input, ingredient, tooltip) -> {
                 Map<Class<?>, List<ComponentRequirement<?, ?>>> components = recipeWrapper.finalOrderedComponents
                         .get(input ? IOType.INPUT : IOType.OUTPUT);
-                if(components != null) {
+                if (components != null) {
                     List<ComponentRequirement<?, ?>> compList = components.get(clazz);
 
                     int index = input ? slotIndex : slotIndex - finalAmtInputs;
-                    if(index < 0 || index >= compList.size()) {
+                    if (index < 0 || index >= compList.size()) {
                         return;
                     }
                     ComponentRequirement.JEIComponent jeiComp = compList.get(index).provideJEIComponent();
                     jeiComp.onJEIHoverTooltip(index, input, ingredient, tooltip);
                 }
             });
-        }
+        });
     }
 }

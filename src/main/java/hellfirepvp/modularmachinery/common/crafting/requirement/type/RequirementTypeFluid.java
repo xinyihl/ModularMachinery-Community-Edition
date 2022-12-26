@@ -10,18 +10,14 @@ package hellfirepvp.modularmachinery.common.crafting.requirement.type;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
-import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.nbt.NBTException;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-
-import javax.annotation.Nullable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -36,30 +32,30 @@ public class RequirementTypeFluid extends RequirementType<HybridFluid, Requireme
     public RequirementFluid createRequirement(IOType type, JsonObject requirement) {
         RequirementFluid req;
 
-        if(!requirement.has("fluid") || !requirement.get("fluid").isJsonPrimitive() ||
+        if (!requirement.has("fluid") || !requirement.get("fluid").isJsonPrimitive() ||
                 !requirement.get("fluid").getAsJsonPrimitive().isString()) {
             throw new JsonParseException("The ComponentType 'fluid' expects an 'fluid'-entry that defines the type of fluid!");
         }
-        if(!requirement.has("amount") || !requirement.get("amount").isJsonPrimitive() ||
+        if (!requirement.has("amount") || !requirement.get("amount").isJsonPrimitive() ||
                 !requirement.get("amount").getAsJsonPrimitive().isNumber()) {
             throw new JsonParseException("The ComponentType 'fluid' expects an 'amount'-entry that defines the type of fluid!");
         }
         String fluidName = requirement.getAsJsonPrimitive("fluid").getAsString();
         int mbAmount = requirement.getAsJsonPrimitive("amount").getAsInt();
         Fluid f = FluidRegistry.getFluid(fluidName);
-        if(f == null) {
+        if (f == null) {
             throw new JsonParseException("The fluid specified in the 'fluid'-entry (" + fluidName + ") doesn't exist!");
         }
         mbAmount = Math.max(0, mbAmount);
         FluidStack fluidStack = new FluidStack(f, mbAmount);
         req = new RequirementFluid(type, fluidStack);
 
-        if(requirement.has("chance")) {
-            if(!requirement.get("chance").isJsonPrimitive() || !requirement.getAsJsonPrimitive("chance").isNumber()) {
+        if (requirement.has("chance")) {
+            if (!requirement.get("chance").isJsonPrimitive() || !requirement.getAsJsonPrimitive("chance").isNumber()) {
                 throw new JsonParseException("'chance', if defined, needs to be a chance-number between 0 and 1!");
             }
             float chance = requirement.getAsJsonPrimitive("chance").getAsFloat();
-            if(chance >= 0 && chance <= 1) {
+            if (chance >= 0 && chance <= 1) {
                 req.setChance(chance);
             }
         }
@@ -74,7 +70,7 @@ public class RequirementTypeFluid extends RequirementType<HybridFluid, Requireme
                 throw new JsonParseException("Error trying to parse NBTTag! Rethrowing exception...", exc);
             }
             if (requirement.has("nbt-display")) {
-                if(!requirement.has("nbt-display") || !requirement.get("nbt-display").isJsonObject()) {
+                if (!requirement.has("nbt-display") || !requirement.get("nbt-display").isJsonObject()) {
                     throw new JsonParseException("The ComponentType 'nbt-display' expects a json compound that defines the NBT tag meant to be used for displaying!");
                 }
                 String nbtDisplayString = requirement.getAsJsonObject("nbt-display").toString();

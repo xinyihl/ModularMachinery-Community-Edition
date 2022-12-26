@@ -22,7 +22,8 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
  */
 public class TileFluidInputHatch extends TileFluidTank implements MachineComponentTile {
 
-    public TileFluidInputHatch() {}
+    public TileFluidInputHatch() {
+    }
 
     public TileFluidInputHatch(FluidHatchSize size) {
         super(size, IOType.INPUT);

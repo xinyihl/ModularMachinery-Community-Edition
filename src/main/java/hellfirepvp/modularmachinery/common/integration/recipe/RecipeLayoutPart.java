@@ -15,7 +15,6 @@ import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.plugins.vanilla.ingredients.item.ItemStackRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 
 import java.awt.*;
@@ -128,7 +127,7 @@ public abstract class RecipeLayoutPart<T> {
                             1000,
                             false,
                             RecipeLayoutHelper.PART_TANK_SHELL.drawable);
-            if(Mods.MEKANISM.isPresent()) {
+            if (Mods.MEKANISM.isPresent()) {
                 copy = addGasRenderer(copy);
             }
             return copy;
@@ -155,7 +154,8 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         @Override
-        public void drawBackground(Minecraft mc) {}
+        public void drawBackground(Minecraft mc) {
+        }
 
     }
 
@@ -226,7 +226,7 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         public void drawEnergy(Minecraft mc, Long energy) {
-            if(energy > 0) {
+            if (energy > 0) {
                 RecipeLayoutHelper.PART_ENERGY_FOREGROUND.drawable.draw(mc, getOffset().x, getOffset().y);
             }
         }

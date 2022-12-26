@@ -8,12 +8,9 @@
 
 package hellfirepvp.modularmachinery.client.util;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
-import hellfirepvp.modularmachinery.common.util.MiscUtils;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -21,7 +18,6 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -32,7 +28,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -40,20 +35,13 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -64,11 +52,11 @@ import java.util.function.Function;
  */
 public class BlockArrayRenderHelper {
 
-    private BlockArray blocks;
-    private WorldBlockArrayRenderAccess renderAccess;
+    private final BlockArray blocks;
+    private final WorldBlockArrayRenderAccess renderAccess;
+    long sampleSnap = -1;
     private double rotX, rotY, rotZ;
     private double sliceTrX, sliceTrY, sliceTrZ;
-    long sampleSnap = -1;
 
     BlockArrayRenderHelper(BlockArray blocks) {
         this.blocks = blocks;
@@ -124,7 +112,7 @@ public class BlockArrayRenderHelper {
 
     public void render3DGUI(double x, double y, float scaleMultiplier, float pTicks, Optional<Integer> slice) {
         GuiScreen scr = Minecraft.getMinecraft().currentScreen;
-        if(scr == null) return;
+        if (scr == null) return;
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glPushMatrix();
@@ -142,22 +130,22 @@ public class BlockArrayRenderHelper {
         double size = 2;
         double minSize = 0.5;
 
-        if(!slice.isPresent()) {
+        if (!slice.isPresent()) {
             double maxLength = 0;
             double pointDst = max.getX() - min.getX();
-            if(pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) maxLength = pointDst;
             pointDst = max.getY() - min.getY();
-            if(pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) maxLength = pointDst;
             pointDst = max.getZ() - min.getZ();
-            if(pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) maxLength = pointDst;
             maxLength -= 5;
 
-            if(maxLength > 0) {
+            if (maxLength > 0) {
                 size = (size - minSize) * (1D - (maxLength / 20D));
             }
         }
 
-        double dr = -5.75*size;
+        double dr = -5.75 * size;
         GL11.glTranslated(dr, dr, dr);
         GL11.glRotated(rotX, 1, 0, 0);
         GL11.glRotated(rotY, 0, 1, 0);
@@ -166,7 +154,7 @@ public class BlockArrayRenderHelper {
 
         GL11.glTranslated(sliceTrX, sliceTrY, sliceTrZ);
 
-        GL11.glScaled(-size*mul, -size*mul, -size*mul);
+        GL11.glScaled(-size * mul, -size * mul, -size * mul);
 
         BlockRendererDispatcher brd = Minecraft.getMinecraft().getBlockRendererDispatcher();
         VertexFormat blockFormat = DefaultVertexFormats.BLOCK;
@@ -181,16 +169,16 @@ public class BlockArrayRenderHelper {
         vb.begin(GL11.GL_QUADS, blockFormat);
         for (Map.Entry<BlockPos, BakedBlockData> data : renderAccess.blockRenderData.entrySet()) {
             BlockPos offset = data.getKey();
-            if(slice.isPresent()) {
-                if(slice.get() != offset.getY()) {
+            if (slice.isPresent()) {
+                if (slice.get() != offset.getY()) {
                     continue;
                 }
             }
             BakedBlockData renderData = data.getValue();
             SampleRenderState state = renderData.getSampleState();
-            if(state.state.getBlock() != Blocks.AIR) {
+            if (state.state.getBlock() != Blocks.AIR) {
                 TileEntityRenderData terd = state.renderData;
-                if(terd != null && terd.tileEntity != null) {
+                if (terd != null && terd.tileEntity != null) {
                     terd.tileEntity.setWorld(Minecraft.getMinecraft().world);
                     terd.tileEntity.setPos(offset);
                 }
@@ -212,19 +200,20 @@ public class BlockArrayRenderHelper {
 
         for (Map.Entry<BlockPos, BakedBlockData> data : renderAccess.blockRenderData.entrySet()) {
             BlockPos offset = data.getKey();
-            if(slice.isPresent()) {
-                if(slice.get() != offset.getY()) {
+            if (slice.isPresent()) {
+                if (slice.get() != offset.getY()) {
                     continue;
                 }
             }
             SampleRenderState state = data.getValue().getSampleState();
             TileEntityRenderData terd = state.renderData;
-            if(terd != null && terd.tileEntity != null && terd.renderer != null) {
+            if (terd != null && terd.tileEntity != null && terd.renderer != null) {
                 terd.tileEntity.setWorld(Minecraft.getMinecraft().world);
                 terd.tileEntity.setPos(offset);
                 try {
                     terd.renderer.render(terd.tileEntity, offset.getX(), offset.getY(), offset.getZ(), pTicks, 0, 1F);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
 
@@ -237,8 +226,8 @@ public class BlockArrayRenderHelper {
 
     static class BakedBlockData {
 
-        private BlockArrayRenderHelper ref;
-        private List<SampleRenderState> renderStates = Lists.newArrayList();
+        private final BlockArrayRenderHelper ref;
+        private final List<SampleRenderState> renderStates = new ArrayList<>();
 
         private BakedBlockData(BlockArrayRenderHelper ref, List<BlockArray.IBlockStateDescriptor> states, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
             this.ref = ref;
@@ -251,7 +240,7 @@ public class BlockArrayRenderHelper {
 
         SampleRenderState getSampleState() {
             int tickSpeed = BlockArray.BlockInformation.CYCLE_TICK_SPEED;
-            if(renderStates.size() > 10) {
+            if (renderStates.size() > 10) {
                 tickSpeed *= 0.6;
             }
             int p = (int) ((ref.sampleSnap == -1 ? ClientScheduler.getClientTick() : ref.sampleSnap) / tickSpeed);
@@ -263,26 +252,22 @@ public class BlockArrayRenderHelper {
 
     static class SampleRenderState {
 
-        IBlockState state;
-        TileEntityRenderData renderData;
+        final IBlockState state;
+        final TileEntityRenderData renderData;
 
         private SampleRenderState(IBlockState state, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
             Tuple<IBlockState, TileEntity> tt = BlockCompatHelper.transformState(state, matchTag, context);
             this.state = tt.getFirst();
             TileEntity te = tt.getSecond();
-            if(te != null) {
-                renderData = new TileEntityRenderData(te);
-            } else {
-                renderData = null;
-            }
+            renderData = new TileEntityRenderData(te);
         }
 
     }
 
     static class TileEntityRenderData {
 
-        TileEntity tileEntity;
-        TileEntitySpecialRenderer<TileEntity> renderer;
+        final TileEntity tileEntity;
+        final TileEntitySpecialRenderer<TileEntity> renderer;
 
         private TileEntityRenderData(TileEntity tileEntity) {
             this.tileEntity = tileEntity;
@@ -291,12 +276,10 @@ public class BlockArrayRenderHelper {
     }
 
     public static class WorldBlockArrayRenderAccess implements IBlockAccess {
-
-        Map<BlockPos, BakedBlockData> blockRenderData = new HashMap<>();
+        final Map<BlockPos, BakedBlockData> blockRenderData = new HashMap<>();
+        private final BlockArray originalArray;
         private int currentRenderSlice = 0;
         private boolean respectRenderSlice = false;
-
-        private final BlockArray originalArray;
 
         private WorldBlockArrayRenderAccess(BlockArrayRenderHelper ref, BlockArray array) {
             this.originalArray = array;
@@ -308,18 +291,18 @@ public class BlockArrayRenderHelper {
             }
         }
 
-        WorldBlockArrayRenderAccess build(BlockArrayRenderHelper ref, BlockArray array, BlockPos toOffset) {
+        static WorldBlockArrayRenderAccess build(BlockArrayRenderHelper ref, BlockArray array, BlockPos toOffset) {
             return new WorldBlockArrayRenderAccess(ref, new BlockArray(array, toOffset));
         }
 
         @Nullable
         @Override
         public TileEntity getTileEntity(BlockPos pos) {
-            if(!isInBounds(pos)) {
+            if (!isInBounds(pos)) {
                 return null;
             }
             SampleRenderState sample = getSample(pos);
-            if(sample == null || sample.renderData == null) {
+            if (sample == null || sample.renderData == null) {
                 return null;
             }
             return sample.renderData.tileEntity;
@@ -334,11 +317,11 @@ public class BlockArrayRenderHelper {
         @Nonnull
         @Override
         public IBlockState getBlockState(BlockPos pos) {
-            if(!isInBounds(pos)) {
+            if (!isInBounds(pos)) {
                 return Blocks.AIR.getDefaultState();
             }
             SampleRenderState sample = getSample(pos);
-            if(sample == null) {
+            if (sample == null) {
                 return Blocks.AIR.getDefaultState();
             }
             return sample.state;
@@ -366,8 +349,8 @@ public class BlockArrayRenderHelper {
         }
 
         private boolean isInBounds(BlockPos pos) {
-            if(respectRenderSlice) {
-                if(pos.getY() != currentRenderSlice) {
+            if (respectRenderSlice) {
+                if (pos.getY() != currentRenderSlice) {
                     return false;
                 }
             }

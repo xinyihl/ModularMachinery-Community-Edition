@@ -26,17 +26,17 @@ import net.minecraftforge.items.ItemHandlerHelper;
 public class RedstoneHelper {
 
     public static int getRedstoneLevel(TileEntity sync) {
-        if(sync == null) return 0;
-        if(sync instanceof TileInventory) {
+        if (sync == null) return 0;
+        if (sync instanceof TileInventory) {
             return ItemHandlerHelper.calcRedstoneFromInventory(((TileInventory) sync).getInventory());
-        } else if(sync instanceof TileFluidTank) {
+        } else if (sync instanceof TileFluidTank) {
             FluidTank tank = ((TileFluidTank) sync).getTank();
             float cap = tank.getCapacity();
             float cur = tank.getFluidAmount();
             return MathHelper.clamp(Math.round(15F * (cur / cap)), 0, 15);
-        } else if(sync instanceof TileEnergyHatch) {
-            float cap = ((TileEnergyHatch) sync).getMaxEnergy();
-            float cur = ((TileEnergyHatch) sync).getCurrentEnergy();
+        } else if (sync instanceof TileEnergyHatch) {
+            float cap = ((IEnergyHandler) sync).getMaxEnergy();
+            float cur = ((IEnergyHandler) sync).getCurrentEnergy();
             return MathHelper.clamp(Math.round(15F * (cur / cap)), 0, 15);
         }
         return 0;

@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.common.crafting.command;
 import net.minecraft.command.ICommandSender;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**

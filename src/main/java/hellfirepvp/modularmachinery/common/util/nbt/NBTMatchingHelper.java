@@ -25,32 +25,32 @@ import java.util.List;
 public class NBTMatchingHelper {
 
     public static boolean matchNBTCompound(@Nullable NBTTagCompound matchNBT, @Nullable NBTTagCompound itemStackNBTToCheck) {
-        if(matchNBT == null) {
+        if (matchNBT == null) {
             return true;
         }
-        if(itemStackNBTToCheck == null) {
+        if (itemStackNBTToCheck == null) {
             return matchNBT.getKeySet().isEmpty();
         }
         return matchCompound(matchNBT, itemStackNBTToCheck);
     }
 
     private static boolean matchBase(NBTBase matchBase, NBTBase matchStack) {
-        if(matchBase instanceof NBTComparableNumber) {
+        if (matchBase instanceof NBTComparableNumber) {
             return (matchStack instanceof NBTPrimitive) &&
                     ((NBTComparableNumber) matchBase).test((NBTPrimitive) matchStack);
-        } else if(matchBase instanceof NBTPatternString) {
+        } else if (matchBase instanceof NBTPatternString) {
             return (matchStack instanceof NBTTagString) &&
                     ((NBTPatternString) matchBase).testString(((NBTTagString) matchStack).getString());
-        } else if(matchBase instanceof NBTTagCompound) {
+        } else if (matchBase instanceof NBTTagCompound) {
             return (matchStack instanceof NBTTagCompound) &&
                     matchCompound((NBTTagCompound) matchBase, (NBTTagCompound) matchStack);
-        } else if(matchBase instanceof NBTTagList) {
+        } else if (matchBase instanceof NBTTagList) {
             return (matchStack instanceof NBTTagList) &&
                     matchList((NBTTagList) matchBase, (NBTTagList) matchStack);
-        } else if(matchBase instanceof NBTTagByteArray) {
+        } else if (matchBase instanceof NBTTagByteArray) {
             return (matchStack instanceof NBTTagByteArray) &&
                     Arrays.equals(((NBTTagByteArray) matchBase).getByteArray(), ((NBTTagByteArray) matchStack).getByteArray());
-        } else if(matchBase instanceof NBTTagIntArray) {
+        } else if (matchBase instanceof NBTTagIntArray) {
             return (matchStack instanceof NBTTagIntArray) &&
                     Arrays.equals(((NBTTagIntArray) matchBase).getIntArray(), ((NBTTagIntArray) matchStack).getIntArray());
         }
@@ -59,10 +59,10 @@ public class NBTMatchingHelper {
 
     private static boolean matchCompound(NBTTagCompound matchNBT, NBTTagCompound itemStackNBTToCheck) {
         for (String keyMatch : matchNBT.getKeySet()) {
-            if(itemStackNBTToCheck.hasKey(keyMatch)) {
+            if (itemStackNBTToCheck.hasKey(keyMatch)) {
                 NBTBase baseOriginal = matchNBT.getTag(keyMatch);
                 NBTBase baseStack = itemStackNBTToCheck.getTag(keyMatch);
-                if(!matchBase(baseOriginal, baseStack)) {
+                if (!matchBase(baseOriginal, baseStack)) {
                     return false;
                 }
             } else {
@@ -73,14 +73,11 @@ public class NBTMatchingHelper {
     }
 
     private static boolean matchList(NBTTagList baseOriginal, NBTTagList baseStack) {
-        if(baseOriginal.tagCount() == 0) {
+        if (baseOriginal.tagCount() == 0) {
             return true;
         }
-        if(baseStack.tagCount() == 0) {
-            return false;
-        }
 
-        if(baseOriginal.getTagType() != baseStack.getTagType()) {
+        if (baseStack.tagCount() == 0 || baseOriginal.getTagType() != baseStack.getTagType()) {
             return false;
         }
 

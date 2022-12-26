@@ -25,8 +25,8 @@ import java.lang.reflect.Type;
  */
 public class RecipeRunnableCommand {
 
-    private String command;
-    private int interval;
+    private final String command;
+    private final int interval;
 
     public RecipeRunnableCommand(String command) {
         this(command, -1);
@@ -39,7 +39,7 @@ public class RecipeRunnableCommand {
 
     public void run(ICommandSender sender, int tick) {
         World world = sender.getEntityWorld();
-        if (!world.isRemote && (!hasInterval() || (tick % getInterval()) == 0)) {
+        if (!world.isRemote && (!hasInterval() || (tick % interval) == 0)) {
             MinecraftServer server = sender.getServer();
             if (server != null) {
                 server.getCommandManager().executeCommand(sender, this.command);

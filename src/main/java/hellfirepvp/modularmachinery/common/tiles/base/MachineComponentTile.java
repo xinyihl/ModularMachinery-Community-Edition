@@ -22,6 +22,6 @@ import javax.annotation.Nullable;
 public interface MachineComponentTile {
 
     @Nullable
-    public MachineComponent provideComponent();
+    MachineComponent provideComponent();
 
 }

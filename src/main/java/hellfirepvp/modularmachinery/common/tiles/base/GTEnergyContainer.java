@@ -82,7 +82,7 @@ public class GTEnergyContainer implements IEnergyContainer {
         long maxCapacity = hatch.getMaxEnergy() / 4L;
 
         long newEnergyStored = (maxCapacity - oldEnergyStored < differenceAmount) ? maxCapacity : (oldEnergyStored + differenceAmount);
-        if(newEnergyStored < 0) {
+        if (newEnergyStored < 0) {
             newEnergyStored = 0;
         }
         hatch.setCurrentEnergy(newEnergyStored * 4L);

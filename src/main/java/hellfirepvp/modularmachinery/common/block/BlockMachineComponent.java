@@ -41,7 +41,7 @@ public abstract class BlockMachineComponent extends BlockContainer implements Bl
 
     @Override
     public int getColorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex) {
-        if(worldIn == null || pos == null) {
+        if (worldIn == null || pos == null) {
             return Config.machineColor;
         }
         TileEntity te = worldIn.getTileEntity(pos);

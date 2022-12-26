@@ -23,21 +23,21 @@ public class TileColorableMachineComponent extends TileEntitySynchronized implem
     private int definedColor = Config.machineColor;
 
     @Override
+    public int getMachineColor() {
+        return this.definedColor;
+    }
+
+    @Override
     public void setMachineColor(int newColor) {
         this.definedColor = newColor;
         this.markForUpdate();
     }
 
     @Override
-    public int getMachineColor() {
-        return this.definedColor;
-    }
-
-    @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
 
-        if(!compound.hasKey("casingColor")) {
+        if (!compound.hasKey("casingColor")) {
             definedColor = Config.machineColor;
         } else {
             definedColor = compound.getInteger("casingColor");

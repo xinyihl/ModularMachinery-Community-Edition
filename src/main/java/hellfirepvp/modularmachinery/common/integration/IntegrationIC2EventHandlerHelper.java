@@ -26,9 +26,9 @@ public class IntegrationIC2EventHandlerHelper {
 
     public static void fireLoadEvent(World world, IEnergyTile tileEnergyInputHatch) {
         MinecraftServer ms = FMLCommonHandler.instance().getMinecraftServerInstance();
-        if(ms != null) {
+        if (ms != null) {
             ms.addScheduledTask(() -> {
-                if(!world.isRemote) {
+                if (!world.isRemote) {
                     MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(tileEnergyInputHatch));
                 }
             });

@@ -8,10 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
@@ -20,7 +18,6 @@ import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,11 +28,11 @@ import net.minecraft.util.Rotation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -43,6 +40,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -57,7 +55,8 @@ public class BlockArray {
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
-    public BlockArray() {}
+    public BlockArray() {
+    }
 
     public BlockArray(BlockArray other) {
         this.pattern = new HashMap<>(other.pattern);
@@ -70,8 +69,8 @@ public class BlockArray {
         for (Map.Entry<BlockPos, BlockInformation> otherEntry : other.pattern.entrySet()) {
             this.pattern.put(otherEntry.getKey().add(offset), otherEntry.getValue());
         }
-        this.min  = new Vec3i(offset.getX() + other.min.getX(),  offset.getY() + other.min.getY(),  offset.getZ() + other.min.getZ());
-        this.max  = new Vec3i(offset.getX() + other.max.getX(),  offset.getY() + other.max.getY(),  offset.getZ() + other.max.getZ());
+        this.min = new Vec3i(offset.getX() + other.min.getX(), offset.getY() + other.min.getY(), offset.getZ() + other.min.getZ());
+        this.max = new Vec3i(offset.getX() + other.max.getX(), offset.getY() + other.max.getY(), offset.getZ() + other.max.getZ());
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
     }
 
@@ -105,22 +104,22 @@ public class BlockArray {
     }
 
     private void updateSize(BlockPos addedPos) {
-        if(addedPos.getX() < min.getX()) {
+        if (addedPos.getX() < min.getX()) {
             min = new Vec3i(addedPos.getX(), min.getY(), min.getZ());
         }
-        if(addedPos.getX() > max.getX()) {
+        if (addedPos.getX() > max.getX()) {
             max = new Vec3i(addedPos.getX(), max.getY(), max.getZ());
         }
-        if(addedPos.getY() < min.getY()) {
+        if (addedPos.getY() < min.getY()) {
             min = new Vec3i(min.getX(), addedPos.getY(), min.getZ());
         }
-        if(addedPos.getY() > max.getY()) {
+        if (addedPos.getY() > max.getY()) {
             max = new Vec3i(max.getX(), addedPos.getY(), max.getZ());
         }
-        if(addedPos.getZ() < min.getZ()) {
+        if (addedPos.getZ() < min.getZ()) {
             min = new Vec3i(min.getX(), min.getY(), addedPos.getZ());
         }
-        if(addedPos.getZ() > max.getZ()) {
+        if (addedPos.getZ() > max.getZ()) {
             max = new Vec3i(max.getX(), max.getY(), addedPos.getZ());
         }
         size = new Vec3i(max.getX() - min.getX() + 1, max.getY() - min.getY() + 1, max.getZ() - min.getZ() + 1);
@@ -133,7 +132,7 @@ public class BlockArray {
     public Map<BlockPos, BlockInformation> getPatternSlice(int slice) {
         Map<BlockPos, BlockInformation> copy = new HashMap<>();
         for (BlockPos pos : pattern.keySet()) {
-            if(pos.getY() == slice) {
+            if (pos.getY() == slice) {
                 copy.put(pos, pattern.get(pos));
             }
         }
@@ -152,16 +151,17 @@ public class BlockArray {
             BlockArray.BlockInformation bi = infoEntry.getValue();
             ItemStack s = bi.getDescriptiveStack(snapSample);
 
-            if(!s.isEmpty()) {
-                boolean found = false;
+            if (!s.isEmpty()) {
+                AtomicBoolean found = new AtomicBoolean(false);
+
                 for (ItemStack stack : out) {
-                    if(stack.getItem().getRegistryName().equals(s.getItem().getRegistryName()) && stack.getItemDamage() == s.getItemDamage()) {
+                    if (stack.getItem().getRegistryName().equals(s.getItem().getRegistryName()) && stack.getItemDamage() == s.getItemDamage()) {
                         stack.setCount(stack.getCount() + 1);
-                        found = true;
+                        found.set(true);
                         break;
                     }
                 }
-                if(!found) {
+                if (!found.get()) {
                     out.add(s);
                 }
             }
@@ -173,8 +173,8 @@ public class BlockArray {
         lblPattern:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
-            if(!entry.getValue().matches(world, at, oldState)) {
-                if(modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
+            if (!entry.getValue().matches(world, at, oldState)) {
+                if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
                     for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
                         if (info.matches(world, at, oldState)) {
                             continue lblPattern;
@@ -190,8 +190,8 @@ public class BlockArray {
     public BlockPos getRelativeMismatchPosition(World world, BlockPos center, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
-            if(!entry.getValue().matches(world, at, false)) {
-                if(modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
+            if (!entry.getValue().matches(world, at, false)) {
+                if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
                     for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
                         if (info.matches(world, at, false)) {
                             continue;
@@ -222,7 +222,8 @@ public class BlockArray {
         sb.append("{").append(newline);
         sb.append(move).append("\"parts\": [").append(newline);
 
-        for (Iterator<BlockPos> iterator = this.pattern.keySet().iterator(); iterator.hasNext(); ) {
+        Iterator<BlockPos> iterator = this.pattern.keySet().iterator();
+        while (iterator.hasNext()) {
             BlockPos pos = iterator.next();
             sb.append(move).append(move).append("{").append(newline);
 
@@ -231,7 +232,7 @@ public class BlockArray {
             sb.append(move).append(move).append(move).append("\"z\": ").append(pos.getZ()).append(",").append(newline);
 
             BlockInformation bi = this.pattern.get(pos);
-            if(bi.matchingTag != null) {
+            if (bi.matchingTag != null) {
                 String strTag = NBTJsonSerializer.serializeNBT(bi.matchingTag);
                 sb.append(move).append(move).append(move).append("\"nbt\": ").append(strTag).append(",").append(newline);
             }
@@ -244,7 +245,7 @@ public class BlockArray {
                 String str = descriptor.getBlock().getRegistryName().toString() + "@" + meta;
                 sb.append(move).append(move).append(move).append(move).append("\"").append(str).append("\"");
 
-                if(iterator1.hasNext()) {
+                if (iterator1.hasNext()) {
                     sb.append(",");
                 }
                 sb.append(newline);
@@ -252,7 +253,7 @@ public class BlockArray {
 
             sb.append(move).append(move).append(move).append("]").append(newline);
             sb.append(move).append(move).append("}");
-            if(iterator.hasNext()) {
+            if (iterator.hasNext()) {
                 sb.append(",");
             }
             sb.append(newline);
@@ -266,14 +267,37 @@ public class BlockArray {
     public static class BlockInformation {
 
         public static final int CYCLE_TICK_SPEED = 30;
-        public List<IBlockStateDescriptor> matchingStates;
-        private List<IBlockState> samples = Lists.newLinkedList();
+        public final List<IBlockStateDescriptor> matchingStates;
+        private final List<IBlockState> samples = new LinkedList<>();
         public NBTTagCompound matchingTag = null;
 
         public BlockInformation(List<IBlockStateDescriptor> matching) {
             this.matchingStates = Lists.newLinkedList(matching);
             for (IBlockStateDescriptor desc : matchingStates) {
                 samples.addAll(desc.applicable);
+            }
+        }
+
+        public static IBlockStateDescriptor getDescriptor(String strElement) throws JsonParseException {
+            int meta = -1;
+            int indexMeta = strElement.indexOf('@');
+            if (indexMeta != -1 && indexMeta != strElement.length() - 1) {
+                try {
+                    meta = Integer.parseInt(strElement.substring(indexMeta + 1));
+                } catch (NumberFormatException exc) {
+                    throw new JsonParseException("Expected a metadata number, got " + strElement.substring(indexMeta + 1), exc);
+                }
+                strElement = strElement.substring(0, indexMeta);
+            }
+            ResourceLocation res = new ResourceLocation(strElement);
+            Block block = ForgeRegistries.BLOCKS.getValue(res);
+            if (block == null) {
+                throw new JsonParseException("Couldn't find block with registryName '" + res + "' !");
+            }
+            if (meta == -1) {
+                return new IBlockStateDescriptor(block);
+            } else {
+                return new IBlockStateDescriptor(block.getStateFromMeta(meta));
             }
         }
 
@@ -287,7 +311,7 @@ public class BlockArray {
 
         public IBlockState getSampleState(Optional<Long> snapTick) {
             int tickSpeed = CYCLE_TICK_SPEED;
-            if(samples.size() > 10) {
+            if (samples.size() > 10) {
                 tickSpeed *= 0.6;
             }
             int p = (int) (snapTick.orElse(ClientScheduler.getClientTick()) / tickSpeed);
@@ -304,59 +328,37 @@ public class BlockArray {
             state = recovered.getFirst();
             Block type = state.getBlock();
             int meta = type.getMetaFromState(state);
-            ItemStack s = ItemStack.EMPTY;
+            ItemStack stack = ItemStack.EMPTY;
 
             try {
-                if(ic2TileBlock.equals(type.getRegistryName())) {
-                    s = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
+                if (ic2TileBlock.equals(type.getRegistryName())) {
+                    stack = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
                 } else {
-                    s = state.getBlock().getPickBlock(state, null, null, BlockPos.ORIGIN, null);
+                    stack = state.getBlock().getPickBlock(state, null, null, BlockPos.ORIGIN, null);
                 }
-            } catch (Exception exc) {}
+            } catch (Exception exc) {
+            }
 
-            if(s.isEmpty()) {
-                if(type instanceof BlockFluidBase) {
-                    s = FluidUtil.getFilledBucket(new FluidStack(((BlockFluidBase) type).getFluid(), 1000));
-                } else if(type instanceof BlockLiquid) {
+            if (stack.isEmpty()) {
+                if (type instanceof BlockFluidBase) {
+                    stack = FluidUtil.getFilledBucket(new FluidStack(((IFluidBlock) type).getFluid(), 1000));
+                } else if (type instanceof BlockLiquid) {
                     Material m = state.getMaterial();
-                    if(m == Material.LAVA) {
-                        s = new ItemStack(Items.LAVA_BUCKET);
-                    } else if(m == Material.WATER) {
-                        s = new ItemStack(Items.WATER_BUCKET);
+                    if (m == Material.LAVA) {
+                        stack = new ItemStack(Items.LAVA_BUCKET);
+                    } else if (m == Material.WATER) {
+                        stack = new ItemStack(Items.WATER_BUCKET);
                     } else {
-                        s = ItemStack.EMPTY;
+                        stack = ItemStack.EMPTY;
                     }
                 } else {
                     Item i = Item.getItemFromBlock(type);
-                    if(i != Items.AIR) {
-                        s = new ItemStack(i, 1, meta);
+                    if (i != Items.AIR) {
+                        stack = new ItemStack(i, 1, meta);
                     }
                 }
             }
-            return s;
-        }
-
-        public static IBlockStateDescriptor getDescriptor(String strElement) throws JsonParseException {
-            int meta = -1;
-            int indexMeta = strElement.indexOf('@');
-            if(indexMeta != -1 && indexMeta != strElement.length() - 1) {
-                try {
-                    meta = Integer.parseInt(strElement.substring(indexMeta + 1));
-                } catch (NumberFormatException exc) {
-                    throw new JsonParseException("Expected a metadata number, got " + strElement.substring(indexMeta + 1), exc);
-                }
-                strElement = strElement.substring(0, indexMeta);
-            }
-            ResourceLocation res = new ResourceLocation(strElement);
-            Block b = ForgeRegistries.BLOCKS.getValue(res);
-            if(b == null) {
-                throw new JsonParseException("Couldn't find block with registryName '" + res.toString() + "' !");
-            }
-            if(meta == -1) {
-                return new IBlockStateDescriptor(b);
-            } else {
-                return new IBlockStateDescriptor(b.getStateFromMeta(meta));
-            }
+            return stack;
         }
 
         public BlockInformation copyRotateYCCW() {
@@ -368,8 +370,8 @@ public class BlockArray {
                 }
                 newDescriptors.add(copy);
             }
-            BlockInformation bi =  new BlockInformation(newDescriptors);
-            if(this.matchingTag != null) {
+            BlockInformation bi = new BlockInformation(newDescriptors);
+            if (this.matchingTag != null) {
                 bi.matchingTag = this.matchingTag;
             }
             return bi;
@@ -382,8 +384,8 @@ public class BlockArray {
                 copy.applicable.addAll(desc.applicable);
                 descr.add(copy);
             }
-            BlockInformation bi =  new BlockInformation(descr);
-            if(this.matchingTag != null) {
+            BlockInformation bi = new BlockInformation(descr);
+            if (this.matchingTag != null) {
                 bi.matchingTag = this.matchingTag;
             }
             return bi;
@@ -397,7 +399,7 @@ public class BlockArray {
                 for (IBlockState applicable : descriptor.applicable) {
                     Block type = applicable.getBlock();
                     int meta = type.getMetaFromState(applicable);
-                    if(type.equals(state.getBlock()) && meta == atMeta) {
+                    if (type.equals(state.getBlock()) && meta == atMeta) {
                         return true;
                     }
                 }
@@ -406,16 +408,16 @@ public class BlockArray {
         }
 
         public boolean matches(World world, BlockPos at, boolean default_) {
-            if(!world.isBlockLoaded(at)) {
+            if (!world.isBlockLoaded(at)) {
                 return default_;
             }
 
-            if(matchingTag != null) {
+            if (matchingTag != null) {
                 TileEntity te = world.getTileEntity(at);
-                if(te != null && matchingTag.getSize() > 0) {
+                if (te != null && matchingTag.getSize() > 0) {
                     NBTTagCompound cmp = new NBTTagCompound();
                     te.writeToNBT(cmp);
-                    if(!NBTMatchingHelper.matchNBTCompound(matchingTag, cmp)) {
+                    if (!NBTMatchingHelper.matchNBTCompound(matchingTag, cmp)) {
                         return false; //No match at this position.
                     }
                 }
@@ -429,7 +431,7 @@ public class BlockArray {
                 for (IBlockState applicable : descriptor.applicable) {
                     Block type = applicable.getBlock();
                     int meta = type.getMetaFromState(applicable);
-                    if(type.equals(state.getBlock()) && meta == atMeta) {
+                    if (type.equals(state.getBlock()) && meta == atMeta) {
                         return true;
                     }
                 }
@@ -443,20 +445,21 @@ public class BlockArray {
 
         public final List<IBlockState> applicable = Lists.newArrayList();
 
-        private IBlockStateDescriptor() {}
+        private IBlockStateDescriptor() {
+        }
 
         private IBlockStateDescriptor(Block block) {
             List<Integer> usedMetas = Lists.newArrayList();
-            if(!(block instanceof BlockLiquid) && !(block instanceof BlockFluidBase)) {
+            if (!(block instanceof BlockLiquid) && !(block instanceof BlockFluidBase)) {
                 for (IBlockState state : block.getBlockState().getValidStates()) {
                     int meta = block.getMetaFromState(state);
-                    if(!usedMetas.contains(meta)) {
+                    if (!usedMetas.contains(meta)) {
                         usedMetas.add(meta);
                         this.applicable.add(state);
                     }
                 }
             }
-            if(applicable.isEmpty()) {
+            if (applicable.isEmpty()) {
                 applicable.add(block.getDefaultState());
             }
         }
@@ -486,7 +489,7 @@ public class BlockArray {
         }
 
         public void apply(TileEntity te) {
-            if(te != null) {
+            if (te != null) {
                 te.setWorld(world);
                 te.setPos(pos);
             }

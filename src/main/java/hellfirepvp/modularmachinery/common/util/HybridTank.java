@@ -8,11 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
-
-import javax.annotation.Nullable;
 
 /**
  * This class is part of the Modular Machinery Mod

@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import net.minecraft.item.ItemStack;
 
 /**

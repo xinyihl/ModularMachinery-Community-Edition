@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.type.Requirement
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.registries.ForgeRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,8 @@ import java.util.List;
 public class IntegrationTypeHelper {
 
     public static void filterModIdComponents() {
+        ForgeRegistry<ComponentType> componentTypeRegistry = RegistriesMM.COMPONENT_TYPE_REGISTRY;
+
         List<ComponentType> removableTypes = new ArrayList<>();
         for (ComponentType type : RegistriesMM.COMPONENT_TYPE_REGISTRY) {
             String modid = type.requiresModid();
@@ -35,11 +38,13 @@ public class IntegrationTypeHelper {
                 removableTypes.add(type);
             }
         }
-        RegistriesMM.COMPONENT_TYPE_REGISTRY.unfreeze();
-        removableTypes.forEach(type -> RegistriesMM.COMPONENT_TYPE_REGISTRY.remove(type.getRegistryName()));
+        componentTypeRegistry.unfreeze();
+        removableTypes.forEach(type -> componentTypeRegistry.remove(type.getRegistryName()));
     }
 
     public static void filterModIdRequirementTypes() {
+        ForgeRegistry<RequirementType<?, ?>> requirementTypeRegistry = RegistriesMM.REQUIREMENT_TYPE_REGISTRY;
+
         List<RequirementType<?, ?>> removableTypes = new ArrayList<>();
         for (RequirementType<?, ?> type : RegistriesMM.REQUIREMENT_TYPE_REGISTRY) {
             String modid = type.requiresModid();
@@ -48,14 +53,14 @@ public class IntegrationTypeHelper {
                 removableTypes.add(type);
             }
         }
-        RegistriesMM.REQUIREMENT_TYPE_REGISTRY.unfreeze();
-        removableTypes.forEach(type -> RegistriesMM.REQUIREMENT_TYPE_REGISTRY.remove(type.getRegistryName()));
+        requirementTypeRegistry.unfreeze();
+        removableTypes.forEach(type -> requirementTypeRegistry.remove(type.getRegistryName()));
     }
 
     public static RequirementType<?, ?> searchRequirementType(String name) {
         for (RequirementType<?, ?> type : RegistriesMM.REQUIREMENT_TYPE_REGISTRY) {
             ResourceLocation key = type.getRegistryName();
-            if (key.getResourcePath().equalsIgnoreCase(name)) {
+            if (key.getPath().equalsIgnoreCase(name)) {
                 return type;
             }
         }

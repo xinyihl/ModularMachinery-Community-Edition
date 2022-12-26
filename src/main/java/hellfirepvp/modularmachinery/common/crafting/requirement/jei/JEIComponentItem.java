@@ -25,7 +25,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class is part of the Fracture Mod
@@ -52,9 +54,9 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
         switch (requirement.requirementType) {
             case ITEMSTACKS:
                 ItemStack stack = ItemUtils.copyStackWithSize(requirement.required, requirement.required.getCount());
-                if(requirement.previewDisplayTag != null) {
+                if (requirement.previewDisplayTag != null) {
                     stack.setTagCompound(requirement.previewDisplayTag);
-                } else if(requirement.tag != null) {
+                } else if (requirement.tag != null) {
                     requirement.previewDisplayTag = requirement.tag.copy();
                     stack.setTagCompound(requirement.previewDisplayTag.copy());
                 }
@@ -69,17 +71,11 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                         out.add(oreDictIn);
                     }
                 }
-                NonNullList<ItemStack> stacksOut = NonNullList.create();
-                for (ItemStack s : out) {
-                    ItemStack copy = s.copy();
-                    copy.setCount(requirement.oreDictItemAmount);
-                    stacksOut.add(copy);
-                }
-                return stacksOut;
+                return out.stream().peek(e -> e.setCount(requirement.oreDictItemAmount)).collect(Collectors.toList());
             case FUEL:
                 return FuelItemHelper.getFuelItems();
         }
-        return Lists.newArrayList();
+        return new ArrayList<>(0);
     }
 
     @Override
@@ -91,22 +87,22 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
     @Override
     @SideOnly(Side.CLIENT)
     public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
-        if(requirement.requirementType == RequirementItem.ItemRequirementType.FUEL) {
+        if (requirement.requirementType == RequirementItem.ItemRequirementType.FUEL) {
             int burn = TileEntityFurnace.getItemBurnTime(ingredient);
-            if(burn > 0) {
-                tooltip.add(TextFormatting.GRAY.toString() + I18n.format("tooltip.machinery.fuel.item", burn));
+            if (burn > 0) {
+                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.fuel.item", burn));
             }
             tooltip.add(I18n.format("tooltip.machinery.fuel"));
         }
-        if(requirement.chance < 1F && requirement.chance >= 0F) {
+        if (requirement.chance < 1F && requirement.chance >= 0F) {
             String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
             String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
 
             String chanceStr = String.valueOf(MathHelper.floor(requirement.chance * 100F));
-            if(requirement.chance == 0F) {
+            if (requirement.chance == 0F) {
                 tooltip.add(I18n.format(keyNever));
             } else {
-                if(requirement.chance < 0.01F) {
+                if (requirement.chance < 0.01F) {
                     chanceStr = "< 1";
                 }
                 chanceStr += "%";

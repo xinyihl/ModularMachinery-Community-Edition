@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
@@ -102,12 +101,7 @@ public class BlockCasing extends BlockMachineComponent implements BlockCustomNam
         return layer == BlockRenderLayer.CUTOUT;
     }
 
-    //@Override
-    //public BlockRenderLayer getBlockLayer() {
-    //    return BlockRenderLayer.CUTOUT;
-    //}
-
-    public static enum CasingType implements IStringSerializable {
+    public enum CasingType implements IStringSerializable {
 
         PLAIN,
         VENT,

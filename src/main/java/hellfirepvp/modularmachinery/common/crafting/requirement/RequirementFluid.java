@@ -33,6 +33,7 @@ import net.minecraftforge.fluids.FluidStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -104,7 +105,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Nullable
     public NBTTagCompound getTagMatch() {
-        if(tagMatch == null) {
+        if (tagMatch == null) {
             return null;
         }
         return tagMatch.copy();
@@ -116,7 +117,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Nullable
     public NBTTagCompound getTagDisplay() {
-        if(tagDisplay == null) {
+        if (tagDisplay == null) {
             return null;
         }
         return tagDisplay.copy();
@@ -145,7 +146,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = this.getRequirementType().getRegistryName();
         return String.format("component.missing.%s.%s.%s",
-                compKey.getResourceDomain(), compKey.getResourcePath(), ioType.name().toLowerCase());
+                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
@@ -161,7 +162,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         HybridTank handler = (HybridTank) component.getProvidedComponent();
 
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             java.util.Optional<CraftCheck> check = checkStartCraftingWithMekanism(component, context, handler, restrictions);
             if (check.isPresent()) {
                 return check.get();
@@ -172,14 +173,14 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
             case INPUT:
                 //If it doesn't consume the item, we only need to see if it's actually there.
                 FluidStack drained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
-                if(drained == null) {
+                if (drained == null) {
                     return CraftCheck.failure("craftcheck.failure.fluid.input");
                 }
-                if(!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
+                if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
                     return CraftCheck.failure("craftcheck.failure.fluid.input");
                 }
                 this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
-                if(this.requirementCheck.getAmount() <= 0) {
+                if (this.requirementCheck.getAmount() <= 0) {
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
@@ -187,20 +188,20 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                 handler = CopyHandlerHelper.copyTank(handler);
 
                 for (ComponentOutputRestrictor restrictor : restrictions) {
-                    if(restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
+                    if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
                         ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
 
-                        if(tank.exactComponent.equals(component)) {
+                        if (tank.exactComponent.equals(component)) {
                             handler.fillInternal(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
                         }
                     }
                 }
                 int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), false); //True or false doesn't really matter tbh
                 boolean didFill = filled >= this.requirementCheck.getAmount();
-                if(didFill) {
+                if (didFill) {
                     context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
                 }
-                if(didFill) {
+                if (didFill) {
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.output.space");
@@ -213,34 +214,34 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                                                                 RecipeCraftingContext context,
                                                                 HybridTank handler,
                                                                 List<ComponentOutputRestrictor> restrictions) {
-        if(handler instanceof HybridGasTank) {
+        if (handler instanceof HybridGasTank) {
             HybridGasTank gasTank = (HybridGasTank) handler;
             switch (getActionType()) {
                 case INPUT:
-                    if(this.requirementCheck instanceof HybridFluidGas) {
+                    if (this.requirementCheck instanceof HybridFluidGas) {
                         GasStack drained = gasTank.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), false);
-                        if(drained == null) {
+                        if (drained == null) {
                             return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
                         }
-                        if(drained.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
+                        if (drained.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
                             return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
                         }
                         this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
-                        if(this.requirementCheck.getAmount() <= 0) {
+                        if (this.requirementCheck.getAmount() <= 0) {
                             return Optional.of(CraftCheck.success());
                         }
                         return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
                     }
                     break;
                 case OUTPUT:
-                    if(this.requirementCheck instanceof HybridFluidGas) {
+                    if (this.requirementCheck instanceof HybridFluidGas) {
                         gasTank = (HybridGasTank) CopyHandlerHelper.copyTank(gasTank);
 
                         for (ComponentOutputRestrictor restrictor : restrictions) {
-                            if(restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
+                            if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
                                 ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
 
-                                if(tank.exactComponent.equals(component) && tank.inserted instanceof HybridFluidGas) {
+                                if (tank.exactComponent.equals(component) && tank.inserted instanceof HybridFluidGas) {
                                     gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), true);
                                 }
                             }
@@ -248,10 +249,10 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
                         int gasFilled = gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), false);
                         boolean didFill = gasFilled >= this.requirementCheck.getAmount();
-                        if(didFill) {
+                        if (didFill) {
                             context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
                         }
-                        if(didFill) {
+                        if (didFill) {
                             return Optional.of(CraftCheck.success());
                         }
                         return Optional.of(CraftCheck.failure("craftcheck.failure.gas.output.space"));
@@ -264,114 +265,111 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         HybridTank handler = (HybridTank) component.getProvidedComponent();
-        switch (getActionType()) {
-            case INPUT:
-                if(Mods.MEKANISM.isPresent()) {
-                    return startCraftingWithMekanismHandling(handler, chance);
-                }
+        if (Objects.requireNonNull(getActionType()) == IOType.INPUT) {
+            if (Mods.MEKANISM.isPresent()) {
+                return startCraftingWithMekanismHandling(handler, chance);
+            }
 
-                //If it doesn't consume the item, we only need to see if it's actually there.
-                FluidStack drainedSimulated = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
-                if(drainedSimulated == null) {
-                    return false;
-                }
-                if(!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drainedSimulated.tag)) {
-                    return false;
-                }
-                if(this.doesntConsumeInput) {
-                    this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drainedSimulated.amount, 0));
-                    return this.requirementCheck.getAmount() <= 0;
-                }
-                FluidStack actualDrained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), true);
-                if(actualDrained == null) {
-                    return false;
-                }
-                if(!NBTMatchingHelper.matchNBTCompound(this.tagMatch, actualDrained.tag)) {
-                    return false;
-                }
-                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - actualDrained.amount, 0));
+            //If it doesn't consume the item, we only need to see if it's actually there.
+            FluidStack drainedSimulated = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
+            if (drainedSimulated == null) {
+                return false;
+            }
+            if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drainedSimulated.tag)) {
+                return false;
+            }
+            if (this.doesntConsumeInput) {
+                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drainedSimulated.amount, 0));
                 return this.requirementCheck.getAmount() <= 0;
+            }
+            FluidStack actualDrained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), true);
+            if (actualDrained == null) {
+                return false;
+            }
+            if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, actualDrained.tag)) {
+                return false;
+            }
+            this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - actualDrained.amount, 0));
+            return this.requirementCheck.getAmount() <= 0;
         }
         return false;
     }
 
     @net.minecraftforge.fml.common.Optional.Method(modid = "mekanism")
     private boolean startCraftingWithMekanismHandling(HybridTank handler, ResultChance chance) {
-        if(this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
+        if (this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
             HybridGasTank gasHandler = (HybridGasTank) handler;
 
             GasStack drainSimulated = gasHandler.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), false);
-            if(drainSimulated == null) {
+            if (drainSimulated == null) {
                 return false;
             }
-            if(drainSimulated.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
+            if (drainSimulated.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
                 return false;
             }
-            if(this.doesntConsumeInput) {
+            if (this.doesntConsumeInput) {
                 this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drainSimulated.amount, 0));
                 return this.requirementCheck.getAmount() <= 0;
             }
             GasStack actualDrain = gasHandler.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), true);
-            if(actualDrain == null) {
+            if (actualDrain == null) {
                 return false;
             }
-            if(actualDrain.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
+            if (actualDrain.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
                 return false;
             }
             this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - actualDrain.amount, 0));
-            return this.requirementCheck.getAmount() <= 0;
         } else {
             FluidStack drainedSimulated = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
-            if(drainedSimulated == null) {
+            if (drainedSimulated == null) {
                 return false;
             }
-            if(!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drainedSimulated.tag)) {
+            if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drainedSimulated.tag)) {
                 return false;
             }
-            if(this.doesntConsumeInput) {
+            if (this.doesntConsumeInput) {
                 this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drainedSimulated.amount, 0));
                 return this.requirementCheck.getAmount() <= 0;
             }
             FluidStack actualDrained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), true);
-            if(actualDrained == null) {
+            if (actualDrained == null) {
                 return false;
             }
-            if(!NBTMatchingHelper.matchNBTCompound(this.tagMatch, actualDrained.tag)) {
+            if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, actualDrained.tag)) {
                 return false;
             }
             this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - actualDrained.amount, 0));
-            return this.requirementCheck.getAmount() <= 0;
         }
+        return this.requirementCheck.getAmount() <= 0;
     }
 
     @Override
     @Nonnull
     public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         HybridTank handler = (HybridTank) component.getProvidedComponent();
-        switch (getActionType()) {
-            case OUTPUT:
-                if(Mods.MEKANISM.isPresent()) {
-                    return finishWithMekanismHandling(handler, context, chance);
-                } else {
-                    FluidStack outStack = this.requirementCheck.asFluidStack();
-                    if (outStack != null) {
-                        int fillableAmount = handler.fillInternal(outStack.copy(), false);
-                        if (chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                            if (fillableAmount >= outStack.amount) {
-                                return CraftCheck.success();
-                            }
-                            return CraftCheck.failure("craftcheck.failure.fluid.output.space");
-                        }
-                        FluidStack copyOut = outStack.copy();
-                        if (this.tagDisplay != null ){
-                            copyOut.tag = this.tagDisplay.copy();
-                        }
-                        if (fillableAmount >= outStack.amount && handler.fillInternal(copyOut.copy(), true) >= copyOut.amount) {
+        if (Objects.requireNonNull(getActionType()) == IOType.OUTPUT) {
+            if (Mods.MEKANISM.isPresent()) {
+                return finishWithMekanismHandling(handler, context, chance);
+            } else {
+                FluidStack outStack = this.requirementCheck.asFluidStack();
+                if (outStack != null) {
+                    int fillableAmount = handler.fillInternal(outStack.copy(), false);
+                    if (chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                        if (fillableAmount >= outStack.amount) {
                             return CraftCheck.success();
                         }
                         return CraftCheck.failure("craftcheck.failure.fluid.output.space");
                     }
+                    FluidStack copyOut = outStack.copy();
+                    if (this.tagDisplay != null) {
+                        copyOut.tag = this.tagDisplay.copy();
+                    }
+                    if (fillableAmount >= outStack.amount && handler.fillInternal(copyOut.copy(), true) >= copyOut.amount) {
+                        return CraftCheck.success();
+                    }
+                    return CraftCheck.failure("craftcheck.failure.fluid.output.space");
                 }
+            }
         }
         return CraftCheck.skipComponent();
     }
@@ -395,16 +393,16 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
             return CraftCheck.failure("craftcheck.failure.gas.output.space");
         } else {
             FluidStack outStack = this.requirementCheck.asFluidStack();
-            if(outStack != null) {
+            if (outStack != null) {
                 int fillableAmount = handler.fillInternal(outStack.copy(), false);
                 if (fillableAmount < outStack.amount) {
                     return CraftCheck.failure("craftcheck.failure.gas.output.space");
                 }
-                if(chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                if (chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                     return CraftCheck.success();
                 }
                 FluidStack copyOut = outStack.copy();
-                if(this.tagDisplay != null ){
+                if (this.tagDisplay != null) {
                     copyOut.tag = this.tagDisplay.copy();
                 }
                 if (handler.fillInternal(copyOut.copy(), true) >= copyOut.amount) {

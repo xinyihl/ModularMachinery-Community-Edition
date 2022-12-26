@@ -32,7 +32,7 @@ import java.util.Map;
 public class ActiveMachineRecipe {
 
     private final MachineRecipe recipe;
-    private Map<ResourceLocation, NBTTagCompound> dataMap = new HashMap<>();
+    private final Map<ResourceLocation, NBTTagCompound> dataMap = new HashMap<>();
     private int tick = 0;
 
     public ActiveMachineRecipe(MachineRecipe recipe) {
@@ -40,7 +40,7 @@ public class ActiveMachineRecipe {
     }
 
     public ActiveMachineRecipe(NBTTagCompound serialized) {
-        this.recipe = RecipeRegistry.getRegistry().getRecipe(new ResourceLocation(serialized.getString("recipeName")));
+        this.recipe = RecipeRegistry.getRecipe(new ResourceLocation(serialized.getString("recipeName")));
         this.tick = serialized.getInteger("tick");
         if (serialized.hasKey("data", Constants.NBT.TAG_LIST)) {
             NBTTagList listData = serialized.getTagList("data", Constants.NBT.TAG_COMPOUND);
@@ -71,7 +71,7 @@ public class ActiveMachineRecipe {
         }
 
         RecipeCraftingContext.CraftingCheckResult check;
-        if(!(check = context.ioTick(tick)).isFailure()) {
+        if (!(check = context.ioTick(tick)).isFailure()) {
             this.tick++;
             return TileMachineController.CraftingStatus.working();
         } else {

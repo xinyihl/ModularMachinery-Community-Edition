@@ -40,27 +40,43 @@ import java.util.Optional;
  */
 public class BlockArrayPreviewRenderHelper {
 
+    private static int hash = -1;
+    private static int batchDList = -1;
     private BlockArrayRenderHelper renderHelper = null;
     private BlockArray matchArray = null;
     private Vec3i renderHelperOffset = null;
     private DynamicMachine machine = null;
-
     private BlockPos attachedPosition = null;
-
     private int renderedLayer = -1;
 
-    private static int hash = -1;
-    private static int batchDList = -1;
+    @Nullable
+    private static RayTraceResult getLookBlock(Entity e, boolean stopTraceOnLiquids, boolean ignoreBlockWithoutBoundingBox, double range) {
+        float pitch = e.rotationPitch;
+        float yaw = e.rotationYaw;
+        Vec3d entityVec = new Vec3d(e.posX, e.posY + e.getEyeHeight(), e.posZ);
+        float f2 = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
+        float f3 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
+        float f4 = -MathHelper.cos(-pitch * 0.017453292F);
+        float f5 = MathHelper.sin(-pitch * 0.017453292F);
+        float f6 = f3 * f4;
+        float f7 = f2 * f4;
+        Vec3d vec3d1 = entityVec.add((double) f6 * range, (double) f5 * range, (double) f7 * range);
+        RayTraceResult rtr = e.getEntityWorld().rayTraceBlocks(entityVec, vec3d1, stopTraceOnLiquids, ignoreBlockWithoutBoundingBox, false);
+        if (rtr == null || rtr.typeOfHit != RayTraceResult.Type.BLOCK) {
+            return null;
+        }
+        return rtr;
+    }
 
     public boolean startPreview(DynamicMachineRenderContext currentContext) {
-        if(currentContext.getShiftSnap() != -1) {
+        if (currentContext.getShiftSnap() != -1) {
             this.renderHelper = currentContext.getRender();
             this.matchArray = this.renderHelper.getBlocks();
             this.renderHelper.sampleSnap = currentContext.getShiftSnap(); //Just for good measure
             this.renderHelperOffset = currentContext.getMoveOffset();
             this.machine = currentContext.getDisplayedMachine();
             this.attachedPosition = null;
-            if(Minecraft.getMinecraft().player != null) {
+            if (Minecraft.getMinecraft().player != null) {
                 Minecraft.getMinecraft().player.sendMessage(new TextComponentTranslation("gui.blueprint.popout.place"));
             }
             return true;
@@ -71,9 +87,9 @@ public class BlockArrayPreviewRenderHelper {
     public boolean placePreview() {
         EntityPlayer player = Minecraft.getMinecraft().player;
 
-        if(player != null && this.renderHelper != null && this.attachedPosition == null) {
+        if (player != null && this.renderHelper != null && this.attachedPosition == null) {
             RayTraceResult lookBlock = getLookBlock(player, false, true, 20);
-            if(lookBlock != null && lookBlock.typeOfHit == RayTraceResult.Type.BLOCK) {
+            if (lookBlock != null && lookBlock.typeOfHit == RayTraceResult.Type.BLOCK) {
                 BlockPos attachPos = lookBlock.getBlockPos();
 
                 IBlockState lookState = Minecraft.getMinecraft().world.getBlockState(attachPos);
@@ -95,13 +111,13 @@ public class BlockArrayPreviewRenderHelper {
     }
 
     public void tick() {
-        if(attachedPosition != null) {
-            if(Minecraft.getMinecraft().player != null &&
+        if (attachedPosition != null) {
+            if (Minecraft.getMinecraft().player != null &&
                     Minecraft.getMinecraft().player.getDistanceSqToCenter(attachedPosition) >= 1024) {
                 clearSelection();
             }
 
-            if(Minecraft.getMinecraft().world != null && renderHelper != null) {
+            if (Minecraft.getMinecraft().world != null && renderHelper != null) {
                 if (hasLowerLayer() && !doesPlacedLayerMatch(this.renderedLayer - 1)) {
                     updateLayers();
                 } else if (doesPlacedLayerMatch(this.renderedLayer)) {
@@ -121,7 +137,7 @@ public class BlockArrayPreviewRenderHelper {
 
         float partialTicks = Minecraft.getMinecraft().getRenderPartialTicks();
         Entity rView = Minecraft.getMinecraft().getRenderViewEntity();
-        if(rView == null) rView = Minecraft.getMinecraft().player;
+        if (rView == null) rView = Minecraft.getMinecraft().player;
         Entity entity = rView;
         double tx = entity.lastTickPosX + ((entity.posX - entity.lastTickPosX) * partialTicks);
         double ty = entity.lastTickPosY + ((entity.posY - entity.lastTickPosY) * partialTicks);
@@ -130,12 +146,12 @@ public class BlockArrayPreviewRenderHelper {
 
         GlStateManager.color(1F, 1F, 1F, 1F);
 
-        if(batchDList == -1) {
+        if (batchDList == -1) {
             batchBlocks();
             hash = hashBlocks();
         } else {
             int currentHash = hashBlocks();
-            if(hash != currentHash) {
+            if (hash != currentHash) {
                 GLAllocation.deleteDisplayLists(batchDList);
                 batchBlocks();
                 hash = currentHash;
@@ -157,12 +173,12 @@ public class BlockArrayPreviewRenderHelper {
 
     private int hashBlocks() {
         int hash = 80238287;
-        if(this.renderHelper != null && Minecraft.getMinecraft().player != null) {
+        if (this.renderHelper != null && Minecraft.getMinecraft().player != null) {
             Vec3i move = getRenderOffset();
-            if(move != null) {
+            if (move != null) {
                 BlockArray render = new BlockArray(this.matchArray, move);
                 for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry : render.getPattern().entrySet()) {
-                    if(Minecraft.getMinecraft().world != null && entry.getValue().matches(Minecraft.getMinecraft().world, entry.getKey(), false)) {
+                    if (Minecraft.getMinecraft().world != null && entry.getValue().matches(Minecraft.getMinecraft().world, entry.getKey(), false)) {
                         continue;
                     }
                     int layer = entry.getKey().subtract(move).getY();
@@ -204,7 +220,7 @@ public class BlockArrayPreviewRenderHelper {
                 matchPattern = MiscUtils.rotateYCCWNorthUntil(matchPattern, rotate);
             }
         }
-        BlockArrayRenderHelper.WorldBlockArrayRenderAccess access = renderHelper.getRenderAccess().build(renderHelper, matchPattern, move);
+        BlockArrayRenderHelper.WorldBlockArrayRenderAccess access = BlockArrayRenderHelper.WorldBlockArrayRenderAccess.build(renderHelper, matchPattern, move);
         BlockRendererDispatcher brd = Minecraft.getMinecraft().getBlockRendererDispatcher();
         VertexFormat blockFormat = DefaultVertexFormats.BLOCK;
 
@@ -218,13 +234,13 @@ public class BlockArrayPreviewRenderHelper {
             BlockArrayRenderHelper.BakedBlockData renderData = data.getValue();
             BlockArrayRenderHelper.SampleRenderState state = renderData.getSampleState();
 
-            if(Minecraft.getMinecraft().world != null &&
+            if (Minecraft.getMinecraft().world != null &&
                     matchPattern.getPattern().get(offset.subtract(move)).matches(Minecraft.getMinecraft().world, offset, false)) {
                 continue;
             }
-            if(state.state.getBlock() != Blocks.AIR) {
+            if (state.state.getBlock() != Blocks.AIR) {
                 BlockArrayRenderHelper.TileEntityRenderData terd = state.renderData;
-                if(terd != null && terd.tileEntity != null) {
+                if (terd != null && terd.tileEntity != null) {
                     terd.tileEntity.setWorld(Minecraft.getMinecraft().world);
                     terd.tileEntity.setPos(offset);
                 }
@@ -247,7 +263,7 @@ public class BlockArrayPreviewRenderHelper {
         BlockPos move = this.attachedPosition;
         if (move == null) {
             RayTraceResult res = getLookBlock(Minecraft.getMinecraft().player, false, true, 20);
-            if(res != null && res.typeOfHit == RayTraceResult.Type.BLOCK) {
+            if (res != null && res.typeOfHit == RayTraceResult.Type.BLOCK) {
                 IBlockState state = Minecraft.getMinecraft().world.getBlockState(res.getBlockPos());
                 if (state.getBlock() instanceof BlockController) {
                     return res.getBlockPos();
@@ -257,25 +273,6 @@ public class BlockArrayPreviewRenderHelper {
             }
         }
         return move;
-    }
-
-    @Nullable
-    private RayTraceResult getLookBlock(Entity e, boolean stopTraceOnLiquids, boolean ignoreBlockWithoutBoundingBox, double range) {
-        float pitch = e.rotationPitch;
-        float yaw = e.rotationYaw;
-        Vec3d entityVec = new Vec3d(e.posX, e.posY + e.getEyeHeight(), e.posZ);
-        float f2 = MathHelper.cos(-yaw * 0.017453292F - (float) Math.PI);
-        float f3 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
-        float f4 = -MathHelper.cos(-pitch * 0.017453292F);
-        float f5 = MathHelper.sin(-pitch * 0.017453292F);
-        float f6 = f3 * f4;
-        float f7 = f2 * f4;
-        Vec3d vec3d1 = entityVec.addVector((double) f6 * range, (double) f5 * range, (double) f7 * range);
-        RayTraceResult rtr = e.getEntityWorld().rayTraceBlocks(entityVec, vec3d1, stopTraceOnLiquids, ignoreBlockWithoutBoundingBox, false);
-        if (rtr == null || rtr.typeOfHit != RayTraceResult.Type.BLOCK) {
-            return null;
-        }
-        return rtr;
     }
 
     private boolean doesPlacedLayerMatch(int slice) {
@@ -292,7 +289,7 @@ public class BlockArrayPreviewRenderHelper {
                     if (info.matches(world, actualPosition, false)) {
                         continue;
                     }
-                    if(replacements.containsKey(offset)) {
+                    if (replacements.containsKey(offset)) {
                         for (BlockArray.BlockInformation bi : replacements.get(offset)) {
                             if (bi.matches(world, actualPosition, false)) {
                                 continue lblMatching;

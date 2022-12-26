@@ -8,10 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util.nbt;
 
-import com.google.common.collect.Lists;
 import net.minecraft.nbt.*;
 
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -35,12 +33,12 @@ public class NBTJsonDeserializer {
 
     //^.* <name> .*$ = contains
 
-    public static NBTTagCompound deserialize(String json) throws NBTException {
-        return new NBTJsonDeserializer(json).readCompound();
+    private NBTJsonDeserializer(String str) {
+        this.string = str;
     }
 
-    private NBTJsonDeserializer(String string) {
-        this.string = string;
+    public static NBTTagCompound deserialize(String json) throws NBTException {
+        return new NBTJsonDeserializer(json).readCompound();
     }
 
     private NBTTagCompound readCompound() throws NBTException {
@@ -66,7 +64,8 @@ public class NBTJsonDeserializer {
     }
 
     private String readQuotedString() throws NBTException {
-        int i = ++this.cursor;
+        ++this.cursor;
+        int i = this.cursor;
         StringBuilder stringbuilder = null;
         boolean flag = false;
 
@@ -117,7 +116,7 @@ public class NBTJsonDeserializer {
 
     private NBTBase type(String stringIn) {
         NBTComparableNumber.ComparisonMode peekedMode = NBTComparableNumber.ComparisonMode.peekMode(stringIn);
-        if(peekedMode != null) {
+        if (peekedMode != null) {
             stringIn = stringIn.substring(peekedMode.getIdentifier().length());
         }
         try {
@@ -143,14 +142,15 @@ public class NBTJsonDeserializer {
                 return new NBTComparableDouble(peekedMode == null ? NBTComparableNumber.ComparisonMode.EQUAL : peekedMode, Double.parseDouble(stringIn));
             }
             if ("true".equalsIgnoreCase(stringIn)) {
-                return new NBTTagByte((byte)1);
+                return new NBTTagByte((byte) 1);
             }
             if ("false".equalsIgnoreCase(stringIn)) {
-                return new NBTTagByte((byte)0);
+                return new NBTTagByte((byte) 0);
             }
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+        }
 
-        if(peekedMode != null) {
+        if (peekedMode != null) {
             stringIn = peekedMode.getIdentifier() + stringIn;
         }
         return new NBTPatternString(stringIn);
@@ -221,7 +221,7 @@ public class NBTJsonDeserializer {
                 if (i < 0) {
                     i = j;
                 } else if (j != i) {
-                    throw this.exception("Unable to insert " + NBTBase.getTagTypeName(j) + " into ListTag of type " + NBTBase.getTagTypeName(i));
+                    throw this.exception("Unable to insert " + NBTBase.getTypeName(j) + " into ListTag of type " + NBTBase.getTypeName(i));
                 }
 
                 nbttaglist.appendTag(nbtbase);
@@ -294,7 +294,9 @@ public class NBTJsonDeserializer {
     }
 
     private char pop() {
-        return this.string.charAt(this.cursor++);
+        char c = this.string.charAt(this.cursor);
+        this.cursor++;
+        return c;
     }
 
 }

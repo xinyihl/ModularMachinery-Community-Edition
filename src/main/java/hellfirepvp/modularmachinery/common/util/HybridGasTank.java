@@ -13,7 +13,6 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nullable;
@@ -37,14 +36,14 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     @Override
     public void setFluid(@Nullable FluidStack fluid) {
         super.setFluid(fluid);
-        if(getFluid() != null) {
+        if (getFluid() != null) {
             setGas(null);
         }
     }
 
     @Override
     public int fillInternal(FluidStack resource, boolean doFill) {
-        if(getGas() != null && getGas().amount > 0) {
+        if (gas != null && gas.amount > 0) {
             return 0;
         }
         return super.fillInternal(resource, doFill);
@@ -53,7 +52,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     @Nullable
     @Override
     public FluidStack drainInternal(int maxDrain, boolean doDrain) {
-        if(getGas() != null && getGas().amount > 0) {
+        if (gas != null && gas.amount > 0) {
             return null;
         }
         return super.drainInternal(maxDrain, doDrain);
@@ -62,24 +61,24 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     @Nullable
     @Override
     public FluidStack drainInternal(FluidStack resource, boolean doDrain) {
-        if(getGas() != null && getGas().amount > 0) {
+        if (gas != null && gas.amount > 0) {
             return null;
         }
         return super.drainInternal(resource, doDrain);
     }
 
+    @Nullable
+    public GasStack getGas() {
+        return this.gas;
+    }
+
     public void setGas(@Nullable GasStack stack) {
-        if(stack != null) {
+        if (stack != null) {
             this.gas = stack.copy();
             setFluid(null);
         } else {
             this.gas = null;
         }
-    }
-
-    @Nullable
-    public GasStack getGas() {
-        return this.gas;
     }
 
     @Override
@@ -93,34 +92,34 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
         }
 
         if (!doTransfer) {
-            if (getGas() == null) {
+            if (gas == null) {
                 return Math.min(capacity, stack.amount);
             }
 
-            if (!getGas().isGasEqual(stack)) {
+            if (!gas.isGasEqual(stack)) {
                 return 0;
             }
 
-            return Math.min(capacity - getGas().amount, stack.amount);
+            return Math.min(capacity - gas.amount, stack.amount);
         }
 
-        if (getGas() == null) {
+        if (gas == null) {
             setGas(new GasStack(stack.getGas(), Math.min(capacity, stack.amount)));
 
             onContentsChanged();
-            return getGas().amount;
+            return gas.amount;
         }
 
-        if (!getGas().isGasEqual(stack)) {
+        if (!gas.isGasEqual(stack)) {
             return 0;
         }
-        int filled = capacity - getGas().amount;
+        int filled = capacity - gas.amount;
 
-        if (getGas().amount < filled) {
-            getGas().amount += stack.amount;
+        if (gas.amount < filled) {
+            gas.amount += stack.amount;
             filled = stack.amount;
         } else {
-            getGas().amount = capacity;
+            gas.amount = capacity;
         }
 
         onContentsChanged();
@@ -130,7 +129,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Override
     public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
-        if (getGas() == null || amount <= 0) {
+        if (gas == null || amount <= 0) {
             return null;
         }
         if (getFluid() != null && getFluid().amount > 0) {
@@ -138,14 +137,14 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
         }
 
         int drained = amount;
-        if (getGas().amount < drained) {
-            drained = getGas().amount;
+        if (gas.amount < drained) {
+            drained = gas.amount;
         }
 
-        GasStack stack = new GasStack(getGas().getGas(), drained);
+        GasStack stack = new GasStack(gas.getGas(), drained);
         if (doTransfer) {
-            getGas().amount -= drained;
-            if (getGas().amount <= 0) {
+            gas.amount -= drained;
+            if (gas.amount <= 0) {
                 setGas(null);
             }
 
@@ -157,12 +156,12 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Override
     public boolean canReceiveGas(EnumFacing side, Gas type) {
-        return super.canFill();
+        return canFill();
     }
 
     @Override
     public boolean canDrawGas(EnumFacing side, Gas type) {
-        return super.canDrain();
+        return canDrain();
     }
 
     public void readGasFromNBT(NBTTagCompound nbt) {

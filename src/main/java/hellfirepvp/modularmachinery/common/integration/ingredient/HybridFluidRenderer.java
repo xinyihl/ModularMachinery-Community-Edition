@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.integration.ingredient;
 
 import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import mekanism.api.gas.GasStack;
@@ -56,13 +55,13 @@ public class HybridFluidRenderer<T extends HybridFluid> implements IIngredientRe
 
     @Override
     public void render(@Nonnull Minecraft minecraft, int xPosition, int yPosition, @Nullable T ingredient) {
-        if(Mods.MEKANISM.isPresent()) {
-            if(attemptRenderGas(minecraft, xPosition, yPosition, ingredient)) {
+        if (Mods.MEKANISM.isPresent()) {
+            if (attemptRenderGas(minecraft, xPosition, yPosition, ingredient)) {
                 return;
             }
         }
         IIngredientRenderer<FluidStack> fluidRenderer = fluidStackRenderer;
-        if(fluidRenderer == null) {
+        if (fluidRenderer == null) {
             fluidRenderer = ModIntegrationJEI.ingredientRegistry.getIngredientRenderer(FluidStack.class);
         }
         fluidRenderer.render(minecraft, xPosition, yPosition, ingredient == null ? null : ingredient.asFluidStack());
@@ -70,10 +69,10 @@ public class HybridFluidRenderer<T extends HybridFluid> implements IIngredientRe
 
     @Optional.Method(modid = "mekanism")
     private boolean attemptRenderGas(Minecraft minecraft, int xPosition, int yPosition, @Nullable T ingredient) {
-        if(ingredient == null) {
+        if (ingredient == null) {
             return false;
         }
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             redirectRenderGasStack(minecraft, xPosition, yPosition, (HybridFluidGas) ingredient);
             return true;
         }
@@ -83,7 +82,7 @@ public class HybridFluidRenderer<T extends HybridFluid> implements IIngredientRe
     @Optional.Method(modid = "mekanism")
     private void redirectRenderGasStack(Minecraft minecraft, int x, int y, @Nonnull HybridFluidGas ingredient) {
         IIngredientRenderer<GasStack> gasRenderer = this.gasRenderer;
-        if(gasRenderer == null) {
+        if (gasRenderer == null) {
             gasRenderer = ModIntegrationJEI.ingredientRegistry.getIngredientRenderer(GasStack.class);
         }
         gasRenderer.render(minecraft, x, y, ingredient.asGasStack());
@@ -91,28 +90,28 @@ public class HybridFluidRenderer<T extends HybridFluid> implements IIngredientRe
 
     @Override
     public List<String> getTooltip(Minecraft minecraft, T ingredient, ITooltipFlag tooltipFlag) {
-        if(Mods.MEKANISM.isPresent()) {
+        if (Mods.MEKANISM.isPresent()) {
             List<String> tooltip = attemptGetTooltip(minecraft, ingredient, tooltipFlag);
-            if(tooltip != null) {
+            if (tooltip != null) {
                 return tooltip;
             }
         }
-        FluidStack f = ingredient.asFluidStack();
-        if(f == null) {
+        FluidStack fluidStack = ingredient.asFluidStack();
+        if (fluidStack == null) {
             return Lists.newArrayList();
         }
         IIngredientRenderer<FluidStack> fluidStackRenderer = this.fluidStackRenderer;
-        if(fluidStackRenderer == null) {
+        if (fluidStackRenderer == null) {
             fluidStackRenderer = ModIntegrationJEI.ingredientRegistry.getIngredientRenderer(FluidStack.class);
         }
-        return fluidStackRenderer.getTooltip(minecraft, f, tooltipFlag);
+        return fluidStackRenderer.getTooltip(minecraft, fluidStack, tooltipFlag);
     }
 
     @Optional.Method(modid = "mekanism")
     private List<String> attemptGetTooltip(Minecraft minecraft, T ingredient, ITooltipFlag tooltipFlag) {
-        if(ingredient instanceof HybridFluidGas) {
+        if (ingredient instanceof HybridFluidGas) {
             IIngredientRenderer<GasStack> gasStackRenderer = this.gasRenderer;
-            if(gasStackRenderer == null) {
+            if (gasStackRenderer == null) {
                 gasStackRenderer = ModIntegrationJEI.ingredientRegistry.getIngredientRenderer(GasStack.class);
             }
             return gasStackRenderer.getTooltip(minecraft, ((HybridFluidGas) ingredient).asGasStack(), tooltipFlag);

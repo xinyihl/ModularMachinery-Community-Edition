@@ -25,7 +25,6 @@ import stanhebben.zenscript.annotations.ZenMethod;
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeBuilder")
 public class RecipeBuilder {
-
     @ZenMethod
     public static RecipePrimer newBuilder(String recipeRegistryName, String associatedMachineRegistryName, int processingTickTime) {
         return newBuilder(recipeRegistryName, associatedMachineRegistryName, processingTickTime, 0);
@@ -39,14 +38,14 @@ public class RecipeBuilder {
     @ZenMethod
     public static RecipePrimer newBuilder(String recipeRegistryName, String associatedMachineRegistryName, int processingTickTime, int sortingPriority, boolean cancelIfPerTickFails) {
         ResourceLocation recipeLoc = new ResourceLocation(recipeRegistryName);
-        if(recipeLoc.getResourceDomain().equals("minecraft")) {
-            recipeLoc = new ResourceLocation(ModularMachinery.MODID, recipeLoc.getResourcePath());
+        if (recipeLoc.getNamespace().equals("minecraft")) {
+            recipeLoc = new ResourceLocation(ModularMachinery.MODID, recipeLoc.getPath());
         }
         ResourceLocation machineLoc = new ResourceLocation(associatedMachineRegistryName);
-        if(machineLoc.getResourceDomain().equals("minecraft")) {
-            machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getResourcePath());
+        if (machineLoc.getNamespace().equals("minecraft")) {
+            machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
         }
-        if(processingTickTime <= 0) {
+        if (processingTickTime <= 0) {
             CraftTweakerAPI.logError("Recipe processing tick time has to be at least 1 tick!");
             return null;
         }

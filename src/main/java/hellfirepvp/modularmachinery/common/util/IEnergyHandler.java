@@ -17,13 +17,13 @@ package hellfirepvp.modularmachinery.common.util;
  */
 public interface IEnergyHandler {
 
-    public long getCurrentEnergy();
+    long getCurrentEnergy();
 
-    public void setCurrentEnergy(long energy);
+    void setCurrentEnergy(long energy);
 
-    public long getMaxEnergy();
+    long getMaxEnergy();
 
-    default public long getRemainingCapacity() {
+    default long getRemainingCapacity() {
         return getMaxEnergy() - getCurrentEnergy();
     }
 
