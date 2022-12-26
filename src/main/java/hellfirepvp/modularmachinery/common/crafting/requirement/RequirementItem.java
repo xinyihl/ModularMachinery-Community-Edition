@@ -227,7 +227,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
 
                     if (inv.exactComponent.equals(component)) {
-                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, true);
                     }
                 }
             }
