@@ -2,13 +2,12 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1"
+version = "1.12.2-1.11.1-Async-v0.1"
 group = "hellfirepvp.modularmachinery"
-archivesBaseName = "modularmachinery"
 
 repositories {
     maven {
-        url = 'https://maven.cleanroommc.com'
+        url 'https://maven.cleanroommc.com'
     }
     maven {
         url 'https://cfa2.cursemaven.com'
@@ -16,8 +15,8 @@ repositories {
     maven {
         url 'https://cursemaven.com'
     }
-    maven { // CraftTweaker
-        url = 'https://maven.blamejared.com/'
+    maven {
+        url 'https://maven.blamejared.com/'
     }
     maven {
         url 'https://dvs1.progwml6.com/files/maven/'

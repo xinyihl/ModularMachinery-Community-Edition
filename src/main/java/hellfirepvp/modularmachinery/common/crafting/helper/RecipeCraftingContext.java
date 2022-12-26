@@ -90,7 +90,7 @@ public class RecipeCraftingContext {
     }
 
     public Iterable<ProcessingComponent<?>> getComponentsFor(ComponentRequirement<?, ?> requirement, @Nullable ComponentSelectorTag tag) {
-        List<ProcessingComponent<?>> validComponents = this.typeComponents.parallelStream()
+        List<ProcessingComponent<?>> validComponents = this.typeComponents.stream()
                 .filter(comp -> requirement.isValidComponent(comp, this))
                 .collect(Collectors.toList());
         if (tag == null) {
