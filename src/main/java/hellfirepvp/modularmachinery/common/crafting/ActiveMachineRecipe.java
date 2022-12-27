@@ -11,6 +11,8 @@ package hellfirepvp.modularmachinery.common.crafting;
 import com.google.common.collect.Iterables;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import net.minecraft.nbt.NBTTagCompound;
@@ -71,13 +73,33 @@ public class ActiveMachineRecipe {
         }
 
         RecipeCraftingContext.CraftingCheckResult check;
-        if (!(check = context.ioTick(tick)).isFailure()) {
-            this.tick++;
-            return TileMachineController.CraftingStatus.working();
-        } else {
-//            this.tick = 0;
+        if ((check = context.ioTick(tick)).isFailure()) {
+            //On Failure
+            DynamicMachine machine = ctrl.getFoundMachine();
+            //Some Actions
+            if (machine != null) {
+                RecipeFailureActions action = machine.getFailureAction();
+                doFailureAction(action);
+            } else {
+                doFailureAction(RecipeFailureActions.getDefaultAction());
+            }
             return TileMachineController.CraftingStatus.failure(
                     Iterables.getFirst(check.getUnlocalizedErrorMessages(), ""));
+        } else {
+            //Success
+            this.tick++;
+            return TileMachineController.CraftingStatus.working();
+        }
+    }
+
+    public void doFailureAction(RecipeFailureActions action) {
+        switch (action) {
+            case RESET:
+                this.tick = 0;
+                break;
+            case DECREASE:
+                this.tick = Math.min(tick - 1, 0);
+                break;
         }
     }
 

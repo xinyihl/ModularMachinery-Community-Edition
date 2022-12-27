@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
  * Date: 27.06.2017 / 13:57
  */
 public class DynamicMachine {
-
     @Nonnull
     private final ResourceLocation registryName;
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
@@ -52,6 +51,15 @@ public class DynamicMachine {
     private String localizedName = null;
     private int definedColor = Config.machineColor;
     private boolean requiresBlueprint = false;
+    private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
+
+    public RecipeFailureActions getFailureAction() {
+        return failureAction;
+    }
+
+    public void setFailureAction(RecipeFailureActions failureAction) {
+        this.failureAction = failureAction;
+    }
 
     public DynamicMachine(@Nonnull ResourceLocation registryName) {
         this.registryName = registryName;
@@ -176,6 +184,18 @@ public class DynamicMachine {
             }
             DynamicMachine machine = new DynamicMachine(new ResourceLocation(ModularMachinery.MODID, registryName));
             machine.setLocalizedName(localized);
+
+            //Failure Action
+            if (root.has("failure-action")) {
+                JsonElement failureAction = root.get("failure-action");
+                if (!failureAction.isJsonPrimitive() || !failureAction.getAsJsonPrimitive().isString()) {
+                    throw new JsonParseException("'failure-action' has to be 'reset', 'still' or 'decrease'!");
+                }
+                String action = failureAction.getAsJsonPrimitive().getAsString();
+                machine.setFailureAction(RecipeFailureActions.getFailureAction(action));
+            }
+
+            //Requires Blueprint
             if (root.has("requires-blueprint")) {
                 JsonElement elementBlueprint = root.get("requires-blueprint");
                 if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
@@ -186,6 +206,8 @@ public class DynamicMachine {
                     machine.setRequiresBlueprint();
                 }
             }
+
+            //Color
             if (root.has("color")) {
                 JsonElement elementColor = root.get("color");
                 if (!elementColor.isJsonPrimitive()) {
@@ -201,6 +223,7 @@ public class DynamicMachine {
                 machine.definedColor = hexColor;
             }
 
+            //Parts
             for (int i = 0; i < parts.size(); i++) {
                 JsonElement element = parts.get(i);
                 if (!element.isJsonObject()) {
@@ -266,6 +289,7 @@ public class DynamicMachine {
                 }
             }
 
+            //Modifiers
             if (root.has("modifiers")) {
                 JsonElement partModifiers = root.get("modifiers");
                 if (!partModifiers.isJsonArray()) {
