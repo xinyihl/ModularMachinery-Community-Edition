@@ -209,7 +209,7 @@ public class RecipeRegistry {
         return validRecipes;
     }
 
-    public void registerRecipes(Map<DynamicMachine, List<MachineRecipe>> map) {
+    public static void registerRecipes(Map<DynamicMachine, List<MachineRecipe>> map) {
         for (DynamicMachine machine : map.keySet()) {
             List<MachineRecipe> recipes = map.get(machine);
             for (MachineRecipe recipe : recipes) {

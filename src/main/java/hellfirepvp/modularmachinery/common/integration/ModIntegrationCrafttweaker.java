@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class ModIntegrationCrafttweaker {
 
     @SubscribeEvent
-    public static void onScriptsReloaded(ScriptRunEvent.Post event) {
+    public void onScriptsReloaded(ScriptRunEvent.Post event) {
         RecipeRegistry.reloadAdapters();
     }
 

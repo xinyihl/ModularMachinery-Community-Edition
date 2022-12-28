@@ -27,7 +27,6 @@ import net.minecraftforge.oredict.OreDictionary;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the Fracture Mod
@@ -71,7 +70,15 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                         out.add(oreDictIn);
                     }
                 }
-                return out.stream().peek(e -> e.setCount(requirement.oreDictItemAmount)).collect(Collectors.toList());
+
+                NonNullList<ItemStack> stacksOut = NonNullList.create();
+
+                for (ItemStack itemStack : out) {
+                    ItemStack copy = itemStack.copy();
+                    copy.setCount(requirement.oreDictItemAmount);
+                    stacksOut.add(copy);
+                }
+                return stacksOut;
             case FUEL:
                 return FuelItemHelper.getFuelItems();
         }

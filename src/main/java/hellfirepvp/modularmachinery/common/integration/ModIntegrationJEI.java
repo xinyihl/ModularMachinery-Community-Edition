@@ -52,7 +52,6 @@ public class ModIntegrationJEI implements IModPlugin {
 
     public static final String CATEGORY_PREVIEW = "modularmachinery.preview";
     private static final Map<DynamicMachine, CategoryDynamicRecipe> recipeCategories = new HashMap<>();
-
     public static IStackHelper stackHelper;
     public static IJeiHelpers jeiHelpers;
     public static IIngredientRegistry ingredientRegistry;
@@ -64,11 +63,6 @@ public class ModIntegrationJEI implements IModPlugin {
 
     public static CategoryDynamicRecipe getCategory(DynamicMachine machine) {
         return recipeCategories.get(machine);
-    }
-
-    @Optional.Method(modid = "mekanism")
-    private static void registerHybridGas(IModIngredientRegistration registry) {
-        registry.register(() -> HybridFluidGas.class, new ArrayList<>(0), new HybridStackHelper<>(), new HybridFluidRenderer<>());
     }
 
     @Override
@@ -94,6 +88,11 @@ public class ModIntegrationJEI implements IModPlugin {
             exc.printStackTrace();
             throw exc;
         }
+    }
+
+    @Optional.Method(modid = "mekanism")
+    private void registerHybridGas(IModIngredientRegistration registry) {
+        registry.register(() -> HybridFluidGas.class, Lists.newArrayList(), new HybridStackHelper<>(), new HybridFluidRenderer<>());
     }
 
     @Override
