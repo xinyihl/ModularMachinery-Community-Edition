@@ -1,14 +1,14 @@
 [
     {
         "modid": "modularmachinery",
-        "name": "Modular Machinery",
+        "name": "Modular Machinery Community Edition",
         "description": "A modpack-maker toolset to create custom, massive, unique and complex machines and recipes from scratch with JSON.\n\nWiki: https://github.com/HellFirePvP/ModularMachinery/wiki",
         "version": "${version}",
         "mcversion": "${mcversion}",
         "url": "https://minecraft.curseforge.com/projects/modular-machinery",
         "updateUrl": "",
-        "authorList": [ "HellFirePvP", "wiiv" ],
-        "credits": "HellFirePvP code, wiiv ALL THE TEXTURES :3",
+        "authorList": [ "HellFirePvP", "wiiv", "KasumiNova"],
+        "credits": "HellFirePvP code, wiiv ALL THE TEXTURES :3, and... KasumiNova Improvements",
         "logoFile": "assets/modularmachinery/textures/logo.png",
         "screenshots": [],
         "dependencies": []

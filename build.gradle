@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.12.0"
+version = "1.12.2-1.11.1-r1"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -129,7 +129,10 @@ dependencies {
     implementation "curse.maven:CodeChickenLib-242818:2779848"
     implementation "curse.maven:brandonscore-231382:3051539"
     implementation "curse.maven:draconicevolution-223565:3051542"
+
+    //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
     implementation "curse.maven:gregtech-293327:3266351"
+
     implementation "curse.maven:Mekanism-268560:2835175"
     implementation "curse.maven:industrialcraft-2-242638:3078604"
 }
