@@ -86,13 +86,13 @@ public class RecipePrimer implements PreparedRecipe {
     // Energy input & output
     //----------------------------------------------------------------------------------------------
     @ZenMethod
-    public RecipePrimer addEnergyPerTickInput(int perTick) {
+    public RecipePrimer addEnergyPerTickInput(long perTick) {
         requireEnergy(IOType.INPUT, perTick);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addEnergyPerTickOutput(int perTick) {
+    public RecipePrimer addEnergyPerTickOutput(long perTick) {
         requireEnergy(IOType.OUTPUT, perTick);
         return this;
     }
@@ -107,8 +107,24 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
+    public RecipePrimer addFluidInputs(ILiquidStack... stacks) {
+        for (ILiquidStack stack : stacks) {
+            requireFluid(IOType.INPUT, stack);
+        }
+        return this;
+    }
+
+    @ZenMethod
     public RecipePrimer addFluidOutput(ILiquidStack stack) {
         requireFluid(IOType.OUTPUT, stack);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFluidOutputs(ILiquidStack... stacks) {
+        for (ILiquidStack stack : stacks) {
+            requireFluid(IOType.OUTPUT, stack);
+        }
         return this;
     }
 
@@ -149,6 +165,15 @@ public class RecipePrimer implements PreparedRecipe {
         return this;
     }
 
+    @ZenMethod
+    public RecipePrimer addItemInputs(IItemStack... stacks) {
+        for (IItemStack stack : stacks) {
+            addItemInput(stack);
+        }
+        return this;
+    }
+
+    //TODO haha
     //DERP. Sorry x)
     @ZenMethod
     public RecipePrimer addFuelItemInout(int requiredTotalBurnTime) {
@@ -178,6 +203,14 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addItemOutput(IOreDictEntry oreDict, int amount) {
         requireItem(IOType.OUTPUT, oreDict.getName(), amount);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addItemOutputs(IItemStack... stacks) {
+        for (IItemStack stack : stacks) {
+            addItemOutput(stack);
+        }
         return this;
     }
 
