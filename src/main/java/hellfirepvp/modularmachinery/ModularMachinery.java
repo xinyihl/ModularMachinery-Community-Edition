@@ -49,11 +49,11 @@ public class ModularMachinery {
     public static final String CLIENT_PROXY = "hellfirepvp.modularmachinery.client.ClientProxy";
     public static final String COMMON_PROXY = "hellfirepvp.modularmachinery.common.CommonProxy";
     public static final SimpleNetworkWrapper NET_CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
-    public static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+    public static final int AVAILABLE_PROCESSORS = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
     //Async Thread Pool
     public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(
             AVAILABLE_PROCESSORS,
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, false
     );
     @Mod.Instance(MODID)
     public static ModularMachinery instance;

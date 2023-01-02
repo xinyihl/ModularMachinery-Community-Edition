@@ -152,11 +152,13 @@ jar {
     }
 }
 
+//GTCE
 task deobfJar(type: Jar) {
     from(sourceSets.main.output)
     archiveName = "${baseName}-${version}-deobf.${extension}"
 }
 
+//GTCE
 task srcJar(type: Jar) {
     from(sourceSets.main.java)
     classifier = 'sources'
