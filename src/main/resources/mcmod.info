@@ -1,7 +1,7 @@
 [
     {
         "modid": "modularmachinery",
-        "name": "Modular Machinery Community Edition",
+        "name": "Modular Machinery: Community Edition",
         "description": "A modpack-maker toolset to create custom, massive, unique and complex machines and recipes from scratch with JSON.\n\nWiki: https://github.com/HellFirePvP/ModularMachinery/wiki",
         "version": "${version}",
         "mcversion": "${mcversion}",

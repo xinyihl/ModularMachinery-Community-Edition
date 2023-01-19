@@ -15,6 +15,12 @@ gui.controller.status.no_recipe=No matching recipe found
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 
+top.recipe.progress=Progress:
+top.recipe.progress.second=%s Sec / %s Sec
+top.machine.working=Processing
+top.machine.structure.found=Found structure
+top.machine.structure.none=Missing structure
+
 craftcheck.failure.item.input=Missing input item!
 craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!
 craftcheck.failure.fluid.input=Missing fluid input!

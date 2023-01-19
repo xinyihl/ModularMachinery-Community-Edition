@@ -15,6 +15,12 @@ gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.crafting=工作中……
 gui.controller.status.crafting.progress=进度：%s
 
+top.recipe.progress=进度：
+top.recipe.progress.second=%s 秒 / %s 秒
+top.machine.working=工作中
+top.machine.structure.found=结构已形成
+top.machine.structure.none=结构不完整
+
 craftcheck.failure.item.input=Missing input item!
 craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!
 craftcheck.failure.fluid.input=Missing fluid input!

@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistry;
 import hellfirepvp.modularmachinery.common.data.ModDataHolder;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
+import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
@@ -62,7 +63,7 @@ public class CommonProxy implements IGuiHandler {
         MinecraftForge.EVENT_BUS.register(new PrimerEventHandler(registryPrimer));
     }
 
-    public void loadModData(File configDir) {
+    public static void loadModData(File configDir) {
         dataHolder.setup(configDir);
         if (dataHolder.requiresDefaultMachinery()) {
             dataHolder.copyDefaultMachinery();
@@ -93,6 +94,8 @@ public class CommonProxy implements IGuiHandler {
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
+
+        ModIntegrationTOP.registerProvider();
     }
 
     public void postInit() {

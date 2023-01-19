@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r2"
+version = "1.12.2-1.11.1-r3"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -29,6 +29,10 @@ repositories {
     }
     maven {
         url 'https://modmaven.dev/'
+    }
+    maven { // TOP
+        name 'tterrag maven'
+        url "https://maven.tterrag.com/"
     }
 }
 
@@ -129,6 +133,7 @@ dependencies {
     implementation "curse.maven:CodeChickenLib-242818:2779848"
     implementation "curse.maven:brandonscore-231382:3051539"
     implementation "curse.maven:draconicevolution-223565:3051542"
+    implementation "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
     //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
     implementation "curse.maven:gregtech-293327:3266351"

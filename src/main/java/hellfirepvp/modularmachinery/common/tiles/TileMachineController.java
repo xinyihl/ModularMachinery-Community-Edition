@@ -84,6 +84,10 @@ public class TileMachineController extends TileEntityRestrictedTick {
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
     }
 
+    public ActiveMachineRecipe getActiveRecipe() {
+        return activeRecipe;
+    }
+
     private IOInventory buildInventory() {
         return new IOInventory(this, new int[0], new int[0])
                 .setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
