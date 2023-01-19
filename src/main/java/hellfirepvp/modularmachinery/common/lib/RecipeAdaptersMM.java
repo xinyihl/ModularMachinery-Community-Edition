@@ -20,6 +20,8 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 public class RecipeAdaptersMM {
 
     public static RecipeAdapter MINECRAFT_FURNACE;
+    public static RecipeAdapter IC2_COMPRESSOR;
+    public static RecipeAdapter NC_ALLOY_FURNACE;
 
     private RecipeAdaptersMM() {
     }

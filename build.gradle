@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r3"
+version = "1.12.2-1.11.1-r4"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -125,21 +125,22 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 //    compileOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.301')
 //    runtimeOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.301')
-    implementation(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
+    compileOnly(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
 
-    implementation 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
+    compileOnly 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
 
-    implementation fg.deobf("curse.maven:RedstoneFlux-270789:2920436")
-    implementation "curse.maven:CodeChickenLib-242818:2779848"
-    implementation "curse.maven:brandonscore-231382:3051539"
-    implementation "curse.maven:draconicevolution-223565:3051542"
-    implementation "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
+    compileOnly fg.deobf("curse.maven:RedstoneFlux-270789:2920436")
+    compileOnly "curse.maven:CodeChickenLib-242818:2779848"
+    compileOnly "curse.maven:brandonscore-231382:3051539"
+    compileOnly "curse.maven:draconicevolution-223565:3051542"
+    compileOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
     //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
-    implementation "curse.maven:gregtech-293327:3266351"
+    compileOnly "curse.maven:gregtech-293327:3266351"
 
-    implementation "curse.maven:Mekanism-268560:2835175"
-    implementation "curse.maven:industrialcraft-2-242638:3078604"
+    compileOnly "curse.maven:Mekanism-268560:2835175"
+    compileOnly "curse.maven:industrialcraft-2-242638:3078604"
+    compileOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
 }
 
 // Example for how to get properties into the manifest for reading at runtime.
@@ -155,23 +156,6 @@ jar {
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-}
-
-//GTCE
-task deobfJar(type: Jar) {
-    from(sourceSets.main.output)
-    archiveName = "${baseName}-${version}-deobf.${extension}"
-}
-
-//GTCE
-task srcJar(type: Jar) {
-    from(sourceSets.main.java)
-    classifier = 'sources'
-    archiveName = "${baseName}-${version}-sources.${extension}"
-}
-
-artifacts {
-    archives deobfJar, srcJar
 }
 
 jar.finalizedBy('reobfJar')

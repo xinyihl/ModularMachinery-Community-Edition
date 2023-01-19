@@ -21,11 +21,13 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
+import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
@@ -73,6 +75,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     private EnumFacing patternRotation = null;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
+    private RecipeCraftingContext context;
     private volatile boolean recipePrepared = false;
     private volatile ActiveMachineRecipe activeRecipe = null;
 
@@ -113,7 +116,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                         searchAndUpdateRecipe();
                     }
                 } else {
-                    RecipeCraftingContext context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+                    context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
                     if (recipePrepared) {
                         this.activeRecipe.start(context);
                         recipePrepared = false;
@@ -138,6 +141,15 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 markForUpdate();
             }
         }
+    }
+
+    public int getRecipeTotalTime() {
+        if (foundMachine == null || context == null) return 0;
+
+        int recipeTotalTickTime = activeRecipe.getRecipe().getRecipeTotalTickTime();
+        recipeTotalTickTime = Math.round(RecipeModifier.applyModifiers(context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, recipeTotalTickTime, false));
+
+        return recipeTotalTickTime;
     }
 
     private void tryRedoRecipe(RecipeCraftingContext context) {
@@ -313,7 +325,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     public float getCurrentActiveRecipeProgress(float partial) {
         if (activeRecipe == null) return 0F;
         float tick = activeRecipe.getTick() + partial;
-        float maxTick = activeRecipe.getRecipe().getRecipeTotalTickTime();
+        float maxTick = getRecipeTotalTime();
         return MathHelper.clamp(tick / maxTick, 0F, 1F);
     }
 

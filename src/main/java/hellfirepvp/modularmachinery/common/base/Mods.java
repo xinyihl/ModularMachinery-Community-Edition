@@ -25,7 +25,8 @@ public enum Mods {
     REDSTONEFLUXAPI("redstoneflux"),
     MEKANISM("mekanism"),
     IC2("ic2"),
-    TOP("theoneprobe");
+    TOP("theoneprobe"),
+    NUCLEARCRAFT("nuclearcraft");
 
     public final String modid;
     private final boolean loaded;

@@ -31,20 +31,18 @@ public class DynamicMachineInfoProvider implements IProbeInfoProvider {
         IProbeInfo statusLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
 
         //是否在工作
-        if (machine.hasActiveRecipe()) {
+        if (machine.hasActiveRecipe() && machine.getFoundMachine() != null) {
             statusLine.text(TextFormatting.GREEN + I18n.format("top.machine.working"));
 
-            float progress = machine.getCurrentActiveRecipeProgress(Animation.getPartialTickTime());
-            progress *= 100;
+            float progress = machine.getCurrentActiveRecipeProgress(Animation.getPartialTickTime()) * 100;
 
-            int recipeTotalTickTime = machine.getActiveRecipe().getRecipe().getRecipeTotalTickTime();
+            int recipeTotalTickTime = machine.getRecipeTotalTime();
 
             String progressStr;
             if (player.isSneaking()) {
                 //如：20.5 秒 / 40.0 秒
                 //Example: 20.5 Sec / 40.0 Sec
-                progressStr = I18n.format(
-                        "top.recipe.progress.second",
+                progressStr = I18n.format("top.recipe.progress.second",
                         String.format("%.1f", (machine.getCurrentActiveRecipeProgress(
                                 Animation.getPartialTickTime()) * recipeTotalTickTime) / 20),
                         String.format("%.1f", (float) recipeTotalTickTime / 20)
