@@ -24,7 +24,8 @@ public enum Mods {
     DRACONICEVOLUTION("draconicevolution"),
     REDSTONEFLUXAPI("redstoneflux"),
     MEKANISM("mekanism"),
-    IC2("ic2");
+    IC2("ic2"),
+    TOP("theoneprobe");
 
     public final String modid;
     private final boolean loaded;

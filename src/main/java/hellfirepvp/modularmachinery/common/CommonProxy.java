@@ -95,7 +95,9 @@ public class CommonProxy implements IGuiHandler {
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
 
-        ModIntegrationTOP.registerProvider();
+        if (Mods.TOP.isPresent()) {
+            ModIntegrationTOP.registerProvider();
+        }
     }
 
     public void postInit() {

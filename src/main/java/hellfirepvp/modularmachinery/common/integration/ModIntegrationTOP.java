@@ -4,7 +4,6 @@ import hellfirepvp.modularmachinery.common.integration.theoneprobe.DynamicMachin
 import mcjty.theoneprobe.TheOneProbe;
 import mcjty.theoneprobe.apiimpl.TheOneProbeImp;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.Optional;
 
 public class ModIntegrationTOP {
     public static int recipeProgressBarFilledColor = 0xCC54FF9F;
@@ -13,14 +12,12 @@ public class ModIntegrationTOP {
     public static int recipeProgressBarBackgroundColor = 0xFF000000;
     public static boolean showRecipeProgressBarDecimalPoints = true;
 
-    @Optional.Method(modid = "theoneprobe")
     public static void registerProvider() {
         TheOneProbeImp top = TheOneProbe.theOneProbeImp;
 
         top.registerProvider(new DynamicMachineInfoProvider());
     }
 
-    @Optional.Method(modid = "theoneprobe")
     public static void loadFromConfig(Configuration cfg) {
         recipeProgressBarFilledColor = Integer.parseUnsignedInt(
                 cfg.getString("RECIPE_PROGRESSBAR_FILLED_COLOR", "display.theoneprobe",
