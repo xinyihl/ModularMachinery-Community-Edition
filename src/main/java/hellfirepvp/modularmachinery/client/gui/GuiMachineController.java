@@ -114,8 +114,8 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         }
         offsetY += 15;
         if (controller.hasActiveRecipe()) {
-            float progress = controller.getCurrentActiveRecipeProgress(Animation.getPartialTickTime()) * 100;
-            String progressStr = I18n.format("gui.controller.status.crafting.progress", progress + "%");
+            int progress = (int) (controller.getCurrentActiveRecipeProgress(Animation.getPartialTickTime()) * 100);
+            String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
             fr.drawString(progressStr, offsetX, offsetY, 0xFFFFFF);
         }
 

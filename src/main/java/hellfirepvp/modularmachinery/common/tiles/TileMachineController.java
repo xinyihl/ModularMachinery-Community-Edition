@@ -134,12 +134,12 @@ public class TileMachineController extends TileEntityRestrictedTick {
                             tryRedoRecipe(context);
                         }
                     }
-                    markForUpdate();
                 }
             } else {
                 craftingStatus = CraftingStatus.MISSING_STRUCTURE;
-                markForUpdate();
             }
+
+            markForUpdate();
         }
     }
 
@@ -322,10 +322,17 @@ public class TileMachineController extends TileEntityRestrictedTick {
         }
     }
 
-    public float getCurrentActiveRecipeProgress(float partial) {
+    public float getCurrentActiveRecipeProgressWithModifier(float partial) {
         if (activeRecipe == null) return 0F;
         float tick = activeRecipe.getTick() + partial;
         float maxTick = getRecipeTotalTime();
+        return MathHelper.clamp(tick / maxTick, 0F, 1F);
+    }
+
+    public float getCurrentActiveRecipeProgress(float partial) {
+        if (activeRecipe == null) return 0F;
+        float tick = activeRecipe.getTick() + partial;
+        float maxTick = activeRecipe.getRecipe().getRecipeTotalTickTime();
         return MathHelper.clamp(tick / maxTick, 0F, 1F);
     }
 

@@ -34,7 +34,7 @@ public class DynamicMachineInfoProvider implements IProbeInfoProvider {
         if (machine.hasActiveRecipe() && machine.getFoundMachine() != null) {
             statusLine.text(TextFormatting.GREEN + I18n.format("top.machine.working"));
 
-            float progress = machine.getCurrentActiveRecipeProgress(Animation.getPartialTickTime()) * 100;
+            float progress = machine.getCurrentActiveRecipeProgressWithModifier(Animation.getPartialTickTime()) * 100;
 
             int recipeTotalTickTime = machine.getRecipeTotalTime();
 
@@ -43,8 +43,7 @@ public class DynamicMachineInfoProvider implements IProbeInfoProvider {
                 //如：20.5 秒 / 40.0 秒
                 //Example: 20.5 Sec / 40.0 Sec
                 progressStr = I18n.format("top.recipe.progress.second",
-                        String.format("%.1f", (machine.getCurrentActiveRecipeProgress(
-                                Animation.getPartialTickTime()) * recipeTotalTickTime) / 20),
+                        String.format("%.1f", ((progress / 100) * recipeTotalTickTime) / 20),
                         String.format("%.1f", (float) recipeTotalTickTime / 20)
                 );
             } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints &&

@@ -18,7 +18,7 @@ gui.controller.status.crafting.progress=Progress: %s
 top.recipe.progress=Progress:
 top.recipe.progress.second=%s Sec / %s Sec
 top.machine.working=Processing
-top.machine.structure.found=Found structure
+top.machine.structure.found=Structure formed
 top.machine.structure.none=Missing structure
 
 craftcheck.failure.item.input=Missing input item!
