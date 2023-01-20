@@ -23,14 +23,10 @@ import hellfirepvp.modularmachinery.common.util.IOInventory;
  */
 public abstract class MachineComponent<T> {
 
-    private final IOType ioType;
+    public final IOType ioType;
 
     public MachineComponent(IOType ioType) {
         this.ioType = ioType;
-    }
-
-    public final IOType getIOType() {
-        return ioType;
     }
 
     public abstract ComponentType getComponentType();

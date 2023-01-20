@@ -53,16 +53,16 @@ public class DynamicMachine {
     private boolean requiresBlueprint = false;
     private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
+    public DynamicMachine(@Nonnull ResourceLocation registryName) {
+        this.registryName = registryName;
+    }
+
     public RecipeFailureActions getFailureAction() {
         return failureAction;
     }
 
     public void setFailureAction(RecipeFailureActions failureAction) {
         this.failureAction = failureAction;
-    }
-
-    public DynamicMachine(@Nonnull ResourceLocation registryName) {
-        this.registryName = registryName;
     }
 
     public void setRequiresBlueprint() {
@@ -126,9 +126,20 @@ public class DynamicMachine {
             throw new IllegalArgumentException("Tried to create context for a recipe that doesn't belong to the referenced machine!");
         }
         RecipeCraftingContext context = new RecipeCraftingContext(activeRecipe, controller);
-        taggedComponents.forEach(tpl -> context.addComponent(tpl.getFirst(), tpl.getSecond()));
-        modifiers.forEach(context::addModifier);
+        for (Tuple<MachineComponent<?>, ComponentSelectorTag> tpl : taggedComponents) {
+            context.addComponent(tpl.getFirst(), tpl.getSecond());
+        }
+        for (ModifierReplacement modifier : modifiers) {
+            context.addModifier(modifier);
+        }
         return context;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof DynamicMachine)) return false;
+        DynamicMachine machine = (DynamicMachine) obj;
+        return machine.registryName.toString().equals(registryName.toString());
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {

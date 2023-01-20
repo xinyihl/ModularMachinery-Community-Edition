@@ -75,7 +75,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     private EnumFacing patternRotation = null;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
-    private RecipeCraftingContext context;
+    private RecipeCraftingContext context = null;
     private volatile boolean recipePrepared = false;
     private volatile ActiveMachineRecipe activeRecipe = null;
 
@@ -156,11 +156,11 @@ public class TileMachineController extends TileEntityRestrictedTick {
         if (singleContextCheckTask != null) {
             if (singleContextCheckTask.isDone()) {
                 singleContextCheckTask = null;
-                singleContextCheckTask = new SingleContextCheckTask(context);
+                singleContextCheckTask = new SingleContextCheckTask(context, foundMachine);
                 ModularMachinery.FORK_JOIN_POOL.submit(singleContextCheckTask);
             }
         } else {
-            singleContextCheckTask = new SingleContextCheckTask(context);
+            singleContextCheckTask = new SingleContextCheckTask(context, foundMachine);
             ModularMachinery.FORK_JOIN_POOL.submit(singleContextCheckTask);
         }
     }
@@ -169,41 +169,42 @@ public class TileMachineController extends TileEntityRestrictedTick {
         if (searchTask != null) {
             if (searchTask.isDone()) {
                 searchTask = null;
-                searchTask = new SearchTask();
+                searchTask = new SearchTask(foundMachine);
                 ModularMachinery.FORK_JOIN_POOL.submit(searchTask);
             }
         } else {
-            searchTask = new SearchTask();
+            searchTask = new SearchTask(foundMachine);
             ModularMachinery.FORK_JOIN_POOL.submit(searchTask);
         }
+    }
+
+    private void resetMachine(boolean resetAll) {
+        if (resetAll) {
+            this.activeRecipe = null;
+            this.context = null;
+            this.craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+            this.searchTask = null;
+            this.singleContextCheckTask = null;
+        }
+        this.foundMachine = null;
+        this.foundPattern = null;
+        this.patternRotation = null;
+        this.foundReplacements = null;
     }
 
     private void checkStructure() {
         if (ticksExisted % 30 == 0) {
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
-                    this.activeRecipe = null;
-                    this.foundMachine = null;
-                    this.foundPattern = null;
-                    this.patternRotation = null;
-                    this.foundReplacements = null;
-                    craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+                    resetMachine(true);
                     markForUpdate();
                 } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
-                    this.activeRecipe = null;
-                    this.foundMachine = null;
-                    this.foundPattern = null;
-                    this.patternRotation = null;
-                    this.foundReplacements = null;
-                    craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+                    resetMachine(true);
                     markForUpdate();
                 }
             }
             if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
-                this.foundMachine = null;
-                this.foundPattern = null;
-                this.patternRotation = null;
-                this.foundReplacements = null;
+                resetMachine(false);
 
                 DynamicMachine blueprint = getBlueprintMachine();
                 if (blueprint != null) {
@@ -243,6 +244,12 @@ public class TileMachineController extends TileEntityRestrictedTick {
         }
     }
 
+    /**
+     * 尝试对方块上色。
+     * 此方法内容不应被修改，因为内容已被 gugu_utils 所覆盖。
+     * @param pos 位置
+     * @param color 颜色
+     */
     private void tryColorize(BlockPos pos, int color) {
         TileEntity te = this.getWorld().getTileEntity(pos);
         if (te instanceof ColorableMachineTile) {
@@ -278,10 +285,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             this.foundComponents.clear();
             this.foundModifiers.clear();
 
-            this.foundMachine = null;
-            this.foundPattern = null;
-            this.patternRotation = null;
-            this.foundReplacements = null;
+            resetMachine(false);
             return;
         }
         if (ticksExisted % 40 == 0) {
@@ -394,10 +398,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
             if (machine == null) {
                 ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
-                this.foundMachine = null;
-                this.foundPattern = null;
-                this.patternRotation = null;
-                this.foundReplacements = null;
+                resetMachine(false);
             } else {
                 EnumFacing rot = EnumFacing.byHorizontalIndex(compound.getInteger("rotation"));
                 EnumFacing offset = EnumFacing.NORTH;
@@ -431,10 +432,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 }
             }
         } else {
-            this.foundMachine = null;
-            this.foundPattern = null;
-            this.patternRotation = null;
-            this.foundReplacements = null;
+            resetMachine(false);
         }
         if (compound.hasKey("activeRecipe")) {
             NBTTagCompound tag = compound.getCompoundTag("activeRecipe");
@@ -536,15 +534,19 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     public class SingleContextCheckTask extends RecursiveAction {
+        private final DynamicMachine currentMachine;
         private final RecipeCraftingContext context;
 
-        public SingleContextCheckTask(RecipeCraftingContext context) {
+        public SingleContextCheckTask(RecipeCraftingContext context, DynamicMachine currentMachine) {
             this.context = context;
+            this.currentMachine = currentMachine;
         }
 
         @Override
         protected void compute() {
             RecipeCraftingContext.CraftingCheckResult tryResult = context.canStartCrafting();
+            if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
+
             if (!tryResult.isFailure()) {
                 activeRecipe = context.getActiveRecipe();
                 recipePrepared = true;
@@ -556,6 +558,12 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     public class SearchTask extends RecursiveAction {
+        private final DynamicMachine currentMachine;
+
+        public SearchTask(DynamicMachine currentMachine) {
+            this.currentMachine = currentMachine;
+        }
+
         @Override
         protected void compute() {
             Iterable<MachineRecipe> availableRecipes = RecipeRegistry.getRecipesFor(foundMachine);
@@ -569,6 +577,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 RecipeCraftingContext context = foundMachine.createContext(aRecipe, TileMachineController.this, foundComponents, MiscUtils.flatten(foundModifiers.values()));
                 RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
                 if (!result.isFailure()) {
+                    if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
+
                     activeRecipe = aRecipe;
                     recipePrepared = true;
                     break;
@@ -579,6 +589,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
                     validity = result.getValidity();
                 }
             }
+
+            if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
 
             if (activeRecipe == null) {
                 if (highestValidity != null) {

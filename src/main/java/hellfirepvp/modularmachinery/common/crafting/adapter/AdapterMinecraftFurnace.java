@@ -35,6 +35,8 @@ import java.util.Map;
  */
 public class AdapterMinecraftFurnace extends RecipeAdapter {
 
+    private int incId = 0;
+
     public AdapterMinecraftFurnace() {
         super(new ResourceLocation("minecraft", "furnace"));
     }
@@ -46,7 +48,6 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
                                                       List<ComponentRequirement<?, ?>> additionalRequirements) {
         Map<ItemStack, ItemStack> inputOutputMap = FurnaceRecipes.instance().getSmeltingList();
         List<MachineRecipe> smeltingRecipes = new ArrayList<>(inputOutputMap.size());
-        int incId = 0;
         for (Map.Entry<ItemStack, ItemStack> smelting : inputOutputMap.entrySet()) {
             int tickTime = Math.round(Math.max(1, RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, 120, false)));
 

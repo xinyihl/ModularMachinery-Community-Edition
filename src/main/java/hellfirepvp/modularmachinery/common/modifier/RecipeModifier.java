@@ -20,9 +20,9 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -55,21 +55,25 @@ public class RecipeModifier {
     }
 
     public static float applyModifiers(RecipeCraftingContext context, ComponentRequirement<?, ?> in, float value, boolean isChance) {
-        RequirementType<?, ?> target = in.getRequirementType();
+        RequirementType<?, ?> target = in.requirementType;
         return applyModifiers(context.getModifiers(target), target, in.getActionType(), value, isChance);
     }
 
     public static float applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, float value, boolean isChance) {
-        return applyModifiers(modifiers, in.getRequirementType(), in.getActionType(), value, isChance);
+        return applyModifiers(modifiers, in.requirementType, in.getActionType(), value, isChance);
     }
 
     public static float applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
-        List<RecipeModifier> applicable = modifiers
-                .stream()
-                .filter(mod -> mod.target.equals(target))
-                .filter(mod -> ioType == null || mod.ioTarget == ioType)
-                .filter(mod -> mod.affectsChance() == isChance)
-                .collect(Collectors.toList());
+        List<RecipeModifier> applicable = new ArrayList<>();
+        for (RecipeModifier recipeModifier : modifiers) {
+            if (recipeModifier.target.equals(target)) {
+                if (ioType == null || recipeModifier.ioTarget == ioType) {
+                    if (recipeModifier.affectsChance() == isChance) {
+                        applicable.add(recipeModifier);
+                    }
+                }
+            }
+        }
         float add = 0F;
         float mul = 1F;
         for (RecipeModifier mod : applicable) {

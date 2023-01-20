@@ -92,7 +92,7 @@ public class RecipeLoader {
     public static List<MachineRecipe> loadAdapterRecipes(List<File> adapterCandidates) {
         List<MachineRecipe> loadedRecipes = Lists.newArrayList();
         for (File f : adapterCandidates) {
-            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()))) {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()), StandardCharsets.UTF_8)) {
                 RecipeAdapterAccessor accessor = JsonUtils.fromJson(GSON, isr, RecipeAdapterAccessor.class);
                 Collection<MachineRecipe> recipes = accessor.loadRecipesForAdapter();
                 if (recipes.isEmpty()) {

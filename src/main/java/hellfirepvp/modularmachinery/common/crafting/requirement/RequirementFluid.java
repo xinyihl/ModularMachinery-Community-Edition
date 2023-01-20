@@ -77,7 +77,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Override
     public ComponentRequirement<HybridFluid, RequirementTypeFluid> deepCopy() {
-        RequirementFluid fluid = new RequirementFluid(this.getRequirementType(), this.getActionType(), this.required.copy());
+        RequirementFluid fluid = new RequirementFluid(this.requirementType, this.actionType, this.required.copy());
         fluid.chance = this.chance;
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
@@ -88,7 +88,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     public ComponentRequirement<HybridFluid, RequirementTypeFluid> deepCopyModified(List<RecipeModifier> modifiers) {
         HybridFluid hybrid = this.required.copy();
         hybrid.setAmount(Math.round(RecipeModifier.applyModifiers(modifiers, this, hybrid.getAmount(), false)));
-        RequirementFluid fluid = new RequirementFluid(this.getRequirementType(), this.getActionType(), hybrid);
+        RequirementFluid fluid = new RequirementFluid(this.requirementType, this.actionType, hybrid);
 
         fluid.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
         fluid.tagMatch = getTagMatch();
@@ -146,23 +146,23 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Nonnull
     @Override
     public String getMissingComponentErrorMessage(IOType ioType) {
-        ResourceLocation compKey = this.getRequirementType().getRegistryName();
+        ResourceLocation compKey = this.requirementType.getRegistryName();
         return String.format("component.missing.%s.%s.%s",
                 compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.getComponent();
+        MachineComponent<?> cmp = component.component;
         return (cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_FLUID) || cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_GAS)) &&
                 cmp instanceof MachineComponent.FluidHatch &&
-                cmp.getIOType() == this.getActionType();
+                cmp.ioType == this.actionType;
     }
 
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        HybridTank handler = (HybridTank) component.getProvidedComponent();
+        HybridTank handler = (HybridTank) component.providedComponent;
 
         if (Mods.MEKANISM.isPresent()) {
             java.util.Optional<CraftCheck> check = checkStartCraftingWithMekanism(component, context, handler, restrictions);
@@ -171,7 +171,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
             }
         }
 
-        switch (getActionType()) {
+        switch (actionType) {
             case INPUT:
                 //If it doesn't consume the item, we only need to see if it's actually there.
                 FluidStack drained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
@@ -218,7 +218,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                                                                 List<ComponentOutputRestrictor> restrictions) {
         if (handler instanceof HybridGasTank) {
             HybridGasTank gasTank = (HybridGasTank) handler;
-            switch (getActionType()) {
+            switch (actionType) {
                 case INPUT:
                     if (this.requirementCheck instanceof HybridFluidGas) {
                         GasStack drained = gasTank.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), false);
@@ -266,8 +266,8 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        HybridTank handler = (HybridTank) component.getProvidedComponent();
-        if (Objects.requireNonNull(getActionType()) == IOType.INPUT) {
+        HybridTank handler = (HybridTank) component.providedComponent;
+        if (Objects.requireNonNull(actionType) == IOType.INPUT) {
             if (Mods.MEKANISM.isPresent()) {
                 return startCraftingWithMekanismHandling(handler, chance);
             }
@@ -348,8 +348,8 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Override
     @Nonnull
     public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        HybridTank handler = (HybridTank) component.getProvidedComponent();
-        if (Objects.requireNonNull(getActionType()) == IOType.OUTPUT) {
+        HybridTank handler = (HybridTank) component.providedComponent;
+        if (Objects.requireNonNull(actionType) == IOType.OUTPUT) {
             if (Mods.MEKANISM.isPresent()) {
                 return finishWithMekanismHandling(handler, context, chance);
             } else {

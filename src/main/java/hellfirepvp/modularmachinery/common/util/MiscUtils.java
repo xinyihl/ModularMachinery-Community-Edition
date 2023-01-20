@@ -13,6 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -64,9 +65,11 @@ public class MiscUtils {
     }
 
     public static <T> List<T> flatten(Collection<List<T>> collection) {
-        return collection.stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
+        List<T> list = new ArrayList<>(collection.size());
+        for (List<T> ts : collection) {
+            list.addAll(ts);
+        }
+        return list;
     }
 
     @Nullable

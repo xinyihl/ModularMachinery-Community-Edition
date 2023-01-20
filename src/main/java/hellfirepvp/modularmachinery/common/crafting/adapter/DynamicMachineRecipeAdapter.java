@@ -29,8 +29,8 @@ import java.util.List;
  * Date: 02.03.2019 / 15:02
  */
 public class DynamicMachineRecipeAdapter extends RecipeAdapter {
-
     private final DynamicMachine originalMachine;
+    private int incId = 0;
 
     public DynamicMachineRecipeAdapter(@Nonnull ResourceLocation registryName, DynamicMachine originalMachine) {
         super(registryName);
@@ -47,7 +47,7 @@ public class DynamicMachineRecipeAdapter extends RecipeAdapter {
         List<MachineRecipe> recipesNew = new ArrayList<>();
         for (MachineRecipe recipe : RecipeRegistry.getRecipesFor(this.originalMachine)) {
             MachineRecipe newRecipe = recipe.copy(
-                    (res) -> new ResourceLocation(ModularMachinery.MODID, res.getPath() + ".copy." + newIdentifier),
+                    (res) -> new ResourceLocation(ModularMachinery.MODID, res.getPath() + ".copy." + newIdentifier + "_" + incId),
                     owningMachineName,
                     modifiers);
             for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
@@ -55,6 +55,8 @@ public class DynamicMachineRecipeAdapter extends RecipeAdapter {
             }
             recipesNew.add(newRecipe);
         }
+
+        incId++;
         return recipesNew;
     }
 

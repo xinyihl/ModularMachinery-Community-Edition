@@ -90,7 +90,7 @@ public class MachineLoader {
         variableContext.clear();
 
         files.forEach(file -> {
-            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()))) {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 Map<String, BlockArray.BlockInformation> variables = JsonUtils.fromJson(GSON, isr, BlockInformationVariable.class).getDefinedVariables();
                 for (String key : variables.keySet()) {
                     variableContext.put(key, variables.get(key));

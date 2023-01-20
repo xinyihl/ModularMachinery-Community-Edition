@@ -90,13 +90,16 @@ public class RecipeCraftingContext {
     }
 
     public Iterable<ProcessingComponent<?>> getComponentsFor(ComponentRequirement<?, ?> requirement, @Nullable ComponentSelectorTag tag) {
-        List<ProcessingComponent<?>> validComponents = this.typeComponents.stream()
-                .filter(comp -> requirement.isValidComponent(comp, this))
-                .collect(Collectors.toList());
+        List<ProcessingComponent<?>> validComponents = new ArrayList<>();
+        for (ProcessingComponent<?> typeComponent : this.typeComponents) {
+            if (requirement.isValidComponent(typeComponent, this)) {
+                validComponents.add(typeComponent);
+            }
+        }
         if (tag == null) {
             return Collections.unmodifiableList(validComponents);
         } else {
-            return new PriorityProvider<>(validComponents, compList -> Iterators.tryFind(compList.iterator(), comp -> tag.equals(comp.getTag())).orNull());
+            return new PriorityProvider<>(validComponents, compList -> Iterators.tryFind(compList.iterator(), comp -> tag.equals(comp.tag)).orNull());
         }
     }
 
@@ -106,13 +109,13 @@ public class RecipeCraftingContext {
         //Input tick
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
-                    requirement.getActionType() == IOType.OUTPUT) continue;
+                    requirement.actionType == IOType.OUTPUT) continue;
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
 
             perTickRequirement.resetIOTick(this);
             perTickRequirement.startIOTick(this, durMultiplier);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.getTag())) {
+            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
                 CraftCheck result = perTickRequirement.doIOTick(component, this);
                 if (result.isSuccess()) {
                     break;
@@ -130,13 +133,13 @@ public class RecipeCraftingContext {
         //Output tick
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
-                    requirement.getActionType() == IOType.INPUT) continue;
+                    requirement.actionType == IOType.INPUT) continue;
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
 
             perTickRequirement.resetIOTick(this);
             perTickRequirement.startIOTick(this, durMultiplier);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.getTag())) {
+            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
                 CraftCheck result = perTickRequirement.doIOTick(component, this);
                 if (result.isSuccess()) {
                     break;
@@ -165,7 +168,7 @@ public class RecipeCraftingContext {
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             requirement.startRequirementCheck(chance, this);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.getTag())) {
+            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
                 if (requirement.startCrafting(component, this, chance)) {
                     requirement.endRequirementCheck();
                     break;
@@ -186,7 +189,7 @@ public class RecipeCraftingContext {
         for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
             requirement.startRequirementCheck(chance, this);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.getTag())) {
+            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
                 CraftCheck check = requirement.finishCrafting(component, this, chance);
                 if (check.isSuccess()) {
                     requirement.endRequirementCheck();
@@ -215,7 +218,7 @@ public class RecipeCraftingContext {
         for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(ResultChance.GUARANTEED, this);
 
-            Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.getTag());
+            Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
             if (!Iterables.isEmpty(components)) {
 
                 List<String> errorMessages = Lists.newArrayList();
@@ -235,7 +238,7 @@ public class RecipeCraftingContext {
                 errorMessages.forEach(result::addError);
             } else {
                 // No component found that would apply for the given requirement
-                result.addError(requirement.getMissingComponentErrorMessage(requirement.getActionType()));
+                result.addError(requirement.getMissingComponentErrorMessage(requirement.actionType));
             }
 
             requirement.endRequirementCheck();

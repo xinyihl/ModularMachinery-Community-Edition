@@ -51,7 +51,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopy() {
-        RequirementEnergy energy = new RequirementEnergy(this.getActionType(), this.requirementPerTick);
+        RequirementEnergy energy = new RequirementEnergy(this.actionType, this.requirementPerTick);
         energy.activeIO = this.activeIO;
         return energy;
     }
@@ -59,7 +59,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopyModified(List<RecipeModifier> modifiers) {
         int requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.requirementPerTick, false));
-        RequirementEnergy energy = new RequirementEnergy(this.getActionType(), requirement);
+        RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
         energy.activeIO = this.activeIO;
         return energy;
     }
@@ -75,7 +75,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     @Nonnull
     @Override
     public String getMissingComponentErrorMessage(IOType ioType) {
-        ResourceLocation compKey = this.getRequirementType().getRegistryName();
+        ResourceLocation compKey = this.requirementType.getRegistryName();
         return String.format("component.missing.%s.%s.%s",
                 compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
@@ -91,17 +91,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.getComponent();
+        MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ENERGY) &&
                 cmp instanceof MachineComponent.EnergyHatch &&
-                cmp.getIOType() == this.getActionType();
+                cmp.ioType == this.actionType;
     }
 
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IEnergyHandler handler = (IEnergyHandler) component.getProvidedComponent();
-        switch (getActionType()) {
+        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
+        switch (actionType) {
             case INPUT:
                 if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) {
                     return CraftCheck.success();
@@ -137,7 +137,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         boolean enough = this.activeIO <= 0;
         this.activeIO = this.requirementPerTick;
 
-        switch (getActionType()) {
+        switch (actionType) {
             case INPUT:
                 return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
@@ -149,23 +149,19 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     @Nonnull
     @Override
     public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        IEnergyHandler handler = (IEnergyHandler) component.getProvidedComponent();
-        switch (getActionType()) {
+        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
+        switch (actionType) {
             case INPUT:
                 if (handler.getCurrentEnergy() >= this.activeIO) {
                     handler.setCurrentEnergy(handler.getCurrentEnergy() - this.activeIO);
                     this.activeIO = 0;
                     return CraftCheck.success();
                 } else {
-//                    this.activeIO -= handler.getCurrentEnergy();
-//                    handler.setCurrentEnergy(0);
                     return CraftCheck.partialSuccess();
                 }
             case OUTPUT:
                 this.remaining = handler.getRemainingCapacity();
                 if (remaining < this.activeIO) {
-//                    handler.setCurrentEnergy(handler.getMaxEnergy());
-//                    this.activeIO -= remaining;
                     return CraftCheck.partialSuccess();
                 }
                 handler.setCurrentEnergy(Math.min(handler.getCurrentEnergy() + this.activeIO, handler.getMaxEnergy()));

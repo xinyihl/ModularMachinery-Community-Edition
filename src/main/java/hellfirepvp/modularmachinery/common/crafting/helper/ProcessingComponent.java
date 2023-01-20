@@ -21,9 +21,9 @@ import javax.annotation.Nullable;
  */
 public class ProcessingComponent<T> {
 
-    private final MachineComponent<T> component;
-    private final T providedComponent;
-    private final ComponentSelectorTag tag;
+    public final T providedComponent;
+    public final MachineComponent<T> component;
+    protected final ComponentSelectorTag tag;
 
     public ProcessingComponent(MachineComponent<T> component, T providedComponent, ComponentSelectorTag tag) {
         this.component = component;

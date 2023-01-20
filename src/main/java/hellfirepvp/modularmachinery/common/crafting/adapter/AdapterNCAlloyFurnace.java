@@ -22,6 +22,7 @@ import java.util.List;
 public class AdapterNCAlloyFurnace extends RecipeAdapter {
     public static final int WORK_TIME = 400;
     public static final int BASE_ENERGY_USAGE = 10;
+    private int incId = 0;
 
     public AdapterNCAlloyFurnace() {
         super(new ResourceLocation("nuclearcraft", "alloy_furnace"));
@@ -34,24 +35,23 @@ public class AdapterNCAlloyFurnace extends RecipeAdapter {
 
         List<BasicRecipe> recipeList = alloyFurnaceRecipes.getRecipeList();
         List<MachineRecipe> machineRecipeList = new ArrayList<>(recipeList.size());
-        int incId = 0;
 
         for (BasicRecipe basicRecipe : recipeList) {
             MachineRecipe recipe = createRecipeShell(new ResourceLocation("nuclearcraft", "alloy_furnace_" + incId),
                     owningMachineName, (int) basicRecipe.getBaseProcessTime(Math.round(RecipeModifier.applyModifiers(
                             modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, WORK_TIME, false))),
-                    0, false
+                    incId, false
             );
+
+            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
+                recipe.addRequirement(additionalRequirement.deepCopy());
+            }
 
             for (IItemIngredient itemIngredient : basicRecipe.getItemIngredients()) {
                 int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, itemIngredient.getStack().getCount(), false));
                 if (inAmount > 0) {
                     recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(itemIngredient.getStack(), inAmount)));
                 }
-            }
-
-            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
-                recipe.addRequirement(additionalRequirement.deepCopy());
             }
 
             for (IItemIngredient itemProduct : basicRecipe.getItemProducts()) {

@@ -91,16 +91,16 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         RequirementItem item;
         switch (this.requirementType) {
             case OREDICT:
-                item = new RequirementItem(this.getActionType(), this.oreDictName, this.oreDictItemAmount);
+                item = new RequirementItem(this.actionType, this.oreDictName, this.oreDictItemAmount);
                 break;
 
             case FUEL:
-                item = new RequirementItem(this.getActionType(), this.fuelBurntime);
+                item = new RequirementItem(this.actionType, this.fuelBurntime);
                 break;
 
             default:
             case ITEMSTACKS:
-                item = new RequirementItem(this.getActionType(), this.required.copy());
+                item = new RequirementItem(this.actionType, this.required.copy());
                 break;
         }
         item.chance = this.chance;
@@ -119,18 +119,18 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         switch (this.requirementType) {
             case OREDICT:
                 int inOreAmt = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.oreDictItemAmount, false));
-                item = new RequirementItem(this.getActionType(), this.oreDictName, inOreAmt);
+                item = new RequirementItem(this.actionType, this.oreDictName, inOreAmt);
                 break;
             case FUEL:
                 int inFuel = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.fuelBurntime, false));
-                item = new RequirementItem(this.getActionType(), inFuel);
+                item = new RequirementItem(this.actionType, inFuel);
                 break;
             default:
             case ITEMSTACKS:
                 ItemStack inReq = this.required.copy();
                 int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, inReq.getCount(), false));
                 inReq.setCount(amt);
-                item = new RequirementItem(this.getActionType(), inReq);
+                item = new RequirementItem(this.actionType, inReq);
                 break;
         }
 
@@ -185,18 +185,18 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.getComponent();
+        MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ITEM) &&
                 cmp instanceof MachineComponent.ItemBus &&
-                cmp.getIOType() == getActionType();
+                cmp.ioType == actionType;
     }
 
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IOInventory handler = (IOInventory) component.getProvidedComponent();
+        IOInventory handler = (IOInventory) component.providedComponent;
 
-        if (getActionType() == IOType.INPUT) {
+        if (actionType == IOType.INPUT) {
             switch (this.requirementType) {
                 case ITEMSTACKS:
                     ItemStack inReq = this.required.copy();
@@ -220,7 +220,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     break;
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
-        } else if (getActionType() == IOType.OUTPUT) {
+        } else if (actionType == IOType.OUTPUT) {
 
             for (ComponentOutputRestrictor restrictor : restrictions) {
                 if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
@@ -269,9 +269,9 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        IOInventory handler = (IOInventory) component.getProvidedComponent();
+        IOInventory handler = (IOInventory) component.providedComponent;
         float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
-        if (Objects.requireNonNull(getActionType()) == IOType.INPUT) {
+        if (Objects.requireNonNull(actionType) == IOType.INPUT) {
             switch (this.requirementType) {
                 //If it doesn't consume the item, we only need to see if it's actually there.
                 case ITEMSTACKS:
@@ -308,8 +308,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         if (fuelBurntime > 0 && oreDictName == null && required.isEmpty()) {
             throw new IllegalStateException("Invalid item output!");
         }
-        IOInventory handler = (IOInventory) component.getProvidedComponent();
-        if (Objects.requireNonNull(getActionType()) == IOType.OUTPUT) {
+        IOInventory handler = (IOInventory) component.providedComponent;
+        if (Objects.requireNonNull(actionType) == IOType.OUTPUT) {
             ItemStack stack;
             if (oreDictName != null) {
                 stack = Iterables.getFirst(OreDictionary.getOres(oreDictName), ItemStack.EMPTY);

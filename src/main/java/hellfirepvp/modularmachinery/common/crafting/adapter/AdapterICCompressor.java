@@ -18,8 +18,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class AdapterICCompressor extends RecipeAdapter  {
+public class AdapterICCompressor extends RecipeAdapter {
     public static final int workTime = 300;
+    private int incId = 0;
 
     public AdapterICCompressor() {
         super(new ResourceLocation("ic2", "te_compressor"));
@@ -31,12 +32,15 @@ public class AdapterICCompressor extends RecipeAdapter  {
         Iterable<? extends ic2.api.recipe.MachineRecipe<IRecipeInput, Collection<ItemStack>>> machineRecipes = Recipes.compressor.getRecipes();
 
         List<MachineRecipe> recipes = new ArrayList<>(40);
-        int incId = 0;
         for (ic2.api.recipe.MachineRecipe<IRecipeInput, Collection<ItemStack>> machineRecipe : machineRecipes) {
             MachineRecipe recipe = createRecipeShell(
                     new ResourceLocation("ic2", "te_compressor_recipe_" + incId),
                     owningMachineName,
-                    workTime, 0, false);
+                    workTime, incId, false);
+
+            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
+                recipe.addRequirement(additionalRequirement.deepCopy());
+            }
 
             int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, machineRecipe.getInput().getAmount(), false));
 
@@ -56,10 +60,6 @@ public class AdapterICCompressor extends RecipeAdapter  {
             int inEnergy = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ENERGY, IOType.INPUT, 8, false));
             if (inEnergy > 0) {
                 recipe.addRequirement(new RequirementEnergy(IOType.INPUT, inEnergy));
-            }
-
-            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
-                recipe.addRequirement(additionalRequirement.deepCopy());
             }
 
             recipes.add(recipe);
