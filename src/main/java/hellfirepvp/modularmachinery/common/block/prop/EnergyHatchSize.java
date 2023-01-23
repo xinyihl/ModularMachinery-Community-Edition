@@ -98,14 +98,14 @@ public enum EnergyHatchSize implements IStringSerializable {
         if (getGTEnergyTier() < 0) {
             return -1;
         }
-        return (int) StrictMath.pow(2, ((getGTEnergyTier() + 1) * 2) + 1);
+        return (int) Math.pow(2, ((getGTEnergyTier() + 1) * 2) + 1);
     }
 
     public int getIC2EnergyTransmission() {
         if (ic2EnergyTier < 0) {
             return -1;
         }
-        return (int) StrictMath.pow(2, ((ic2EnergyTier + 1) * 2) + 1);
+        return (int) Math.pow(2, ((ic2EnergyTier + 1) * 2) + 1);
     }
 
 }

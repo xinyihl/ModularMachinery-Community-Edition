@@ -11,6 +11,8 @@ import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import nc.recipe.BasicRecipe;
 import nc.recipe.NCRecipes;
 import nc.recipe.ingredient.IItemIngredient;
+import nc.recipe.ingredient.ItemArrayIngredient;
+import nc.recipe.ingredient.OreIngredient;
 import nc.recipe.processor.AlloyFurnaceRecipes;
 import net.minecraft.util.ResourceLocation;
 
@@ -47,10 +49,25 @@ public class AdapterNCAlloyFurnace extends RecipeAdapter {
                 recipe.addRequirement(additionalRequirement.deepCopy());
             }
 
-            for (IItemIngredient itemIngredient : basicRecipe.getItemIngredients()) {
-                int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, itemIngredient.getStack().getCount(), false));
+            for (IItemIngredient iItemIngredient : basicRecipe.getItemIngredients()) {
+                int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, iItemIngredient.getStack().getCount(), false));
                 if (inAmount > 0) {
-                    recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(itemIngredient.getStack(), inAmount)));
+                    if (iItemIngredient instanceof OreIngredient) {
+                        OreIngredient oreIngredient = (OreIngredient) iItemIngredient;
+                        recipe.addRequirement(new RequirementItem(IOType.INPUT, oreIngredient.oreName, inAmount));
+                        continue;
+                    }
+
+                    if (iItemIngredient instanceof ItemArrayIngredient) {
+                        ItemArrayIngredient arrayIngredient = (ItemArrayIngredient) iItemIngredient;
+                        IItemIngredient oreIngredient = arrayIngredient.ingredientList.get(0);
+                        if (oreIngredient instanceof OreIngredient){
+                            recipe.addRequirement(new RequirementItem(IOType.INPUT, ((OreIngredient) oreIngredient).oreName, inAmount));
+                            continue;
+                        }
+                    }
+                    
+                    recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(iItemIngredient.getStack(), inAmount)));
                 }
             }
 
