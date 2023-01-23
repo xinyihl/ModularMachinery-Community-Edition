@@ -36,14 +36,17 @@ public class ActiveMachineRecipe {
     private final MachineRecipe recipe;
     private final Map<ResourceLocation, NBTTagCompound> dataMap = new HashMap<>();
     private int tick = 0;
+    private int totalTick;
 
     public ActiveMachineRecipe(MachineRecipe recipe) {
         this.recipe = recipe;
+        this.totalTick = recipe.getRecipeTotalTickTime();
     }
 
     public ActiveMachineRecipe(NBTTagCompound serialized) {
         this.recipe = RecipeRegistry.getRecipe(new ResourceLocation(serialized.getString("recipeName")));
         this.tick = serialized.getInteger("tick");
+        this.totalTick = serialized.getInteger("totalTick");
         if (serialized.hasKey("data", Constants.NBT.TAG_LIST)) {
             NBTTagList listData = serialized.getTagList("data", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < listData.tagCount(); i++) {
@@ -68,7 +71,7 @@ public class ActiveMachineRecipe {
     @Nonnull
     public TileMachineController.CraftingStatus tick(TileMachineController ctrl, RecipeCraftingContext context) {
         //Skip per-tick logic until controller can finish the recipe
-        if (this.isCompleted(ctrl, context)) {
+        if (this.isCompleted()) {
             return TileMachineController.CraftingStatus.working();
         }
 
@@ -107,6 +110,10 @@ public class ActiveMachineRecipe {
         return tick;
     }
 
+    public int getTotalTick() {
+        return totalTick;
+    }
+
     @Nonnull
     public Map<ResourceLocation, NBTTagCompound> getData() {
         return dataMap;
@@ -117,15 +124,14 @@ public class ActiveMachineRecipe {
         return dataMap.computeIfAbsent(key, k -> new NBTTagCompound());
     }
 
-    public boolean isCompleted(TileMachineController controller, RecipeCraftingContext context) {
-        int time = this.recipe.getRecipeTotalTickTime();
-        //Not sure which a user will use... let's try both.
-        time = Math.round(RecipeModifier.applyModifiers(context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, time, false));
-        return this.tick >= time;
+    public boolean isCompleted() {
+        return this.tick >= totalTick;
     }
 
     public void start(RecipeCraftingContext context) {
         context.startCrafting();
+        int time = this.recipe.getRecipeTotalTickTime();
+        totalTick = Math.round(RecipeModifier.applyModifiers(context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, time, false));
     }
 
     public void complete(RecipeCraftingContext completionContext) {
@@ -135,6 +141,7 @@ public class ActiveMachineRecipe {
     public NBTTagCompound serialize() {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setInteger("tick", this.tick);
+        tag.setInteger("totalTick", this.totalTick);
         tag.setString("recipeName", this.recipe.getRegistryName().toString());
 
         NBTTagList listData = new NBTTagList();

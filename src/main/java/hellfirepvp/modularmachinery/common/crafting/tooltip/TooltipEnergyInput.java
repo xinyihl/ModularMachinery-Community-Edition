@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -53,11 +54,11 @@ public class TooltipEnergyInput extends RequirementTip {
         List<String> tooltip = new ArrayList<>(3);
         if (totalEnergyIn > 0) {
             String energyType = I18n.format(EnergyDisplayUtil.type.getUnlocalizedFormat());
-            long energyIn = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyIn);
+            long energyOut = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyIn);
 
             tooltip.add(I18n.format("tooltip.machinery.energy.in"));
-            tooltip.add(I18n.format("tooltip.machinery.energy.in.tick", energyIn, energyType));
-            tooltip.add(I18n.format("tooltip.machinery.energy.in.total", energyIn * recipe.getRecipeTotalTickTime(), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.out.tick", MiscUtils.formatNumber(energyOut), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.out.total", MiscUtils.formatNumber(energyOut * recipe.getRecipeTotalTickTime()), energyType));
         }
         return tooltip;
     }

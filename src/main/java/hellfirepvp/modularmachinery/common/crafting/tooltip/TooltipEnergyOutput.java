@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
 
 import javax.annotation.Nonnull;
@@ -52,8 +53,8 @@ public class TooltipEnergyOutput extends RequirementTip {
             long energyIn = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyOut);
 
             tooltip.add(I18n.format("tooltip.machinery.energy.out"));
-            tooltip.add(I18n.format("tooltip.machinery.energy.out.tick", energyIn, energyType));
-            tooltip.add(I18n.format("tooltip.machinery.energy.out.total", energyIn * recipe.getRecipeTotalTickTime(), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.out.tick", MiscUtils.formatNumber(energyIn), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.out.total", MiscUtils.formatNumber(energyIn * recipe.getRecipeTotalTickTime()), energyType));
         }
         return tooltip;
     }

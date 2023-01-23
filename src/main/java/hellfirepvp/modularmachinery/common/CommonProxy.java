@@ -83,6 +83,7 @@ public class CommonProxy implements IGuiHandler {
         if (Mods.CRAFTTWEAKER.isPresent()) {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
+        MinecraftForge.EVENT_BUS.register(ModularMachinery.PARALLEL_EXECUTOR);
     }
 
     public void init() {

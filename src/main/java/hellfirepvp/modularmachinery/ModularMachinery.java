@@ -8,8 +8,10 @@
 
 package hellfirepvp.modularmachinery;
 
+import github.kasuminova.mmce.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.command.CommandHand;
+import hellfirepvp.modularmachinery.common.command.CommandPerformanceReport;
 import hellfirepvp.modularmachinery.common.command.CommandSyntax;
 import hellfirepvp.modularmachinery.common.network.PktCopyToClipboard;
 import hellfirepvp.modularmachinery.common.network.PktInteractFluidTankGui;
@@ -26,8 +28,6 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
-
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -49,12 +49,7 @@ public class ModularMachinery {
     public static final String CLIENT_PROXY = "hellfirepvp.modularmachinery.client.ClientProxy";
     public static final String COMMON_PROXY = "hellfirepvp.modularmachinery.common.CommonProxy";
     public static final SimpleNetworkWrapper NET_CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
-    public static final int AVAILABLE_PROCESSORS = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
-    //Async Thread Pool
-    public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(
-            AVAILABLE_PROCESSORS,
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, false
-    );
+    public static final TaskExecutor PARALLEL_EXECUTOR = new TaskExecutor();
     @Mod.Instance(MODID)
     public static ModularMachinery instance;
     public static Logger log;
@@ -101,6 +96,7 @@ public class ModularMachinery {
         //Cmd registration
         event.registerServerCommand(new CommandSyntax());
         event.registerServerCommand(new CommandHand());
+        event.registerServerCommand(new CommandPerformanceReport());
     }
 
 }

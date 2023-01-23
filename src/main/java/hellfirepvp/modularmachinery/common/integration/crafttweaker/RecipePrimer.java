@@ -10,7 +10,9 @@ package hellfirepvp.modularmachinery.common.integration.crafttweaker;
 
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.item.IIngredient;
 import crafttweaker.api.item.IItemStack;
+import crafttweaker.api.item.IngredientStack;
 import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.oredict.IOreDictEntry;
@@ -68,7 +70,7 @@ public class RecipePrimer implements PreparedRecipe {
             if (lastComponent instanceof ComponentRequirement.ChancedRequirement) {
                 ((ComponentRequirement.ChancedRequirement) lastComponent).setChance(chance);
             } else {
-                CraftTweakerAPI.logWarning("Cannot set chance for not-chance-based Component: " + lastComponent.getClass().toString());
+                CraftTweakerAPI.logWarning("[ModularMachinery] Cannot set chance for not-chance-based Component: " + lastComponent.getClass().toString());
             }
         }
         return this;
@@ -78,6 +80,53 @@ public class RecipePrimer implements PreparedRecipe {
     public RecipePrimer setTag(String selectorTag) {
         if (lastComponent != null) {
             lastComponent.setTag(new ComponentSelectorTag(selectorTag));
+        }
+        return this;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    // General Input & Output
+    //----------------------------------------------------------------------------------------------
+    @ZenMethod
+    public RecipePrimer addInput(IIngredient input) {
+        if (input instanceof IItemStack ||
+            input instanceof IOreDictEntry ||
+            input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
+            addItemInput(input);
+        } else if (input instanceof ILiquidStack) {
+            addFluidInput((ILiquidStack) input);
+        } else {
+            CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid input type %s(%s)! Ignored.", input, input.getClass()));
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addInputs(IIngredient... inputs) {
+        for (IIngredient input : inputs) {
+            addInput(input);
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addOutput(IIngredient output) {
+        if (output instanceof IItemStack ||
+            output instanceof IOreDictEntry ||
+            output instanceof IngredientStack && output.getInternal() instanceof IOreDictEntry) {
+            addItemOutput(output);
+        } else if (output instanceof ILiquidStack) {
+            addFluidOutput((ILiquidStack) output);
+        } else {
+            CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid output type %s(%s)! Ignored.", output, output.getClass()));
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addOutputs(IIngredient... outputs) {
+        for (IIngredient output : outputs) {
+            addOutput(output);
         }
         return this;
     }
@@ -109,7 +158,7 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addFluidInputs(ILiquidStack... stacks) {
         for (ILiquidStack stack : stacks) {
-            requireFluid(IOType.INPUT, stack);
+            addFluidInput(stack);
         }
         return this;
     }
@@ -123,7 +172,7 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addFluidOutputs(ILiquidStack... stacks) {
         for (ILiquidStack stack : stacks) {
-            requireFluid(IOType.OUTPUT, stack);
+            addFluidOutput(stack);
         }
         return this;
     }
@@ -149,35 +198,37 @@ public class RecipePrimer implements PreparedRecipe {
     // ITEM input
     //----------------------------------------------------------------------------------------------
     @ZenMethod
-    public RecipePrimer addItemInput(IItemStack stack) {
-        requireItem(IOType.INPUT, stack);
+    public RecipePrimer addItemInput(IIngredient input) {
+        if (input instanceof IItemStack) {
+            requireItem(IOType.INPUT, (IItemStack) input);
+        } else if (input instanceof IOreDictEntry) {
+            requireItem(IOType.INPUT, ((IOreDictEntry) input).getName(), 1);
+        } else if (input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
+            requireItem(IOType.INPUT, ((IOreDictEntry) input.getInternal()).getName(), input.getAmount());
+        } else {
+            CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid input type %s(%s)! Ignored.", input, input.getClass()));
+        }
+
         return this;
     }
 
-    @ZenMethod
-    public RecipePrimer addItemInput(IOreDictEntry oreDict) {
-        return addItemInput(oreDict, 1);
-    }
-
+    @Deprecated
     @ZenMethod
     public RecipePrimer addItemInput(IOreDictEntry oreDict, int amount) {
         requireItem(IOType.INPUT, oreDict.getName(), amount);
+        CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
+                                "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
+                oreDict.getName(), amount, oreDict.getName(), amount)
+        );
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addItemInputs(IItemStack... stacks) {
-        for (IItemStack stack : stacks) {
-            addItemInput(stack);
+    public RecipePrimer addItemInputs(IIngredient... inputs) {
+        for (IIngredient input : inputs) {
+            addItemInput(input);
         }
         return this;
-    }
-
-    //TODO haha
-    //DERP. Sorry x)
-    @ZenMethod
-    public RecipePrimer addFuelItemInout(int requiredTotalBurnTime) {
-        return addFuelItemInput(requiredTotalBurnTime);
     }
 
     @ZenMethod
@@ -190,27 +241,37 @@ public class RecipePrimer implements PreparedRecipe {
     // ITEM output
     //----------------------------------------------------------------------------------------------
     @ZenMethod
-    public RecipePrimer addItemOutput(IItemStack stack) {
-        requireItem(IOType.OUTPUT, stack);
+    public RecipePrimer addItemOutput(IIngredient output) {
+        if (output instanceof IItemStack) {
+            requireItem(IOType.OUTPUT, (IItemStack) output);
+        } else if (output instanceof IOreDictEntry) {
+            requireItem(IOType.OUTPUT, ((IOreDictEntry) output).getName(), 1);
+        } else if (output instanceof IngredientStack && output.getInternal() instanceof IOreDictEntry) {
+            requireItem(IOType.OUTPUT, ((IOreDictEntry) output.getInternal()).getName(), output.getAmount());
+        } else {
+            CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid output type %s(%s)! Ignored.", output, output.getClass()));
+        }
+
         return this;
     }
 
-    @ZenMethod
-    public RecipePrimer addItemOutput(IOreDictEntry oreDict) {
-        return addItemOutput(oreDict, 1);
-    }
-
+    @Deprecated
     @ZenMethod
     public RecipePrimer addItemOutput(IOreDictEntry oreDict, int amount) {
         requireItem(IOType.OUTPUT, oreDict.getName(), amount);
+        CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
+                                "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
+                oreDict.getName(), amount, oreDict.getName(), amount)
+        );
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addItemOutputs(IItemStack... stacks) {
-        for (IItemStack stack : stacks) {
-            addItemOutput(stack);
+    public RecipePrimer addItemOutputs(IIngredient... inputs) {
+        for (IIngredient input : inputs) {
+            addItemOutput(input);
         }
+
         return this;
     }
 
@@ -224,7 +285,7 @@ public class RecipePrimer implements PreparedRecipe {
     private void requireFluid(IOType ioType, ILiquidStack stack) {
         FluidStack mcFluid = CraftTweakerMC.getLiquidStack(stack);
         if (mcFluid == null) {
-            CraftTweakerAPI.logError("FluidStack not found/unknown fluid: " + stack.toString());
+            CraftTweakerAPI.logError("[ModularMachinery] FluidStack not found/unknown fluid: " + stack.toString());
             return;
         }
         if (stack.getTag() != null) {
@@ -238,7 +299,7 @@ public class RecipePrimer implements PreparedRecipe {
     private void requireGas(IOType ioType, String gasName, int amount) {
         Gas gas = GasRegistry.getGas(gasName);
         if (gas == null) {
-            CraftTweakerAPI.logError("GasStack not found/unknown gas: " + gasName);
+            CraftTweakerAPI.logError("[ModularMachinery] GasStack not found/unknown gas: " + gasName);
             return;
         }
         int max = Math.max(0, amount);
@@ -254,7 +315,7 @@ public class RecipePrimer implements PreparedRecipe {
     private void requireItem(IOType ioType, IItemStack stack) {
         ItemStack mcStack = CraftTweakerMC.getItemStack(stack);
         if (mcStack.isEmpty()) {
-            CraftTweakerAPI.logError("ItemStack not found/unknown item: " + stack.toString());
+            CraftTweakerAPI.logError("[ModularMachinery] ItemStack not found/unknown item: " + stack.toString());
             return;
         }
         RequirementItem ri = new RequirementItem(ioType, mcStack);

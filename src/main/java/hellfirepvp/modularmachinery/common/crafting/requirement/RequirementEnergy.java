@@ -58,7 +58,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopyModified(List<RecipeModifier> modifiers) {
-        int requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.requirementPerTick, false));
+        long requirement = Math.round((double) RecipeModifier.applyModifiers(modifiers, this, this.requirementPerTick, false));
         RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
         energy.activeIO = this.activeIO;
         return energy;

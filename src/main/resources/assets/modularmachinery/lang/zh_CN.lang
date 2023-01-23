@@ -2,7 +2,15 @@ itemGroup.modularmachinery=模块化机械 - 社区版
 
 command.modularmachinery.syntax=/mm-syntax
 command.modularmachinery.hand=/mm-hand
+command.modularmachinery.performance_report=/mm-performance_report
 command.modularmachinery.hand.empty=手持某个物品以查看其信息。
+command.modularmachinery.performance_report.title=模块化机械 - 并发操作性能报告（已统计 %s Tick）
+command.modularmachinery.performance_report.reset=性能报告数据已重置。
+command.modularmachinery.performance_report.total_executed=已运行的任务数量：%s
+command.modularmachinery.performance_report.total_used_time=总耗时：%s 毫秒
+command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时：%s 微秒
+command.modularmachinery.performance_report.used_time_avg_per_tick=每 Tick 平均耗时: %.2f 毫秒
+command.modularmachinery.performance_report.executed_avg_per_tick=每 Tick 平均执行任务数: %s
 
 gui.controller.blueprint=找到蓝图：%s
 gui.controller.blueprint.none=无
@@ -15,29 +23,29 @@ gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 
-top.recipe.progress=进度：
-top.recipe.progress.second=%s 秒 / %s 秒
+top.recipe.progress=进度
+top.recipe.progress.second=秒
 top.machine.working=工作中
 top.machine.structure.found=结构已形成
 top.machine.structure.none=结构不完整
 
-craftcheck.failure.item.input=Missing input item!
-craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!
-craftcheck.failure.fluid.input=Missing fluid input!
-craftcheck.failure.fluid.output.space=Not enough tank space for fluid output(s)!
-craftcheck.failure.gas.input=Missing gas input!
-craftcheck.failure.gas.output.space=Not enough space for gas output(s)!
-craftcheck.failure.energy.input=Not enough energy!
+craftcheck.failure.item.input=缺少物品输入！
+craftcheck.failure.item.output.space=没有足够的库存空间用于物品输出！
+craftcheck.failure.fluid.input=缺少液体输入！
+craftcheck.failure.fluid.output.space=没有足够的库存空间用于流体输出！
+craftcheck.failure.gas.input=缺少气体输入！
+craftcheck.failure.gas.output.space=没有足够的库存空间用于气体输出！
+craftcheck.failure.energy.input=缺少能量输入！
 craftcheck.failure.energy.output.space=能源输出仓已满
 
-component.missing.modularmachinery.energy.output=No Energy Output Hatch found!
-component.missing.modularmachinery.energy.input=No Energy Input Hatch found!
-component.missing.modularmachinery.fluid.output=No Fluid Output Hatch found!
-component.missing.modularmachinery.fluid.input=No Fluid Input Hatch found!
-component.missing.modularmachinery.gas.output=No Fluid Output Hatch found!
-component.missing.modularmachinery.gas.input=No Fluid Input Hatch found!
-component.missing.modularmachinery.item.output=No Item Output found!
-component.missing.modularmachinery.item.input=No Item Input found!
+component.missing.modularmachinery.energy.output=没有找到能量输出口！
+component.missing.modularmachinery.energy.input=没有找到能量输入口！
+component.missing.modularmachinery.fluid.output=没有找到流体输出口！
+component.missing.modularmachinery.fluid.input=没有找到流体输入口！
+component.missing.modularmachinery.gas.output=没有找到流体输出口！
+component.missing.modularmachinery.gas.input=没有找到流体输入口！
+component.missing.modularmachinery.item.output=没有找到物品输出口！
+component.missing.modularmachinery.item.input=没有找到物品输入口！
 
 gui.blueprint.popout.info=潜行以将当前预览锁定在当前世界中。
 gui.blueprint.popout.place=右击以显示预览；远离或放置其他结构预览（蓝图）将会清除此前世界中的结构预览。
@@ -224,3 +232,4 @@ tile.modularmachinery.blockenergyoutputhatch.reinforced.name=强化能源输出�
 tile.modularmachinery.blockenergyoutputhatch.big.name=大型能源输出仓
 tile.modularmachinery.blockenergyoutputhatch.huge.name=巨型能源输出仓
 tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=超级能源输出仓
+tile.modularmachinery.blockenergyoutputhatch.ultimate.name=终极能源输出仓

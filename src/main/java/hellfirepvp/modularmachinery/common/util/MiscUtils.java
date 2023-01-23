@@ -13,6 +13,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
  * Date: 30.03.2018 / 16:50
  */
 public class MiscUtils {
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,###");
 
     public static <K, V, N> Map<K, N> remap(Map<K, V> map, Function<V, N> remapFct) {
         return map.entrySet()
@@ -88,6 +90,28 @@ public class MiscUtils {
         } else {
             return Math.min(num, max);
         }
+    }
+
+    public static String formatNumber(long value) {
+        if (value < 1000L) {
+            return String.valueOf(value);
+        } else if (value < 1000000L) {
+            return (double) Math.round((float) value) / 1000.0 + "K";
+        } else if (value < 1000000000L) {
+            return (double) Math.round((float) (value / 1000L)) / 1000.0 + "M";
+        } else if (value < 1000000000000L) {
+            return (double) Math.round((float) (value / 1000000L)) / 1000.0 + "G";
+        } else if (value < 1000000000000000L) {
+            return (double) Math.round((float) (value / 1000000000L)) / 1000.0 + "T";
+        } else if (value < 1000000000000000000L) {
+            return (double) Math.round((float) (value / 1000000000000L)) / 1000.0 + "P";
+        } else {
+            return (double) Math.round((float) (value / 1000000000000000L)) / 1000.0 + "E";
+        }
+    }
+
+    public static String formatDecimal(float value) {
+        return DECIMAL_FORMAT.format(value);
     }
 
 }

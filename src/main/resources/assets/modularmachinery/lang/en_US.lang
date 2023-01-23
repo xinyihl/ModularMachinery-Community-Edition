@@ -2,7 +2,15 @@ itemGroup.modularmachinery=Modular Machinery Community Edition
 
 command.modularmachinery.syntax=/mm-syntax
 command.modularmachinery.hand=/mm-hand
+command.modularmachinery.performance_report=/mm-performance_report
 command.modularmachinery.hand.empty=Please hold an item to get the data from.
+command.modularmachinery.performance_report.title=Modular Machinery - Concurrent Operations Performance Report (Counted %s Tick)
+command.modularmachinery.performance_report.reset=Performance report has been reset.
+command.modularmachinery.performance_report.total_executed=Total executed: %s
+command.modularmachinery.performance_report.total_used_time=Total used time: %s ms
+command.modularmachinery.performance_report.used_time_avg=Single task used time average: %s µs
+command.modularmachinery.performance_report.used_time_avg_per_tick=Single task used time per tick average: %.2f ms
+command.modularmachinery.performance_report.executed_avg_per_tick=Executed task per tick average: %s
 
 gui.controller.blueprint=Blueprint Found: %s
 gui.controller.blueprint.none=None
@@ -15,8 +23,8 @@ gui.controller.status.no_recipe=No matching recipe found
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 
-top.recipe.progress=Progress:
-top.recipe.progress.second=%s Sec / %s Sec
+top.recipe.progress=Progress
+top.recipe.progress.second=Sec
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
 top.machine.structure.none=Missing structure

@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.client.gui;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerController;
+import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import net.minecraft.client.gui.FontRenderer;
@@ -18,7 +19,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.client.model.animation.Animation;
 
 import java.util.List;
 
@@ -114,7 +114,8 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         }
         offsetY += 15;
         if (controller.hasActiveRecipe()) {
-            int progress = (int) (controller.getCurrentActiveRecipeProgress(Animation.getPartialTickTime()) * 100);
+            ActiveMachineRecipe activeRecipe = controller.getActiveRecipe();
+            int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
             String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
             fr.drawString(progressStr, offsetX, offsetY, 0xFFFFFF);
         }

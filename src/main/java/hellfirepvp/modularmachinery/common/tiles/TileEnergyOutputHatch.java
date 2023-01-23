@@ -40,7 +40,6 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.RecursiveTask;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -51,9 +50,7 @@ import java.util.concurrent.RecursiveTask;
  */
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "ic2")
 public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySource {
-    private BlockPos foundCore = null;
-
-    private FindTask findTask = null;
+    private volatile BlockPos foundCore = null;
 
     public TileEnergyOutputHatch() {
     }
@@ -120,7 +117,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
         if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
             if (world.getTotalWorldTime() % 100 == 0) {
-                foundCore = findCore(foundCore);
+                findCore(foundCore);
             }
         }
 
@@ -136,26 +133,28 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     }
 
     @Optional.Method(modid = "draconicevolution")
-    private BlockPos findCore(BlockPos before) {
-        if (findTask != null) {
-            if (findTask.isDone()) {
-                BlockPos result;
-                try {
-                    result = findTask.get();
-                } catch (Exception e) {
-                    result = null;
-                    ModularMachinery.log.warn(e);
+    private void findCore(BlockPos before) {
+        ModularMachinery.PARALLEL_EXECUTOR.addPreTickTask(() -> {
+            List<TileEnergyStorageCore> list = new LinkedList<>();
+            int range = 16;
+
+            Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
+
+            for (BlockPos blockPos : positions) {
+                if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
+                    TileEntity tile = world.getTileEntity(blockPos);
+                    if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
+                        list.add(((TileEnergyStorageCore) tile));
+                    }
                 }
-
-                findTask = null;
-                return result;
             }
-        } else {
-            findTask = new FindTask(before);
-            ModularMachinery.FORK_JOIN_POOL.submit(findTask);
-        }
-
-        return before;
+            if (before != null) {
+                list.removeIf(tile -> tile.getPos().equals(before));
+            }
+            Collections.shuffle(list);
+            TileEnergyStorageCore first = Iterables.getFirst(list, null);
+            foundCore = first == null ? null : first.getPos();
+        });
     }
 
     @Optional.Method(modid = "gregtech")
@@ -285,37 +284,5 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
                 return TileEnergyOutputHatch.this;
             }
         };
-    }
-
-    public class FindTask extends RecursiveTask<BlockPos> {
-        private final BlockPos before;
-
-        public FindTask(BlockPos before) {
-            this.before = before;
-        }
-
-        @Optional.Method(modid = "draconicevolution")
-        @Override
-        protected BlockPos compute() {
-            List<TileEnergyStorageCore> list = new LinkedList<>();
-            int range = 16;
-
-            Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
-
-            for (BlockPos blockPos : positions) {
-                if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
-                    TileEntity tile = world.getTileEntity(blockPos);
-                    if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
-                        list.add(((TileEnergyStorageCore) tile));
-                    }
-                }
-            }
-            if (before != null) {
-                list.removeIf(tile -> tile.getPos().equals(before));
-            }
-            Collections.shuffle(list);
-            TileEnergyStorageCore first = Iterables.getFirst(list, null);
-            return first == null ? null : first.getPos();
-        }
     }
 }

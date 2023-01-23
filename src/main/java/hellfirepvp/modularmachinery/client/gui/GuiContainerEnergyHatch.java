@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.container.ContainerEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -58,8 +59,8 @@ public class GuiContainerEnergyHatch extends GuiContainerBase<ContainerEnergyHat
 
             List<String> text = Lists.newArrayList();
             text.add(I18n.format("tooltip.energyhatch.charge",
-                    String.valueOf(currentEnergy),
-                    String.valueOf(maxEnergy),
+                    MiscUtils.formatNumber(currentEnergy),
+                    MiscUtils.formatNumber(maxEnergy),
                     I18n.format(EnergyDisplayUtil.type.getUnlocalizedFormat())));
 
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
