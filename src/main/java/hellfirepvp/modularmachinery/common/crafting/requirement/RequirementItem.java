@@ -271,7 +271,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         IOInventory handler = (IOInventory) component.providedComponent;
         float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
-        if (Objects.requireNonNull(actionType) == IOType.INPUT) {
+        if (actionType == IOType.INPUT) {
             switch (this.requirementType) {
                 //If it doesn't consume the item, we only need to see if it's actually there.
                 case ITEMSTACKS:
@@ -345,7 +345,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public enum ItemRequirementType {
         ITEMSTACKS,
         OREDICT,
-        FUEL
+        FUEL,
+        ITEMSTACK_ARRAY
 
     }
 

@@ -61,6 +61,8 @@ message.structurebuild.fail=机器配置保存失败！请查阅日志文件获�
 
 tooltip.machinery.empty=空
 
+tooltip.machinery.ingredient_array_input=接受以下输入（仅消耗其中一种）：
+
 tooltip.machinery.fuel=接受任意燃料。
 tooltip.machinery.fuel.item=燃烧时间：%s
 tooltip.machinery.fuel.in=合计需要的燃料燃烧时间：
@@ -73,8 +75,8 @@ tooltip.machinery.duration=加工时间：%s tick
 
 tooltip.machinery.chance.in=有 %s 概率被消耗
 tooltip.machinery.chance.out=有 %s 概率产出
-tooltip.machinery.chance.in.never=不被消耗。
-tooltip.machinery.chance.out.never=不产出。
+tooltip.machinery.chance.in.never=不被消耗
+tooltip.machinery.chance.out.never=不产出
 
 tooltip.machinery.energy.in=能量消耗：
 tooltip.machinery.energy.in.tick=平均：%s FE/t

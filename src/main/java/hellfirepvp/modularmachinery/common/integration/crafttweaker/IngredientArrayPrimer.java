@@ -1,0 +1,82 @@
+package hellfirepvp.modularmachinery.common.integration.crafttweaker;
+
+import crafttweaker.CraftTweakerAPI;
+import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.item.IIngredient;
+import crafttweaker.api.item.IItemStack;
+import crafttweaker.api.item.IngredientStack;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.api.oredict.IOreDictEntry;
+import github.kasuminova.mmce.itemtype.ChancedIngredientStack;
+import net.minecraft.item.ItemStack;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
+
+import java.util.ArrayList;
+
+@ZenRegister
+@ZenClass("mods.modularmachinery.IngredientArrayPrimer")
+public class IngredientArrayPrimer {
+    private final ArrayList<ChancedIngredientStack> ingredientStackList = new ArrayList<>();
+    private ChancedIngredientStack lastIngredientStack = null;
+
+    @ZenMethod
+    public IngredientArrayPrimer addIngredient(IIngredient input) {
+        if (input instanceof IItemStack) {
+            IItemStack stackCT = (IItemStack) input;
+            ItemStack stackMC = CraftTweakerMC.getItemStack(input);
+            if (stackMC.isEmpty()) {
+                CraftTweakerAPI.logError("[ModularMachinery] ItemStack not found/unknown item: " + stackMC);
+                return this;
+            }
+            ChancedIngredientStack ingredientStack = new ChancedIngredientStack(stackMC);
+            if (stackCT.getTag().length() > 0) {
+                ingredientStack.tag = CraftTweakerMC.getNBTCompound(stackCT.getTag());
+            }
+            addIngredient(ingredientStack);
+        } else if (input instanceof IOreDictEntry) {
+            addIngredient(new ChancedIngredientStack(((IOreDictEntry) input).getName(), 1));
+        } else if (input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
+            addIngredient(new ChancedIngredientStack(
+                    ((IOreDictEntry) input.getInternal()).getName(), input.getAmount()));
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer addIngredients(IIngredient... inputs) {
+        for (IIngredient input : inputs) {
+            addIngredient(input);
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer addChancedIngredient(IIngredient input, float chance) {
+        addIngredient(input);
+        setChance(chance);
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer setChance(float chance) {
+        if (lastIngredientStack != null) {
+            lastIngredientStack.chance = chance;
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer build() {
+        return this;
+    }
+
+    public ArrayList<ChancedIngredientStack> getIngredientStackList() {
+        return ingredientStackList;
+    }
+
+    private void addIngredient(ChancedIngredientStack input) {
+        ingredientStackList.add(input);
+        lastIngredientStack = input;
+    }
+}

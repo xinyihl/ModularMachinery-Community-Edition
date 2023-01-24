@@ -195,6 +195,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
         } else {
             craftingStatus = CraftingStatus.working();
         }
+        markForUpdate();
     }
 
     private void resetMachine(boolean resetAll) {

@@ -23,6 +23,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import mekanism.api.gas.Gas;
@@ -234,6 +235,12 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addFuelItemInput(int requiredTotalBurnTime) {
         requireItem(IOType.INPUT, requiredTotalBurnTime);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addIngredientArrayInput(IngredientArrayPrimer ingredientArrayPrimer) {
+        appendComponent(new RequirementIngredientArray(ingredientArrayPrimer.getIngredientStackList()));
         return this;
     }
 

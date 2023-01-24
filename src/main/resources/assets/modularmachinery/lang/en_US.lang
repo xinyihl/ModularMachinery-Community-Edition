@@ -61,6 +61,8 @@ message.structurebuild.fail=Failed to save the machine to a file! Check the log 
 
 tooltip.machinery.empty=Empty
 
+tooltip.machinery.ingredient_array_input=Accepts the following inputs (only one of them is consumed):
+
 tooltip.machinery.fuel=Accepts any fuel.
 tooltip.machinery.fuel.item=BurnTime: %s
 tooltip.machinery.fuel.in=Required total Fuel Burntime:
