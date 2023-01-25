@@ -76,11 +76,12 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
             StringBuilder tooltipBuilder = new StringBuilder(10);
             switch (stack.ingredientType) {
                 case ITEMSTACK: {
-                    tooltipBuilder.append(stack.itemStack.getDisplayName());
+                    ItemStack itemStack = stack.itemStack;
+                    tooltipBuilder.append(itemStack.getDisplayName()).append(" * ").append(itemStack.getCount());
                     break;
                 }
                 case ORE_DICT: {
-                    tooltipBuilder.append(stack.oreDictName);
+                    tooltipBuilder.append(stack.oreDictName).append(" * ").append(stack.count);
                     break;
                 }
             }

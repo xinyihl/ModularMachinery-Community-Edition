@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common;
 
+import github.kasuminova.mmce.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.ContainerController;
@@ -83,7 +84,9 @@ public class CommonProxy implements IGuiHandler {
         if (Mods.CRAFTTWEAKER.isPresent()) {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
-        MinecraftForge.EVENT_BUS.register(ModularMachinery.PARALLEL_EXECUTOR);
+
+        MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
+        ModularMachinery.log.info(String.format("[ModularMachinery] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_COUNT));
     }
 
     public void init() {

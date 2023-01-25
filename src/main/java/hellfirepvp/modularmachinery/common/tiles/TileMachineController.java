@@ -103,18 +103,18 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 return;
             }
 
-            ModularMachinery.PARALLEL_EXECUTOR.addPreTickTask(() -> {
-                checkStructure();
-                updateComponents();
-            });
+            ModularMachinery.EXECUTE_MANAGER.addPreTickTask(this::checkStructure);
+            ModularMachinery.EXECUTE_MANAGER.addPostTickTask(this::updateComponents);
 
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.activeRecipe == null) {
                     if (this.ticksExisted % 40 == 0) {
-                        ModularMachinery.PARALLEL_EXECUTOR.addPreTickTask(this::searchAndUpdateRecipe);
+                        ModularMachinery.EXECUTE_MANAGER.addPreTickTask(this::searchAndUpdateRecipe);
                     }
                 } else {
-                    context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+                    context = this.foundMachine.createContext(this.activeRecipe, this,
+                            this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+
                     //Handle perTick IO and tick progression
                     this.craftingStatus = this.activeRecipe.tick(this, context);
 
@@ -124,7 +124,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                         this.activeRecipe.complete(context);
                         this.activeRecipe.reset();
                         context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-                        ModularMachinery.PARALLEL_EXECUTOR.addPostTickTask(this::tryRedoRecipe);
+                        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(this::tryRedoRecipe);
                     }
                     markForUpdate();
                 }
@@ -225,10 +225,10 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 DynamicMachine blueprint = getBlueprintMachine();
                 if (blueprint != null) {
                     if (matchesRotation(blueprint.getPattern(), blueprint)) {
-                        this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+                        synchronized (TileMachineController.class) {
+                            this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
 
-                        if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                            synchronized (TileMachineController.class) {
+                            if (this.foundMachine.getMachineColor() != Config.machineColor) {
                                 distributeCasingColor();
                             }
                         }
@@ -239,17 +239,19 @@ public class TileMachineController extends TileEntityRestrictedTick {
                         if (matchesRotation(machine.getPattern(), machine)) {
                             synchronized (TileMachineController.class) {
                                 this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
-                            }
-
-                            if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                                synchronized (TileMachineController.class) {
+                                if (this.foundMachine.getMachineColor() != Config.machineColor) {
                                     distributeCasingColor();
                                 }
                             }
+
                             break;
                         }
                     }
                 }
+            }
+
+            synchronized (TileMachineController.class) {
+                markForUpdate();
             }
         }
     }

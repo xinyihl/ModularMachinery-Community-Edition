@@ -134,7 +134,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
     @Optional.Method(modid = "draconicevolution")
     private void findCore(BlockPos before) {
-        ModularMachinery.PARALLEL_EXECUTOR.addPreTickTask(() -> {
+        ModularMachinery.EXECUTE_MANAGER.addPreTickTask(() -> {
             List<TileEnergyStorageCore> list = new LinkedList<>();
             int range = 16;
 

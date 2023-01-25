@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r5-nightly"
+version = "1.12.2-1.11.1-r6-nightly"
 group = "hellfirepvp.modularmachinery"
 
 repositories {

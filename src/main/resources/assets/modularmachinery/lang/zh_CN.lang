@@ -2,13 +2,14 @@ itemGroup.modularmachinery=模块化机械 - 社区版
 
 command.modularmachinery.syntax=/mm-syntax
 command.modularmachinery.hand=/mm-hand
-command.modularmachinery.performance_report=/mm-performance_report
+command.modularmachinery.performance_report=/mm-performance_report [reset]
 command.modularmachinery.hand.empty=手持某个物品以查看其信息。
 command.modularmachinery.performance_report.title=模块化机械 - 并发操作性能报告（已统计 %s Tick）
 command.modularmachinery.performance_report.reset=性能报告数据已重置。
-command.modularmachinery.performance_report.total_executed=已运行的任务数量：%s
-command.modularmachinery.performance_report.total_used_time=总耗时：%s 毫秒
-command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时：%s 微秒
+command.modularmachinery.performance_report.total_submitted=已提交的任务数量: %s
+command.modularmachinery.performance_report.total_executed=已运行的任务数量: %s
+command.modularmachinery.performance_report.total_used_time=总耗时: %s 毫秒
+command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时: %s 微秒
 command.modularmachinery.performance_report.used_time_avg_per_tick=每 Tick 平均耗时: %.2f 毫秒
 command.modularmachinery.performance_report.executed_avg_per_tick=每 Tick 平均执行任务数: %s
 
