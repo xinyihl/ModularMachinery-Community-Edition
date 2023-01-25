@@ -23,8 +23,9 @@ public class TaskExecutor {
     public static long tickExisted = 0;
     public final AtomicInteger completedThreadCount = new AtomicInteger(0);
     private final ArrayList<TaskExecutorThread> executors = new ArrayList<>((int) (THREAD_COUNT * 1.5));
-    private final ConcurrentLinkedQueue<ParallelAction> preParallelActions = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<ParallelAction> postParallelActions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Action> preActions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Action> postActions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
     public Thread serverThread = null;
 
     public TaskExecutor() {
@@ -48,18 +49,18 @@ public class TaskExecutor {
 
         switch (event.phase) {
             case START: {
-                executeActions(preParallelActions);
+                executeActions(preActions);
                 break;
             }
             case END: {
-                executeActions(postParallelActions);
+                executeActions(postActions);
                 tickExisted++;
                 break;
             }
         }
     }
 
-    public void executeActions(final ConcurrentLinkedQueue<ParallelAction> actions) {
+    public void executeActions(final ConcurrentLinkedQueue<Action> actions) {
         if (actions.isEmpty()) return;
 
         long time = System.nanoTime() / 1000;
@@ -77,6 +78,12 @@ public class TaskExecutor {
         }
 
         completedThreadCount.set(0);
+
+        Action action;
+        while ((action = mainThreadActions.poll()) != null) {
+            action.doAction();
+        }
+
         totalUsedTime += System.nanoTime() / 1000 - time;
     }
 
@@ -85,9 +92,9 @@ public class TaskExecutor {
      *
      * @param action 引用
      */
-    public void addPreTickTask(final ParallelAction action) {
+    public void addPreTickTask(final Action action) {
         totalSubmitted++;
-        preParallelActions.add(action);
+        preActions.add(action);
     }
 
     /**
@@ -95,12 +102,16 @@ public class TaskExecutor {
      *
      * @param action 引用
      */
-    public void addPostTickTask(final ParallelAction action) {
+    public void addPostTickTask(final Action action) {
         totalSubmitted++;
-        postParallelActions.add(action);
+        postActions.add(action);
     }
 
-    public void await(final ConcurrentLinkedQueue<ParallelAction> actions) {
+    public void addMainThreadTask(final Action action) {
+        mainThreadActions.add(action);
+    }
+
+    public void await(final ConcurrentLinkedQueue<Action> actions) {
         long time = System.currentTimeMillis();
         //Timeout 1000ms
         LockSupport.parkNanos(1000 * 1000 * 250);

@@ -12,7 +12,7 @@ public class TaskExecutorThread implements Runnable {
     public final Thread executorThread = new Thread(this);
     public final TaskExecutor manager;
     public final AtomicInteger completedThreadCount;
-    public final AtomicReference<ConcurrentLinkedQueue<ParallelAction>> actions = new AtomicReference<>(null);
+    public final AtomicReference<ConcurrentLinkedQueue<Action>> actions = new AtomicReference<>(null);
     public long usedTime = 0;
     public long executed = 0;
 
@@ -32,11 +32,11 @@ public class TaskExecutorThread implements Runnable {
             LockSupport.park();
             executed = 0;
 
-            ConcurrentLinkedQueue<ParallelAction> actions = this.actions.get();
+            ConcurrentLinkedQueue<Action> actions = this.actions.get();
             if (actions != null) {
                 long time = System.nanoTime();
 
-                ParallelAction action;
+                Action action;
                 while ((action = actions.poll()) != null) {
                     action.doAction();
                     executed++;

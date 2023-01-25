@@ -103,8 +103,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 return;
             }
 
-            ModularMachinery.EXECUTE_MANAGER.addPreTickTask(this::checkStructure);
-            ModularMachinery.EXECUTE_MANAGER.addPostTickTask(this::updateComponents);
+            checkStructure();
+            updateComponents();
 
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.activeRecipe == null) {
@@ -149,10 +149,10 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
         if (!tryResult.isFailure()) {
             activeRecipe = context.getActiveRecipe();
-            synchronized (TileMachineController.class) {
+            ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> {
                 activeRecipe.start(context);
                 markForUpdate();
-            }
+            });
         } else {
             activeRecipe = null;
             craftingStatus = CraftingStatus.failure(Iterables.getFirst(tryResult.getUnlocalizedErrorMessages(), ""));
@@ -172,10 +172,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
             RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
             if (!result.isFailure()) {
                 activeRecipe = aRecipe;
-                synchronized (TileMachineController.class) {
-                    activeRecipe.start(context);
-                    markForUpdate();
-                }
+
+                ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> activeRecipe.start(context));
                 break;
             } else if (highestValidity == null ||
                     (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
@@ -195,7 +193,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
         } else {
             craftingStatus = CraftingStatus.working();
         }
-        markForUpdate();
+
+        ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(this::markForUpdate);
     }
 
     private void resetMachine(boolean resetAll) {
@@ -224,24 +223,20 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
                 DynamicMachine blueprint = getBlueprintMachine();
                 if (blueprint != null) {
-                    if (matchesRotation(blueprint.getPattern(), blueprint)) {
-                        synchronized (TileMachineController.class) {
-                            this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+                if (matchesRotation(blueprint.getPattern(), blueprint)) {
+                        this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
 
-                            if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                                distributeCasingColor();
-                            }
+                        if (this.foundMachine.getMachineColor() != Config.machineColor) {
+                            distributeCasingColor();
                         }
                     }
                 } else {
                     for (DynamicMachine machine : MachineRegistry.getRegistry()) {
                         if (machine.requiresBlueprint()) continue;
                         if (matchesRotation(machine.getPattern(), machine)) {
-                            synchronized (TileMachineController.class) {
-                                this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
-                                if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                                    distributeCasingColor();
-                                }
+                            this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+                            if (this.foundMachine.getMachineColor() != Config.machineColor) {
+                                distributeCasingColor();
                             }
 
                             break;
@@ -250,9 +245,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 }
             }
 
-            synchronized (TileMachineController.class) {
-                markForUpdate();
-            }
+            markForUpdate();
         }
     }
 
@@ -311,7 +304,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             resetMachine(false);
             return;
         }
-        if (ticksExisted % 40 == 0) {
+        if (ticksExisted % 50 == 0) {
             this.foundComponents = Lists.newArrayList();
             for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
                 BlockPos realPos = getPos().add(potentialPosition);

@@ -1,5 +1,5 @@
 package github.kasuminova.mmce.concurrent;
 
-public interface ParallelAction {
+public interface Action {
     void doAction();
 }

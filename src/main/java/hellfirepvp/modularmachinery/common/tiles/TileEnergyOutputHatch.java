@@ -16,7 +16,6 @@ import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore
 import com.google.common.collect.Iterables;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
 import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
@@ -50,7 +49,7 @@ import java.util.List;
  */
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "ic2")
 public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySource {
-    private volatile BlockPos foundCore = null;
+    private BlockPos foundCore = null;
 
     public TileEnergyOutputHatch() {
     }
@@ -117,7 +116,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
         if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
             if (world.getTotalWorldTime() % 100 == 0) {
-                findCore(foundCore);
+                foundCore = findCore(foundCore);
             }
         }
 
@@ -133,28 +132,26 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     }
 
     @Optional.Method(modid = "draconicevolution")
-    private void findCore(BlockPos before) {
-        ModularMachinery.EXECUTE_MANAGER.addPreTickTask(() -> {
-            List<TileEnergyStorageCore> list = new LinkedList<>();
-            int range = 16;
+    private BlockPos findCore(BlockPos before) {
+        List<TileEnergyStorageCore> list = new LinkedList<>();
+        int range = 16;
 
-            Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
+        Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
 
-            for (BlockPos blockPos : positions) {
-                if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
-                    TileEntity tile = world.getTileEntity(blockPos);
-                    if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
-                        list.add(((TileEnergyStorageCore) tile));
-                    }
+        for (BlockPos blockPos : positions) {
+            if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
+                TileEntity tile = world.getTileEntity(blockPos);
+                if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
+                    list.add(((TileEnergyStorageCore) tile));
                 }
             }
-            if (before != null) {
-                list.removeIf(tile -> tile.getPos().equals(before));
-            }
-            Collections.shuffle(list);
-            TileEnergyStorageCore first = Iterables.getFirst(list, null);
-            foundCore = first == null ? null : first.getPos();
-        });
+        }
+        if (before != null) {
+            list.removeIf(tile -> tile.getPos().equals(before));
+        }
+        Collections.shuffle(list);
+        TileEnergyStorageCore first = Iterables.getFirst(list, null);
+        return first == null ? null : first.getPos();
     }
 
     @Optional.Method(modid = "gregtech")
