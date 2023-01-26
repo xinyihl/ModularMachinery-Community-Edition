@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.tiles;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import github.kasuminova.mmce.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -21,13 +22,11 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
-import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
-import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
@@ -54,6 +53,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.RecursiveAction;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -69,11 +69,12 @@ public class TileMachineController extends TileEntityRestrictedTick {
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
-    private volatile DynamicMachine foundMachine = null;
-    private volatile TaggedPositionBlockArray foundPattern = null;
-    private volatile EnumFacing patternRotation = null;
-    private volatile RecipeCraftingContext context = null;
-    private volatile ActiveMachineRecipe activeRecipe = null;
+    private DynamicMachine foundMachine = null;
+    private TaggedPositionBlockArray foundPattern = null;
+    private EnumFacing patternRotation = null;
+    private ActiveMachineRecipe activeRecipe = null;
+    private boolean recipePrepared = false;
+    private SearchTask searchTask = null;
 
     private List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = Lists.newArrayList();
     private Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
@@ -109,23 +110,31 @@ public class TileMachineController extends TileEntityRestrictedTick {
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.activeRecipe == null) {
                     if (this.ticksExisted % 40 == 0) {
-                        ModularMachinery.EXECUTE_MANAGER.addPreTickTask(this::searchAndUpdateRecipe);
+                        searchAndUpdateRecipe();
                     }
                 } else {
-                    context = this.foundMachine.createContext(this.activeRecipe, this,
+                    RecipeCraftingContext context = this.foundMachine.createContext(this.activeRecipe, this,
                             this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
 
-                    //Handle perTick IO and tick progression
-                    this.craftingStatus = this.activeRecipe.tick(this, context);
+                    if (recipePrepared) {
+                        activeRecipe.start(context);
+                        recipePrepared = false;
+                    } else {
+                        //Handle perTick IO and tick progression
+                        this.craftingStatus = this.activeRecipe.tick(this, context);
 
-                    if (this.activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
-                        this.activeRecipe = null;
-                    } else if (this.activeRecipe.isCompleted()) {
-                        this.activeRecipe.complete(context);
-                        this.activeRecipe.reset();
-                        context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-                        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(this::tryRedoRecipe);
+                        if (this.activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
+                            this.activeRecipe = null;
+                        } else if (this.activeRecipe.isCompleted()) {
+                            this.activeRecipe.complete(context);
+                            this.activeRecipe.reset();
+                            context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+
+                            RecipeCraftingContext finalContext = context;
+                            ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryRedoRecipe(finalContext));
+                        }
                     }
+
                     markForUpdate();
                 }
             } else {
@@ -135,16 +144,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
         }
     }
 
-    public int getRecipeTotalTime() {
-        if (foundMachine == null || context == null) return 0;
-
-        int recipeTotalTickTime = activeRecipe.getRecipe().getRecipeTotalTickTime();
-        recipeTotalTickTime = Math.round(RecipeModifier.applyModifiers(context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, recipeTotalTickTime, false));
-
-        return recipeTotalTickTime;
-    }
-
-    private void tryRedoRecipe() {
+    private void tryRedoRecipe(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult tryResult = context.canStartCrafting();
 
         if (!tryResult.isFailure()) {
@@ -160,47 +160,21 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     private void searchAndUpdateRecipe() {
-        Iterable<MachineRecipe> availableRecipes = RecipeRegistry.getRecipesFor(foundMachine);
-
-        MachineRecipe highestValidity = null;
-        RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
-        float validity = 0F;
-
-        for (MachineRecipe recipe : availableRecipes) {
-            ActiveMachineRecipe aRecipe = new ActiveMachineRecipe(recipe);
-            RecipeCraftingContext context = foundMachine.createContext(aRecipe, TileMachineController.this, foundComponents, MiscUtils.flatten(foundModifiers.values()));
-            RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
-            if (!result.isFailure()) {
-                activeRecipe = aRecipe;
-
-                ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> activeRecipe.start(context));
-                break;
-            } else if (highestValidity == null ||
-                    (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
-                highestValidity = recipe;
-                highestValidityResult = result;
-                validity = result.getValidity();
-            }
-        }
-
-        if (activeRecipe == null) {
-            if (highestValidity != null) {
-                craftingStatus = CraftingStatus.failure(
-                        Iterables.getFirst(highestValidityResult.getUnlocalizedErrorMessages(), ""));
-            } else {
-                craftingStatus = CraftingStatus.failure(Type.NO_RECIPE.getUnlocalizedDescription());
+        if (searchTask != null) {
+            if (searchTask.isDone()) {
+                searchTask = null;
+                searchTask = new SearchTask(foundMachine);
+                TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
             }
         } else {
-            craftingStatus = CraftingStatus.working();
+            searchTask = new SearchTask(foundMachine);
+            TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
         }
-
-        ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(this::markForUpdate);
     }
 
     private void resetMachine(boolean resetAll) {
         if (resetAll) {
             this.activeRecipe = null;
-            this.context = null;
             this.craftingStatus = CraftingStatus.MISSING_STRUCTURE;
         }
         this.foundMachine = null;
@@ -223,7 +197,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
                 DynamicMachine blueprint = getBlueprintMachine();
                 if (blueprint != null) {
-                if (matchesRotation(blueprint.getPattern(), blueprint)) {
+                    if (matchesRotation(blueprint.getPattern(), blueprint)) {
                         this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
 
                         if (this.foundMachine.getMachineColor() != Config.machineColor) {
@@ -539,6 +513,54 @@ public class TileMachineController extends TileEntityRestrictedTick {
             tag.setInteger("type", this.status.ordinal());
             tag.setString("message", this.unlocalizedMessage);
             return tag;
+        }
+    }
+
+    public class SearchTask extends RecursiveAction {
+        private final DynamicMachine currentMachine;
+
+        public SearchTask(DynamicMachine currentMachine) {
+            this.currentMachine = currentMachine;
+        }
+
+        @Override
+        protected void compute() {
+            Iterable<MachineRecipe> availableRecipes = RecipeRegistry.getRecipesFor(foundMachine);
+
+            MachineRecipe highestValidity = null;
+            RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
+            float validity = 0F;
+
+            for (MachineRecipe recipe : availableRecipes) {
+                ActiveMachineRecipe aRecipe = new ActiveMachineRecipe(recipe);
+                RecipeCraftingContext context = foundMachine.createContext(aRecipe, TileMachineController.this, foundComponents, MiscUtils.flatten(foundModifiers.values()));
+                RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+                if (!result.isFailure()) {
+                    if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
+
+                    activeRecipe = aRecipe;
+                    recipePrepared = true;
+                    break;
+                } else if (highestValidity == null ||
+                        (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
+                    highestValidity = recipe;
+                    highestValidityResult = result;
+                    validity = result.getValidity();
+                }
+            }
+
+            if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
+
+            if (activeRecipe == null) {
+                if (highestValidity != null) {
+                    craftingStatus = CraftingStatus.failure(
+                            Iterables.getFirst(highestValidityResult.getUnlocalizedErrorMessages(), ""));
+                } else {
+                    craftingStatus = CraftingStatus.failure(Type.NO_RECIPE.getUnlocalizedDescription());
+                }
+            } else {
+                craftingStatus = CraftingStatus.working();
+            }
         }
     }
 }

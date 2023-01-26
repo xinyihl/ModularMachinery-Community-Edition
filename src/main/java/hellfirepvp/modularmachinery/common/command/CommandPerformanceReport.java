@@ -30,15 +30,14 @@ public class CommandPerformanceReport extends CommandBase {
         if (args.length > 0 && args[0].equals("reset")) {
             TaskExecutor.tickExisted = 0;
             TaskExecutor.totalSubmitted = 0;
-            TaskExecutor.totalExecuted = 0;
             TaskExecutor.totalUsedTime = 0;
-            TaskExecutor.taskUsedTime = 0;
+            TaskExecutor.taskUsedTime.set(0);
             sender.sendMessage(new TextComponentTranslation("command.modularmachinery.performance_report.reset"));
             return;
         }
 
-        long totalExecuted = TaskExecutor.totalExecuted;
-        long taskUsedTime = TaskExecutor.taskUsedTime;
+        long totalSubmitted = TaskExecutor.totalSubmitted;
+        long taskUsedTime = TaskExecutor.taskUsedTime.get();
         long totalUsedTime = TaskExecutor.totalUsedTime;
         long tickExisted = TaskExecutor.tickExisted;
 
@@ -54,16 +53,11 @@ public class CommandPerformanceReport extends CommandBase {
         );
 
         sender.sendMessage(
-                new TextComponentTranslation("command.modularmachinery.performance_report.total_executed",
-                        MiscUtils.formatDecimal(totalExecuted))
-        );
-
-        sender.sendMessage(
                 new TextComponentTranslation("command.modularmachinery.performance_report.total_used_time",
                         totalUsedTime / 1000)
         );
 
-        long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
+        long usedTimeAvg = totalSubmitted == 0 ? 0 : taskUsedTime / totalSubmitted;
         sender.sendMessage(
                 new TextComponentTranslation("command.modularmachinery.performance_report.used_time_avg",
                         usedTimeAvg)
@@ -75,7 +69,7 @@ public class CommandPerformanceReport extends CommandBase {
                         usedTimeAvgPerTick)
         );
 
-        long executedAvgPerTick = totalExecuted / tickExisted;
+        long executedAvgPerTick = totalSubmitted / tickExisted;
         sender.sendMessage(
                 new TextComponentTranslation("command.modularmachinery.performance_report.executed_avg_per_tick",
                         executedAvgPerTick)
