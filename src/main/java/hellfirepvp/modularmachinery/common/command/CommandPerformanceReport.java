@@ -1,6 +1,6 @@
 package hellfirepvp.modularmachinery.common.command;
 
-import github.kasuminova.mmce.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

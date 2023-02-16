@@ -8,7 +8,7 @@
 
 package hellfirepvp.modularmachinery;
 
-import github.kasuminova.mmce.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.command.CommandHand;
 import hellfirepvp.modularmachinery.common.command.CommandPerformanceReport;

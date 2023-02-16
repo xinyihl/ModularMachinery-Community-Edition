@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.itemtype;
+package github.kasuminova.mmce.common.itemtype;
 
 import net.minecraft.item.ItemStack;
 

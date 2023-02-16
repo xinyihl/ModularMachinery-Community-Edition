@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.concurrent;
+package github.kasuminova.mmce.common.concurrent;
 
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;

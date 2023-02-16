@@ -1,7 +1,7 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
 import com.google.common.collect.Lists;
-import github.kasuminova.mmce.itemtype.ChancedIngredientStack;
+import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;

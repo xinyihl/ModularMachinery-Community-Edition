@@ -11,7 +11,7 @@ package hellfirepvp.modularmachinery.common.tiles;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import github.kasuminova.mmce.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -46,6 +46,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.CapabilityItemHandler;
 
@@ -65,7 +66,7 @@ import java.util.concurrent.RecursiveAction;
 public class TileMachineController extends TileEntityRestrictedTick {
     public static final int BLUEPRINT_SLOT = 0;
     public static final int ACCELERATOR_SLOT = 1;
-
+    public static int structureCheckDelay = 40;
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
@@ -74,7 +75,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     private EnumFacing patternRotation = null;
     private ActiveMachineRecipe activeRecipe = null;
     private boolean recipePrepared = false;
-    private SearchTask searchTask = null;
+    private RecipeSearchTask searchTask = null;
 
     private List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = Lists.newArrayList();
     private Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
@@ -82,6 +83,12 @@ public class TileMachineController extends TileEntityRestrictedTick {
     public TileMachineController() {
         this.inventory = buildInventory();
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
+    }
+
+    public static void loadFromConfig(Configuration config) {
+        structureCheckDelay = config.getInt("structure-check-delay", "general",
+                40, 1, 1200,
+                "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
     }
 
     public ActiveMachineRecipe getActiveRecipe() {
@@ -163,11 +170,11 @@ public class TileMachineController extends TileEntityRestrictedTick {
         if (searchTask != null) {
             if (searchTask.isDone()) {
                 searchTask = null;
-                searchTask = new SearchTask(foundMachine);
+                searchTask = new RecipeSearchTask(foundMachine);
                 TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
             }
         } else {
-            searchTask = new SearchTask(foundMachine);
+            searchTask = new RecipeSearchTask(foundMachine);
             TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
         }
     }
@@ -184,7 +191,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     private void checkStructure() {
-        if (ticksExisted % 30 == 0) {
+        if (ticksExisted % structureCheckDelay == 0) {
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                     resetMachine(true);
@@ -278,7 +285,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             resetMachine(false);
             return;
         }
-        if (ticksExisted % 50 == 0) {
+        if (ticksExisted % structureCheckDelay == 0) {
             this.foundComponents = Lists.newArrayList();
             for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
                 BlockPos realPos = getPos().add(potentialPosition);
@@ -516,10 +523,10 @@ public class TileMachineController extends TileEntityRestrictedTick {
         }
     }
 
-    public class SearchTask extends RecursiveAction {
+    public class RecipeSearchTask extends RecursiveAction {
         private final DynamicMachine currentMachine;
 
-        public SearchTask(DynamicMachine currentMachine) {
+        public RecipeSearchTask(DynamicMachine currentMachine) {
             this.currentMachine = currentMachine;
         }
 

@@ -8,7 +8,7 @@
 
 package hellfirepvp.modularmachinery.common;
 
-import github.kasuminova.mmce.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.ContainerController;

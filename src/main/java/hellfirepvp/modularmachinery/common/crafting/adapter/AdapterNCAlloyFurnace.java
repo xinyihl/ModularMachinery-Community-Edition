@@ -1,6 +1,6 @@
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
-import github.kasuminova.mmce.itemtype.ChancedIngredientStack;
+import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;

@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
+import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
 import net.minecraftforge.common.config.Configuration;
 
@@ -50,6 +51,7 @@ public class Config {
         EnergyDisplayUtil.loadFromConfig(lastReadConfig);
         CatalystNameUtil.loadFromConfig(lastReadConfig);
         RecipeFailureActions.loadFromConfig(lastReadConfig);
+        TileMachineController.loadFromConfig(lastReadConfig);
         if (Mods.TOP.isPresent()) {
             ModIntegrationTOP.loadFromConfig(lastReadConfig);
         }
