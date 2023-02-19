@@ -8,7 +8,9 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
+import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -18,12 +20,15 @@ import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergyEmitter;
 import ic2.api.energy.tile.IEnergySink;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
+
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -34,11 +39,10 @@ import javax.annotation.Nullable;
  */
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "ic2")
 public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink {
-
     public TileEnergyInputHatch() {
     }
 
-    public TileEnergyInputHatch(EnergyHatchSize size) {
+    public TileEnergyInputHatch(EnergyHatchData size) {
         super(size, IOType.INPUT);
     }
 
@@ -54,6 +58,41 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
 
     @Override
     public void update() {
+        if (world.isRemote) {
+            return;
+        }
+
+        long maxCanReceive = Math.min(this.size.transferLimit, this.size.maxEnergy - this.energy);
+        if (maxCanReceive <= 0) {
+            return;
+        }
+
+        if (Mods.DRACONICEVOLUTION.isPresent() && enableDEIntegration) {
+            long received = attemptDECoreTransfer(maxCanReceive);
+            if (received != 0) {
+                this.energy += received;
+                markForUpdate();
+            }
+        }
+    }
+
+    @Optional.Method(modid = "draconicevolution")
+    protected long attemptDECoreTransfer(long maxCanReceive) {
+        TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
+        if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
+            foundCore = null;
+            findCore();
+        }
+
+        if (foundCore != null && te instanceof TileEnergyStorageCore) {
+            TileEnergyStorageCore core = (TileEnergyStorageCore) te;
+
+            long received = Math.min(core.energy.value, maxCanReceive);
+            core.energy.value -= received;
+
+            return received;
+        }
+        return 0;
     }
 
     @Override

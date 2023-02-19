@@ -8,23 +8,29 @@
 
 package hellfirepvp.modularmachinery.common.tiles.base;
 
+import com.brandon3055.draconicevolution.DEFeatures;
+import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
+
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -37,16 +43,55 @@ import javax.annotation.Nullable;
 public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandler, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage {
 
     protected long energy = 0;
-    protected EnergyHatchSize size;
-
+    protected EnergyHatchData size;
+    protected BlockPos foundCore = null;
+    protected int energyCoreSearchFailedCount = 0;
     private GTEnergyContainer energyContainer;
 
     public TileEnergyHatch() {
     }
 
-    public TileEnergyHatch(EnergyHatchSize size, IOType ioType) {
+    public TileEnergyHatch(EnergyHatchData size, IOType ioType) {
         this.size = size;
         this.energyContainer = new GTEnergyContainer(this, ioType);
+    }
+
+    @Optional.Method(modid = "draconicevolution")
+    protected long attemptDECoreTransfer(long maxCanReceive) {
+        return 0;
+    }
+
+    @Optional.Method(modid = "draconicevolution")
+    protected void findCore() {
+        if (!(world.getTotalWorldTime() % currentFoundCoreDelay() == 0)) {
+            return;
+        }
+
+        TileEnergyStorageCore core = null;
+        Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-searchRange, -searchRange, -searchRange), pos.add(searchRange, searchRange, searchRange));
+
+        for (BlockPos blockPos : positions) {
+            if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
+                TileEntity tile = world.getTileEntity(blockPos);
+                if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
+                    core = (TileEnergyStorageCore) tile;
+                    break;
+                }
+            }
+        }
+
+        if (core == null) {
+            energyCoreSearchFailedCount++;
+        } else {
+            foundCore = core.getPos();
+            energyCoreSearchFailedCount = 0;
+        }
+    }
+
+    protected int currentFoundCoreDelay() {
+        return energyCoreSearchDelay + (delayedEnergyCoreSearch
+                ? (Math.min(energyCoreSearchFailedCount * 20, maxEnergyCoreSearchDelay - energyCoreSearchDelay))
+                : 0);
     }
 
     @Optional.Method(modid = "gregtech")
@@ -113,12 +158,12 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Nullable
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityEnergy.ENERGY) {
             return (T) this;
         }
-        if (Mods.GREGTECH.isPresent() &&
-                capability == getGTEnergyCapability()) {
+        if (Mods.GREGTECH.isPresent() && capability == getGTEnergyCapability()) {
             return (T) this.energyContainer;
         }
 
@@ -133,7 +178,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         if (energyTag instanceof NBTPrimitive) {
             this.energy = ((NBTPrimitive) energyTag).getLong();
         }
-        this.size = EnergyHatchSize.values()[compound.getInteger("hatchSize")];
+        this.size = EnergyHatchData.values()[compound.getInteger("hatchSize")];
     }
 
     @Override
@@ -146,7 +191,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     //MM stuff
 
-    public EnergyHatchSize getTier() {
+    public EnergyHatchData getTier() {
         return size;
     }
 

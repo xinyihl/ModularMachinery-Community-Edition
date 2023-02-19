@@ -11,7 +11,7 @@ package hellfirepvp.modularmachinery.common.data;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
@@ -47,7 +47,7 @@ public class Config {
 
     private static void load() {
         FluidHatchSize.loadFromConfig(lastReadConfig);
-        EnergyHatchSize.loadFromConfig(lastReadConfig);
+        EnergyHatchData.loadFromConfig(lastReadConfig);
         EnergyDisplayUtil.loadFromConfig(lastReadConfig);
         CatalystNameUtil.loadFromConfig(lastReadConfig);
         RecipeFailureActions.loadFromConfig(lastReadConfig);

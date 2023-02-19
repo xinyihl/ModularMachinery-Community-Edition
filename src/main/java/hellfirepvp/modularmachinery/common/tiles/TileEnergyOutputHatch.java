@@ -11,12 +11,10 @@ package hellfirepvp.modularmachinery.common.tiles;
 import cofh.redstoneflux.api.IEnergyConnection;
 import cofh.redstoneflux.api.IEnergyReceiver;
 import cofh.redstoneflux.api.IEnergyStorage;
-import com.brandon3055.draconicevolution.DEFeatures;
-import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -36,6 +34,8 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
 
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
+
 /**
  * This class is part of the Modular Machinery Mod
  * The complete source code for this mod can be found on github.
@@ -45,13 +45,11 @@ import javax.annotation.Nullable;
  */
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "ic2")
 public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySource {
-    private BlockPos foundCore = null;
-    private int energyCoreSearchFailedCount = 0;
 
     public TileEnergyOutputHatch() {
     }
 
-    public TileEnergyOutputHatch(EnergyHatchSize size) {
+    public TileEnergyOutputHatch(EnergyHatchData size) {
         super(size, IOType.OUTPUT);
     }
 
@@ -72,90 +70,42 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         }
 
         long prevEnergy = this.energy;
+        long maxCanExtract = Math.min(this.size.transferLimit, this.energy);
+        if (maxCanExtract <= 0) {
+            return;
+        }
 
-        long transferCap = Math.min(this.size.transferLimit, this.energy);
-        if (Mods.DRACONICEVOLUTION.isPresent()) {
-            long transferred = attemptDECoreTransfer(transferCap);
-            transferCap -= transferred;
+        if (Mods.DRACONICEVOLUTION.isPresent() && enableDEIntegration) {
+            long transferred = attemptDECoreTransfer(maxCanExtract);
+            maxCanExtract -= transferred;
             this.energy -= transferred;
         }
-        long usableAmps = Math.min(this.size.getGtAmperage(), transferCap / 4L / this.size.getGTEnergyTransferVoltage());
+        long usableAmps = Math.min(this.size.getGtAmperage(), maxCanExtract / 4L / this.size.getGTEnergyTransferVoltage());
         for (EnumFacing face : EnumFacing.VALUES) {
-            if (transferCap > 0 && Mods.GREGTECH.isPresent() && usableAmps > 0) {
-                long totalTransferred = attemptGTTransfer(face, transferCap / 4L, usableAmps) * 4L;
+            if (maxCanExtract > 0 && Mods.GREGTECH.isPresent() && usableAmps > 0) {
+                long totalTransferred = attemptGTTransfer(face, maxCanExtract / 4L, usableAmps) * 4L;
                 usableAmps -= totalTransferred / 4L / this.size.getGTEnergyTransferVoltage();
-                transferCap -= totalTransferred;
+                maxCanExtract -= totalTransferred;
                 this.energy -= totalTransferred;
             }
-            if (transferCap > 0) {
+            if (maxCanExtract > 0) {
                 int transferred;
 
                 if (Mods.REDSTONEFLUXAPI.isPresent()) {
-                    transferred = attemptFERFTransfer(face, convertDownEnergy(transferCap));
+                    transferred = attemptFERFTransfer(face, convertDownEnergy(maxCanExtract));
                 } else {
-                    transferred = attemptFETransfer(face, convertDownEnergy(transferCap));
+                    transferred = attemptFETransfer(face, convertDownEnergy(maxCanExtract));
                 }
-                transferCap -= transferred;
+                maxCanExtract -= transferred;
                 this.energy -= transferred;
             }
-            if (transferCap <= 0) {
+            if (maxCanExtract <= 0) {
                 break;
             }
         }
 
         if (prevEnergy != this.energy) {
             markForUpdate();
-        }
-    }
-
-    @Optional.Method(modid = "draconicevolution")
-    private long attemptDECoreTransfer(long transferCap) {
-        TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
-        if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
-            foundCore = null;
-            findCore();
-        }
-
-        if (foundCore != null && te instanceof TileEnergyStorageCore) {
-            TileEnergyStorageCore core = (TileEnergyStorageCore) te;
-
-            long energyReceived = Math.min(core.getExtendedCapacity() - core.energy.value, transferCap);
-            ((TileEnergyStorageCore) te).energy.value += energyReceived;
-
-            return energyReceived;
-        }
-        return 0;
-    }
-
-    private int currentFoundCoreDelay() {
-        return 100 + (Math.min(energyCoreSearchFailedCount * 20, 200));
-    }
-
-    @Optional.Method(modid = "draconicevolution")
-    private void findCore() {
-        if (!(world.getTotalWorldTime() % currentFoundCoreDelay() == 0)) {
-            return;
-        }
-
-        TileEnergyStorageCore core = null;
-        int range = 16;
-        Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
-
-        for (BlockPos blockPos : positions) {
-            if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
-                TileEntity tile = world.getTileEntity(blockPos);
-                if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
-                    core = (TileEnergyStorageCore) tile;
-                    break;
-                }
-            }
-        }
-
-        if (core == null) {
-            energyCoreSearchFailedCount++;
-        } else {
-            foundCore = core.getPos();
-            energyCoreSearchFailedCount = 0;
         }
     }
 

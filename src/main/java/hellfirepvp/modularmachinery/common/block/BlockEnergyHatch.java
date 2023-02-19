@@ -2,7 +2,7 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.util.RedstoneHelper;
 import net.minecraft.block.SoundType;
@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class BlockEnergyHatch extends BlockMachineComponent implements BlockCustomName, BlockVariants {
-    protected static final PropertyEnum<EnergyHatchSize> BUS_TYPE = PropertyEnum.create("size", EnergyHatchSize.class);
+    protected static final PropertyEnum<EnergyHatchData> BUS_TYPE = PropertyEnum.create("size", EnergyHatchData.class);
 
     public BlockEnergyHatch() {
         super(Material.IRON);
@@ -39,7 +39,7 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
     }
 
     @Optional.Method(modid = "gregtech")
-    protected abstract void addGTTooltip(List<String> tooltip, EnergyHatchSize size);
+    protected abstract void addGTTooltip(List<String> tooltip, EnergyHatchData size);
 
     @Override
     @SideOnly(Side.CLIENT)
@@ -47,7 +47,7 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
 
     @Override
     public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for (EnergyHatchSize size : EnergyHatchSize.values()) {
+        for (EnergyHatchData size : EnergyHatchData.values()) {
             items.add(new ItemStack(this, 1, size.ordinal()));
         }
     }
@@ -70,7 +70,7 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(BUS_TYPE, EnergyHatchSize.values()[meta]);
+        return getDefaultState().withProperty(BUS_TYPE, EnergyHatchData.values()[meta]);
     }
 
     @Override
@@ -86,7 +86,7 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
     @Override
     public Iterable<IBlockState> getValidStates() {
         List<IBlockState> ret = new LinkedList<>();
-        for (EnergyHatchSize type : EnergyHatchSize.values()) {
+        for (EnergyHatchData type : EnergyHatchData.values()) {
             ret.add(getDefaultState().withProperty(BUS_TYPE, type));
         }
         return ret;

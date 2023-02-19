@@ -10,7 +10,7 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.tiles.TileEnergyOutputHatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class BlockEnergyOutputHatch extends BlockEnergyHatch {
     @Optional.Method(modid = "gregtech")
-    protected void addGTTooltip(List<String> tooltip, EnergyHatchSize size) {
+    protected void addGTTooltip(List<String> tooltip, EnergyHatchData size) {
         tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.gregtech.voltage.out",
                 String.valueOf(size.getGTEnergyTransferVoltage()),
                 size.getUnlocalizedGTEnergyTier()));
@@ -49,7 +49,7 @@ public class BlockEnergyOutputHatch extends BlockEnergyHatch {
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
-        EnergyHatchSize size = EnergyHatchSize.values()[MathHelper.clamp(stack.getMetadata(), 0, EnergyHatchSize.values().length - 1)];
+        EnergyHatchData size = EnergyHatchData.values()[MathHelper.clamp(stack.getMetadata(), 0, EnergyHatchData.values().length - 1)];
         if (EnergyDisplayUtil.displayFETooltip) {
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.storage", size.maxEnergy));
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.out.transfer", size.transferLimit));
