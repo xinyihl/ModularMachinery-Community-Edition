@@ -36,8 +36,6 @@ public class RegistryItems {
         blueprint = prepareRegister(new ItemBlueprint());
         modularium = prepareRegister(new ItemModularium());
         constructTool = prepareRegister(new ItemConstructTool());
-        redstoneSignal = prepareRegister(new ItemRedstoneSignal());
-        catalyst = prepareRegister(new ItemCatalyst());
 
         registerItemBlocks();
         registerItemModels();
@@ -46,7 +44,6 @@ public class RegistryItems {
     private static <T extends Item> T prepareRegister(T item) {
         String name = item.getClass().getSimpleName().toLowerCase();
         item.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
-
 
         return register(item);
     }

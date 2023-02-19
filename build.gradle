@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r6-nightly"
+version = "1.12.2-1.11.1-r7-nightly"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -107,24 +107,8 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    // Specify the version of Minecraft to use. If this is any group other than 'net.minecraft' it is assumed
-    // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
-    // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
-    // Real mod deobf dependency examples - these get remapped to your current mappings
-    // compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api") // Adds JEI API as a compile dependency
-    // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}") // Adds the full JEI mod as a runtime dependency
-    // implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}") // Adds registrate as a dependency
-    // implementation fileTree(dir:'libs',includes:['*jar'])
-    // Examples using mod jars from ./libs
-    // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-//    compileOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.301')
-//    runtimeOnly fg.deobf('mezz.jei:jei_1.12.2:4.16.1.301')
     implementation(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
 
     implementation 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
@@ -143,7 +127,6 @@ dependencies {
     implementation "curse.maven:nuclearcraft-overhauled-336895:3862197"
 }
 
-// Example for how to get properties into the manifest for reading at runtime.
 jar {
     manifest {
         attributes([
@@ -160,6 +143,6 @@ jar {
 
 jar.finalizedBy('reobfJar')
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-}
+//tasks.withType(JavaCompile).configureEach {
+//    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+//}

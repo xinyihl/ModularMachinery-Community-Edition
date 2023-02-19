@@ -157,42 +157,6 @@ tile.modularmachinery.blockinputbus.big.name=Big Item Input
 tile.modularmachinery.blockinputbus.huge.name=Huge Item Input
 tile.modularmachinery.blockinputbus.ludicrous.name=Ludicrous Item Input
 
-tile.modularmachinery.blockredstonebus.tiny.name=Redstone Input
-
-tile.modularmachinery.blockcatalystbus.catalyst00.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst01.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst02.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst03.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst04.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst05.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst06.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst07.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst08.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst09.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst10.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst11.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst12.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst13.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst14.name=Solid Catalyst Container
-tile.modularmachinery.blockcatalystbus.catalyst15.name=Solid Catalyst Container
-
-tile.modularmachinery.blockcatalystbusbroken.catalyst00.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst01.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst02.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst03.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst04.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst05.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst06.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst07.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst08.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst09.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst10.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst11.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst12.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst13.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst14.name=Solid Catalyst Container (Deactivate)
-tile.modularmachinery.blockcatalystbusbroken.catalyst15.name=Solid Catalyst Container (Deactivate)
-
 tile.modularmachinery.blockoutputbus.tiny.name=Tiny Item Output
 tile.modularmachinery.blockoutputbus.small.name=Small Item Output
 tile.modularmachinery.blockoutputbus.normal.name=Normal Item Output

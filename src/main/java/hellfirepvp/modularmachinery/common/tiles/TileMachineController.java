@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
@@ -66,7 +65,10 @@ import java.util.concurrent.RecursiveAction;
 public class TileMachineController extends TileEntityRestrictedTick {
     public static final int BLUEPRINT_SLOT = 0;
     public static final int ACCELERATOR_SLOT = 1;
-    public static int structureCheckDelay = 40;
+    public static int structureCheckDelay = 30;
+    public static boolean delayedStructureCheck = true;
+    public static int maxStructureCheckDelay = 100;
+    private final CachedMachineRotationChecker rotationChecker = new CachedMachineRotationChecker(this);
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
@@ -74,9 +76,11 @@ public class TileMachineController extends TileEntityRestrictedTick {
     private TaggedPositionBlockArray foundPattern = null;
     private EnumFacing patternRotation = null;
     private ActiveMachineRecipe activeRecipe = null;
+    private RecipeCraftingContext context = null;
     private boolean recipePrepared = false;
     private RecipeSearchTask searchTask = null;
-
+    private int recipeResearchRetryCount = 0;
+    private int structureCheckFailedCount = 0;
     private List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = Lists.newArrayList();
     private Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
 
@@ -86,9 +90,77 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     public static void loadFromConfig(Configuration config) {
+        //最短结构检查间隔
         structureCheckDelay = config.getInt("structure-check-delay", "general",
-                40, 1, 1200,
+                30, 1, 1200,
                 "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
+        //延迟结构检查
+        delayedStructureCheck = config.getBoolean("delayed-structure-check", "general",
+                true, "When enabled, the interval between structure checks is gradually increased when multiblock structure checks fail.");
+        //最长结构检查间隔
+        maxStructureCheckDelay = config.getInt("max-structure-check-delay", "general",
+                100, 2, 1200,
+                "When delayed-structure-check is enabled, what is the maximum check interval? (TimeUnit: Tick)");
+
+        //检查最短结构检查间隔是否大于最长结构检查间隔
+        if (structureCheckDelay >= maxStructureCheckDelay) {
+            ModularMachinery.log.warn("structure-check-delay is bigger than or equal max-structure-check-delay!, use default value...");
+            structureCheckDelay = 40;
+            maxStructureCheckDelay = 100;
+        }
+    }
+
+    @Override
+    public void doRestrictedTick() {
+        if (getWorld().isRemote) {
+            return;
+        }
+        if (getWorld().getStrongPower(getPos()) > 0) {
+            return;
+        }
+
+        checkStructure();
+        updateComponents();
+
+        if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
+            if (this.activeRecipe == null) {
+                if (this.ticksExisted % (20 + Math.min(this.recipeResearchRetryCount * 10, 80)) == 0) {
+                    searchAndUpdateRecipe();
+                }
+            } else {
+                if (this.context == null) {
+                    createContext();
+                }
+
+                if (this.recipePrepared) {
+                    //异步结果正确性检查
+                    if (searchTask != null && searchTask.currentMachine == foundMachine) {
+                        this.activeRecipe.start(context);
+                    } else {
+                        searchAndUpdateRecipe();
+                    }
+                    this.recipePrepared = false;
+                } else {
+                    //Handle perTick IO and tick progression
+                    this.craftingStatus = this.activeRecipe.tick(this, this.context);
+
+                    if (this.activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
+                        this.activeRecipe = null;
+                    } else if (this.activeRecipe.isCompleted()) {
+                        this.activeRecipe.complete(this.context);
+                        this.activeRecipe.reset();
+                        this.context = null;
+
+                        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(this::tryRedoRecipe);
+                    }
+                }
+
+                markForUpdate();
+            }
+        } else {
+            craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+            markForUpdate();
+        }
     }
 
     public ActiveMachineRecipe getActiveRecipe() {
@@ -104,57 +176,15 @@ public class TileMachineController extends TileEntityRestrictedTick {
         return inventory;
     }
 
-    @Override
-    public void doRestrictedTick() {
-        if (!getWorld().isRemote) {
-            if (getWorld().getStrongPower(getPos()) > 0) {
-                return;
-            }
-
-            checkStructure();
-            updateComponents();
-
-            if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
-                if (this.activeRecipe == null) {
-                    if (this.ticksExisted % 40 == 0) {
-                        searchAndUpdateRecipe();
-                    }
-                } else {
-                    RecipeCraftingContext context = this.foundMachine.createContext(this.activeRecipe, this,
-                            this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-
-                    if (recipePrepared) {
-                        activeRecipe.start(context);
-                        recipePrepared = false;
-                    } else {
-                        //Handle perTick IO and tick progression
-                        this.craftingStatus = this.activeRecipe.tick(this, context);
-
-                        if (this.activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
-                            this.activeRecipe = null;
-                        } else if (this.activeRecipe.isCompleted()) {
-                            this.activeRecipe.complete(context);
-                            this.activeRecipe.reset();
-                            context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-
-                            RecipeCraftingContext finalContext = context;
-                            ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryRedoRecipe(finalContext));
-                        }
-                    }
-
-                    markForUpdate();
-                }
-            } else {
-                craftingStatus = CraftingStatus.MISSING_STRUCTURE;
-                markForUpdate();
-            }
-        }
+    private void createContext() {
+        context = this.foundMachine.createContext(this.activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
     }
 
-    private void tryRedoRecipe(RecipeCraftingContext context) {
+    private void tryRedoRecipe() {
+        createContext();
         RecipeCraftingContext.CraftingCheckResult tryResult = context.canStartCrafting();
 
-        if (!tryResult.isFailure()) {
+        if (tryResult.isSuccess()) {
             activeRecipe = context.getActiveRecipe();
             ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> {
                 activeRecipe.start(context);
@@ -162,7 +192,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             });
         } else {
             activeRecipe = null;
-            craftingStatus = CraftingStatus.failure(Iterables.getFirst(tryResult.getUnlocalizedErrorMessages(), ""));
+            craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
         }
     }
 
@@ -181,22 +211,30 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
     private void resetMachine(boolean resetAll) {
         if (resetAll) {
-            this.activeRecipe = null;
-            this.craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+            activeRecipe = null;
+            craftingStatus = CraftingStatus.MISSING_STRUCTURE;
         }
-        this.foundMachine = null;
-        this.foundPattern = null;
-        this.patternRotation = null;
-        this.foundReplacements = null;
+        foundMachine = null;
+        foundPattern = null;
+        patternRotation = null;
+        foundReplacements = null;
+    }
+
+    private int currentStructureCheckDelay() {
+        return structureCheckDelay + (delayedStructureCheck
+                ? Math.min(structureCheckFailedCount * 10, maxStructureCheckDelay - structureCheckDelay)
+                : 0);
     }
 
     private void checkStructure() {
-        if (ticksExisted % structureCheckDelay == 0) {
+        if (ticksExisted % currentStructureCheckDelay() == 0) {
             if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null) {
                 if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                     resetMachine(true);
+                    structureCheckFailedCount++;
                 } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
                     resetMachine(true);
+                    structureCheckFailedCount++;
                 }
             }
             if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
@@ -210,6 +248,8 @@ public class TileMachineController extends TileEntityRestrictedTick {
                         if (this.foundMachine.getMachineColor() != Config.machineColor) {
                             distributeCasingColor();
                         }
+
+                        structureCheckFailedCount = 0;
                     }
                 } else {
                     for (DynamicMachine machine : MachineRegistry.getRegistry()) {
@@ -220,6 +260,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
                                 distributeCasingColor();
                             }
 
+                            structureCheckFailedCount = 0;
                             break;
                         }
                     }
@@ -256,25 +297,26 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     private boolean matchesRotation(TaggedPositionBlockArray pattern, DynamicMachine machine) {
-        EnumFacing face = EnumFacing.NORTH;
-        DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
-        do {
-            if (pattern.matches(getWorld(), getPos(), false, replacements)) {
-                this.foundPattern = pattern;
-                this.patternRotation = face;
-                this.foundMachine = machine;
-                this.foundReplacements = replacements;
-                return true;
-            }
-            face = face.rotateYCCW();
-            pattern = pattern.rotateYCCW();
-            replacements = replacements.rotateYCCW();
-        } while (face != EnumFacing.NORTH);
-        this.foundPattern = null;
-        this.patternRotation = null;
-        this.foundMachine = null;
-        this.foundReplacements = null;
-        return false;
+        return rotationChecker.matchesRotation(pattern, machine);
+//        EnumFacing face = EnumFacing.NORTH;
+//        DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
+//        do {
+//            if (pattern.matches(getWorld(), getPos(), false, replacements)) {
+//                this.foundPattern = pattern;
+//                this.patternRotation = face;
+//                this.foundMachine = machine;
+//                this.foundReplacements = replacements;
+//                return true;
+//            }
+//            face = face.rotateYCCW();
+//            pattern = pattern.rotateYCCW();
+//            replacements = replacements.rotateYCCW();
+//        } while (face != EnumFacing.NORTH);
+//        this.foundPattern = null;
+//        this.patternRotation = null;
+//        this.foundMachine = null;
+//        this.foundReplacements = null;
+//        return false;
     }
 
     private void updateComponents() {
@@ -285,7 +327,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             resetMachine(false);
             return;
         }
-        if (ticksExisted % structureCheckDelay == 0) {
+        if (ticksExisted % currentStructureCheckDelay() == 0) {
             this.foundComponents = Lists.newArrayList();
             for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
                 BlockPos realPos = getPos().add(potentialPosition);
@@ -476,6 +518,52 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
     }
 
+    /**
+     * <p>一个带有缓存的结构检查器，用于减少过多的 rotateYCCW() 调用导致性能降低。</p>
+     * <p>对带有蓝图的机械有性能提升。</p>
+     */
+    public static class CachedMachineRotationChecker {
+        private final TileMachineController controller;
+        private TaggedPositionBlockArray cachedPattern = null;
+        private DynamicMachine cachedMachine = null;
+
+        public CachedMachineRotationChecker(TileMachineController controller) {
+            this.controller = controller;
+        }
+
+        private boolean matchesRotation(TaggedPositionBlockArray pattern, DynamicMachine machine) {
+            EnumFacing face = EnumFacing.NORTH;
+            DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
+
+            if (!machine.equals(cachedMachine)) {
+                cachedMachine = machine;
+                cachedPattern = pattern;
+            }
+
+            do {
+                if (cachedPattern.matches(controller.getWorld(), controller.getPos(), false, replacements)) {
+                    controller.foundPattern = cachedPattern;
+                    controller.patternRotation = face;
+                    controller.foundMachine = machine;
+                    controller.foundReplacements = replacements;
+                    return true;
+                }
+                face = face.rotateYCCW();
+                cachedPattern = cachedPattern.rotateYCCW();
+                replacements = replacements.rotateYCCW();
+            } while (face != EnumFacing.NORTH);
+
+            controller.foundPattern = null;
+            controller.patternRotation = null;
+            controller.foundMachine = null;
+            controller.foundReplacements = null;
+
+            cachedMachine = null;
+            cachedPattern = null;
+            return false;
+        }
+    }
+
     public static class CraftingStatus {
 
         private static final CraftingStatus SUCCESS = new CraftingStatus(Type.CRAFTING, "");
@@ -542,29 +630,33 @@ public class TileMachineController extends TileEntityRestrictedTick {
                 ActiveMachineRecipe aRecipe = new ActiveMachineRecipe(recipe);
                 RecipeCraftingContext context = foundMachine.createContext(aRecipe, TileMachineController.this, foundComponents, MiscUtils.flatten(foundModifiers.values()));
                 RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
-                if (!result.isFailure()) {
+                if (result.isSuccess()) {
+                    //并发检查
                     if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
 
+                    TileMachineController.this.context = context;
                     activeRecipe = aRecipe;
                     recipePrepared = true;
+                    recipeResearchRetryCount = 0;
                     break;
                 } else if (highestValidity == null ||
-                        (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
+                           (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
                     highestValidity = recipe;
                     highestValidityResult = result;
                     validity = result.getValidity();
                 }
             }
 
+            //并发检查
             if (foundMachine == null || !foundMachine.equals(currentMachine)) return;
 
             if (activeRecipe == null) {
                 if (highestValidity != null) {
-                    craftingStatus = CraftingStatus.failure(
-                            Iterables.getFirst(highestValidityResult.getUnlocalizedErrorMessages(), ""));
+                    craftingStatus = CraftingStatus.failure(highestValidityResult.getFirstErrorMessage(""));
                 } else {
                     craftingStatus = CraftingStatus.failure(Type.NO_RECIPE.getUnlocalizedDescription());
                 }
+                recipeResearchRetryCount++;
             } else {
                 craftingStatus = CraftingStatus.working();
             }

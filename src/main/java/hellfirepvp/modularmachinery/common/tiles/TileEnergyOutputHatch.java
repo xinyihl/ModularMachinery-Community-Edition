@@ -13,7 +13,6 @@ import cofh.redstoneflux.api.IEnergyReceiver;
 import cofh.redstoneflux.api.IEnergyStorage;
 import com.brandon3055.draconicevolution.DEFeatures;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
-import com.google.common.collect.Iterables;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -36,9 +35,6 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -50,6 +46,7 @@ import java.util.List;
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySource", modid = "ic2")
 public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySource {
     private BlockPos foundCore = null;
+    private int energyCoreSearchFailedCount = 0;
 
     public TileEnergyOutputHatch() {
     }
@@ -115,9 +112,8 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     private long attemptDECoreTransfer(long transferCap) {
         TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
         if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
-            if (world.getTotalWorldTime() % 100 == 0) {
-                foundCore = findCore(foundCore);
-            }
+            foundCore = null;
+            findCore();
         }
 
         if (foundCore != null && te instanceof TileEnergyStorageCore) {
@@ -131,27 +127,36 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         return 0;
     }
 
-    @Optional.Method(modid = "draconicevolution")
-    private BlockPos findCore(BlockPos before) {
-        List<TileEnergyStorageCore> list = new LinkedList<>();
-        int range = 16;
+    private int currentFoundCoreDelay() {
+        return 100 + (Math.min(energyCoreSearchFailedCount * 20, 200));
+    }
 
+    @Optional.Method(modid = "draconicevolution")
+    private void findCore() {
+        if (!(world.getTotalWorldTime() % currentFoundCoreDelay() == 0)) {
+            return;
+        }
+
+        TileEnergyStorageCore core = null;
+        int range = 16;
         Iterable<BlockPos> positions = BlockPos.getAllInBox(pos.add(-range, -range, -range), pos.add(range, range, range));
 
         for (BlockPos blockPos : positions) {
             if (world.getBlockState(blockPos).getBlock() == DEFeatures.energyStorageCore) {
                 TileEntity tile = world.getTileEntity(blockPos);
                 if (tile instanceof TileEnergyStorageCore && ((TileEnergyStorageCore) tile).active.value) {
-                    list.add(((TileEnergyStorageCore) tile));
+                    core = (TileEnergyStorageCore) tile;
+                    break;
                 }
             }
         }
-        if (before != null) {
-            list.removeIf(tile -> tile.getPos().equals(before));
+
+        if (core == null) {
+            energyCoreSearchFailedCount++;
+        } else {
+            foundCore = core.getPos();
+            energyCoreSearchFailedCount = 0;
         }
-        Collections.shuffle(list);
-        TileEnergyStorageCore first = Iterables.getFirst(list, null);
-        return first == null ? null : first.getPos();
     }
 
     @Optional.Method(modid = "gregtech")

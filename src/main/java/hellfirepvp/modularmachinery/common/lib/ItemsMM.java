@@ -22,7 +22,5 @@ public class ItemsMM {
     public static ItemBlueprint blueprint;
     public static ItemModularium modularium;
     public static ItemConstructTool constructTool;
-    public static ItemRedstoneSignal redstoneSignal;
-    public static ItemCatalyst catalyst;
 
 }

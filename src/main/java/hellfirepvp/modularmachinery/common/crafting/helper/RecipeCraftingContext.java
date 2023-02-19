@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSender;
@@ -46,12 +45,18 @@ public class RecipeCraftingContext {
     private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
     private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
+    private final List<ComponentRequirement<?, ?>> requirements;
     private int currentCraftingTick = 0;
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMachineController controller) {
         this.activeRecipe = activeRecipe;
         this.machineController = controller;
         this.commandSender = new ControllerCommandSender(machineController);
+        this.requirements = new ArrayList<>((int) (getParentRecipe().getCraftingRequirements().size() * 1.5));
+
+        for (ComponentRequirement<?, ?> craftingRequirement : getParentRecipe().getCraftingRequirements()) {
+            this.requirements.add(craftingRequirement.deepCopy());
+        }
     }
 
     public TileMachineController getMachineController() {
@@ -107,7 +112,7 @@ public class RecipeCraftingContext {
         float durMultiplier = this.getDurationMultiplier();
 
         //Input tick
-        for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
+        for (ComponentRequirement<?, ?> requirement : requirements) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
                     requirement.actionType == IOType.OUTPUT) continue;
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
@@ -131,7 +136,7 @@ public class RecipeCraftingContext {
         }
 
         //Output tick
-        for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
+        for (ComponentRequirement<?, ?> requirement : requirements) {
             if (!(requirement instanceof ComponentRequirement.PerTick) ||
                     requirement.actionType == IOType.INPUT) continue;
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
@@ -165,7 +170,7 @@ public class RecipeCraftingContext {
 
     public void startCrafting(long seed) {
         ResultChance chance = new ResultChance(seed);
-        for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
+        for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
@@ -186,7 +191,7 @@ public class RecipeCraftingContext {
 
     public void finishCrafting(long seed) {
         ResultChance chance = new ResultChance(seed);
-        for (ComponentRequirement<?, ?> requirement : this.getParentRecipe().getCraftingRequirements()) {
+        for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
@@ -210,7 +215,7 @@ public class RecipeCraftingContext {
         currentRestrictions.clear();
         CraftingCheckResult result = new CraftingCheckResult();
         float successfulRequirements = 0;
-        List<ComponentRequirement<?, ?>> requirements = this.getParentRecipe().getCraftingRequirements().stream()
+        List<ComponentRequirement<?, ?>> requirements = this.requirements.stream()
                 .filter(requirementFilter)
                 .collect(Collectors.toList());
 
@@ -221,7 +226,7 @@ public class RecipeCraftingContext {
             Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
             if (!Iterables.isEmpty(components)) {
 
-                List<String> errorMessages = Lists.newArrayList();
+                List<String> errorMessages = new ArrayList<>();
                 for (ProcessingComponent<?> component : components) {
                     CraftCheck check = requirement.canStartCrafting(component, this, this.currentRestrictions);
 
@@ -267,7 +272,7 @@ public class RecipeCraftingContext {
     public static class CraftingCheckResult {
         private static final CraftingCheckResult SUCCESS = new CraftingCheckResult();
 
-        private final Map<String, Integer> unlocErrorMessages = new HashMap<>();
+        private final Map<String, Integer> unlocErrorMessagesMap = new HashMap<>();
         public float validity = 0F;
 
         public CraftingCheckResult() {
@@ -275,9 +280,9 @@ public class RecipeCraftingContext {
 
         public void addError(String unlocError) {
             if (!unlocError.isEmpty()) {
-                int count = this.unlocErrorMessages.getOrDefault(unlocError, 0);
+                int count = this.unlocErrorMessagesMap.getOrDefault(unlocError, 0);
                 count++;
-                this.unlocErrorMessages.put(unlocError, count);
+                this.unlocErrorMessagesMap.put(unlocError, count);
             }
         }
 
@@ -290,18 +295,26 @@ public class RecipeCraftingContext {
         }
 
         public List<String> getUnlocalizedErrorMessages() {
-            return this.unlocErrorMessages.entrySet()
+            return this.unlocErrorMessagesMap.entrySet()
                     .stream()
                     .sorted(Map.Entry.comparingByValue())
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toList());
         }
 
+        public String getFirstErrorMessage(String defaultMessage) {
+            List<String> unlocalizedErrorMessages = getUnlocalizedErrorMessages();
+            return unlocalizedErrorMessages.isEmpty() ? defaultMessage : unlocalizedErrorMessages.get(0);
+        }
+
         public boolean isFailure() {
-            return !this.unlocErrorMessages.isEmpty();
+            return !this.unlocErrorMessagesMap.isEmpty();
+        }
+
+        public boolean isSuccess() {
+            return this.unlocErrorMessagesMap.isEmpty();
         }
 
     }
-
 
 }

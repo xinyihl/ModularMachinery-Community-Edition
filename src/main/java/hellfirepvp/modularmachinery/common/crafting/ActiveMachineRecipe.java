@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.crafting;
 
-import com.google.common.collect.Iterables;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -86,8 +85,7 @@ public class ActiveMachineRecipe {
             } else {
                 doFailureAction(RecipeFailureActions.getDefaultAction());
             }
-            return TileMachineController.CraftingStatus.failure(
-                    Iterables.getFirst(check.getUnlocalizedErrorMessages(), ""));
+            return TileMachineController.CraftingStatus.failure(check.getFirstErrorMessage(""));
         } else {
             //Success
             this.tick++;
@@ -101,7 +99,9 @@ public class ActiveMachineRecipe {
                 this.tick = 0;
                 break;
             case DECREASE:
-                this.tick = Math.min(tick - 1, 0);
+                if (this.tick > 0) {
+                    this.tick--;
+                }
                 break;
         }
     }

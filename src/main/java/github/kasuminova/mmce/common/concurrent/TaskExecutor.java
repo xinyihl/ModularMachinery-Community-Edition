@@ -69,7 +69,7 @@ public class TaskExecutor {
     }
 
     /**
-     * 添加一个接口引用，这个引用必定会在该一个 tick 即将结束时前完成
+     * 添加一个接口引用，这个引用必定会在该 tick 即将结束时前完成
      *
      * @param action 引用
      */

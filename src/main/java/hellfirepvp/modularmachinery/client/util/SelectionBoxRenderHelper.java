@@ -56,9 +56,9 @@ public class SelectionBoxRenderHelper {
     @SubscribeEvent
     public void onRightClick(PlayerInteractEvent event) {
         if (event.getEntityPlayer().equals(Minecraft.getMinecraft().player) &&
-                (event instanceof PlayerInteractEvent.RightClickBlock ||
-                        event instanceof PlayerInteractEvent.RightClickEmpty ||
-                        event instanceof PlayerInteractEvent.RightClickItem)) {
+            (event instanceof PlayerInteractEvent.RightClickBlock ||
+             event instanceof PlayerInteractEvent.RightClickEmpty ||
+             event instanceof PlayerInteractEvent.RightClickItem)) {
             if (ClientProxy.renderHelper.placePreview()) {
                 event.setCancellationResult(EnumActionResult.FAIL);
                 if (event.isCancelable()) {
