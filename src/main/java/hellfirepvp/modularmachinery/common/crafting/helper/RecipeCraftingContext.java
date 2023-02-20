@@ -269,6 +269,13 @@ public class RecipeCraftingContext {
         }
     }
 
+    public void overrideModifier(Collection<ModifierReplacement> modifiers) {
+        this.modifiers.clear();
+        for (ModifierReplacement modifier : modifiers) {
+            addModifier(modifier);
+        }
+    }
+
     public static class CraftingCheckResult {
         private static final CraftingCheckResult SUCCESS = new CraftingCheckResult();
 

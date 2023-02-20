@@ -4,14 +4,20 @@ command.modularmachinery.syntax=/mm-syntax
 command.modularmachinery.hand=/mm-hand
 command.modularmachinery.performance_report=/mm-performance_report [reset]
 command.modularmachinery.hand.empty=手持某个物品以查看其信息。
-command.modularmachinery.performance_report.title=模块化机械 - 并发操作性能报告（已统计 %s Tick）
+command.modularmachinery.performance_report.title=模块化机械 - 并行性能报告（已统计 %s 次执行）
 command.modularmachinery.performance_report.reset=性能报告数据已重置。
-command.modularmachinery.performance_report.total_submitted=已提交的任务数量: %s
-command.modularmachinery.performance_report.total_executed=已运行的任务数量: %s
+command.modularmachinery.performance_report.total_executed=已执行的任务数量: %s
+command.modularmachinery.performance_report.tasks_avg_per_execution=平均每次执行的任务数: %s
+
 command.modularmachinery.performance_report.total_used_time=总耗时: %s 毫秒
+command.modularmachinery.performance_report.used_time_avg_per_execution=每次执行平均耗时: %.2f 毫秒
+
+command.modularmachinery.performance_report.main_thread_total_used_time=主线程总耗时：%s 毫秒
+command.modularmachinery.performance_report.task_used_time=并行操作总耗时: %s 毫秒
+
+command.modularmachinery.performance_report.main_thread_used_time_avg=主线程平均耗时：%.2f 毫秒
+command.modularmachinery.performance_report.task_used_time_avg=并行操作平均耗时: %.2f 毫秒
 command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时: %s 微秒
-command.modularmachinery.performance_report.used_time_avg_per_tick=每 Tick 平均耗时: %.2f 毫秒
-command.modularmachinery.performance_report.executed_avg_per_tick=每 Tick 平均执行任务数: %s
 
 gui.controller.blueprint=找到蓝图：%s
 gui.controller.blueprint.none=无

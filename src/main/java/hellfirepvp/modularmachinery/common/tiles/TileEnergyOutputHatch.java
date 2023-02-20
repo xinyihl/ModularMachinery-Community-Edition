@@ -146,8 +146,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         if (tileEntity != null && tileEntity.hasCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, oppositeSide)) {
             IEnergyContainer energyContainer = tileEntity.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, oppositeSide);
             if (energyContainer != null && energyContainer.inputsEnergy(oppositeSide)) {
-                return energyContainer.acceptEnergyFromNetwork(oppositeSide, voltage, transferableAmps)
-                        * voltage;
+                return energyContainer.acceptEnergyFromNetwork(oppositeSide, voltage, transferableAmps) * voltage;
             }
         }
         return 0L;
@@ -163,10 +162,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
             if (te.hasCapability(CapabilityEnergy.ENERGY, accessingSide)) {
                 net.minecraftforge.energy.IEnergyStorage ce = te.getCapability(CapabilityEnergy.ENERGY, accessingSide);
                 if (ce != null && ce.canReceive()) {
-                    try {
-                        receivedEnergy = ce.receiveEnergy(maxTransferLeft, false);
-                    } catch (Exception ignored) {
-                    }
+                    receivedEnergy = ce.receiveEnergy(maxTransferLeft, false);
                 }
             }
         }

@@ -40,6 +40,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -52,7 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BlockArray {
 
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
-    protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
+    protected Map<BlockPos, BlockInformation> pattern = new ConcurrentHashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
     public BlockArray() {
@@ -190,27 +191,36 @@ public class BlockArray {
     public BlockPos getRelativeMismatchPosition(World world, BlockPos center, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
-            if (!entry.getValue().matches(world, at, false)) {
-                if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
-                    for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
-                        if (info.matches(world, at, false)) {
-                            continue;
-                        }
+            if (entry.getValue().matches(world, at, false)) {
+                continue;
+            }
+
+            if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
+                for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
+                    if (info.matches(world, at, false)) {
+                        continue;
                     }
                 }
-                return entry.getKey();
             }
+            return entry.getKey();
         }
         return null;
     }
 
     public BlockArray rotateYCCW() {
         BlockArray out = new BlockArray();
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
 
-        for (BlockPos pos : pattern.keySet()) {
-            BlockInformation info = pattern.get(pos);
-            out.pattern.put(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
+        if (pattern.size() > 1000) {
+            pattern.keySet().stream().parallel().forEach(pos ->
+                    outPattern.put(MiscUtils.rotateYCCW(pos), pattern.get(pos).copyRotateYCCW()));
+        } else {
+            for (BlockPos pos : pattern.keySet()) {
+                BlockInformation info = pattern.get(pos);
+                outPattern.put(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
+            }
         }
+
         return out;
     }
 
