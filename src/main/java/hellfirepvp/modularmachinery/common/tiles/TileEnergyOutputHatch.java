@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.tiles;
 import cofh.redstoneflux.api.IEnergyConnection;
 import cofh.redstoneflux.api.IEnergyReceiver;
 import cofh.redstoneflux.api.IEnergyStorage;
+import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -107,6 +108,25 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         if (prevEnergy != this.energy) {
             markForUpdate();
         }
+    }
+
+    @Optional.Method(modid = "draconicevolution")
+    protected long attemptDECoreTransfer(long maxCanExtract) {
+        TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
+        if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
+            foundCore = null;
+            findCore();
+        }
+
+        if (foundCore != null && te instanceof TileEnergyStorageCore) {
+            TileEnergyStorageCore core = (TileEnergyStorageCore) te;
+
+            long energyReceived = Math.min(core.getExtendedCapacity() - core.energy.value, maxCanExtract);
+            core.energy.value += energyReceived;
+
+            return energyReceived;
+        }
+        return 0;
     }
 
     @Optional.Method(modid = "gregtech")
