@@ -8,6 +8,9 @@
 
 package hellfirepvp.modularmachinery.common.crafting;
 
+import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.data.IData;
+import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -15,13 +18,13 @@ import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenGetter;
+import stanhebben.zenscript.annotations.ZenSetter;
 
 import javax.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -30,10 +33,12 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 29.06.2017 / 15:50
  */
+@ZenRegister
+@ZenClass("mods.modularmachinery.ActiveMachineRecipe")
 public class ActiveMachineRecipe {
 
     private final MachineRecipe recipe;
-    private final Map<ResourceLocation, NBTTagCompound> dataMap = new HashMap<>();
+    private NBTTagCompound data = new NBTTagCompound();
     private int tick = 0;
     private int totalTick;
 
@@ -46,21 +51,14 @@ public class ActiveMachineRecipe {
         this.recipe = RecipeRegistry.getRecipe(new ResourceLocation(serialized.getString("recipeName")));
         this.tick = serialized.getInteger("tick");
         this.totalTick = serialized.getInteger("totalTick");
-        if (serialized.hasKey("data", Constants.NBT.TAG_LIST)) {
-            NBTTagList listData = serialized.getTagList("data", Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < listData.tagCount(); i++) {
-                NBTTagCompound tag = listData.getCompoundTagAt(i);
-                String key = tag.getString("key");
-                NBTTagCompound data = tag.getCompoundTag("data");
-                if (!key.isEmpty()) {
-                    dataMap.put(new ResourceLocation(key), data);
-                }
-            }
+        if (serialized.hasKey("data", Constants.NBT.TAG_COMPOUND)) {
+            data = serialized.getCompoundTag("data");
         }
     }
 
     public void reset() {
         this.tick = 0;
+        this.data = new NBTTagCompound();
     }
 
     public MachineRecipe getRecipe() {
@@ -106,36 +104,15 @@ public class ActiveMachineRecipe {
         }
     }
 
-    public int getTick() {
-        return tick;
-    }
-
-    public int getTotalTick() {
-        return totalTick;
-    }
-
-    @Nonnull
-    public Map<ResourceLocation, NBTTagCompound> getData() {
-        return dataMap;
-    }
-
-    @Nonnull
-    public NBTTagCompound getOrCreateData(ResourceLocation key) {
-        return dataMap.computeIfAbsent(key, k -> new NBTTagCompound());
-    }
-
     public boolean isCompleted() {
         return this.tick >= totalTick;
     }
 
     public void start(RecipeCraftingContext context) {
         context.startCrafting();
-        int time = this.recipe.getRecipeTotalTickTime();
-        totalTick = Math.round(RecipeModifier.applyModifiers(context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, time, false));
-    }
-
-    public void complete(RecipeCraftingContext completionContext) {
-        completionContext.finishCrafting();
+        totalTick = Math.round(RecipeModifier.applyModifiers(
+                context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
+                RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
     }
 
     public NBTTagCompound serialize() {
@@ -144,13 +121,42 @@ public class ActiveMachineRecipe {
         tag.setInteger("totalTick", this.totalTick);
         tag.setString("recipeName", this.recipe.getRegistryName().toString());
 
-        NBTTagList listData = new NBTTagList();
-        for (Map.Entry<ResourceLocation, NBTTagCompound> dataEntry : this.dataMap.entrySet()) {
-            NBTTagCompound tagData = new NBTTagCompound();
-            tagData.setString("key", dataEntry.getKey().toString());
-            tagData.setTag("data", dataEntry.getValue());
-        }
-        tag.setTag("data", listData);
+        tag.setTag("data", data);
         return tag;
+    }
+
+    @ZenGetter("tick")
+    public int getTick() {
+        return tick;
+    }
+
+    @ZenSetter("tick")
+    public void setTick(int tick) {
+        this.tick = tick;
+    }
+
+    @ZenGetter("totalTick")
+    public int getTotalTick() {
+        return totalTick;
+    }
+
+    @ZenSetter("totalTick")
+    public void setTotalTick(int totalTick) {
+        this.totalTick = totalTick;
+    }
+
+    @ZenGetter("registryName")
+    public String getRegistryName() {
+        return recipe.getRegistryName().toString();
+    }
+
+    @ZenGetter("data")
+    public IData getData() {
+        return CraftTweakerMC.getIData(data);
+    }
+
+    @ZenSetter("data")
+    public void setData(IData data) {
+        this.data = CraftTweakerMC.getNBTCompound(data);
     }
 }

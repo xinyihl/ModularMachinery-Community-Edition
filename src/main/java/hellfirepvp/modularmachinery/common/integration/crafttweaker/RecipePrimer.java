@@ -16,6 +16,7 @@ import crafttweaker.api.item.IngredientStack;
 import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.oredict.IOreDictEntry;
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.PreparedRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
@@ -24,20 +25,22 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnerg
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasRegistry;
 import mekanism.api.gas.GasStack;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -54,8 +57,9 @@ public class RecipePrimer implements PreparedRecipe {
     private final int tickTime, priority;
     private final boolean doesVoidPerTick;
 
-    private final List<ComponentRequirement> components = new LinkedList<>();
-    private ComponentRequirement lastComponent = null;
+    private final List<ComponentRequirement<?, ?>> components = new LinkedList<>();
+    private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
+    private ComponentRequirement<?, ?> lastComponent = null;
 
     public RecipePrimer(ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean doesVoidPerTick) {
         this.name = registryName;
@@ -83,6 +87,57 @@ public class RecipePrimer implements PreparedRecipe {
             lastComponent.setTag(new ComponentSelectorTag(selectorTag));
         }
         return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer setNBT(String nbtString) throws NBTException {
+        if (lastComponent != null) {
+            if (lastComponent instanceof RequirementItem) {
+                ((RequirementItem) lastComponent).tag = NBTJsonDeserializer.deserialize(nbtString);
+            } else {
+                CraftTweakerAPI.logWarning("[ModularMachinery] setNBT(String nbtString) only can be applied to IItemStack or IOreDictEntry!");
+            }
+        }
+        return this;
+    }
+
+    //----------------------------------------------------------------------------------------------
+    // EventHandlers
+    //----------------------------------------------------------------------------------------------
+    @ZenMethod
+    public RecipePrimer addCheckHandler(IEventHandler<RecipeCheckEvent> event) {
+        addRecipeEventHandler(RecipeCheckEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addStartHandler(IEventHandler<RecipeStartEvent> event) {
+        addRecipeEventHandler(RecipeStartEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addPreTickHandler(IEventHandler<RecipePreTickEvent> event) {
+        addRecipeEventHandler(RecipePreTickEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addTickHandler(IEventHandler<RecipeTickEvent> event) {
+        addRecipeEventHandler(RecipeTickEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFinishHandler(IEventHandler<RecipeFinishEvent> event) {
+        addRecipeEventHandler(RecipeFinishEvent.class, event);
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <H extends RecipeEvent> void addRecipeEventHandler(Class<H> hClass, IEventHandler<H> handler) {
+        recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
+        recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -385,8 +440,13 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @Override
-    public List<ComponentRequirement> getComponents() {
+    public List<ComponentRequirement<?, ?>> getComponents() {
         return components;
+    }
+
+    @Override
+    public Map<Class<?>, List<IEventHandler<RecipeEvent>>> getRecipeEventHandlers() {
+        return recipeEventHandlers;
     }
 
 }

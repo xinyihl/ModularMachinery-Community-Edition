@@ -111,7 +111,8 @@ public class RecipeLoader {
     private static MachineRecipe convertPreparedRecipe(PreparedRecipe recipe) {
         MachineRecipe mr = new MachineRecipe(recipe.getFilePath(),
                 recipe.getRecipeRegistryName(), recipe.getAssociatedMachineName(),
-                recipe.getTotalProcessingTickTime(), recipe.getPriority(), recipe.voidPerTickFailure());
+                recipe.getTotalProcessingTickTime(), recipe.getPriority(), recipe.voidPerTickFailure(),
+                recipe.getRecipeEventHandlers());
         recipe.getComponents().forEach(mr::addRequirement);
         return mr;
     }

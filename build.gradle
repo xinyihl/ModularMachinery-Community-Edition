@@ -112,6 +112,7 @@ dependencies {
     implementation(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
 
     implementation 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
+    implementation 'curse.maven:zenutil-401178:4394263'
 
     implementation fg.deobf("curse.maven:RedstoneFlux-270789:2920436")
     implementation "curse.maven:CodeChickenLib-242818:2779848"

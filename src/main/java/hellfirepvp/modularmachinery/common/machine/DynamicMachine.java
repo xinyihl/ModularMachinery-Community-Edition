@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.machine;
 
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -17,6 +18,7 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
@@ -32,6 +34,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,6 +51,7 @@ public class DynamicMachine {
     private final ResourceLocation registryName;
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
+    private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
     private String localizedName = null;
     private int definedColor = Config.machineColor;
     private boolean requiresBlueprint = false;
@@ -55,6 +59,21 @@ public class DynamicMachine {
 
     public DynamicMachine(@Nonnull ResourceLocation registryName) {
         this.registryName = registryName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <H extends MachineEvent> void addMachineEventHandler(Class<H> hClass, IEventHandler<H> handler) {
+        machineEventHandlers.putIfAbsent(hClass, new ArrayList<>());
+        machineEventHandlers.get(hClass).add((IEventHandler<MachineEvent>) handler);
+    }
+
+    @Nullable
+    public List<IEventHandler<MachineEvent>> getMachineEventHandlers(Class<?> handlerClass) {
+        return machineEventHandlers.get(handlerClass);
+    }
+
+    public Map<Class<?>, List<IEventHandler<MachineEvent>>> getMachineEventHandlers() {
+        return machineEventHandlers;
     }
 
     public RecipeFailureActions getFailureAction() {
@@ -140,6 +159,11 @@ public class DynamicMachine {
         if (!(obj instanceof DynamicMachine)) return false;
         DynamicMachine machine = (DynamicMachine) obj;
         return machine.registryName.toString().equals(registryName.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(registryName);
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {

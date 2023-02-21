@@ -8,10 +8,13 @@
 
 package hellfirepvp.modularmachinery.common.crafting;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -36,6 +39,8 @@ public interface PreparedRecipe {
         return false;
     }
 
-    List<ComponentRequirement> getComponents();
+    List<ComponentRequirement<?, ?>> getComponents();
+
+    Map<Class<?>, List<IEventHandler<RecipeEvent>>> getRecipeEventHandlers();
 
 }

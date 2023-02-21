@@ -140,8 +140,6 @@ tooltip.ic2.powertier.12.name=UXV
 item.modularmachinery.itemblueprint.name=Machine Blueprint
 item.modularmachinery.itemmodularium.name=Modularium
 item.modularmachinery.itemconstructtool.name=Construct Selection Tool
-item.modularmachinery.itemredstonesignal.name=Redstone Signal
-item.modularmachinery.itemcatalyst.name=Solid Catalyst (Solid Catalyst Container)
 
 tile.modularmachinery.blockcontroller.name=Machine Controller
 

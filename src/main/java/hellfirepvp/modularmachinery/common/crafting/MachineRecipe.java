@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.crafting;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.command.RecipeCommandContainer;
 import hellfirepvp.modularmachinery.common.crafting.command.RecipeRunnableCommand;
@@ -18,6 +19,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -28,9 +30,7 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -53,6 +53,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     private final RecipeCommandContainer commandContainer = new RecipeCommandContainer();
     private final int configuredPriority;
     private final boolean voidPerTickFailure;
+    private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean voidPerTickFailure) {
         this.sortId = counter;
@@ -63,6 +64,34 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = tickTime;
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
+        this.recipeEventHandlers = new HashMap<>();
+    }
+
+    public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean voidPerTickFailure, Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers) {
+        this.sortId = counter;
+        counter++;
+        this.recipeFilePath = path;
+        this.registryName = registryName;
+        this.owningMachine = owningMachine;
+        this.tickTime = tickTime;
+        this.configuredPriority = configuredPriority;
+        this.voidPerTickFailure = voidPerTickFailure;
+        this.recipeEventHandlers = recipeEventHandlers;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <H extends RecipeEvent> void addRecipeEventHandler(Class<H> hClass, IEventHandler<H> handler) {
+        recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
+        recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
+    }
+
+    @Nullable
+    public List<IEventHandler<RecipeEvent>> getRecipeEventHandlers(Class<?> handlerClass) {
+        return recipeEventHandlers.get(handlerClass);
+    }
+
+    public Map<Class<?>, List<IEventHandler<RecipeEvent>>> getRecipeEventHandlers() {
+        return recipeEventHandlers;
     }
 
     public String getRecipeFilePath() {

@@ -29,7 +29,7 @@ public class TaskExecutor {
 
     public void init() {
         for (int i = 0; i < THREAD_COUNT; i++) {
-            executors[i] = new TaskExecutorThread(this).start();
+            (executors[i] = new TaskExecutorThread(this)).start();
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

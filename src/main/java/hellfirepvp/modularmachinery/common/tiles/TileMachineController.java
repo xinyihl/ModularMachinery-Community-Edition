@@ -9,6 +9,11 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import com.google.common.collect.Lists;
+import crafttweaker.CraftTweakerAPI;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.api.world.IBlockPos;
+import crafttweaker.api.world.IWorld;
+import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -17,14 +22,18 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
-import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
+import hellfirepvp.modularmachinery.common.machine.*;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
@@ -63,7 +72,7 @@ import java.util.concurrent.RecursiveTask;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 17:14
  */
-public class TileMachineController extends TileEntityRestrictedTick {
+public class TileMachineController extends TileEntityRestrictedTick implements IMachineController {
     public static final int BLUEPRINT_SLOT = 0;
     public static final int ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30;
@@ -121,38 +130,221 @@ public class TileMachineController extends TileEntityRestrictedTick {
         checkStructure();
         updateComponents();
 
-        if (isStructureFormed()) {
-            if (this.activeRecipe != null) {
-                if (this.context == null) {
-                    //context preInit
-                    context = createContext(this.activeRecipe);
-                }
-
-                //Handle perTick IO and tick progression
-                this.craftingStatus = this.activeRecipe.tick(this, this.context);
-
-                if (this.activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
-                    this.activeRecipe = null;
-                } else if (this.activeRecipe.isCompleted()) {
-                    this.context.finishCrafting();
-                    this.activeRecipe.reset();
-                    this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
-
-                    ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryStartRecipe(activeRecipe, null));
-                }
-
+        if (!isStructureFormed()) {
+            if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
+                craftingStatus = CraftingStatus.MISSING_STRUCTURE;
                 markForUpdate();
-            } else {
-                searchAndStartRecipe();
             }
-        } else if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
-            craftingStatus = CraftingStatus.MISSING_STRUCTURE;
-            markForUpdate();
+            return;
+        }
+
+        if (this.activeRecipe == null) {
+            searchAndStartRecipe();
+            return;
+        }
+
+        if (this.context == null) {
+            //context preInit
+            context = createContext(this.activeRecipe);
+        }
+
+        MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
+
+        //Handle perTick IO and tick progression
+        this.craftingStatus = this.activeRecipe.tick(this, this.context);
+
+        if (!onPreTick() && !this.activeRecipe.isCompleted()) {
+            this.activeRecipe.setTick(this.activeRecipe.getTick() - 1);
+        } else {
+            if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
+                this.activeRecipe = null;
+            } else if (this.activeRecipe.isCompleted()) {
+                onFinished();
+            } else {
+                onTick();
+            }
+        }
+
+        markForUpdate();
+    }
+
+    public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
+        RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+        if (result.isSuccess()) {
+            List<IEventHandler<RecipeEvent>> handlerList = context.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
+            if (handlerList == null || handlerList.isEmpty()) return result;
+            for (IEventHandler<RecipeEvent> handler : handlerList) {
+                RecipeCheckEvent event = new RecipeCheckEvent(this);
+                handler.handle(event);
+
+                if (event.isFailure()) {
+                    result.overrideError(event.getFailureReason());
+
+                    return result;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * <p>开始执行一个配方。</p>
+     *
+     * @param activeRecipe ActiveMachineRecipe
+     * @param context      RecipeCraftingContext
+     */
+    public void onStart(ActiveMachineRecipe activeRecipe, RecipeCraftingContext context) {
+        this.activeRecipe = activeRecipe;
+        this.context = context;
+
+        activeRecipe.start(context);
+        List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeStartEvent.class);
+        if (handlerList != null && !handlerList.isEmpty()) {
+            for (IEventHandler<RecipeEvent> handler : handlerList) {
+                RecipeStartEvent event = new RecipeStartEvent(this);
+                handler.handle(event);
+            }
+        }
+
+        markForUpdate();
+    }
+
+    public boolean onPreTick() {
+        List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipePreTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return true;
+
+        for (IEventHandler<RecipeEvent> handler : handlerList) {
+            RecipePreTickEvent event = new RecipePreTickEvent(this);
+            handler.handle(event);
+
+            if (event.isPreventProgressing()) {
+                craftingStatus = CraftingStatus.failure(event.getPreventReason());
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void onTick() {
+        List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return;
+
+        for (IEventHandler<RecipeEvent> handler : handlerList) {
+            RecipeTickEvent event = new RecipeTickEvent(this);
+            handler.handle(event);
+            if (event.isFailure()) {
+                if (event.isDestructRecipe()) {
+                    this.activeRecipe = null;
+                    this.context = null;
+                }
+                craftingStatus = CraftingStatus.failure(event.getFailureReason());
+                return;
+            }
         }
     }
 
+    public void onFinished() {
+        this.context.finishCrafting();
+        this.activeRecipe.reset();
+        this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
+
+        List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeFinishEvent.class);
+        if (handlerList != null && !handlerList.isEmpty()) {
+            for (IEventHandler<RecipeEvent> handler : handlerList) {
+                RecipeFinishEvent event = new RecipeFinishEvent(this);
+                handler.handle(event);
+            }
+        }
+
+        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryStartRecipe(activeRecipe, null));
+    }
+
+    /**
+     * <p>尝试执行一个配方。</p>
+     *
+     * @param activeRecipe ActiveMachineRecipe
+     * @param context      RecipeCraftingContext
+     */
+    private void tryStartRecipe(@Nonnull ActiveMachineRecipe activeRecipe, @Nullable RecipeCraftingContext context) {
+        RecipeCraftingContext finalContext;
+        finalContext = context == null ? createContext(activeRecipe) : context;
+
+        RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(finalContext);
+
+        if (tryResult.isSuccess()) {
+            ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> onStart(activeRecipe, finalContext));
+        } else {
+            this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
+            this.activeRecipe = null;
+            this.context = null;
+
+            createRecipeSearchTask();
+        }
+    }
+
+    @Override
+    public IWorld getIWorld() {
+        return CraftTweakerMC.getIWorld(getWorld());
+    }
+
+    @Override
+    public IBlockPos getIPos() {
+        return CraftTweakerMC.getIBlockPos(getPos());
+    }
+
+    @Override
     public ActiveMachineRecipe getActiveRecipe() {
         return activeRecipe;
+    }
+
+    @Override
+    public String getFormedMachineName() {
+        return isStructureFormed() ? foundMachine.getRegistryName().toString() : null;
+    }
+
+    public void cancelCrafting(String reason) {
+        this.activeRecipe = null;
+        this.context = null;
+        this.craftingStatus = CraftingStatus.failure(reason);
+    }
+
+    @Override
+    public void addModifier(String type, String ioTypeStr, int value, int operation, boolean affectChance) {
+        if (context == null) {
+            CraftTweakerAPI.logError("Machine are not working!");
+            return;
+        }
+
+        RequirementType<?, ?> target = RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(new ResourceLocation(type));
+        if (target == null) {
+            CraftTweakerAPI.logError("Could not find requirementType " + type + "!");
+            return;
+        }
+        IOType ioType;
+        switch (ioTypeStr.toLowerCase()) {
+            case "input":
+                ioType = IOType.INPUT;
+                break;
+            case "output":
+                ioType = IOType.OUTPUT;
+                break;
+            default:
+                CraftTweakerAPI.logError("Invalid ioType " + ioTypeStr + "!");
+                return;
+        }
+        if (operation > 1 || operation < 0) {
+            CraftTweakerAPI.logError("Invalid operation " + operation + "!");
+            return;
+        }
+
+        context.addModifier(new RecipeModifier(target, ioType, value, operation, affectChance));
+    }
+
+    @Override
+    public TileMachineController getController() {
+        return this;
     }
 
     private IOInventory buildInventory() {
@@ -166,45 +358,6 @@ public class TileMachineController extends TileEntityRestrictedTick {
 
     private RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
         return this.foundMachine.createContext(activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
-    }
-
-    /**
-     * <p>尝试执行一个配方。</p>
-     * TODO: 添加事件 RecipeCheckEvent（可取消）
-     *
-     * @param activeRecipe ActiveMachineRecipe
-     * @param context      RecipeCraftingContext
-     */
-    private void tryStartRecipe(@Nonnull ActiveMachineRecipe activeRecipe, @Nullable RecipeCraftingContext context) {
-        RecipeCraftingContext finalContext;
-        finalContext = context == null ? createContext(activeRecipe) : context;
-
-        RecipeCraftingContext.CraftingCheckResult tryResult = finalContext.canStartCrafting();
-
-        if (tryResult.isSuccess()) {
-            ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> startCrafting(activeRecipe, finalContext));
-        } else {
-            this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
-            this.activeRecipe = null;
-            this.context = null;
-
-            createRecipeSearchTask();
-        }
-    }
-
-    /**
-     * <p>开始执行一个配方。</p>
-     * TODO: 添加事件 RecipeStartedEvent（不可取消）
-     *
-     * @param activeRecipe ActiveMachineRecipe
-     * @param context      RecipeCraftingContext
-     */
-    public void startCrafting(ActiveMachineRecipe activeRecipe, RecipeCraftingContext context) {
-        this.activeRecipe = activeRecipe;
-        this.context = context;
-
-        activeRecipe.start(context);
-        markForUpdate();
     }
 
     private void searchAndStartRecipe() {
@@ -268,46 +421,63 @@ public class TileMachineController extends TileEntityRestrictedTick {
         return this.foundMachine != null && this.foundPattern != null && this.patternRotation != null;
     }
 
-    private void checkStructure() {
-        if (ticksExisted % currentStructureCheckDelay() == 0) {
-            if (isStructureFormed()) {
-                if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
-                    resetMachine(true);
-                } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
-                    resetMachine(true);
-                }
+    private void onStructureFormed() {
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineStructureFormedEvent.class);
+        if (handlerList != null && !handlerList.isEmpty()) {
+            for (IEventHandler<MachineEvent> handler : handlerList) {
+                MachineStructureFormedEvent event = new MachineStructureFormedEvent(this);
+                handler.handle(event);
             }
+        }
+    }
 
-            if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
-                resetMachine(false);
+    private void checkStructure() {
+        if (ticksExisted % currentStructureCheckDelay() != 0) {
+            return;
+        }
 
-                DynamicMachine blueprint = getBlueprintMachine();
-                if (blueprint != null) {
-                    if (matchesRotation(blueprint.getPattern(), blueprint)) {
-                        this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+        if (isStructureFormed()) {
+            if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
+                resetMachine(true);
+            } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
+                resetMachine(true);
+            }
+        }
 
-                        if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                            distributeCasingColor();
-                        }
+        if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null && this.foundReplacements != null) {
+            return;
+        }
 
-                        structureCheckFailedCount = 0;
-                    }
-                } else {
-                    for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-                        if (machine.requiresBlueprint()) continue;
-                        if (matchesRotation(machine.getPattern(), machine)) {
-                            this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
-                            if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                                distributeCasingColor();
-                            }
+        resetMachine(false);
 
-                            structureCheckFailedCount = 0;
-                            break;
-                        }
-                    }
+        DynamicMachine blueprint = getBlueprintMachine();
+        if (blueprint != null) {
+            if (matchesRotation(blueprint.getPattern(), blueprint)) {
+                this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+
+                if (this.foundMachine.getMachineColor() != Config.machineColor) {
+                    distributeCasingColor();
                 }
 
+                onStructureFormed();
+                structureCheckFailedCount = 0;
                 markForUpdate();
+            }
+        } else {
+            for (DynamicMachine machine : MachineRegistry.getRegistry()) {
+                if (machine.requiresBlueprint()) continue;
+                if (matchesRotation(machine.getPattern(), machine)) {
+                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+
+                    if (this.foundMachine.getMachineColor() != Config.machineColor) {
+                        distributeCasingColor();
+                    }
+
+                    onStructureFormed();
+                    structureCheckFailedCount = 0;
+                    markForUpdate();
+                    break;
+                }
             }
         }
     }
@@ -417,7 +587,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate) {
+    public boolean shouldRefresh(@Nonnull World world, @Nonnull BlockPos pos, IBlockState oldState, IBlockState newSate) {
         return oldState.getBlock() != newSate.getBlock();
     }
 
@@ -436,13 +606,14 @@ public class TileMachineController extends TileEntityRestrictedTick {
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     }
 
     @Nullable
     @Override
-    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+    @SuppressWarnings("unchecked")
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return (T) inventory;
         }
@@ -623,7 +794,7 @@ public class TileMachineController extends TileEntityRestrictedTick {
             for (MachineRecipe recipe : availableRecipes) {
                 ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe);
                 RecipeCraftingContext context = createContext(activeRecipe);
-                RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+                RecipeCraftingContext.CraftingCheckResult result = onCheck(context);
                 if (result.isSuccess()) {
                     //并发检查
                     if (foundMachine == null || !foundMachine.equals(currentMachine)) return null;

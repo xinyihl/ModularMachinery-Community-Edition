@@ -143,8 +143,6 @@ tooltip.ic2.powertier.12.name=UXV
 item.modularmachinery.itemblueprint.name=机械蓝图
 item.modularmachinery.itemmodularium.name=模块化合金锭
 item.modularmachinery.itemconstructtool.name=建造选择工具
-item.modularmachinery.itemredstonesignal.name=红石信号
-item.modularmachinery.itemcatalyst.name=Solid Catalyst (Solid Catalyst Container)
 
 tile.modularmachinery.blockcontroller.name=机械控制器
 

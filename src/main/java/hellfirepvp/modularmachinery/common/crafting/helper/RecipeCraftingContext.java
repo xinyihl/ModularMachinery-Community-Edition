@@ -269,6 +269,10 @@ public class RecipeCraftingContext {
         }
     }
 
+    public void addModifier(RecipeModifier modifier) {
+        this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+    }
+
     public void overrideModifier(Collection<ModifierReplacement> modifiers) {
         this.modifiers.clear();
         for (ModifierReplacement modifier : modifiers) {
@@ -291,6 +295,11 @@ public class RecipeCraftingContext {
                 count++;
                 this.unlocErrorMessagesMap.put(unlocError, count);
             }
+        }
+
+        public void overrideError(String unlocError) {
+            this.unlocErrorMessagesMap.clear();
+            addError(unlocError);
         }
 
         public float getValidity() {
