@@ -190,7 +190,7 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public int getComponentVerticalGap() {
-            return 4;
+            return 0;
         }
 
         @Override

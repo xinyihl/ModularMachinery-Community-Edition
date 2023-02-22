@@ -21,6 +21,7 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistr
 import hellfirepvp.modularmachinery.common.data.ModDataHolder;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEvents;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
@@ -96,6 +97,7 @@ public class CommonProxy implements IGuiHandler {
         IntegrationTypeHelper.filterModIdRequirementTypes();
 
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
+        MMEvents.loadAll();
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);

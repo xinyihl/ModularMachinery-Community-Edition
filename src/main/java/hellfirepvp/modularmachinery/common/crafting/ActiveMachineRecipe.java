@@ -156,7 +156,7 @@ public class ActiveMachineRecipe {
 
     @ZenGetter("data")
     public IData getData() {
-        return CraftTweakerMC.getIData(data);
+        return CraftTweakerMC.getIDataModifyable(data);
     }
 
     @ZenSetter("data")

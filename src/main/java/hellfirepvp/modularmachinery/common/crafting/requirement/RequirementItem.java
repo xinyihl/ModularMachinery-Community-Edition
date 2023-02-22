@@ -303,7 +303,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     stackRequired.setCount(amt);
                     if (!itemModifierList.isEmpty()) {
                         for (AdvancedItemModifier modifier : itemModifierList) {
-                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStack(stackRequired)));
+                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStackMutable(stackRequired)));
                         }
                     }
 
@@ -356,7 +356,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             if (!itemModifierList.isEmpty()) {
                 for (AdvancedItemModifier modifier : itemModifierList) {
-                    stack = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStack(stack)));
+                    stack = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStackMutable(stack)));
                 }
             } else {
                 if (tag != null) {

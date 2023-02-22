@@ -103,7 +103,6 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                 offsetY += 10;
                 fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
-            offsetY += 15;
 
             //Render Extra Info
             List<IEventHandler<MachineEvent>> handlerList = found.getMachineEventHandlers(ControllerGUIRenderEvent.class);
@@ -126,8 +125,9 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                         offsetY += 10;
                         fr.drawStringWithShadow(s, offsetX, offsetY, 0xFFFFFF);
                     }
-                    offsetY += 15;
                 }
+            } else {
+                offsetY += 15;
             }
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));

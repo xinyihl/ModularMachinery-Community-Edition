@@ -157,7 +157,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.craftingStatus = this.activeRecipe.tick(this, this.context);
 
         if (!onPreTick() && !this.activeRecipe.isCompleted()) {
-            this.activeRecipe.setTick(this.activeRecipe.getTick() - 1);
+            this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
         } else {
             if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
                 this.activeRecipe = null;
@@ -333,7 +333,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
     @Override
     public boolean isWorking() {
-        return context == null || activeRecipe == null;
+        return craftingStatus.isCrafting();
     }
 
     @Override
@@ -343,7 +343,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
     @Override
     public IData getCustomData() {
-        return CraftTweakerMC.getIData(customData);
+        return CraftTweakerMC.getIDataModifyable(customData);
     }
 
     @Override

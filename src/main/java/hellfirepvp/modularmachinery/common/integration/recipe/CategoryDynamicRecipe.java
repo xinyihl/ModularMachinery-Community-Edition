@@ -96,6 +96,8 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             }
 
             int tipLength = 0;
+            //Custom TooltipList
+            tipLength += RequirementTip.LINE_HEIGHT * recipe.getTooltipList().size();
             for (RequirementTip tip : RegistriesMM.REQUIREMENT_TIPS_REGISTRY) {
                 Collection<ComponentRequirement<?, ?>> requirements = tip.filterRequirements(recipe, recipe.getCraftingRequirements());
                 if (!requirements.isEmpty()) {
