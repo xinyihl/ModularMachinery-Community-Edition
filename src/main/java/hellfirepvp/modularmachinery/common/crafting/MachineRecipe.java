@@ -54,8 +54,10 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     private final int configuredPriority;
     private final boolean voidPerTickFailure;
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
+    private final List<String> tooltipList;
 
-    public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean voidPerTickFailure) {
+    public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -65,9 +67,12 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
         this.recipeEventHandlers = new HashMap<>();
+        this.tooltipList = new ArrayList<>();
     }
 
-    public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean voidPerTickFailure, Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers) {
+    public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure,
+                         Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -77,6 +82,11 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
         this.recipeEventHandlers = recipeEventHandlers;
+        this.tooltipList = tooltipList;
+    }
+
+    public List<String> getTooltipList() {
+        return tooltipList;
     }
 
     @SuppressWarnings("unchecked")
@@ -333,12 +343,12 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             JsonObject requirement = json.getAsJsonObject();
 
             if (!requirement.has("type") || !requirement.get("type").isJsonPrimitive() ||
-                    !requirement.get("type").getAsJsonPrimitive().isString()) {
+                !requirement.get("type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'type' of a requirement is missing or isn't a string!");
             }
             String type = requirement.getAsJsonPrimitive("type").getAsString();
             if (!requirement.has("io-type") || !requirement.get("io-type").isJsonPrimitive() ||
-                    !requirement.get("io-type").getAsJsonPrimitive().isString()) {
+                !requirement.get("io-type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'io-type' of a requirement is missing or isn't a string!");
             }
             String ioType = requirement.getAsJsonPrimitive("io-type").getAsString();
@@ -348,7 +358,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 requirementType = IntegrationTypeHelper.searchRequirementType(type);
                 if (requirementType != null) {
                     ModularMachinery.log.info("[Modular Machinery]: Deprecated requirement name '"
-                            + type + "'! Consider using " + requirementType.getRegistryName().toString());
+                                              + type + "'! Consider using " + requirementType.getRegistryName().toString());
                 }
             }
             if (requirementType == null) {

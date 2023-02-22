@@ -43,4 +43,5 @@ public interface PreparedRecipe {
 
     Map<Class<?>, List<IEventHandler<RecipeEvent>>> getRecipeEventHandlers();
 
+    List<String> getTooltipList();
 }

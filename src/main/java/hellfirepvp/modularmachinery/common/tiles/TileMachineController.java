@@ -9,7 +9,7 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import com.google.common.collect.Lists;
-import crafttweaker.CraftTweakerAPI;
+import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
@@ -22,15 +22,14 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
-import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.*;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
@@ -79,7 +78,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public static boolean delayedStructureCheck = true;
     public static int maxStructureCheckDelay = 100;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
+    private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
+    private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
@@ -138,6 +139,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return;
         }
 
+        onMachineTick();
+
         if (this.activeRecipe == null) {
             searchAndStartRecipe();
             return;
@@ -168,6 +171,24 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         markForUpdate();
     }
 
+    /**
+     * <p>机器开始执行逻辑。</p>
+     */
+    public void onMachineTick() {
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return;
+        for (IEventHandler<MachineEvent> handler : handlerList) {
+            MachineTickEvent event = new MachineTickEvent(this);
+            handler.handle(event);
+        }
+    }
+
+    /**
+     * <p>机器开始检查配方能否工作。</p>
+     *
+     * @param context RecipeCraftingContext
+     * @return CraftingCheckResult
+     */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
         if (result.isSuccess()) {
@@ -189,7 +210,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     /**
-     * <p>开始执行一个配方。</p>
+     * <p>机器开始执行一个配方。</p>
      *
      * @param activeRecipe ActiveMachineRecipe
      * @param context      RecipeCraftingContext
@@ -210,6 +231,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         markForUpdate();
     }
 
+    /**
+     * <p>机器在完成配方 Tick 后执行</p>
+     *
+     * @return 如果为 false，则进度停止增加，并在控制器状态栏输出原因
+     */
     public boolean onPreTick() {
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipePreTickEvent.class);
         if (handlerList == null || handlerList.isEmpty()) return true;
@@ -227,6 +253,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         return true;
     }
 
+    /**
+     * <p>与 {@code onPreTick()} 相似，但是可以销毁配方。</p>
+     */
     public void onTick() {
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeTickEvent.class);
         if (handlerList == null || handlerList.isEmpty()) return;
@@ -245,6 +274,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
     }
 
+    /**
+     * <p>机械完成一个配方。</p>
+     */
     public void onFinished() {
         this.context.finishCrafting();
         this.activeRecipe.reset();
@@ -262,7 +294,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     /**
-     * <p>尝试执行一个配方。</p>
+     * <p>机器尝试开始执行一个配方。</p>
      *
      * @param activeRecipe ActiveMachineRecipe
      * @param context      RecipeCraftingContext
@@ -300,8 +332,23 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     @Override
+    public boolean isWorking() {
+        return context == null || activeRecipe == null;
+    }
+
+    @Override
     public String getFormedMachineName() {
         return isStructureFormed() ? foundMachine.getRegistryName().toString() : null;
+    }
+
+    @Override
+    public IData getCustomData() {
+        return CraftTweakerMC.getIData(customData);
+    }
+
+    @Override
+    public void setCustomData(IData data) {
+        customData = CraftTweakerMC.getNBTCompound(data);
     }
 
     public void cancelCrafting(String reason) {
@@ -311,35 +358,19 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     @Override
-    public void addModifier(String type, String ioTypeStr, int value, int operation, boolean affectChance) {
-        if (context == null) {
-            CraftTweakerAPI.logError("Machine are not working!");
-            return;
+    public void addModifier(String key, RecipeModifier newModifier) {
+        if (newModifier != null) {
+            customModifiers.put(key, newModifier);
+            flushContextModifier();
         }
+    }
 
-        RequirementType<?, ?> target = RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(new ResourceLocation(type));
-        if (target == null) {
-            CraftTweakerAPI.logError("Could not find requirementType " + type + "!");
-            return;
+    @Override
+    public void removeModifier(String key) {
+        if (customModifiers.containsKey(key)) {
+            customModifiers.remove(key);
+            flushContextModifier();
         }
-        IOType ioType;
-        switch (ioTypeStr.toLowerCase()) {
-            case "input":
-                ioType = IOType.INPUT;
-                break;
-            case "output":
-                ioType = IOType.OUTPUT;
-                break;
-            default:
-                CraftTweakerAPI.logError("Invalid ioType " + ioTypeStr + "!");
-                return;
-        }
-        if (operation > 1 || operation < 0) {
-            CraftTweakerAPI.logError("Invalid operation " + operation + "!");
-            return;
-        }
-
-        context.addModifier(new RecipeModifier(target, ioType, value, operation, affectChance));
     }
 
     @Override
@@ -347,9 +378,17 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         return this;
     }
 
+    public void flushContextModifier() {
+        if (context != null) {
+            this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
+            for (RecipeModifier modifier : customModifiers.values()) {
+                this.context.addModifier(modifier);
+            }
+        }
+    }
+
     private IOInventory buildInventory() {
-        return new IOInventory(this, new int[0], new int[0])
-                .setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
+        return new IOInventory(this, new int[0], new int[0]).setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
     }
 
     public IOInventory getInventory() {
@@ -395,6 +434,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             craftingStatus = CraftingStatus.MISSING_STRUCTURE;
             structureCheckFailedCount++;
             recipeResearchRetryCount = 0;
+
+            customData = new NBTTagCompound();
+            customModifiers.clear();
         }
         foundMachine = null;
         foundPattern = null;
@@ -673,6 +715,17 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                         }
                     }
                 }
+
+                if (compound.hasKey("customData")) {
+                    this.customData = compound.getCompoundTag("customData");
+                }
+                if (compound.hasKey("customModifier")) {
+                    NBTTagList tagList = compound.getTagList("customModifier", Constants.NBT.TAG_COMPOUND);
+                    for (int i = tagList.tagCount(); i > 0; i--) {
+                        NBTTagCompound modifierTag = tagList.getCompoundTagAt(i);
+                        this.customModifiers.put(modifierTag.getString("key"), RecipeModifier.deserialize(modifierTag.getCompoundTag("modifier")));
+                    }
+                }
             }
         } else {
             resetMachine(false);
@@ -711,6 +764,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 listModifierOffsets.appendTag(tag);
             }
             compound.setTag("modifierOffsets", listModifierOffsets);
+
+            compound.setTag("customData", customData);
+            NBTTagList tagList = new NBTTagList();
+            customModifiers.forEach((key, modifier) -> {
+                NBTTagCompound modifierTag = new NBTTagCompound();
+                modifierTag.setString("key", key);
+                modifierTag.setTag("modifier", modifier.serialize());
+                tagList.appendTag(modifierTag);
+            });
         }
         if (this.activeRecipe != null) {
             compound.setTag("activeRecipe", this.activeRecipe.serialize());

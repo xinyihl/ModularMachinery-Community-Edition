@@ -112,7 +112,7 @@ public class RecipeLoader {
         MachineRecipe mr = new MachineRecipe(recipe.getFilePath(),
                 recipe.getRecipeRegistryName(), recipe.getAssociatedMachineName(),
                 recipe.getTotalProcessingTickTime(), recipe.getPriority(), recipe.voidPerTickFailure(),
-                recipe.getRecipeEventHandlers());
+                recipe.getRecipeEventHandlers(), recipe.getTooltipList());
         recipe.getComponents().forEach(mr::addRequirement);
         return mr;
     }

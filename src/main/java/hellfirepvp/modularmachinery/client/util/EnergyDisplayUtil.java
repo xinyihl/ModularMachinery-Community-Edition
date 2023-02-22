@@ -24,7 +24,7 @@ public class EnergyDisplayUtil {
     public static boolean displayIC2EUTooltip = true;
     public static boolean displayGTEUTooltip = true;
 
-    //Available: FE, IC2_EU, GT_EU
+    //Available: FE, RF, IC2_EU, GT_EU
     public static EnergyType type = EnergyType.FE;
 
     public static void loadFromConfig(Configuration cfg) {
@@ -32,12 +32,13 @@ public class EnergyDisplayUtil {
         displayIC2EUTooltip = cfg.getBoolean("IC2_EU_Tooltip", "display.energy", displayIC2EUTooltip, "Set to true, if IC2's energy EU should be displayed in the tooltip of the energy hatch. Will only have effect if IC2 is installed.");
         displayGTEUTooltip = cfg.getBoolean("GT_EU_Tooltip", "display.energy", displayGTEUTooltip, "Set to true, if GT's energy EU should be displayed in the tooltip of the energy hatch. Will only have effect if GregTech (community edition) is installed.");
 
-        type = EnergyType.getType(cfg.getString("Display_Energy_Type", "display.energy", type.name(), "Available options: 'FE', 'IC2_EU', 'GT_EU' - Default: FE - Set this to one of those 3 types to have GUI, recipe preview and energy be displayed in that type of energy in ALL ModularMachinery things."));
+        type = EnergyType.getType(cfg.getString("Display_Energy_Type", "display.energy", type.name(), "Available options: 'FE', 'RF', 'IC2_EU', 'GT_EU' - Default: FE - Set this to one of those 4 types to have GUI, recipe preview and energy be displayed in that type of energy in ALL ModularMachinery things."));
     }
 
     public enum EnergyType {
 
         FE(1),
+        RF(1),
         IC2_EU(0.25F),
         GT_EU(0.25F);
 

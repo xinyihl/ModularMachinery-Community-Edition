@@ -63,7 +63,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             List<String> out = fr.listFormattedStringToWidth(drawnStop, MathHelper.floor(135 * (1 / scale)));
             for (String draw : out) {
                 offsetY += 10;
-                fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
+                fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
                 offsetY += 10;
             }
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -76,14 +76,14 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         if (machine != null) {
             drawnHead = I18n.format("gui.controller.blueprint", "");
             List<String> out = fr.listFormattedStringToWidth(machine.getLocalizedName(), MathHelper.floor(135 * (1 / scale)));
-            fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
             for (String draw : out) {
                 offsetY += 10;
-                fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
+                fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
         } else {
             drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
-            fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;
 
@@ -92,32 +92,32 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         if (found != null) {
             drawnHead = I18n.format("gui.controller.structure", "");
             List<String> out = fr.listFormattedStringToWidth(found.getLocalizedName(), MathHelper.floor(135 * (1 / scale)));
-            fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
             for (String draw : out) {
                 offsetY += 10;
-                fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
+                fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));
-            fr.drawString(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;
 
         String status = I18n.format("gui.controller.status");
-        fr.drawString(status, offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(status, offsetX, offsetY, 0xFFFFFF);
         String statusKey = controller.getCraftingStatus().getUnlocMessage();
 
         List<String> out = fr.listFormattedStringToWidth(I18n.format(statusKey), MathHelper.floor(135 * (1 / scale)));
         for (String draw : out) {
             offsetY += 10;
-            fr.drawString(draw, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;
         if (controller.hasActiveRecipe()) {
             ActiveMachineRecipe activeRecipe = controller.getActiveRecipe();
             int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
             String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
-            fr.drawString(progressStr, offsetX, offsetY, 0xFFFFFF);
+            fr.drawStringWithShadow(progressStr, offsetX, offsetY, 0xFFFFFF);
         }
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

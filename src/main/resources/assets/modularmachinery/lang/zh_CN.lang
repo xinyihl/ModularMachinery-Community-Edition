@@ -31,7 +31,6 @@ gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 
 top.recipe.progress=进度
-top.recipe.progress.second=秒
 top.machine.working=工作中
 top.machine.structure.found=结构已形成
 top.machine.structure.none=结构不完整
@@ -69,6 +68,8 @@ message.structurebuild.fail=机器配置保存失败！请查阅日志文件获�
 tooltip.machinery.empty=空
 
 tooltip.machinery.ingredient_array_input=接受以下输入（仅消耗其中一种）：
+tooltip.machinery.catalyst=§a作为催化剂输入（可选输入）。
+tooltip.machinery.catalyst.effect=催化剂效果：
 
 tooltip.machinery.fuel=接受任意燃料。
 tooltip.machinery.fuel.item=燃烧时间：%s
@@ -78,7 +79,8 @@ tooltip.machinery.fuel.in.total=%s tick。
 tooltip.machinery.blueprint.required=需要蓝图
 tooltip.machinery.blueprint.upgrades=升级
 
-tooltip.machinery.duration=加工时间：%s tick
+tooltip.machinery.duration.seconds=加工时间：%.1f 秒
+tooltip.machinery.duration.tick=（%s Tick）
 
 tooltip.machinery.chance.in=有 %s 概率被消耗
 tooltip.machinery.chance.out=有 %s 概率产出
@@ -86,15 +88,16 @@ tooltip.machinery.chance.in.never=不被消耗
 tooltip.machinery.chance.out.never=不产出
 
 tooltip.machinery.energy.in=能量消耗：
-tooltip.machinery.energy.in.tick=平均：%s FE/t
-tooltip.machinery.energy.in.total=总计：%s FE
 tooltip.machinery.energy.out=能量产出：
-tooltip.machinery.energy.out.tick=平均：%s FE/t
-tooltip.machinery.energy.out.total=总计：%s FE
+tooltip.machinery.energy.tick=%s %s/t
+tooltip.machinery.energy.total=总计：%s %s
 
 tooltip.energy.type.fe=FE
+tooltip.energy.type.rf=RF
 tooltip.energy.type.ic2_eu=EU
 tooltip.energy.type.gt_eu=EU
+
+tooltip.fluid_pertick=每 Tick 消耗：%smB
 
 tooltip.constructtool.creative=创造模式用机械结构到 JSON 转换工具
 

@@ -28,7 +28,6 @@ gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 
 top.recipe.progress=Progress
-top.recipe.progress.second=Sec
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
 top.machine.structure.none=Missing structure
@@ -66,6 +65,8 @@ message.structurebuild.fail=Failed to save the machine to a file! Check the log 
 tooltip.machinery.empty=Empty
 
 tooltip.machinery.ingredient_array_input=Accepts the following inputs (only one of them is consumed):
+tooltip.machinery.catalyst=§aAs catalyst input. (optional input)
+tooltip.machinery.catalyst.effect=Catalytic effect:
 
 tooltip.machinery.fuel=Accepts any fuel.
 tooltip.machinery.fuel.item=BurnTime: %s
@@ -75,7 +76,8 @@ tooltip.machinery.fuel.in.total=%s ticks.
 tooltip.machinery.blueprint.required=Requires Blueprint
 tooltip.machinery.blueprint.upgrades=Upgrades
 
-tooltip.machinery.duration=Processing Time: %s ticks
+tooltip.machinery.duration.seconds=Processing Time：%.1f Seconds
+tooltip.machinery.duration.tick=(%s Tick)
 
 tooltip.machinery.chance.in=Consumption Chance: %s
 tooltip.machinery.chance.out=Production Chance: %s
@@ -83,15 +85,16 @@ tooltip.machinery.chance.in.never=Doesn't get consumed.
 tooltip.machinery.chance.out.never=Is never produced.
 
 tooltip.machinery.energy.in=Required Energy:
-tooltip.machinery.energy.in.tick=Per Tick: %s %s/t
-tooltip.machinery.energy.in.total=Total: %s %s
 tooltip.machinery.energy.out=Produced Energy:
-tooltip.machinery.energy.out.tick=Per Tick: %s %s/t
-tooltip.machinery.energy.out.total=Total: %s %s
+tooltip.machinery.energy.tick=%s %s/t
+tooltip.machinery.energy.total=Total：%s %s
 
 tooltip.energy.type.fe=FE
+tooltip.energy.type.rf=RF
 tooltip.energy.type.ic2_eu=EU
 tooltip.energy.type.gt_eu=EU
+
+tooltip.fluid_pertick=Consumption per Tick：%smB
 
 tooltip.constructtool.creative=Creative Structure-To-JSON Tool
 

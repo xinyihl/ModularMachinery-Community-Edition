@@ -67,6 +67,10 @@ public class ActiveMachineRecipe {
 
     @Nonnull
     public TileMachineController.CraftingStatus tick(TileMachineController ctrl, RecipeCraftingContext context) {
+        totalTick = Math.round(RecipeModifier.applyModifiers(
+                context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
+                RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
+
         //Skip per-tick logic until controller can finish the recipe
         if (this.isCompleted()) {
             return TileMachineController.CraftingStatus.working();

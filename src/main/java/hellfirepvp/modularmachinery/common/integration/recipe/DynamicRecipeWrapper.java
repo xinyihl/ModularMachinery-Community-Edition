@@ -63,7 +63,9 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
         CategoryDynamicRecipe recipeCategory = ModIntegrationJEI.getCategory(recipe.getOwningMachine());
         if (recipeCategory != null) {
             if (recipeCategory.rectangleProcessArrow.contains(mouseX, mouseY)) {
-                tooltips.add(I18n.format("tooltip.machinery.duration", recipe.getRecipeTotalTickTime()));
+                tooltips.add(
+                        I18n.format("tooltip.machinery.duration.seconds", (float) recipe.getRecipeTotalTickTime() / 20) +
+                        I18n.format("tooltip.machinery.duration.tick", recipe.getRecipeTotalTickTime()));
             }
         }
 
@@ -79,7 +81,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
         int tick = (int) (ClientScheduler.getClientTick() % totalDur);
         int pxPart = MathHelper.ceil(((float) tick + Animation.getPartialTickTime()) / ((float) totalDur) * RecipeLayoutHelper.PART_PROCESS_ARROW_ACTIVE.xSize);
         ModIntegrationJEI.jeiHelpers.getGuiHelper()
-                .createDrawable(RecipeLayoutHelper.LOCATION_JEI_ICONS, 84, 15, pxPart, RecipeLayoutHelper.PART_PROCESS_ARROW_ACTIVE.zSize)
+                .createDrawable(RecipeLayoutHelper.LOCATION_JEI_ICONS, 72, 15, pxPart, RecipeLayoutHelper.PART_PROCESS_ARROW_ACTIVE.zSize)
                 .draw(minecraft, recipeCategory.rectangleProcessArrow.x, recipeCategory.rectangleProcessArrow.y);
 
         int offsetY = recipeCategory.realHeight;
@@ -95,16 +97,20 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             }
         }
 
+        tooltips.add(recipe.getTooltipList());
+
         for (List<String> tTip : tooltips) {
             offsetY -= lineHeight * tTip.size();
             offsetY -= splitHeight;
         }
 
+        offsetY += splitHeight;
+
         FontRenderer fr = minecraft.fontRenderer;
         GlStateManager.color(1, 1, 1, 1);
         for (List<String> tTip : tooltips) {
             for (String tip : tTip) {
-                fr.drawString(tip, 8, offsetY, 0x222222);
+                fr.drawStringWithShadow(tip, 8, offsetY, 0xFFFFFF);
                 offsetY += lineHeight;
             }
             offsetY += splitHeight;

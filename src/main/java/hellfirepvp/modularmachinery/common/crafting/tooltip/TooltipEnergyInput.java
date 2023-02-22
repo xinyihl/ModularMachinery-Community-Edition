@@ -54,11 +54,10 @@ public class TooltipEnergyInput extends RequirementTip {
         List<String> tooltip = new ArrayList<>(3);
         if (totalEnergyIn > 0) {
             String energyType = I18n.format(EnergyDisplayUtil.type.getUnlocalizedFormat());
-            long energyOut = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyIn);
+            long energyIn = EnergyDisplayUtil.type.formatEnergyForDisplay(totalEnergyIn);
 
-            tooltip.add(I18n.format("tooltip.machinery.energy.in"));
-            tooltip.add(I18n.format("tooltip.machinery.energy.out.tick", MiscUtils.formatNumber(energyOut), energyType));
-            tooltip.add(I18n.format("tooltip.machinery.energy.out.total", MiscUtils.formatNumber(energyOut * recipe.getRecipeTotalTickTime()), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.in") + I18n.format("tooltip.machinery.energy.tick", MiscUtils.formatNumber(energyIn), energyType));
+            tooltip.add(I18n.format("tooltip.machinery.energy.total", MiscUtils.formatNumber(energyIn * recipe.getRecipeTotalTickTime()), energyType));
         }
         return tooltip;
     }

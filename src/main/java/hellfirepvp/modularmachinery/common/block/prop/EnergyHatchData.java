@@ -76,7 +76,7 @@ public enum EnergyHatchData implements IStringSerializable {
             size.gtAmperage = MathHelper.clamp(size.gtAmperage, 1, 16);
         }
 
-        enableDEIntegration = cfg.getBoolean("enable-de-energy-core-integration", "energyhatch", true,
+        enableDEIntegration = cfg.getBoolean("enable-de-integration", "energyhatch", true,
                 "When enabled, EnergyHatch can be used as an energy tower for the Draconic Evolution energy core and can automatically output energy at a rate that depends on the maximum rate in the configuration. Available only when Draconic Evolution is installed.");
         searchRange = cfg.getInt("energy-core-search-range", "energyhatch", 16, 1, 64,
                 "How many energy cores within a radius does EnergyHatch look for?");

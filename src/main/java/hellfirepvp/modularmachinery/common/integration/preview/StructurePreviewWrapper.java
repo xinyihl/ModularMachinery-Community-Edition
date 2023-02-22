@@ -256,7 +256,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
 
             GlStateManager.disableDepth();
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.upgrades");
-            minecraft.fontRenderer.drawString(reqBlueprint, 10, 127, 0x444444);
+            minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 10, 127, 0xFFFFFF);
             GlStateManager.enableDepth();
 
             if (mouseX >= 5 && mouseX <= 105 &&
@@ -285,16 +285,17 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
                     }
                 }
 
+
                 RenderingUtils.renderBlueStackTooltip(mouseX, mouseY, descriptionList, minecraft.fontRenderer, Minecraft.getMinecraft().getRenderItem());
             }
         }
 
-        minecraft.fontRenderer.drawString(machine.getLocalizedName(),
+        minecraft.fontRenderer.drawStringWithShadow(machine.getLocalizedName(),
                 4, 0,
                 0x222222);
         if (machine.requiresBlueprint()) {
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
-            minecraft.fontRenderer.drawString(reqBlueprint, 6, 108, 0x222222);
+            minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 6, 108, 0xFFFFFF);
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         Rectangle scissorFrame = new Rectangle(4, 4,
@@ -462,7 +463,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         int width = minecraft.fontRenderer.getStringWidth(String.valueOf(dynamnicContext.getRenderSlice()));
         GlStateManager.pushMatrix();
         GlStateManager.translate(0.5, 0, 0); //Don't ask.
-        minecraft.fontRenderer.drawString(String.valueOf(dynamnicContext.getRenderSlice()), guiLeft + 158 - (width / 2), guiTop + 118, 0x222222);
+        minecraft.fontRenderer.drawStringWithShadow(String.valueOf(dynamnicContext.getRenderSlice()), guiLeft + 158 - (width / 2F), guiTop + 118, 0xFFFFFF);
         if (drawPopoutInfo) {
             ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
             java.util.List<String> out = minecraft.fontRenderer.listFormattedStringToWidth(

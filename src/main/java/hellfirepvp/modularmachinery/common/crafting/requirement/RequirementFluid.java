@@ -44,7 +44,6 @@ import java.util.Optional;
  * Date: 24.02.2018 / 12:28
  */
 
-//TODO Add PerTick Output.
 public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid> implements ComponentRequirement.ChancedRequirement {
 
     public final HybridFluid required;

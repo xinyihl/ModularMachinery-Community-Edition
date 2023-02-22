@@ -160,7 +160,7 @@ public class RenderingUtils {
 
             for (Tuple<ItemStack, String> stackDesc : tooltipData) {
                 if (!stackDesc.getFirst().isEmpty()) {
-                    fr.drawString(stackDesc.getSecond(), pX + 17, pY, strColor.getRGB());
+                    fr.drawStringWithShadow(stackDesc.getSecond(), pX + 17, pY, strColor.getRGB());
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     GlStateManager.pushMatrix();
                     RenderHelper.enableGUIStandardItemLighting();
@@ -170,7 +170,7 @@ public class RenderingUtils {
                 } else if (stackDesc.getSecond().isEmpty()) {
                     pY += 6;
                 } else {
-                    fr.drawString(stackDesc.getSecond(), pX, pY, strColor.getRGB());
+                    fr.drawStringWithShadow(stackDesc.getSecond(), pX, pY, strColor.getRGB());
                     GlStateManager.color(1F, 1F, 1F, 1F);
                     pY += 10;
                 }
@@ -240,7 +240,7 @@ public class RenderingUtils {
             GlStateManager.disableDepth();
             for (int i = 0; i < tooltipData.size(); ++i) {
                 String str = tooltipData.get(i);
-                fontRenderer.drawString(str, pX, pY, strColor.getRGB());
+                fontRenderer.drawStringWithShadow(str, pX, pY, strColor.getRGB());
                 if (i == 0)
                     pY += 2;
                 pY += 10;

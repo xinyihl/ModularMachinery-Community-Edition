@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -116,8 +118,72 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
+    public static boolean consumeFromInventory(IItemHandlerModifiable handler, ItemStack toConsume, boolean simulate, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker);
+        if (contents.isEmpty()) return false;
+
+        int cAmt = toConsume.getCount();
+        for (int slot : contents.keySet()) {
+            ItemStack inSlot = contents.get(slot);
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
+                    continue; //uh... rip. we won't consume 16 buckets at once.
+                }
+                ItemStack stack = ForgeHooks.getContainerItem(inSlot);
+                cAmt--;
+                if (!simulate) {
+                    handler.setStackInSlot(slot, stack.copy());
+                }
+                if (cAmt <= 0) {
+                    break;
+                }
+            }
+            int toRemove = Math.min(cAmt, inSlot.getCount());
+            cAmt -= toRemove;
+            if (!simulate) {
+                handler.setStackInSlot(slot, copyStackWithSize(inSlot, inSlot.getCount() - toRemove));
+            }
+            if (cAmt <= 0) {
+                break;
+            }
+        }
+        return cAmt <= 0;
+    }
+
     public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
+        if (contents.isEmpty()) return false;
+
+        int cAmt = amount;
+        for (int slot : contents.keySet()) {
+            ItemStack inSlot = contents.get(slot);
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
+                    continue; //uh... rip. we won't consume 16 buckets at once.
+                }
+                ItemStack stack = ForgeHooks.getContainerItem(inSlot);
+                cAmt--;
+                if (!simulate) {
+                    handler.setStackInSlot(slot, stack.copy());
+                }
+                if (cAmt <= 0) {
+                    break;
+                }
+            }
+            int toRemove = Math.min(cAmt, inSlot.getCount());
+            cAmt -= toRemove;
+            if (!simulate) {
+                handler.setStackInSlot(slot, copyStackWithSize(inSlot, inSlot.getCount() - toRemove));
+            }
+            if (cAmt <= 0) {
+                break;
+            }
+        }
+        return cAmt <= 0;
+    }
+
+    public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker);
         if (contents.isEmpty()) return false;
 
         int cAmt = amount;
@@ -261,11 +327,37 @@ public class ItemUtils {
         return stacksOut;
     }
 
+    public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        for (int j = 0; j < handler.getSlots(); j++) {
+            ItemStack s = handler.getStackInSlot(j);
+            if (s.isEmpty()) continue;
+            int[] ids = OreDictionary.getOreIDs(s);
+            for (int id : ids) {
+                if (OreDictionary.getOreName(id).equals(oreDict) && nbtChecker.isMatch(CraftTweakerMC.getIItemStack(s))) {
+                    stacksOut.put(j, s.copy());
+                }
+            }
+        }
+        return stacksOut;
+    }
+
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> stacksOut = new HashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
+                stacksOut.put(j, s.copy());
+            }
+        }
+        return stacksOut;
+    }
+
+    public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        for (int j = 0; j < handler.getSlots(); j++) {
+            ItemStack s = handler.getStackInSlot(j);
+            if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(CraftTweakerMC.getIItemStack(s))) {
                 stacksOut.put(j, s.copy());
             }
         }

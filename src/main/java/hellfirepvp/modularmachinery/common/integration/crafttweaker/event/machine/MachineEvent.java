@@ -10,7 +10,7 @@ import stanhebben.zenscript.annotations.ZenGetter;
 public abstract class MachineEvent {
     private final IMachineController controller;
 
-    protected MachineEvent(IMachineController controller) {
+    public MachineEvent(IMachineController controller) {
         this.controller = controller;
     }
 

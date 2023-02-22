@@ -141,10 +141,8 @@ public class GuiScreenBlueprint extends GuiScreen {
             this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
             this.drawTexturedModalRect(guiLeft + 5, guiTop + 124, 0, 145, 100, 15);
 
-            GlStateManager.disableDepth();
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.upgrades");
-            fontRenderer.drawString(reqBlueprint, this.guiLeft + 10, this.guiTop + 127, 0x444444);
-            GlStateManager.enableDepth();
+            fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 127, 0xFFFFFF);
 
             if (mouseX >= guiLeft + 5 && mouseX <= guiLeft + 105 &&
                     mouseY >= guiTop + 124 && mouseY <= guiTop + 139) {
@@ -176,13 +174,11 @@ public class GuiScreenBlueprint extends GuiScreen {
             }
         }
 
-        GlStateManager.disableDepth();
         fontRenderer.drawStringWithShadow(machine.getLocalizedName(), this.guiLeft + 10, this.guiTop + 11, 0xFFFFFFFF);
         if (machine.requiresBlueprint()) {
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
-            fontRenderer.drawString(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0x444444);
+            fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0xFFFFFF);
         }
-        GlStateManager.enableDepth();
 
         scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
         if (!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
@@ -246,27 +242,7 @@ public class GuiScreenBlueprint extends GuiScreen {
                     }
                 }
 
-                List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
-                        ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-                List<Tuple<ItemStack, String>> stacks = new LinkedList<>();
-                boolean first = true;
-                for (String str : tooltip) {
-                    if (first) {
-                        stacks.add(new Tuple<>(stack, str));
-                        first = false;
-                    } else {
-                        stacks.add(new Tuple<>(ItemStack.EMPTY, str));
-                    }
-                }
-
-                GlStateManager.pushMatrix();
-                GlStateManager.translate(mouseX, mouseY, 0);
-                GlStateManager.disableDepth();
-                GlStateManager.disableBlend();
-                RenderingUtils.renderBlueStackTooltip(0, 0, stacks, Minecraft.getMinecraft().fontRenderer, Minecraft.getMinecraft().getRenderItem());
-                GlStateManager.enableBlend();
-                GlStateManager.enableDepth();
-                GlStateManager.popMatrix();
+                renderToolTip(stack, mouseX, mouseY);
                 break;
             }
         }
@@ -346,7 +322,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         int width = fontRenderer.getStringWidth(String.valueOf(renderContext.getRenderSlice()));
-        fontRenderer.drawString(String.valueOf(renderContext.getRenderSlice()), guiLeft + 159 - (width / 2), guiTop + 118, 0x222222);
+        fontRenderer.drawStringWithShadow(String.valueOf(renderContext.getRenderSlice()), guiLeft + 159 - (width / 2), guiTop + 118, 0x222222);
         if (drawPopoutInfo) {
             ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
             List<String> out = fontRenderer.listFormattedStringToWidth(

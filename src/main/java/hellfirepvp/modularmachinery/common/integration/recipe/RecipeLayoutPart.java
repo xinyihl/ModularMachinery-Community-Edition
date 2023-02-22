@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.integration.recipe;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.integration.ingredient.CatalystRenderer;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidRenderer;
 import mezz.jei.api.ingredients.IIngredientRenderer;
@@ -80,12 +81,12 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public int getComponentHeight() {
-            return 63;
+            return 18;
         }
 
         @Override
         public int getComponentWidth() {
-            return 22;
+            return 18;
         }
 
         @Override
@@ -95,17 +96,17 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public int getComponentHorizontalGap() {
-            return 4;
+            return 0;
         }
 
         @Override
         public int getComponentVerticalGap() {
-            return 4;
+            return 0;
         }
 
         @Override
         public int getMaxHorizontalCount() {
-            return 2;
+            return 1;
         }
 
         @Override
@@ -115,17 +116,15 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public boolean canBeScaled() {
-            return true;
+            return false;
         }
 
         @Override
         public IIngredientRenderer<HybridFluid> provideIngredientRenderer() {
             HybridFluidRenderer<HybridFluid> copy = new HybridFluidRenderer<>().
                     copyPrepareFluidRender(
-                            getComponentWidth(),
-                            getComponentHeight(),
-                            1000,
-                            false,
+                            getComponentWidth(), getComponentHeight(),
+                            1, false,
                             RecipeLayoutHelper.PART_TANK_SHELL.drawable);
             if (Mods.MEKANISM.isPresent()) {
                 copy = addGasRenderer(copy);
@@ -146,15 +145,14 @@ public abstract class RecipeLayoutPart<T> {
         @Optional.Method(modid = "mekanism")
         private HybridFluidRenderer<HybridFluid> addGasRenderer(HybridFluidRenderer<HybridFluid> copy) {
             return copy.copyPrepareGasRender(
-                    getComponentWidth(),
-                    getComponentHeight(),
-                    1000,
-                    false,
-                    RecipeLayoutHelper.PART_TANK_SHELL.drawable);
+                    getComponentWidth(), getComponentHeight(),
+                    1, false,
+                    RecipeLayoutHelper.PART_GAS_TANK_SHELL.drawable);
         }
 
         @Override
         public void drawBackground(Minecraft mc) {
+            RecipeLayoutHelper.PART_TANK_SHELL_BACKGROUND.drawable.draw(mc, getOffset().x, getOffset().y);
         }
 
     }
@@ -167,7 +165,7 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public int getComponentWidth() {
-            return 22;
+            return 18;
         }
 
         @Override
@@ -231,6 +229,18 @@ public abstract class RecipeLayoutPart<T> {
             }
         }
 
+    }
+
+    public static class Catalyst extends Item {
+
+        public Catalyst(Point offset) {
+            super(offset);
+        }
+
+        @Override
+        public IIngredientRenderer<ItemStack> provideIngredientRenderer() {
+            return new CatalystRenderer(RecipeLayoutHelper.PART_INVENTORY_CATALYST_CELL.drawable);
+        }
     }
 
     public static class Item extends RecipeLayoutPart<ItemStack> {

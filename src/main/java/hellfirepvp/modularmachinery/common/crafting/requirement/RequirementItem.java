@@ -9,9 +9,12 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import com.google.common.collect.Iterables;
+import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeItem;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifier;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -26,6 +29,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -46,12 +50,11 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public final int oreDictItemAmount;
 
     public final int fuelBurntime;
-
+    public final List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
     public int countIOBuffer = 0;
-
     public NBTTagCompound tag = null;
     public NBTTagCompound previewDisplayTag = null;
-
+    public AdvancedItemNBTChecker nbtChecker = null;
     public float chance = 1F;
 
     public RequirementItem(IOType ioType, ItemStack item) {
@@ -81,6 +84,14 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         this.required = ItemStack.EMPTY;
     }
 
+    public void setNbtChecker(AdvancedItemNBTChecker nbtChecker) {
+        this.nbtChecker = nbtChecker;
+    }
+
+    public void addItemModifier(AdvancedItemModifier itemModifier) {
+        this.itemModifierList.add(itemModifier);
+    }
+
     @Override
     public int getSortingWeight() {
         return PRIORITY_WEIGHT_ITEM;
@@ -104,8 +115,13 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 break;
         }
         item.chance = this.chance;
-        if (this.tag != null) {
+        if (this.nbtChecker != null) {
+            item.nbtChecker = this.nbtChecker;
+        } else if (this.tag != null) {
             item.tag = this.tag.copy();
+        }
+        if (!this.itemModifierList.isEmpty()) {
+            item.itemModifierList.addAll(this.itemModifierList);
         }
         if (this.previewDisplayTag != null) {
             item.previewDisplayTag = this.previewDisplayTag.copy();
@@ -187,8 +203,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ITEM) &&
-                cmp instanceof MachineComponent.ItemBus &&
-                cmp.ioType == actionType;
+               cmp instanceof MachineComponent.ItemBus &&
+               cmp.ioType == actionType;
     }
 
     @Nonnull
@@ -202,13 +218,21 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     ItemStack inReq = this.required.copy();
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false));
                     inReq.setCount(amt);
-                    if (ItemUtils.consumeFromInventory(handler, inReq, true, this.tag)) {
+
+                    boolean isSuccess = (this.nbtChecker != null)
+                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.nbtChecker)
+                            : ItemUtils.consumeFromInventory(handler, inReq, true, this.tag);
+                    if (isSuccess) {
                         return CraftCheck.success();
                     }
                     break;
                 case OREDICT:
                     int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
-                    if (ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag)) {
+
+                    isSuccess = (this.nbtChecker != null)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, nbtChecker)
+                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag);
+                    if (isSuccess) {
                         return CraftCheck.success();
                     }
                     break;
@@ -221,7 +245,6 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
         } else if (actionType == IOType.OUTPUT) {
-
             for (ComponentOutputRestrictor restrictor : restrictions) {
                 if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
                     ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
@@ -235,12 +258,13 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             ItemStack stack = ItemStack.EMPTY;
             if (oreDictName != null) {
                 for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
-                    if (!oreInstance.isEmpty()) {
-                        stack = ItemUtils.copyStackWithSize(oreInstance, this.countIOBuffer);
+                    if (oreInstance.isEmpty()) {
+                        continue;
+                    }
+                    stack = ItemUtils.copyStackWithSize(oreInstance, this.countIOBuffer);
 
-                        if (!stack.isEmpty()) { //Try all options first..
-                            break;
-                        }
+                    if (!stack.isEmpty()) { //Try all options first..
+                        break;
                     }
                 }
 
@@ -273,23 +297,32 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
         if (actionType == IOType.INPUT) {
             switch (this.requirementType) {
-                //If it doesn't consume the item, we only need to see if it's actually there.
                 case ITEMSTACKS:
                     ItemStack stackRequired = this.required.copy();
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false));
                     stackRequired.setCount(amt);
-                    boolean can = ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
+                    if (!itemModifierList.isEmpty()) {
+                        for (AdvancedItemModifier modifier : itemModifierList) {
+                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStack(stackRequired)));
+                        }
+                    }
+
+                    boolean can = (this.nbtChecker != null)
+                            ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.nbtChecker)
+                            : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
                     if (chance.canProduce(productionChance)) {
                         return can;
                     }
-                    return can && ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
+                    return can;
                 case OREDICT:
                     int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
-                    can = ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
+                    can = (this.nbtChecker != null)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker)
+                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
                     if (chance.canProduce(productionChance)) {
                         return can;
                     }
-                    return can && ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
+                    return can;
                 case FUEL:
                     int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
                     can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, true, this.tag) <= 0;
@@ -321,9 +354,16 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             if (stack.isEmpty()) {
                 return CraftCheck.success(); //Can't find anything to output. Guess that's a valid state.
             }
-            if (tag != null) {
-                stack.setTagCompound(tag);
+            if (!itemModifierList.isEmpty()) {
+                for (AdvancedItemModifier modifier : itemModifierList) {
+                    stack = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStack(stack)));
+                }
+            } else {
+                if (tag != null) {
+                    stack.setTagCompound(tag);
+                }
             }
+
             //If we don't produce the item, we only need to see if there would be space for it at all.
             int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
             if (inserted > 0 && chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {

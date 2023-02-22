@@ -9,14 +9,18 @@
 package hellfirepvp.modularmachinery.common.modifier;
 
 import com.google.gson.*;
+import crafttweaker.annotations.ZenRegister;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.IntegrationTypeHelper;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeModifierBuilder;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
@@ -31,6 +35,8 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 30.03.2018 / 10:48
  */
+@ZenRegister
+@ZenClass("mods.modularmachinery.RecipeModifier")
 public class RecipeModifier {
 
     public static final String IO_INPUT = "input";
@@ -52,6 +58,30 @@ public class RecipeModifier {
         this.modifier = modifier;
         this.operation = operation;
         this.chance = affectsChance;
+    }
+
+    public NBTTagCompound serialize() {
+        NBTTagCompound compound = new NBTTagCompound();
+        compound.setString("target", (target == null || target.getRegistryName() == null) ? "" : target.getRegistryName().toString());
+        compound.setInteger("ioTarget", ioTarget == IOType.INPUT ? 0 : 1);
+        compound.setInteger("operation", operation);
+        compound.setFloat("value", modifier);
+        compound.setBoolean("chance", chance);
+
+        return compound;
+    }
+
+    public static RecipeModifier deserialize(NBTTagCompound compound) {
+        if (compound.hasKey("target") && compound.hasKey("ioTarget") && compound.hasKey("operation") && compound.hasKey("value") && compound.hasKey("chance")) {
+            return RecipeModifierBuilder.newBuilder()
+                    .setRequirementType(compound.getString("target"))
+                    .setIOType(compound.getInteger("ioTarget") == 0 ? IO_INPUT : IO_OUTPUT)
+                    .setOperation(compound.getInteger("operation"))
+                    .setValue(compound.getFloat("value"))
+                    .isAffectChance(compound.getBoolean("chance"))
+                    .build();
+        }
+        return null;
     }
 
     public static float applyModifiers(RecipeCraftingContext context, ComponentRequirement<?, ?> in, float value, boolean isChance) {
@@ -77,9 +107,9 @@ public class RecipeModifier {
         float add = 0F;
         float mul = 1F;
         for (RecipeModifier mod : applicable) {
-            if (mod.operation == 0) {
+            if (mod.operation == OPERATION_ADD) {
                 add += mod.modifier;
-            } else if (mod.operation == 1) {
+            } else if (mod.operation == OPERATION_MULTIPLY) {
                 mul *= mod.modifier;
             } else {
                 throw new RuntimeException("Unknown modifier operation: " + mod.operation);

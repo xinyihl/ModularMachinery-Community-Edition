@@ -25,21 +25,27 @@ public class RecipeLayoutHelper {
     static final ResourceLocation LOCATION_JEI_ICONS = new ResourceLocation(ModularMachinery.MODID, "textures/gui/jeirecipeicons.png");
 
     static RecipePart PART_TANK_SHELL;
+    static RecipePart PART_GAS_TANK_SHELL;
+    static RecipePart PART_TANK_SHELL_BACKGROUND;
     static RecipePart PART_ENERGY_BACKGROUND;
     static RecipePart PART_ENERGY_FOREGROUND;
     static RecipePart PART_INVENTORY_CELL;
+    static RecipePart PART_INVENTORY_CATALYST_CELL;
     static RecipePart PART_PROCESS_ARROW;
     static RecipePart PART_PROCESS_ARROW_ACTIVE;
 
     public static void init() {
         if (PART_TANK_SHELL != null) return;
 
-        PART_TANK_SHELL = new RecipePart(LOCATION_JEI_ICONS, 0, 0, 22, 63);
-        PART_ENERGY_FOREGROUND = new RecipePart(LOCATION_JEI_ICONS, 22, 0, 22, 63);
-        PART_ENERGY_BACKGROUND = new RecipePart(LOCATION_JEI_ICONS, 44, 0, 22, 63);
-        PART_INVENTORY_CELL = new RecipePart(LOCATION_JEI_ICONS, 66, 0, 18, 18);
-        PART_PROCESS_ARROW = new RecipePart(LOCATION_JEI_ICONS, 84, 0, 22, 15);
-        PART_PROCESS_ARROW_ACTIVE = new RecipePart(LOCATION_JEI_ICONS, 84, 15, 22, 15);
+        PART_TANK_SHELL              = new RecipePart(LOCATION_JEI_ICONS, 0,  0,  18, 18);
+        PART_GAS_TANK_SHELL          = new RecipePart(LOCATION_JEI_ICONS, 0,  18, 18, 18);
+        PART_TANK_SHELL_BACKGROUND   = new RecipePart(LOCATION_JEI_ICONS, 0,  36, 18, 18);
+        PART_ENERGY_FOREGROUND       = new RecipePart(LOCATION_JEI_ICONS, 18, 0,  18, 54);
+        PART_ENERGY_BACKGROUND       = new RecipePart(LOCATION_JEI_ICONS, 36, 0,  18, 54);
+        PART_INVENTORY_CELL          = new RecipePart(LOCATION_JEI_ICONS, 54, 0,  18, 18);
+        PART_INVENTORY_CATALYST_CELL = new RecipePart(LOCATION_JEI_ICONS, 54, 18, 18, 18);
+        PART_PROCESS_ARROW           = new RecipePart(LOCATION_JEI_ICONS, 72, 0,  22, 15);
+        PART_PROCESS_ARROW_ACTIVE    = new RecipePart(LOCATION_JEI_ICONS, 72, 15, 22, 15);
     }
 
     public static class RecipePart {
