@@ -89,6 +89,14 @@ public interface IMachineController {
     void removeModifier(String key);
 
     /**
+     * 检查某个 RecipeModifier 是否已存在
+     * @param key KEY
+     * @return 存在返回 true，反之 false
+     */
+    @ZenMethod
+    boolean hasModifier(String key);
+
+    /**
      * 覆盖控制器的状态消息
      *
      * @param newInfo 新消息

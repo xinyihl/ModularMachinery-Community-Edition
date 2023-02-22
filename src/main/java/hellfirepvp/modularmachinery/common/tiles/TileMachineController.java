@@ -374,6 +374,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     @Override
+    public boolean hasModifier(String key) {
+        return customModifiers.containsKey(key);
+    }
+
+    @Override
     public void overrideStatusInfo(String newInfo) {
         this.craftingStatus.overrideStatusMessage(newInfo);
     }
@@ -779,6 +784,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 modifierTag.setTag("modifier", modifier.serialize());
                 tagList.appendTag(modifierTag);
             });
+            compound.setTag("customModifier", tagList);
         }
         if (this.activeRecipe != null) {
             compound.setTag("activeRecipe", this.activeRecipe.serialize());
