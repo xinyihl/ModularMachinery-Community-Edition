@@ -8,9 +8,12 @@
 
 package hellfirepvp.modularmachinery.client.gui;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import net.minecraft.client.gui.FontRenderer;
@@ -20,6 +23,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,13 +36,14 @@ import java.util.List;
  */
 public class GuiMachineController extends GuiContainerBase<ContainerController> {
 
-    public static final ResourceLocation TEXTURES_CONTROLLER = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guicontroller.png");
+    public static final ResourceLocation TEXTURES_CONTROLLER = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guicontroller_large.png");
 
     private final TileMachineController controller;
 
     public GuiMachineController(TileMachineController controller, EntityPlayer opening) {
         super(new ContainerController(controller, opening));
         this.controller = controller;
+        this.ySize = 213;
     }
 
     @Override
@@ -96,6 +102,32 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             for (String draw : out) {
                 offsetY += 10;
                 fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
+            }
+            offsetY += 15;
+
+            //Render Extra Info
+            List<IEventHandler<MachineEvent>> handlerList = found.getMachineEventHandlers(ControllerGUIRenderEvent.class);
+            if (handlerList != null) {
+                List<String> extraInfo = new ArrayList<>();
+                for (IEventHandler<MachineEvent> handler : handlerList) {
+                    ControllerGUIRenderEvent event = new ControllerGUIRenderEvent(controller);
+                    handler.handle(event);
+                    String[] info = event.getInfo();
+                    if (info.length > 0) {
+                        extraInfo.addAll(Arrays.asList(info));
+                    }
+                }
+                List<String> waitForDraw = new ArrayList<>();
+                if (!extraInfo.isEmpty()) {
+                    for (String s : extraInfo) {
+                        waitForDraw.addAll(fr.listFormattedStringToWidth(I18n.format(s), MathHelper.floor(135 * (1 / scale))));
+                    }
+                    for (String s : waitForDraw) {
+                        offsetY += 10;
+                        fr.drawStringWithShadow(s, offsetX, offsetY, 0xFFFFFF);
+                    }
+                    offsetY += 15;
+                }
             }
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));

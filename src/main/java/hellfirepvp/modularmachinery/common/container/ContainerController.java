@@ -83,6 +83,18 @@ public class ContainerController extends ContainerBase<TileMachineController> {
         return itemstack;
     }
 
+    @Override
+    protected void addPlayerSlots(EntityPlayer opening) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 9; j++) {
+                addSlotToContainer(new Slot(opening.inventory, j + i * 9 + 9, 8 + j * 18, 131 + i * 18));
+            }
+        }
+        for (int i = 0; i < 9; i++) {
+            addSlotToContainer(new Slot(opening.inventory, i, 8 + i * 18, 189));
+        }
+    }
+
     public static class SlotBlueprint extends SlotItemHandler {
 
         public SlotBlueprint(IItemHandler itemHandler, int index, int xPosition, int yPosition) {

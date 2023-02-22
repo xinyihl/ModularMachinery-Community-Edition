@@ -35,7 +35,7 @@ public abstract class ContainerBase<T extends TileEntity> extends Container {
         return owner;
     }
 
-    private void addPlayerSlots(EntityPlayer opening) {
+    protected void addPlayerSlots(EntityPlayer opening) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
                 addSlotToContainer(new Slot(opening.inventory, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));

@@ -88,5 +88,13 @@ public interface IMachineController {
     @ZenMethod
     void removeModifier(String key);
 
+    /**
+     * 覆盖控制器的状态消息
+     *
+     * @param newInfo 新消息
+     */
+    @ZenSetter("statusMessage")
+    void overrideStatusInfo(String newInfo);
+
     TileMachineController getController();
 }

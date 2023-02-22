@@ -374,6 +374,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     @Override
+    public void overrideStatusInfo(String newInfo) {
+        this.craftingStatus.overrideStatusMessage(newInfo);
+    }
+
+    @Override
     public TileMachineController getController() {
         return this;
     }
@@ -617,6 +622,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
     }
 
+    @Deprecated
     public float getCurrentActiveRecipeProgress(float partial) {
         if (activeRecipe == null) return 0F;
         float tick = activeRecipe.getTick() + partial;
@@ -797,7 +803,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         private static final CraftingStatus MISSING_STRUCTURE = new CraftingStatus(Type.MISSING_STRUCTURE, "");
 
         private final Type status;
-        private final String unlocalizedMessage;
+        private String unlocalizedMessage;
 
         private CraftingStatus(Type status, String unlocalizedMessage) {
             this.status = status;
@@ -824,6 +830,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         public String getUnlocMessage() {
             return !unlocalizedMessage.isEmpty() ? unlocalizedMessage : this.status.getUnlocalizedDescription();
+        }
+
+        public void overrideStatusMessage(String unlocalizedMessage) {
+            this.unlocalizedMessage = unlocalizedMessage;
         }
 
         public boolean isCrafting() {
