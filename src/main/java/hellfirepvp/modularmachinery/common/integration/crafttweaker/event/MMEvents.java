@@ -31,7 +31,7 @@ public class MMEvents {
             if (machine != null) {
                 machine.addMachineEventHandler(MachineStructureFormedEvent.class, function);
             } else {
-                CraftTweakerAPI.logError("Cloud not find machine `" + machineRegistryName + "`!");
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
         });
     }
@@ -43,7 +43,7 @@ public class MMEvents {
             if (machine != null) {
                 machine.addMachineEventHandler(MachineTickEvent.class, function);
             } else {
-                CraftTweakerAPI.logError("Cloud not find machine `" + machineRegistryName + "`!");
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
         });
     }
@@ -56,7 +56,7 @@ public class MMEvents {
             if (machine != null) {
                 machine.addMachineEventHandler(ControllerGUIRenderEvent.class, function);
             } else {
-                CraftTweakerAPI.logError("Cloud not find machine `" + machineRegistryName + "`!");
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
         });
     }
