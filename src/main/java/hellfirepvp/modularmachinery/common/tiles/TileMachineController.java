@@ -155,13 +155,13 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
 
         MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
-
-        //Handle perTick IO and tick progression
-        this.craftingStatus = this.activeRecipe.tick(this, this.context);
-
         if (!onPreTick() && !this.activeRecipe.isCompleted()) {
+            //Handle perTick IO and tick progression
+            this.craftingStatus = this.activeRecipe.tick(this, this.context);
             this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
         } else {
+            //Handle perTick IO and tick progression
+            this.craftingStatus = this.activeRecipe.tick(this, this.context);
             if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
                 this.activeRecipe = null;
             } else if (this.activeRecipe.isCompleted()) {
