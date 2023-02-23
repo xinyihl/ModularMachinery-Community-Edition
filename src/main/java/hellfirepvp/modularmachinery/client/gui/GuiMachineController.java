@@ -118,6 +118,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                 }
                 List<String> waitForDraw = new ArrayList<>();
                 if (!extraInfo.isEmpty()) {
+                    offsetY += 5;
                     for (String s : extraInfo) {
                         waitForDraw.addAll(fr.listFormattedStringToWidth(I18n.format(s), MathHelper.floor(135 * (1 / scale))));
                     }
@@ -126,8 +127,6 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                         fr.drawStringWithShadow(s, offsetX, offsetY, 0xFFFFFF);
                     }
                 }
-            } else {
-                offsetY += 15;
             }
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));

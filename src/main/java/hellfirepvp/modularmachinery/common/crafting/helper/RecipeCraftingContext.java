@@ -44,6 +44,7 @@ public class RecipeCraftingContext {
     private final ControllerCommandSender commandSender;
     private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
     private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
+    private final List<RecipeModifier> permanentModifierList = new ArrayList<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements;
     private int currentCraftingTick = 0;
@@ -273,9 +274,17 @@ public class RecipeCraftingContext {
         this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
     }
 
+    public void addPermanentModifier(RecipeModifier modifier) {
+        this.permanentModifierList.add(modifier);
+        addModifier(modifier);
+    }
+
     public void overrideModifier(Collection<ModifierReplacement> modifiers) {
         this.modifiers.clear();
         for (ModifierReplacement modifier : modifiers) {
+            addModifier(modifier);
+        }
+        for (RecipeModifier modifier : permanentModifierList) {
             addModifier(modifier);
         }
     }

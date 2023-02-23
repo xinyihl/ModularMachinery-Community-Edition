@@ -48,7 +48,7 @@ public class RequirementCatalyst extends RequirementItem {
         CraftCheck craftCheck = super.canStartCrafting(component, context, restrictions);
         if (craftCheck.isSuccess()) {
             for (RecipeModifier modifier : modifierList) {
-                context.addModifier(modifier);
+                context.addPermanentModifier(modifier);
             }
         }
         return CraftCheck.success();

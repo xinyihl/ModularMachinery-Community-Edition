@@ -154,14 +154,19 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             context = createContext(this.activeRecipe);
         }
 
+        CraftingStatus statusTmp = this.craftingStatus;
         MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
-        if (!onPreTick() && !this.activeRecipe.isCompleted()) {
+        if (!onPreTick()) {
             //Handle perTick IO and tick progression
-            this.craftingStatus = this.activeRecipe.tick(this, this.context);
+            this.activeRecipe.tick(this, this.context);
             this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
         } else {
             //Handle perTick IO and tick progression
-            this.craftingStatus = this.activeRecipe.tick(this, this.context);
+            if (statusTmp != this.craftingStatus) {
+                this.activeRecipe.tick(this, this.context);
+            } else {
+                this.craftingStatus = this.activeRecipe.tick(this, this.context);
+            }
             if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
                 this.activeRecipe = null;
             } else if (this.activeRecipe.isCompleted()) {
@@ -201,10 +206,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             for (IEventHandler<RecipeEvent> handler : handlerList) {
                 RecipeCheckEvent event = new RecipeCheckEvent(this);
                 handler.handle(event);
-
                 if (event.isFailure()) {
                     result.overrideError(event.getFailureReason());
-
                     return result;
                 }
             }
@@ -282,10 +285,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
      * <p>机械完成一个配方。</p>
      */
     public void onFinished() {
-        this.context.finishCrafting();
-        this.activeRecipe.reset();
-        this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
-
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeFinishEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
             for (IEventHandler<RecipeEvent> handler : handlerList) {
@@ -294,6 +293,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
         }
 
+        this.context.finishCrafting();
+        this.activeRecipe.reset();
+        this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
         ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryStartRecipe(activeRecipe, null));
     }
 
@@ -415,7 +417,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     private RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        return this.foundMachine.createContext(activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+        RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
+        for (RecipeModifier modifier : customModifiers.values()) {
+            context.addModifier(modifier);
+        }
+        return context;
     }
 
     private void searchAndStartRecipe() {
@@ -785,7 +791,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
             compound.setTag("modifierOffsets", listModifierOffsets);
 
-            compound.setTag("customData", customData);
+            if (customData != null) {
+                compound.setTag("customData", customData);
+            }
             NBTTagList tagList = new NBTTagList();
             customModifiers.forEach((key, modifier) -> {
                 NBTTagCompound modifierTag = new NBTTagCompound();

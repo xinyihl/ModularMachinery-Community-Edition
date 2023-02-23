@@ -47,14 +47,14 @@ public class TaskExecutor {
         serverThread = Thread.currentThread();
 
         switch (event.phase) {
-            case START: {
+            case START:
                 activeActions = preActions;
                 break;
-            }
-            case END: {
+            case END:
                 activeActions = postActions;
                 break;
-            }
+            default:
+                return;
         }
 
         if (activeActions != null) {
@@ -63,7 +63,6 @@ public class TaskExecutor {
                 totalExecuted += executed;
                 executedCount++;
             }
-
             activeActions = null;
         }
     }
@@ -100,6 +99,11 @@ public class TaskExecutor {
         }
 
         totalUsedTime += System.nanoTime() / 1000 - time;
+
+        //Empty Check
+        if (!activeActions.isEmpty()) {
+            executed += executeActions();
+        }
 
         return executed;
     }
