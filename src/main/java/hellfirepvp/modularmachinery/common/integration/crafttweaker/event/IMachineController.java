@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.integration.crafttweaker.event;
 
 import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.block.IBlockState;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
@@ -22,6 +23,14 @@ public interface IMachineController {
      */
     @ZenGetter("world")
     IWorld getIWorld();
+
+    /**
+     * 获取控制器方块。
+     *
+     * @return 方块
+     */
+    @ZenGetter("blockState")
+    IBlockState getIBlockState();
 
     /**
      * 获取控制器所在的坐标

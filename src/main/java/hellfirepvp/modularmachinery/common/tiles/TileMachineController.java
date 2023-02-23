@@ -139,10 +139,13 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return;
         }
 
-        onMachineTick();
+        boolean updateRequired = onMachineTick();
 
         if (this.activeRecipe == null) {
             searchAndStartRecipe();
+            if (updateRequired) {
+                markForUpdate();
+            }
             return;
         }
 
@@ -174,13 +177,14 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     /**
      * <p>机器开始执行逻辑。</p>
      */
-    public void onMachineTick() {
+    public boolean onMachineTick() {
         List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return;
+        if (handlerList == null || handlerList.isEmpty()) return false;
         for (IEventHandler<MachineEvent> handler : handlerList) {
             MachineTickEvent event = new MachineTickEvent(this);
             handler.handle(event);
         }
+        return true;
     }
 
     /**
@@ -319,6 +323,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     @Override
     public IWorld getIWorld() {
         return CraftTweakerMC.getIWorld(getWorld());
+    }
+
+    @Override
+    public crafttweaker.api.block.IBlockState getIBlockState() {
+        return CraftTweakerMC.getBlockState(getWorld().getBlockState(getPos()));
     }
 
     @Override
