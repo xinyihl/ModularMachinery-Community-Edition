@@ -796,10 +796,12 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
             NBTTagList tagList = new NBTTagList();
             customModifiers.forEach((key, modifier) -> {
-                NBTTagCompound modifierTag = new NBTTagCompound();
-                modifierTag.setString("key", key);
-                modifierTag.setTag("modifier", modifier.serialize());
-                tagList.appendTag(modifierTag);
+                if (key != null && modifier != null) {
+                    NBTTagCompound modifierTag = new NBTTagCompound();
+                    modifierTag.setString("key", key);
+                    modifierTag.setTag("modifier", modifier.serialize());
+                    tagList.appendTag(modifierTag);
+                }
             });
             compound.setTag("customModifier", tagList);
         }

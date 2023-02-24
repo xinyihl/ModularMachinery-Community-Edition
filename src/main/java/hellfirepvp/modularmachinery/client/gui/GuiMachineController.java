@@ -120,7 +120,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                 if (!extraInfo.isEmpty()) {
                     offsetY += 5;
                     for (String s : extraInfo) {
-                        waitForDraw.addAll(fr.listFormattedStringToWidth(I18n.format(s), MathHelper.floor(135 * (1 / scale))));
+                        waitForDraw.addAll(fr.listFormattedStringToWidth(s, MathHelper.floor(135 * (1 / scale))));
                     }
                     for (String s : waitForDraw) {
                         offsetY += 10;
