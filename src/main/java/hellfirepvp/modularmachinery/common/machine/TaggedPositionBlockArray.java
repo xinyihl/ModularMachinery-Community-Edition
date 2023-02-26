@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Date: 04.03.2019 / 21:33
  */
 public class TaggedPositionBlockArray extends BlockArray {
+    //TODO 预先构建已翻转的 BlockArray。
 
     private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new ConcurrentHashMap<>();
 
