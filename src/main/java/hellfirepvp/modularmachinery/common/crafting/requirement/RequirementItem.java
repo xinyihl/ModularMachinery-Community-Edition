@@ -307,25 +307,27 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         }
                     }
 
-                    boolean can = (this.nbtChecker != null)
+                    if (chance.canProduce(productionChance)) {
+                        return (this.nbtChecker != null)
+                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.nbtChecker)
+                                : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
+                    }
+                    return (this.nbtChecker != null)
                             ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.nbtChecker)
                             : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
-                    if (chance.canProduce(productionChance)) {
-                        return can;
-                    }
-                    return can;
                 case OREDICT:
                     int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
-                    can = (this.nbtChecker != null)
+                    if (chance.canProduce(productionChance)) {
+                        return (this.nbtChecker != null)
+                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker)
+                                : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
+                    }
+                    return (this.nbtChecker != null)
                             ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, nbtChecker)
                             : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
-                    if (chance.canProduce(productionChance)) {
-                        return can;
-                    }
-                    return can;
                 case FUEL:
                     int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                    can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
+                    boolean can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
                     if (chance.canProduce(productionChance)) {
                         return can;
                     }
