@@ -209,4 +209,4 @@ tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=超级能源输出�
 tile.modularmachinery.blockenergyoutputhatch.ultimate.name=终极能源输出仓
 
 tile.modularmachinery.blocksmartinterface.number.name=智能接口（数值）
-tile.modularmachinery.blocksmartinterface.string.name=智能数字（字符串）
+tile.modularmachinery.blocksmartinterface.string.name=智能接口（字符串）
