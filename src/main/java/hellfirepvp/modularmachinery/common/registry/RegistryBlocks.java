@@ -66,6 +66,8 @@ public class RegistryBlocks {
         prepareItemBlockRegister(energyInputHatch);
         energyOutputHatch = prepareRegister(new BlockEnergyOutputHatch());
         prepareItemBlockRegister(energyOutputHatch);
+        smartInterface = prepareRegister(new BlockSmartInterface());
+        prepareItemBlockRegister(smartInterface);
     }
 
     private static void registerTiles() {

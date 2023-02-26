@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r12-nightly"
+version = "1.12.2-1.11.1-r13-nightly"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -27,9 +27,6 @@ repositories {
     maven {
         url 'https://maven.hellfiredev.net/'
     }
-//    maven {
-//        url 'https://modmaven.dev/'
-//    }
     maven { // TOP
         name 'tterrag maven'
         url "https://maven.tterrag.com/"
@@ -42,42 +39,12 @@ java {
 }
 
 minecraft {
-    // The mappings can be changed at any time and must be in the following format.
-    // Channel:   Version:
-    // official   MCVersion             Official field/method names from Mojang mapping files
-    // parchment  YYYY.MM.DD-MCVersion  Open community-sourced parameter names and javadocs layered on top of official
-    //
-    // You must be aware of the Mojang license when using the 'official' or 'parchment' mappings.
-    // See more information here: https://github.com/MinecraftForge/MCPConfig/blob/master/Mojang.md
-    //
-    // Parchment is an unofficial project maintained by ParchmentMC, separate from MinecraftForge
-    // Additional setup is needed to use their mappings: https://github.com/ParchmentMC/Parchment/wiki/Getting-Started
-    //
-    // Use non-default mappings at your own risk. They may not always work.
-    // Simply re-run your setup task after changing the mappings to update your workspace.
     mappings channel: 'stable', version: '39-1.12'
-
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
-
-    // Default run configurations.
-    // These can be tweaked, removed, or duplicated as needed.
     runs {
         client {
             workingDirectory project.file('run')
-
-            // Recommended logging data for a userdev environment
-            // The markers can be added/remove as needed separated by commas.
-            // "SCAN": For mods scan.
-            // "REGISTRIES": For firing of registry events.
-            // "REGISTRYDUMP": For getting the contents of all registries.
             property 'forge.logging.markers', 'REGISTRIES'
-
-
-            // Recommended logging level for the console
-            // You can set various levels here.
-            // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'debug'
-
 
             mods {
                 moudlarmachinery {
@@ -88,11 +55,8 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-
             property 'forge.logging.markers', 'REGISTRIES'
-
             property 'forge.logging.console.level', 'debug'
-
 
             mods {
                 modularmachinery {
@@ -109,23 +73,40 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
-    implementation(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
+    runtimeOnly(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
+    compileOnly(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
 
-    implementation 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
-    implementation 'curse.maven:zenutil-401178:4394263'
+    runtimeOnly 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
+    compileOnly 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
 
-    implementation fg.deobf("curse.maven:RedstoneFlux-270789:2920436")
-    implementation "curse.maven:CodeChickenLib-242818:2779848"
-    implementation "curse.maven:brandonscore-231382:3051539"
-    implementation "curse.maven:draconicevolution-223565:3051542"
-    implementation "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
+    runtimeOnly 'curse.maven:zenutil-401178:4394263'
+    compileOnly 'curse.maven:zenutil-401178:4394263'
+
+    runtimeOnly "curse.maven:RedstoneFlux-270789:2920436"
+    compileOnly "curse.maven:RedstoneFlux-270789:2920436"
+
+    runtimeOnly "curse.maven:CodeChickenLib-242818:2779848"
+    compileOnly "curse.maven:CodeChickenLib-242818:2779848"
+
+    runtimeOnly "curse.maven:brandonscore-231382:3051539"
+    compileOnly "curse.maven:brandonscore-231382:3051539"
+
+    runtimeOnly "curse.maven:draconicevolution-223565:3051542"
+    compileOnly "curse.maven:draconicevolution-223565:3051542"
+
+    runtimeOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
+    compileOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
     //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
-    implementation "curse.maven:gregtech-293327:3266351"
+    runtimeOnly "curse.maven:gregtech-293327:3266351"
+    compileOnly "curse.maven:gregtech-293327:3266351"
+    runtimeOnly "curse.maven:Mekanism-268560:2835175"
+    compileOnly "curse.maven:Mekanism-268560:2835175"
+    runtimeOnly "curse.maven:industrialcraft-2-242638:3078604"
+    compileOnly "curse.maven:industrialcraft-2-242638:3078604"
+    runtimeOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
+    compileOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
 
-    implementation "curse.maven:Mekanism-268560:2835175"
-    implementation "curse.maven:industrialcraft-2-242638:3078604"
-    implementation "curse.maven:nuclearcraft-overhauled-336895:3862197"
 }
 
 jar {
@@ -144,6 +125,6 @@ jar {
 
 jar.finalizedBy('reobfJar')
 
-//tasks.withType(JavaCompile).configureEach {
-//    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
-//}
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}

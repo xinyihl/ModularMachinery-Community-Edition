@@ -204,3 +204,6 @@ tile.modularmachinery.blockenergyoutputhatch.big.name=Big Energy Output Hatch
 tile.modularmachinery.blockenergyoutputhatch.huge.name=Huge Energy Output Hatch
 tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=Ludicrous Energy Output Hatch
 tile.modularmachinery.blockenergyoutputhatch.ultimate.name=Ultimate Energy Output Hatch
+
+tile.modularmachinery.blocksmartinterface.number.name=Smart Interface (Number)
+tile.modularmachinery.blocksmartinterface.string.name=Smart Interface (String)

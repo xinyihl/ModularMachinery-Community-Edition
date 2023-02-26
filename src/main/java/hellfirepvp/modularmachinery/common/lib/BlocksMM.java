@@ -30,4 +30,6 @@ public class BlocksMM {
     public static BlockEnergyInputHatch energyInputHatch;
     public static BlockEnergyOutputHatch energyOutputHatch;
 
+    public static BlockSmartInterface smartInterface;
+
 }

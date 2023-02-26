@@ -54,6 +54,7 @@ public class TaskExecutor {
                 activeActions = postActions;
                 break;
             default:
+                activeActions = null;
                 return;
         }
 
@@ -63,7 +64,6 @@ public class TaskExecutor {
                 totalExecuted += executed;
                 executedCount++;
             }
-            activeActions = null;
         }
     }
 
