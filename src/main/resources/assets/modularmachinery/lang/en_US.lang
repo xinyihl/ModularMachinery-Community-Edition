@@ -27,6 +27,11 @@ gui.controller.status.no_recipe=No matching recipe found
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 
+gui.smartinterface.title=Smart Data Interface (TotalBound: %s, Current: %s)
+gui.smartinterface.value=Current Value:
+gui.smartinterface.prev=Previous
+gui.smartinterface.next=Next
+
 top.recipe.progress=Progress
 top.machine.working=Processing
 top.machine.structure.found=Structure formed

@@ -25,10 +25,12 @@ public class ComponentTypesMM {
     public static final ResourceLocation KEY_COMPONENT_FLUID = new ResourceLocation(ModularMachinery.MODID, "fluid");
     public static final ResourceLocation KEY_COMPONENT_GAS = new ResourceLocation(ModularMachinery.MODID, "gas");
     public static final ResourceLocation KEY_COMPONENT_ENERGY = new ResourceLocation(ModularMachinery.MODID, "energy");
+    public static final ResourceLocation KEY_COMPONENT_SMART_INTERFACE = new ResourceLocation(ModularMachinery.MODID, "interface_number");
     public static ComponentType COMPONENT_ITEM;
     public static ComponentType COMPONENT_FLUID;
     public static ComponentType COMPONENT_ENERGY;
     public static ComponentType COMPONENT_GAS;
+    public static ComponentType COMPONENT_SMART_INTERFACE;
 
     private ComponentTypesMM() {
     }

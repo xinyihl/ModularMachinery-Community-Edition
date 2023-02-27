@@ -23,6 +23,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.registry.RegistryBlocks;
 import hellfirepvp.modularmachinery.common.registry.RegistryItems;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
@@ -187,6 +188,8 @@ public class ClientProxy extends CommonProxy {
                 return new GuiContainerFluidHatch((TileFluidTank) present, player);
             case ENERGY_INVENTORY:
                 return new GuiContainerEnergyHatch((TileEnergyHatch) present, player);
+            case SMART_INTERFACE:
+                return new GuiContainerSmartInterface((TileSmartInterface) present, player);
             case BLUEPRINT_PREVIEW:
                 ItemStack stack;
                 if (x == 0) {

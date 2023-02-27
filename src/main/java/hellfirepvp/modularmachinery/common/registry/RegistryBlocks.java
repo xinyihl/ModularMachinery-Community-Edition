@@ -81,6 +81,8 @@ public class RegistryBlocks {
         registerTile(TileItemInputBus.class);
         registerTile(TileEnergyInputHatch.class);
         registerTile(TileEnergyOutputHatch.class);
+
+        registerTile(TileSmartInterface.class);
     }
 
     private static void registerBlockModels() {

@@ -32,6 +32,7 @@ import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -56,6 +57,7 @@ public class DynamicMachine {
     private int definedColor = Config.machineColor;
     private boolean requiresBlueprint = false;
     private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
+    private List<Triple<String, String, String>> smartInterfaceDescList = new ArrayList<>();
 
     public DynamicMachine(@Nonnull ResourceLocation registryName) {
         this.registryName = registryName;

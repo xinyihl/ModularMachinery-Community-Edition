@@ -10,10 +10,7 @@ package hellfirepvp.modularmachinery.common.registry;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
-import hellfirepvp.modularmachinery.common.crafting.component.ComponentEnergy;
-import hellfirepvp.modularmachinery.common.crafting.component.ComponentFluid;
-import hellfirepvp.modularmachinery.common.crafting.component.ComponentGas;
-import hellfirepvp.modularmachinery.common.crafting.component.ComponentItem;
+import hellfirepvp.modularmachinery.common.crafting.component.*;
 import net.minecraft.util.ResourceLocation;
 
 import static hellfirepvp.modularmachinery.common.lib.ComponentTypesMM.*;
@@ -35,6 +32,7 @@ public class RegistryComponentTypes {
         COMPONENT_FLUID = register(new ComponentFluid(), KEY_COMPONENT_FLUID);
         COMPONENT_ENERGY = register(new ComponentEnergy(), KEY_COMPONENT_ENERGY);
         COMPONENT_GAS = register(new ComponentGas(), KEY_COMPONENT_GAS);
+        COMPONENT_SMART_INTERFACE = register(new ComponentSmartInterface(), KEY_COMPONENT_SMART_INTERFACE);
     }
 
     private static <T extends ComponentType> T register(T componentType, ResourceLocation registryName) {

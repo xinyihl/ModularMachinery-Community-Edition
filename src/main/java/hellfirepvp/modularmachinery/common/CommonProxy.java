@@ -11,10 +11,7 @@ package hellfirepvp.modularmachinery.common;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.container.ContainerController;
-import hellfirepvp.modularmachinery.common.container.ContainerEnergyHatch;
-import hellfirepvp.modularmachinery.common.container.ContainerFluidHatch;
-import hellfirepvp.modularmachinery.common.container.ContainerItemBus;
+import hellfirepvp.modularmachinery.common.container.*;
 import hellfirepvp.modularmachinery.common.crafting.IntegrationTypeHelper;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistry;
@@ -27,6 +24,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
@@ -139,6 +137,8 @@ public class CommonProxy implements IGuiHandler {
                 return new ContainerFluidHatch((TileFluidTank) present, player);
             case ENERGY_INVENTORY:
                 return new ContainerEnergyHatch((TileEnergyHatch) present, player);
+            case SMART_INTERFACE:
+                return new ContainerSmartInterface((TileSmartInterface) present, player);
             case BLUEPRINT_PREVIEW:
                 break;
         }
@@ -157,6 +157,7 @@ public class CommonProxy implements IGuiHandler {
         BUS_INVENTORY(TileItemBus.class),
         TANK_INVENTORY(TileFluidTank.class),
         ENERGY_INVENTORY(TileEnergyHatch.class),
+        SMART_INTERFACE(TileSmartInterface.class),
         BLUEPRINT_PREVIEW(null);
 
         public final Class<? extends TileEntity> requiredTileEntity;

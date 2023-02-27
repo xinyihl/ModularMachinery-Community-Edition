@@ -30,6 +30,11 @@ gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 
+gui.smartinterface.title=智能数据接口（已绑定：%s，当前：%s）
+gui.smartinterface.value=当前值：
+gui.smartinterface.prev=上一个
+gui.smartinterface.next=下一个
+
 top.recipe.progress=进度
 top.machine.working=工作中
 top.machine.structure.found=结构已形成

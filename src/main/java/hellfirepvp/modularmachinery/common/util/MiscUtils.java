@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.util;
 import com.google.common.collect.Lists;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
@@ -21,6 +22,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static net.minecraft.client.gui.GuiScreen.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -112,6 +115,11 @@ public class MiscUtils {
 
     public static String formatDecimal(float value) {
         return DECIMAL_FORMAT.format(value);
+    }
+
+    public static boolean isTextBoxKey(int i) {
+        return i == Keyboard.KEY_BACK || i == Keyboard.KEY_DELETE || i == Keyboard.KEY_LEFT || i == Keyboard.KEY_RIGHT || i == Keyboard.KEY_END ||
+               i == Keyboard.KEY_HOME || isKeyComboCtrlA(i) || isKeyComboCtrlC(i) || isKeyComboCtrlV(i) || isKeyComboCtrlX(i);
     }
 
 }

@@ -73,38 +73,20 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
-    runtimeOnly(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
-    compileOnly(files("libs/HadEnoughItems_1.12.2-4.24.2.jar"))
-
-    runtimeOnly 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
+    compileOnly files("libs/HadEnoughItems_1.12.2-4.24.2.jar")
     compileOnly 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
-
-    runtimeOnly 'curse.maven:zenutil-401178:4394263'
     compileOnly 'curse.maven:zenutil-401178:4394263'
-
-    runtimeOnly "curse.maven:RedstoneFlux-270789:2920436"
     compileOnly "curse.maven:RedstoneFlux-270789:2920436"
-
-    runtimeOnly "curse.maven:CodeChickenLib-242818:2779848"
     compileOnly "curse.maven:CodeChickenLib-242818:2779848"
-
-    runtimeOnly "curse.maven:brandonscore-231382:3051539"
     compileOnly "curse.maven:brandonscore-231382:3051539"
-
-    runtimeOnly "curse.maven:draconicevolution-223565:3051542"
     compileOnly "curse.maven:draconicevolution-223565:3051542"
-
-    runtimeOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
     compileOnly "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
     //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
-    runtimeOnly "curse.maven:gregtech-293327:3266351"
     compileOnly "curse.maven:gregtech-293327:3266351"
-    runtimeOnly "curse.maven:Mekanism-268560:2835175"
+
     compileOnly "curse.maven:Mekanism-268560:2835175"
-    runtimeOnly "curse.maven:industrialcraft-2-242638:3078604"
     compileOnly "curse.maven:industrialcraft-2-242638:3078604"
-    runtimeOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
     compileOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
 
 }
