@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.command.CommandPerformanceReport;
 import hellfirepvp.modularmachinery.common.command.CommandSyntax;
 import hellfirepvp.modularmachinery.common.network.PktCopyToClipboard;
 import hellfirepvp.modularmachinery.common.network.PktInteractFluidTankGui;
+import hellfirepvp.modularmachinery.common.network.PktSmartInterfaceUpdate;
 import hellfirepvp.modularmachinery.common.network.PktSyncSelection;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -75,6 +76,7 @@ public class ModularMachinery {
         NET_CHANNEL.registerMessage(PktSyncSelection.class, PktSyncSelection.class, 1, Side.CLIENT);
 
         NET_CHANNEL.registerMessage(PktInteractFluidTankGui.class, PktInteractFluidTankGui.class, 2, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktSmartInterfaceUpdate.class, PktSmartInterfaceUpdate.class, 3, Side.SERVER);
 
         proxy.loadModData(event.getModConfigurationDirectory());
 

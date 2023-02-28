@@ -55,13 +55,11 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.CapabilityItemHandler;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
 /**
@@ -79,6 +77,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public static int maxStructureCheckDelay = 100;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
+    private final Map<String, BlockPos> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
@@ -604,39 +603,68 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             resetMachine(false);
             return;
         }
-        if (ticksExisted % currentStructureCheckDelay() == 0) {
-            this.foundComponents.clear();
-            for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
-                BlockPos realPos = getPos().add(potentialPosition);
-                TileEntity te = getWorld().getTileEntity(realPos);
-                if (te instanceof MachineComponentTile) {
-                    ComponentSelectorTag tag = this.foundPattern.getTag(potentialPosition);
-                    MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
-                    if (component != null) {
-                        this.foundComponents.add(new Tuple<>(component, tag));
-                    }
-                }
+        if (ticksExisted % currentStructureCheckDelay() != 0) {
+            return;
+        }
+
+        this.foundComponents.clear();
+        this.foundSmartInterfaces.clear();
+        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
+            BlockPos realPos = getPos().add(potentialPosition);
+            TileEntity te = getWorld().getTileEntity(realPos);
+            if (!(te instanceof MachineComponentTile)) {
+                continue;
             }
 
-            int rotations = 0;
-            EnumFacing rot = EnumFacing.NORTH;
-            while (rot != this.patternRotation) {
-                rot = rot.rotateYCCW();
-                rotations++;
+            ComponentSelectorTag tag = this.foundPattern.getTag(potentialPosition);
+            MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
+            if (component == null) {
+                continue;
             }
 
-            this.foundModifiers.clear();
-            for (Map.Entry<BlockPos, List<ModifierReplacement>> offsetModifiers : this.foundMachine.getModifiers().entrySet()) {
-                BlockPos at = offsetModifiers.getKey();
-                for (int i = 0; i < rotations; i++) {
-                    at = new BlockPos(at.getZ(), at.getY(), -at.getX());
+            this.foundComponents.add(new Tuple<>(component, tag));
+
+            if (!(component instanceof TileSmartInterface.SmartInterfaceProvider)) {
+                continue;
+            }
+
+            TileSmartInterface.SmartInterfaceProvider smartInterface = ((TileSmartInterface.SmartInterfaceProvider) component);
+            Triple<BlockPos, String, Float> data = smartInterface.getMachineData(getPos());
+            Map<String, Triple<String, String, String>> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.keySet());
+
+            if (data != null) {
+                String type = data.getMiddle();
+
+                if (notFoundInterface.containsKey(type)) {
+                    foundSmartInterfaces.put(type, realPos);
                 }
-                BlockPos realAt = this.getPos().add(at);
-                for (ModifierReplacement mod : offsetModifiers.getValue()) {
-                    if (mod.getBlockInformation().matches(this.world, realAt, true)) {
-                        this.foundModifiers.putIfAbsent(offsetModifiers.getKey(), Lists.newArrayList());
-                        this.foundModifiers.get(offsetModifiers.getKey()).add(mod);
-                    }
+            } else {
+                if (!notFoundInterface.isEmpty()) {
+                    Optional<String> type = notFoundInterface.keySet().stream().findFirst();
+                    smartInterface.addMachineData(getPos(), type.get(), 0);
+                    foundSmartInterfaces.put(type.get(), realPos);
+                }
+            }
+        }
+
+        int rotations = 0;
+        EnumFacing rot = EnumFacing.NORTH;
+        while (rot != this.patternRotation) {
+            rot = rot.rotateYCCW();
+            rotations++;
+        }
+
+        this.foundModifiers.clear();
+        for (Map.Entry<BlockPos, List<ModifierReplacement>> offsetModifiers : this.foundMachine.getModifiers().entrySet()) {
+            BlockPos at = offsetModifiers.getKey();
+            for (int i = 0; i < rotations; i++) {
+                at = new BlockPos(at.getZ(), at.getY(), -at.getX());
+            }
+            BlockPos realAt = this.getPos().add(at);
+            for (ModifierReplacement mod : offsetModifiers.getValue()) {
+                if (mod.getBlockInformation().matches(this.world, realAt, true)) {
+                    this.foundModifiers.putIfAbsent(offsetModifiers.getKey(), Lists.newArrayList());
+                    this.foundModifiers.get(offsetModifiers.getKey()).add(mod);
                 }
             }
         }

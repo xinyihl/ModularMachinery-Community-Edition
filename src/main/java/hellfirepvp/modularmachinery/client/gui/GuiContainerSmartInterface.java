@@ -2,6 +2,7 @@ package hellfirepvp.modularmachinery.client.gui;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerSmartInterface;
+import hellfirepvp.modularmachinery.common.network.PktSmartInterfaceUpdate;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.Minecraft;
@@ -13,7 +14,10 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.animation.Animation;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
@@ -124,7 +128,15 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
         }
 
         if (i == Keyboard.KEY_RETURN) {
-            //TODO: Set Value
+            TileSmartInterface.SmartInterfaceProvider provider = smartInterface.provideComponent().getContainerProvider();
+            Triple<BlockPos, String, Float> data = provider.getMachineData(showing);
+            try {
+                Triple<BlockPos, String, Float> newData = new ImmutableTriple<>(data.getLeft(), data.getMiddle(), Float.parseFloat(textField.getText()));
+                ModularMachinery.NET_CHANNEL.sendToServer(new PktSmartInterfaceUpdate(newData));
+            } catch (NumberFormatException ex) {
+                ModularMachinery.log.warn(ex);
+            }
+            return;
         }
 
         if (Character.isDigit(c) || c == '.' || c == 'E' || MiscUtils.isTextBoxKey(i)) {

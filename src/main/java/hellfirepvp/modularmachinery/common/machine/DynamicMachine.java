@@ -53,14 +53,29 @@ public class DynamicMachine {
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
+    private final HashMap<String, Triple<String, String, String>> smartInterfaces = new HashMap<>();
     private String localizedName = null;
     private int definedColor = Config.machineColor;
     private boolean requiresBlueprint = false;
     private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
-    private List<Triple<String, String, String>> smartInterfaceDescList = new ArrayList<>();
 
     public DynamicMachine(@Nonnull ResourceLocation registryName) {
         this.registryName = registryName;
+    }
+
+    public boolean hasSmartInterfaceType(String type) {
+        return smartInterfaces.containsKey(type);
+    }
+
+    public Map<String, Triple<String, String, String>> getFilteredType(Collection<String> ignoredTypes) {
+        Map<String, Triple<String, String, String>> filtered = new HashMap<>();
+        smartInterfaces.forEach((type, data) -> {
+            if (!ignoredTypes.contains(type)) {
+                filtered.put(type, data);
+            }
+        });
+
+        return filtered;
     }
 
     @SuppressWarnings("unchecked")
