@@ -623,7 +623,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
             this.foundComponents.add(new Tuple<>(component, tag));
 
-            if (!(component instanceof TileSmartInterface.SmartInterfaceProvider)) {
+            if (!(component instanceof TileSmartInterface.SmartInterfaceProvider) || foundMachine.smartInterfaceTypesIsEmpty()) {
                 continue;
             }
 
@@ -631,18 +631,23 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             SmartInterfaceData data = smartInterface.getMachineData(getPos());
             Map<String, SmartInterfaceType> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.keySet());
 
-            if (data != null) {
+            if (notFoundInterface.isEmpty()) {
+                Optional<SmartInterfaceType> firstOpt = foundMachine.getFirstSmartInterfaceType();
+                if (firstOpt.isPresent()) {
+                    SmartInterfaceType first = firstOpt.get();
+                    smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), first.getType(), 0);
+                    foundSmartInterfaces.put(first.getType(), realPos);
+                }
+            } else if (data != null) {
                 String type = data.getType();
 
                 if (notFoundInterface.containsKey(type)) {
                     foundSmartInterfaces.put(type, realPos);
                 }
             } else {
-                if (!notFoundInterface.isEmpty()) {
-                    String type = notFoundInterface.keySet().stream().findFirst().get();
-                    smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type, 0);
-                    foundSmartInterfaces.put(type, realPos);
-                }
+                SmartInterfaceType type = notFoundInterface.values().stream().sorted().findFirst().get();
+                smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), 0);
+                foundSmartInterfaces.put(type.getType(), realPos);
             }
         }
 

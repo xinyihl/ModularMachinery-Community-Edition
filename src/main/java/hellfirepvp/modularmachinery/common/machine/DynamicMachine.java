@@ -75,6 +75,14 @@ public class DynamicMachine {
         smartInterfaces.put(type.getType(), type);
     }
 
+    public Optional<SmartInterfaceType> getFirstSmartInterfaceType() {
+        return smartInterfaces.values().stream().sorted().findFirst();
+    }
+
+    public boolean smartInterfaceTypesIsEmpty() {
+        return smartInterfaces.isEmpty();
+    }
+
     public Map<String, SmartInterfaceType> getFilteredType(Collection<String> ignoredTypes) {
         Map<String, SmartInterfaceType> filtered = new HashMap<>();
         smartInterfaces.forEach((type, data) -> {
