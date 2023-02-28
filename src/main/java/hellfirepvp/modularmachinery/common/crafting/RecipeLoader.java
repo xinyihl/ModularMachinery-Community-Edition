@@ -84,6 +84,7 @@ public class RecipeLoader {
             }
         }
         for (PreparedRecipe recipe : preparedRecipes) {
+            recipe.loadNeedAfterInitActions();
             loadedRecipes.add(convertPreparedRecipe(recipe));
         }
         return loadedRecipes;

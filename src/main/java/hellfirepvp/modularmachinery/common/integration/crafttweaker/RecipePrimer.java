@@ -18,6 +18,7 @@ import crafttweaker.api.liquid.ILiquidStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.oredict.IOreDictEntry;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.concurrent.Action;
 import hellfirepvp.modularmachinery.common.crafting.PreparedRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
@@ -27,8 +28,11 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasRegistry;
 import mekanism.api.gas.GasStack;
@@ -57,6 +61,7 @@ public class RecipePrimer implements PreparedRecipe {
     private final boolean doesVoidPerTick;
 
     private final List<ComponentRequirement<?, ?>> components = new LinkedList<>();
+    private final List<Action> needAfterInitActions = new LinkedList<>();
     private final List<String> toolTipList = new ArrayList<>();
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
     private ComponentRequirement<?, ?> lastComponent = null;
@@ -134,6 +139,24 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addRecipeTooltip(String... tooltips) {
         toolTipList.addAll(Arrays.asList(tooltips));
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addSmartInterfaceDataInput(String typeStr, float minValue, float maxValue) {
+        needAfterInitActions.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(machineName);
+            if (machine == null) {
+                CraftTweakerAPI.logError("Could not find machine `" + machineName.toString() + "`!");
+                return;
+            }
+            SmartInterfaceType type = machine.getSmartInterfaceType(typeStr);
+            if (type == null) {
+                CraftTweakerAPI.logError("SmartInterfaceType " + typeStr + " Not Found!");
+                return;
+            }
+            appendComponent(new RequirementInterfaceNumInput(type, minValue, maxValue));
+        });
         return this;
     }
 
@@ -402,7 +425,7 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     //----------------------------------------------------------------------------------------------
-    // Catalysts
+    // Catalyst
     //----------------------------------------------------------------------------------------------
     @ZenMethod
     public RecipePrimer addCatalystInput(IIngredient input, String[] tooltips, RecipeModifierBuilder[] modifiers) {
@@ -577,4 +600,10 @@ public class RecipePrimer implements PreparedRecipe {
         return toolTipList;
     }
 
+    @Override
+    public void loadNeedAfterInitActions() {
+        for (Action needAfterInitAction : needAfterInitActions) {
+            needAfterInitAction.doAction();
+        }
+    }
 }

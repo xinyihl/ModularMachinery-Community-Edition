@@ -2,9 +2,13 @@ package hellfirepvp.modularmachinery.client.gui;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerSmartInterface;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.network.PktSmartInterfaceUpdate;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.FontRenderer;
@@ -14,10 +18,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.animation.Animation;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
@@ -49,24 +50,49 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
         GlStateManager.pushMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         FontRenderer fr = this.fontRenderer;
-
         fr.drawStringWithShadow(I18n.format("gui.smartinterface.title", component.getBoundSize(), showing), offsetX, offsetY, 0xFFFFFF);
         offsetX += 4;
-        offsetY += 2;
+        offsetY += 12;
+
+        if (component.getBoundSize() <= 0) {
+            fr.drawStringWithShadow(I18n.format("gui.smartinterface.notfound"), offsetX, offsetY, 0xFFFFFF);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+            return;
+        }
+        SmartInterfaceData data = component.getMachineData(showing);
+        if (data == null) {
+            fr.drawStringWithShadow(I18n.format("gui.smartinterface.notfound"), offsetX, offsetY, 0xFFFFFF);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+            return;
+        }
+        DynamicMachine machine = MachineRegistry.getRegistry().getMachine(data.getParent());
+        if (machine == null) {
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+            return;
+        }
+        SmartInterfaceType type = machine.getSmartInterfaceType(data.getType());
+        if (type == null) {
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.popMatrix();
+            return;
+        }
+
+        fr.drawStringWithShadow(machine.getLocalizedName(), offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        fr.drawStringWithShadow("Machine Name", offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(type.getHeaderInfo(), offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        //TODO: Draw Custom Info
-        fr.drawStringWithShadow("Info Header", offsetX, offsetY, 0xFFFFFF);
+        String valueInfo = type.getValueInfo().isEmpty()
+                ? String.format(type.getValueInfo(), data.getValue())
+                : I18n.format("gui.smartinterface.value", data.getValue());
+        fr.drawStringWithShadow(valueInfo, offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        fr.drawStringWithShadow(I18n.format("gui.smartinterface.value") + 0, offsetX, offsetY, 0xFFFFFF);
-
-        offsetY += 10;
-        //TODO: Draw Custom Info
-        fr.drawStringWithShadow("Info Footer", offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(type.getFooterInfo(), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
@@ -79,6 +105,10 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
         int i = (this.width - this.xSize) / 2;
         int j = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
+
+        if (smartInterface.provideComponent().getBoundSize() <= 0) {
+            return;
+        }
 
         textField.drawTextBox();
         prev.drawButton(Minecraft.getMinecraft(), mouseX, mouseY, Animation.getPartialTickTime());
@@ -129,9 +159,13 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
 
         if (i == Keyboard.KEY_RETURN) {
             TileSmartInterface.SmartInterfaceProvider provider = smartInterface.provideComponent().getContainerProvider();
-            Triple<BlockPos, String, Float> data = provider.getMachineData(showing);
+            SmartInterfaceData data = provider.getMachineData(showing);
+            if (data == null) {
+                return;
+            }
+
             try {
-                Triple<BlockPos, String, Float> newData = new ImmutableTriple<>(data.getLeft(), data.getMiddle(), Float.parseFloat(textField.getText()));
+                SmartInterfaceData newData = new SmartInterfaceData(data.getPos(), data.getParent(), data.getType(), Float.parseFloat(textField.getText()));
                 ModularMachinery.NET_CHANNEL.sendToServer(new PktSmartInterfaceUpdate(newData));
             } catch (NumberFormatException ex) {
                 ModularMachinery.log.warn(ex);

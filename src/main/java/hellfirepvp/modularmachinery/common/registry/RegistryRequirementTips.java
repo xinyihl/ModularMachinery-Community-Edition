@@ -9,10 +9,7 @@
 package hellfirepvp.modularmachinery.common.registry;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.crafting.tooltip.RequirementTip;
-import hellfirepvp.modularmachinery.common.crafting.tooltip.TooltipEnergyInput;
-import hellfirepvp.modularmachinery.common.crafting.tooltip.TooltipEnergyOutput;
-import hellfirepvp.modularmachinery.common.crafting.tooltip.TooltipFuelInput;
+import hellfirepvp.modularmachinery.common.crafting.tooltip.*;
 import net.minecraft.util.ResourceLocation;
 
 import static hellfirepvp.modularmachinery.common.lib.RequirementTipsMM.*;
@@ -33,6 +30,7 @@ public class RegistryRequirementTips {
         TIP_ENERGY_INPUT = register(new TooltipEnergyInput(), TIP_ENERGY_INPUT_NAME);
         TIP_ENERGY_OUTPUT = register(new TooltipEnergyOutput(), TIP_ENERGY_OUTPUT_NAME);
         TIP_FUEL_INPUT = register(new TooltipFuelInput(), TIP_FUEL_INPUT_NAME);
+        TIP_SMART_INTERFACE_NUMBER_INPUT = register(new TooltipInterfaceNumberInput(), TIP_SMART_INTERFACE_NUMBER_INPUT_NAME);
     }
 
     private static <T extends RequirementTip> T register(T requirementTip, ResourceLocation name) {

@@ -5,41 +5,25 @@ import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
-import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
+import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ITickable;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
-import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.List;
 
-public class TileSmartInterface extends TileColorableMachineComponent implements ITickable, MachineComponentTile {
+public class TileSmartInterface extends TileEntityRestrictedTick implements MachineComponentTile {
     //LEFT = MachinePos, MIDDLE = DataType, RIGHT = InputValue
-    private final ArrayList<Triple<BlockPos, String, Float>> boundData = new ArrayList<>();
+    private final List<SmartInterfaceData> boundData = new ArrayList<>();
     private final SmartInterfaceProvider provider = new SmartInterfaceProvider(this);
-
-    public static NBTTagCompound serializeBoundData(Triple<BlockPos, String, Float> boundData) {
-        NBTTagCompound subData = new NBTTagCompound();
-
-        subData.setLong("pos", boundData.getLeft().toLong());
-        subData.setString("type", boundData.getMiddle());
-        subData.setFloat("numIn", boundData.getRight());
-
-        return subData;
-    }
-
-    public static Triple<BlockPos, String, Float> deserializeBoundData(NBTTagCompound tag) {
-        return new MutableTriple<>(
-                BlockPos.fromLong(tag.getLong("pos")),
-                tag.getString("type"),
-                tag.getFloat("numIn"));
-    }
 
     @Override
     @Nonnull
@@ -48,12 +32,35 @@ public class TileSmartInterface extends TileColorableMachineComponent implements
     }
 
     @Override
-    public void update() {
+    public void doRestrictedTick() {
         World world = getWorld();
         if (world.isRemote) {
             return;
         }
+        if (ticksExisted % 20 != 0) {
+            return;
+        }
+        if (boundData.isEmpty()) {
+            return;
+        }
 
+        //Check Parent Controller Exists
+        int prevDataSize = boundData.size();
+        for (int i = 0; i < boundData.size(); i++) {
+            BlockPos pos = boundData.get(i).getPos();
+            if (!world.isBlockLoaded(pos)) {
+                continue;
+            }
+            TileEntity tileEntity = world.getTileEntity(pos);
+            if (tileEntity == null || tileEntity instanceof TileMachineController) {
+                boundData.remove(i);
+                i--;
+            }
+        }
+
+        if (boundData.size() != prevDataSize) {
+            markForUpdate();
+        }
     }
 
     @Override
@@ -63,23 +70,22 @@ public class TileSmartInterface extends TileColorableMachineComponent implements
             return;
         }
 
-        NBTTagList data = compound.getTagList("boundData", Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < data.tagCount(); i++) {
-            NBTTagCompound subData = data.getCompoundTagAt(i);
-            Triple<BlockPos, String, Float> triple = deserializeBoundData(subData);
-            boundData.add(triple);
+        NBTTagList tagList = compound.getTagList("boundData", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            NBTTagCompound subCompound = tagList.getCompoundTagAt(i);
+            boundData.add(SmartInterfaceData.deserialize(subCompound));
         }
     }
 
     @Override
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
-        NBTTagList data = new NBTTagList();
-        for (Triple<BlockPos, String, Float> boundDatum : boundData) {
-            data.appendTag(serializeBoundData(boundDatum));
+        NBTTagList tagList = new NBTTagList();
+        for (SmartInterfaceData data : boundData) {
+            tagList.appendTag(data.serialize());
         }
-        if (!data.isEmpty()) {
-            compound.setTag("boundData", data);
+        if (!tagList.isEmpty()) {
+            compound.setTag("boundData", tagList);
         }
     }
 
@@ -92,27 +98,27 @@ public class TileSmartInterface extends TileColorableMachineComponent implements
         }
 
         @Nullable
-        public Triple<BlockPos, String, Float> getMachineData(String type) {
-            for (Triple<BlockPos, String, Float> boundDatum : parent.boundData) {
-                if (boundDatum.getMiddle().equals(type)) {
-                    return boundDatum;
+        public SmartInterfaceData getMachineData(String type) {
+            for (SmartInterfaceData data : parent.boundData) {
+                if (data.getType().equals(type)) {
+                    return data;
                 }
             }
             return null;
         }
 
         @Nullable
-        public Triple<BlockPos, String, Float> getMachineData(BlockPos pos) {
-            for (Triple<BlockPos, String, Float> boundDatum : parent.boundData) {
-                if (boundDatum.getLeft().equals(pos)) {
-                    return boundDatum;
+        public SmartInterfaceData getMachineData(BlockPos pos) {
+            for (SmartInterfaceData data : parent.boundData) {
+                if (data.getPos().equals(pos)) {
+                    return data;
                 }
             }
             return null;
         }
 
         @Nullable
-        public Triple<BlockPos, String, Float> getMachineData(int index) {
+        public SmartInterfaceData getMachineData(int index) {
             return parent.boundData.size() >= index ? parent.boundData.get(index) : null;
         }
 
@@ -121,19 +127,19 @@ public class TileSmartInterface extends TileColorableMachineComponent implements
         }
 
         public boolean hasMachineData(BlockPos pos, String type) {
-            Triple<BlockPos, String, Float> data = getMachineData(pos);
+            SmartInterfaceData data = getMachineData(pos);
             if (data == null) {
                 return false;
             }
-            return data.getMiddle().equals(type);
+            return data.getType().equals(type);
         }
 
-        public void addMachineData(BlockPos pos, String type, float defaultValue) {
-            Triple<BlockPos, String, Float> data = getMachineData(pos);
+        public void addMachineData(BlockPos pos, ResourceLocation parent, String type, float defaultValue) {
+            SmartInterfaceData data = getMachineData(pos);
             if (data != null) {
                 return;
             }
-            parent.boundData.add(new MutableTriple<>(pos, type, defaultValue));
+            this.parent.boundData.add(new SmartInterfaceData(pos, parent, type, defaultValue));
         }
 
         public int getBoundSize() {

@@ -34,6 +34,7 @@ public class RegistryRequirementTypes {
         REQUIREMENT_FLUID_PERTICK = register(new RequirementTypeFluidPerTick(), KEY_REQUIREMENT_FLUID_PERTICK);
         REQUIREMENT_ENERGY = register(new RequirementTypeEnergy(), KEY_REQUIREMENT_ENERGY);
         REQUIREMENT_GAS = register(new RequirementTypeGas(), KEY_REQUIREMENT_GAS);
+        REQUIREMENT_INTERFACE_NUMBER_INPUT = register(new RequirementTypeInterfaceNumInput(), KEY_INTERFACE_NUMBER_INPUT);
 
         REQUIREMENT_DURATION = register(new RequirementDuration(), KEY_REQUIREMENT_DURATION);
     }

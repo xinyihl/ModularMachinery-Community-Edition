@@ -2,7 +2,7 @@ package hellfirepvp.modularmachinery.common.block.prop;
 
 import net.minecraft.util.IStringSerializable;
 
-public enum SmartInterfaceType implements IStringSerializable {
+public enum SmartInterfaceTypeEnum implements IStringSerializable {
     NUMBER;
 
     @Override

@@ -38,6 +38,8 @@ import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -55,7 +57,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.CapabilityItemHandler;
-import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -588,10 +589,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             pattern = pattern.rotateYCCW();
             replacements = replacements.rotateYCCW();
         } while (face != EnumFacing.NORTH);
-        this.foundPattern = null;
-        this.patternRotation = null;
-        this.foundMachine = null;
-        this.foundReplacements = null;
+        resetMachine(false);
         return false;
     }
 
@@ -599,6 +597,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
             this.foundComponents.clear();
             this.foundModifiers.clear();
+            this.foundSmartInterfaces.clear();
 
             resetMachine(false);
             return;
@@ -629,20 +628,20 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
 
             TileSmartInterface.SmartInterfaceProvider smartInterface = ((TileSmartInterface.SmartInterfaceProvider) component);
-            Triple<BlockPos, String, Float> data = smartInterface.getMachineData(getPos());
-            Map<String, Triple<String, String, String>> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.keySet());
+            SmartInterfaceData data = smartInterface.getMachineData(getPos());
+            Map<String, SmartInterfaceType> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.keySet());
 
             if (data != null) {
-                String type = data.getMiddle();
+                String type = data.getType();
 
                 if (notFoundInterface.containsKey(type)) {
                     foundSmartInterfaces.put(type, realPos);
                 }
             } else {
                 if (!notFoundInterface.isEmpty()) {
-                    Optional<String> type = notFoundInterface.keySet().stream().findFirst();
-                    smartInterface.addMachineData(getPos(), type.get(), 0);
-                    foundSmartInterfaces.put(type.get(), realPos);
+                    String type = notFoundInterface.keySet().stream().findFirst().get();
+                    smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type, 0);
+                    foundSmartInterfaces.put(type, realPos);
                 }
             }
         }

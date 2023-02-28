@@ -22,8 +22,6 @@ import net.minecraft.util.ResourceLocation;
 public class RequirementTypesMM {
 
     public static final ResourceLocation KEY_REQUIREMENT_ITEM = new ResourceLocation(ModularMachinery.MODID, "item");
-    public static final ResourceLocation KEY_REQUIREMENT_ITEM_PERTICK = new ResourceLocation(ModularMachinery.MODID, "item_pertick");
-    public static final ResourceLocation KEY_REQUIREMENT_CATALYST = new ResourceLocation(ModularMachinery.MODID, "catalyst");
     public static final ResourceLocation KEY_REQUIREMENT_INGREDIENT_ARRAY = new ResourceLocation(ModularMachinery.MODID, "ingredient_array_input");
     public static final ResourceLocation KEY_REQUIREMENT_RANDOM_ITEM_ARRAY = new ResourceLocation(ModularMachinery.MODID, "random_item_array");
     public static final ResourceLocation KEY_REQUIREMENT_FLUID = new ResourceLocation(ModularMachinery.MODID, "fluid");
@@ -33,9 +31,8 @@ public class RequirementTypesMM {
     public static final ResourceLocation KEY_REQUIREMENT_ENERGY = new ResourceLocation(ModularMachinery.MODID, "energy");
     //Helper type as target for duration-type recipe modifiers
     public static final ResourceLocation KEY_REQUIREMENT_DURATION = new ResourceLocation(ModularMachinery.MODID, "duration");
+    public static final ResourceLocation KEY_INTERFACE_NUMBER_INPUT = new ResourceLocation(ModularMachinery.MODID, "interface_number_input");
     public static RequirementTypeItem REQUIREMENT_ITEM;
-    public static RequirementTypeItem REQUIREMENT_ITEM_PERTICK;
-    public static RequirementTypeCatalyst REQUIREMENT_CATALYST;
     public static RequirementTypeIngredientArray REQUIREMENT_INGREDIENT_ARRAY;
     public static RequirementTypeRandomItemArray REQUIREMENT_RANDOM_ITEM_ARRAY;
     public static RequirementTypeFluid REQUIREMENT_FLUID;
@@ -43,6 +40,7 @@ public class RequirementTypesMM {
     public static RequirementTypeEnergy REQUIREMENT_ENERGY;
     public static RequirementTypeGas REQUIREMENT_GAS;
     public static RequirementDuration REQUIREMENT_DURATION;
+    public static RequirementTypeInterfaceNumInput REQUIREMENT_INTERFACE_NUMBER_INPUT;
     private RequirementTypesMM() {
     }
 

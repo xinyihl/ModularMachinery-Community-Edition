@@ -22,6 +22,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.NBTException;
@@ -32,7 +33,6 @@ import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -53,7 +53,7 @@ public class DynamicMachine {
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
-    private final HashMap<String, Triple<String, String, String>> smartInterfaces = new HashMap<>();
+    private final HashMap<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private String localizedName = null;
     private int definedColor = Config.machineColor;
     private boolean requiresBlueprint = false;
@@ -67,8 +67,16 @@ public class DynamicMachine {
         return smartInterfaces.containsKey(type);
     }
 
-    public Map<String, Triple<String, String, String>> getFilteredType(Collection<String> ignoredTypes) {
-        Map<String, Triple<String, String, String>> filtered = new HashMap<>();
+    public SmartInterfaceType getSmartInterfaceType(String type) {
+        return smartInterfaces.get(type);
+    }
+
+    public void addSmartInterfaceType(SmartInterfaceType type) {
+        smartInterfaces.put(type.getType(), type);
+    }
+
+    public Map<String, SmartInterfaceType> getFilteredType(Collection<String> ignoredTypes) {
+        Map<String, SmartInterfaceType> filtered = new HashMap<>();
         smartInterfaces.forEach((type, data) -> {
             if (!ignoredTypes.contains(type)) {
                 filtered.put(type, data);
