@@ -28,7 +28,8 @@ gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 
 gui.smartinterface.title=Smart Data Interface (TotalBound: %s, Current: %s)
-gui.smartinterface.value=Current Value:
+gui.smartinterface.notfound=Not Found Bound Machine.
+gui.smartinterface.value=Current Value: %.0f
 gui.smartinterface.prev=Previous
 gui.smartinterface.next=Next
 
@@ -45,6 +46,7 @@ craftcheck.failure.gas.input=Missing gas input!
 craftcheck.failure.gas.output.space=Not enough space for gas output(s)!
 craftcheck.failure.energy.input=Not enough energy!
 craftcheck.failure.energy.output.space=Energy output hatch are full
+craftcheck.failure.interface.number.notequal=Different values for Smart Data Interface inputs!
 
 component.missing.modularmachinery.energy.output=No Energy Output Hatch found!
 component.missing.modularmachinery.energy.input=No Energy Input Hatch found!
@@ -54,6 +56,7 @@ component.missing.modularmachinery.gas.output=No Fluid Output Hatch found!
 component.missing.modularmachinery.gas.input=No Fluid Input Hatch found!
 component.missing.modularmachinery.item.output=No Item Output found!
 component.missing.modularmachinery.item.input=No Item Input found!
+component.missing.modularmachinery.interface.number=No Smart Data Interface found!
 
 gui.blueprint.popout.info=Sneak to freeze the current preview to be able to preview it in world.
 gui.blueprint.popout.place=Rightclick to place preview; move away from the placed one or open another structure preview (blueprint) to remove the one in-world.
@@ -93,6 +96,10 @@ tooltip.machinery.energy.in=Required Energy:
 tooltip.machinery.energy.out=Produced Energy:
 tooltip.machinery.energy.tick=%s %s/t
 tooltip.machinery.energy.total=Total：%s %s
+
+tooltip.machinery.smartinterface.value=Smart Interface Number Input：%s
+tooltip.machinery.smartinterface.minvalue=Smart Interface Min Number Input：%s
+tooltip.machinery.smartinterface.maxvalue=Smart Interface Max Number Input：%s
 
 tooltip.energy.type.fe=FE
 tooltip.energy.type.rf=RF
@@ -210,5 +217,5 @@ tile.modularmachinery.blockenergyoutputhatch.huge.name=Huge Energy Output Hatch
 tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=Ludicrous Energy Output Hatch
 tile.modularmachinery.blockenergyoutputhatch.ultimate.name=Ultimate Energy Output Hatch
 
-tile.modularmachinery.blocksmartinterface.number.name=Smart Interface (Number)
-tile.modularmachinery.blocksmartinterface.string.name=Smart Interface (String)
+tile.modularmachinery.blocksmartinterface.number.name=Smart Data Interface (Number)
+tile.modularmachinery.blocksmartinterface.string.name=Smart Data Interface (String)

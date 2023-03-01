@@ -3,40 +3,36 @@ package hellfirepvp.modularmachinery.common.network;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.MutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 public class PktSmartInterfaceUpdate implements IMessage, IMessageHandler<PktSmartInterfaceUpdate, IMessage> {
-    private Triple<BlockPos, ResourceLocation, Float> newData = null;
+    private SmartInterfaceData newData = null;
 
     public PktSmartInterfaceUpdate() {
     }
 
-    public PktSmartInterfaceUpdate(BlockPos pos, String machineName, Float data) {
-        this.newData = new ImmutableTriple<>(pos, new ResourceLocation(machineName), data);
+    public PktSmartInterfaceUpdate(SmartInterfaceData newData) {
+        this.newData = newData;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         NBTTagCompound tag = ByteBufUtils.readTag(buf);
         if (tag != null) {
-            newData = TileSmartInterface.deserializeBoundData(tag);
+            newData = SmartInterfaceData.deserialize(tag);
         }
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeTag(buf, TileSmartInterface.serializeBoundData(newData));
+        ByteBufUtils.writeTag(buf, newData.serialize());
     }
 
     @Override
@@ -50,12 +46,12 @@ public class PktSmartInterfaceUpdate implements IMessage, IMessageHandler<PktSma
             return null;
         }
 
-        Triple<BlockPos, ResourceLocation, Float> newData = message.newData;
+        SmartInterfaceData newData = message.newData;
         TileSmartInterface owner = ((ContainerSmartInterface) player.openContainer).getOwner();
         TileSmartInterface.SmartInterfaceProvider provider = owner.provideComponent();
-        MutableTriple<BlockPos, ResourceLocation, Float> machineData = (MutableTriple<BlockPos, ResourceLocation, Float>) provider.getMachineData(newData.getLeft());
+        SmartInterfaceData machineData = provider.getMachineData(newData.getPos());
         if (machineData != null) {
-            machineData.setRight(newData.getRight());
+            machineData.setValue(newData.getValue());
             ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(owner::markForUpdate);
         }
 

@@ -16,13 +16,13 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MMEvents")
 public class MMEvents {
-    public static final List<Action> WAIT_FOR_REGISTER_LIST = new ArrayList<>();
+    public static final List<Action> WAIT_FOR_REGISTER_LIST = new LinkedList<>();
 
     @ZenMethod
     public static void onStructureFormed(String machineRegistryName, IEventHandler<MachineStructureFormedEvent> function) {
@@ -61,7 +61,7 @@ public class MMEvents {
         });
     }
 
-    public static void loadAll() {
+    public static void registryAll() {
         for (Action waitForRegister : WAIT_FOR_REGISTER_LIST) {
             waitForRegister.doAction();
         }

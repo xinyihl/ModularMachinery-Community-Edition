@@ -2,7 +2,7 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.block.prop.SmartInterfaceType;
+import hellfirepvp.modularmachinery.common.block.prop.SmartInterfaceTypeEnum;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import java.util.LinkedList;
 
 public class BlockSmartInterface extends BlockMachineComponent implements BlockCustomName, BlockVariants {
-    protected static final PropertyEnum<SmartInterfaceType> INTERFACE_TYPE = PropertyEnum.create("type", SmartInterfaceType.class);
+    protected static final PropertyEnum<SmartInterfaceTypeEnum> INTERFACE_TYPE = PropertyEnum.create("type", SmartInterfaceTypeEnum.class);
 
     public BlockSmartInterface() {
         super(Material.IRON);
@@ -36,7 +36,7 @@ public class BlockSmartInterface extends BlockMachineComponent implements BlockC
 
     @Override
     public void getSubBlocks(CreativeTabs itemIn, NonNullList<ItemStack> items) {
-        for (SmartInterfaceType size : SmartInterfaceType.values()) {
+        for (SmartInterfaceTypeEnum size : SmartInterfaceTypeEnum.values()) {
             items.add(new ItemStack(this, 1, size.ordinal()));
         }
     }
@@ -69,7 +69,7 @@ public class BlockSmartInterface extends BlockMachineComponent implements BlockC
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(INTERFACE_TYPE, SmartInterfaceType.values()[meta]);
+        return getDefaultState().withProperty(INTERFACE_TYPE, SmartInterfaceTypeEnum.values()[meta]);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class BlockSmartInterface extends BlockMachineComponent implements BlockC
     @Override
     public Iterable<IBlockState> getValidStates() {
         LinkedList<IBlockState> states = new LinkedList<>();
-        for (SmartInterfaceType type : SmartInterfaceType.values()) {
+        for (SmartInterfaceTypeEnum type : SmartInterfaceTypeEnum.values()) {
             states.add(getDefaultState().withProperty(INTERFACE_TYPE, type));
         }
         return states;
