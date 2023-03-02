@@ -51,6 +51,9 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
         }
         for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
             ComponentRequirement.JEIComponent<?> comp = req.provideJEIComponent();
+            if (comp == null) {
+                continue;
+            }
             finalOrderedComponents.get(req.getActionType())
                     .computeIfAbsent(comp.getJEIRequirementClass(), clazz -> new LinkedList<>()).add(req);
         }
@@ -150,9 +153,12 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
         Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> componentMap = new HashMap<>();
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements()) {
             if (req instanceof RequirementEnergy)
-                continue; //Ignore. They're handled differently. I should probably rework this...
+                continue; //TODO: Ignore. They're handled differently. I should probably rework this...
 
             ComponentRequirement.JEIComponent<?> comp = req.provideJEIComponent();
+            if (comp == null) {
+                continue;
+            }
             IIngredientType type = ModIntegrationJEI.ingredientRegistry.getIngredientType(comp.getJEIRequirementClass());
             componentMap.computeIfAbsent(type, t -> new HashMap<>())
                     .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
@@ -164,7 +170,11 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
                 List<ComponentRequirement> components = ioGroup.get(ioType);
                 List<List<Object>> componentObjects = new ArrayList<>(components.size());
                 for (ComponentRequirement req : components) {
-                    componentObjects.add(req.provideJEIComponent().getJEIIORequirements());
+                    ComponentRequirement.JEIComponent jeiComp = req.provideJEIComponent();
+                    if (jeiComp == null) {
+                        continue;
+                    }
+                    componentObjects.add(jeiComp.getJEIIORequirements());
                 }
                 switch (ioType) {
                     case INPUT:

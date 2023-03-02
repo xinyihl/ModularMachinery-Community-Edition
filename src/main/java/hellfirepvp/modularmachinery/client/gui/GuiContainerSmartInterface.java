@@ -18,10 +18,12 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.animation.Animation;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
+import java.util.MissingFormatArgumentException;
 
 public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartInterface> {
     public static final ResourceLocation TEXTURES_SMART_INTERFACE = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guismartinterface.png");
@@ -43,25 +45,21 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         super.drawGuiContainerForegroundLayer(mouseX, mouseY);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+
         TileSmartInterface.SmartInterfaceProvider component = smartInterface.provideComponent();
 
         int offsetX = 4;
         int offsetY = 4;
-        GlStateManager.pushMatrix();
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         FontRenderer fr = this.fontRenderer;
-        fr.drawStringWithShadow(I18n.format("gui.smartinterface.title", component.getBoundSize(), showing), offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(I18n.format("gui.smartinterface.title", component.getBoundSize(), showing + 1), offsetX, offsetY, 0xFFFFFF);
         offsetX += 4;
         offsetY += 12;
 
-        if (component.getBoundSize() <= 0) {
-            fr.drawStringWithShadow(I18n.format("gui.smartinterface.notfound"), offsetX, offsetY, 0xFFFFFF);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GlStateManager.popMatrix();
-            return;
-        }
         SmartInterfaceData data = component.getMachineData(showing);
-        if (data == null) {
+        if (component.getBoundSize() <= 0 || data == null) {
             fr.drawStringWithShadow(I18n.format("gui.smartinterface.notfound"), offsetX, offsetY, 0xFFFFFF);
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             GlStateManager.popMatrix();
@@ -80,19 +78,26 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
             return;
         }
 
-        fr.drawStringWithShadow(machine.getLocalizedName(), offsetX, offsetY, 0xFFFFFF);
+        BlockPos pos = data.getPos();
+        fr.drawStringWithShadow(String.format("%s (%s)", machine.getLocalizedName(), MiscUtils.posToString(pos)),
+                offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        fr.drawStringWithShadow(type.getHeaderInfo(), offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(I18n.format(type.getHeaderInfo()), offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        String valueInfo = type.getValueInfo().isEmpty()
-                ? String.format(type.getValueInfo(), data.getValue())
-                : I18n.format("gui.smartinterface.value", data.getValue());
+        String valueInfo;
+        try {
+            valueInfo = type.getValueInfo().isEmpty()
+                    ? I18n.format("gui.smartinterface.value", data.getValue())
+                    : String.format(type.getValueInfo(), data.getValue());
+        } catch (MissingFormatArgumentException ex) {
+            valueInfo = I18n.format("gui.smartinterface.value", data.getValue());
+        }
         fr.drawStringWithShadow(valueInfo, offsetX, offsetY, 0xFFFFFF);
 
         offsetY += 10;
-        fr.drawStringWithShadow(type.getFooterInfo(), offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(I18n.format(type.getFooterInfo()), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
@@ -130,22 +135,31 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
             return;
         }
 
-        textField.mouseClicked(mouseX, mouseY, mouseButton);
+        boolean clicked = textField.mouseClicked(mouseX, mouseY, mouseButton);
+        if (clicked) {
+            return;
+        }
 
         TileSmartInterface.SmartInterfaceProvider component = smartInterface.provideComponent().getContainerProvider();
         Minecraft minecraft = Minecraft.getMinecraft();
         SoundHandler soundHandler = minecraft.getSoundHandler();
 
+        int boundSize = component.getBoundSize();
         if (prev.mousePressed(minecraft, mouseX, mouseY)) {
-            if (component.getBoundSize() > showing && showing > 1) {
+            if (showing >= 1) {
                 showing--;
+            }
+            if (showing > boundSize) {
+                showing = boundSize - 1;
             }
             prev.playPressSound(soundHandler);
             return;
         }
         if (next.mousePressed(minecraft, mouseX, mouseY)) {
-            if (component.getBoundSize() > showing) {
+            if (boundSize > showing + 1) {
                 showing++;
+            } else {
+                showing = boundSize - 1;
             }
             next.playPressSound(soundHandler);
         }
@@ -167,8 +181,8 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
             try {
                 SmartInterfaceData newData = new SmartInterfaceData(data.getPos(), data.getParent(), data.getType(), Float.parseFloat(textField.getText()));
                 ModularMachinery.NET_CHANNEL.sendToServer(new PktSmartInterfaceUpdate(newData));
-            } catch (NumberFormatException ex) {
-                ModularMachinery.log.warn(ex);
+                textField.setText("");
+            } catch (NumberFormatException ignored) {
             }
             return;
         }
@@ -181,7 +195,7 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
     @Override
     public void initGui() {
         super.initGui();
-        textField = new GuiTextField(0, fontRenderer, this.width / 2, this.height / 2 - 47, 80, 10);
+        textField = new GuiTextField(0, fontRenderer, this.width / 2, this.height / 2 - 48, 80, 10);
         textField.setMaxStringLength(16);
         prev = new GuiButton(1, this.width / 2 - 80, this.height / 2 - 25, 40, 20,
                 I18n.format("gui.smartinterface.prev"));

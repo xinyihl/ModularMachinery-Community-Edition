@@ -1,6 +1,5 @@
 package hellfirepvp.modularmachinery.common.network;
 
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
@@ -52,7 +51,7 @@ public class PktSmartInterfaceUpdate implements IMessage, IMessageHandler<PktSma
         SmartInterfaceData machineData = provider.getMachineData(newData.getPos());
         if (machineData != null) {
             machineData.setValue(newData.getValue());
-            ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(owner::markForUpdate);
+            owner.markForUpdate();
         }
 
         return null;

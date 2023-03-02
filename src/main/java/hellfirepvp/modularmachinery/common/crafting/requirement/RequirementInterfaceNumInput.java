@@ -1,7 +1,6 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
-import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentInterfaceNumberInput;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeInterfaceNumInput;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
@@ -89,7 +88,7 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
             return CraftCheck.failure("component.missing.modularmachinery.interface.number");
         }
         float value = data.getValue();
-        if (minValue >= value && value <= maxValue) {
+        if (value >= minValue && value <= maxValue) {
             return CraftCheck.success();
         }
 
@@ -127,6 +126,6 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
 
     @Override
     public JEIComponent<Float> provideJEIComponent() {
-        return new JEIComponentInterfaceNumberInput(this);
+        return null;
     }
 }

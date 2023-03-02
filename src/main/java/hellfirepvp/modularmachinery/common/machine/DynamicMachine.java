@@ -375,7 +375,7 @@ public class DynamicMachine {
             return machine;
         }
 
-        private void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
+        private static void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
             List<Integer> avX = new ArrayList<>();
             List<Integer> avY = new ArrayList<>();
             List<Integer> avZ = new ArrayList<>();
@@ -392,7 +392,7 @@ public class DynamicMachine {
             }
         }
 
-        private void addDescriptorWithPattern(TaggedPositionBlockArray pattern, BlockArray.BlockInformation information, JsonObject part) throws JsonParseException {
+        private static void addDescriptorWithPattern(TaggedPositionBlockArray pattern, BlockArray.BlockInformation information, JsonObject part) throws JsonParseException {
             List<Integer> avX = new ArrayList<>();
             List<Integer> avY = new ArrayList<>();
             List<Integer> avZ = new ArrayList<>();
@@ -422,7 +422,7 @@ public class DynamicMachine {
             }
         }
 
-        private void addCoordinates(String key, JsonObject part, List<Integer> out) throws JsonParseException {
+        private static void addCoordinates(String key, JsonObject part, List<Integer> out) throws JsonParseException {
             if (!part.has(key)) {
                 out.add(0);
                 return;
@@ -440,7 +440,6 @@ public class DynamicMachine {
                 }
             }
         }
-
     }
 
 }

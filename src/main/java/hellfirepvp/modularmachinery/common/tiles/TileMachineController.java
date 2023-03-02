@@ -78,7 +78,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public static int maxStructureCheckDelay = 100;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
-    private final Map<String, BlockPos> foundSmartInterfaces = new HashMap<>();
+    private final Map<BlockPos, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
@@ -629,25 +629,29 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
             TileSmartInterface.SmartInterfaceProvider smartInterface = ((TileSmartInterface.SmartInterfaceProvider) component);
             SmartInterfaceData data = smartInterface.getMachineData(getPos());
-            Map<String, SmartInterfaceType> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.keySet());
+            Map<String, SmartInterfaceType> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.values());
 
-            if (notFoundInterface.isEmpty()) {
-                Optional<SmartInterfaceType> firstOpt = foundMachine.getFirstSmartInterfaceType();
-                if (firstOpt.isPresent()) {
-                    SmartInterfaceType first = firstOpt.get();
-                    smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), first.getType(), 0);
-                    foundSmartInterfaces.put(first.getType(), realPos);
-                }
-            } else if (data != null) {
+            if (data != null) {
                 String type = data.getType();
 
                 if (notFoundInterface.containsKey(type)) {
-                    foundSmartInterfaces.put(type, realPos);
+                    foundSmartInterfaces.put(realPos, type);
+                } else {
+                    smartInterface.removeMachineData(realPos);
                 }
             } else {
-                SmartInterfaceType type = notFoundInterface.values().stream().sorted().findFirst().get();
-                smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), 0);
-                foundSmartInterfaces.put(type.getType(), realPos);
+                if (notFoundInterface.isEmpty()) {
+                    Optional<SmartInterfaceType> typeOpt = foundMachine.getFirstSmartInterfaceType();
+                    if (typeOpt.isPresent()) {
+                        SmartInterfaceType type = typeOpt.get();
+                        smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), type.getDefaultValue(), true);
+                        foundSmartInterfaces.put(realPos, type.getType());
+                    }
+                } else {
+                    SmartInterfaceType type = notFoundInterface.values().stream().sorted().findFirst().get();
+                    smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), type.getDefaultValue(), true);
+                    foundSmartInterfaces.put(realPos, type.getType());
+                }
             }
         }
 

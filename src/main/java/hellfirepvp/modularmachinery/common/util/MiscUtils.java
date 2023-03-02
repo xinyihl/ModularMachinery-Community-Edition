@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.util;
 import com.google.common.collect.Lists;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nullable;
@@ -120,6 +121,10 @@ public class MiscUtils {
     public static boolean isTextBoxKey(int i) {
         return i == Keyboard.KEY_BACK || i == Keyboard.KEY_DELETE || i == Keyboard.KEY_LEFT || i == Keyboard.KEY_RIGHT || i == Keyboard.KEY_END ||
                i == Keyboard.KEY_HOME || isKeyComboCtrlA(i) || isKeyComboCtrlC(i) || isKeyComboCtrlV(i) || isKeyComboCtrlX(i);
+    }
+
+    public static String posToString(Vec3i pos) {
+        return String.format("X:%s Y:%s Z:%s", pos.getX(), pos.getY(), pos.getZ());
     }
 
 }

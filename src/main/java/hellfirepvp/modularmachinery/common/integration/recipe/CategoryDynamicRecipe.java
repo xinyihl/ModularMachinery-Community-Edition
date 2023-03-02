@@ -75,6 +75,9 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             Map<IOType, Map<Class<?>, Integer>> tempComp = new EnumMap<>(IOType.class);
             for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
                 ComponentRequirement.JEIComponent<?> jeiComp = req.provideJEIComponent();
+                if (jeiComp == null) {
+                    continue;
+                }
                 int amt = tempComp.computeIfAbsent(req.getActionType(), ioType -> new HashMap<>())
                         .computeIfAbsent(jeiComp.getJEIRequirementClass(), clazz -> 0);
                 amt++;
@@ -306,6 +309,9 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                         return;
                     }
                     ComponentRequirement.JEIComponent jeiComp = compList.get(index).provideJEIComponent();
+                    if (jeiComp == null) {
+                        return;
+                    }
                     jeiComp.onJEIHoverTooltip(index, input, ingredient, tooltip);
                 }
             });

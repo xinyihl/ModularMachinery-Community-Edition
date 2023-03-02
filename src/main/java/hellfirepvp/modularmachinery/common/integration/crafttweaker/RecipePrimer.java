@@ -360,7 +360,7 @@ public class RecipePrimer implements PreparedRecipe {
     public RecipePrimer addItemInput(IOreDictEntry oreDict, int amount) {
         requireFuel(IOType.INPUT, oreDict.getName(), amount);
         CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
-                                                 "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
+                                                 "`addItemInput(<ore:%s>, %s)`! Consider using `addItemInput(<ore:%s> * %s)`",
                 oreDict.getName(), amount, oreDict.getName(), amount)
         );
         return this;

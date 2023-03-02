@@ -12,7 +12,6 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -33,8 +32,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
     @Override
     public void doRestrictedTick() {
-        World world = getWorld();
-        if (world.isRemote) {
+        if (getWorld().isRemote) {
             return;
         }
         if (ticksExisted % 20 != 0) {
@@ -48,11 +46,11 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
         int prevDataSize = boundData.size();
         for (int i = 0; i < boundData.size(); i++) {
             BlockPos pos = boundData.get(i).getPos();
-            if (!world.isBlockLoaded(pos)) {
+            if (!getWorld().isBlockLoaded(pos)) {
                 continue;
             }
-            TileEntity tileEntity = world.getTileEntity(pos);
-            if (tileEntity == null || tileEntity instanceof TileMachineController) {
+            TileEntity tileEntity = getWorld().getTileEntity(pos);
+            if (!(tileEntity instanceof TileMachineController)) {
                 boundData.remove(i);
                 i--;
             }
@@ -66,6 +64,8 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        boundData.clear();
+
         if (!compound.hasKey("boundData")) {
             return;
         }
@@ -91,15 +91,17 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
     public static class SmartInterfaceProvider extends MachineComponent<SmartInterfaceProvider> {
         private final TileSmartInterface parent;
+        private final List<SmartInterfaceData> boundData;
 
         public SmartInterfaceProvider(TileSmartInterface parent) {
             super(IOType.INPUT);
             this.parent = parent;
+            this.boundData = parent.boundData;
         }
 
         @Nullable
         public SmartInterfaceData getMachineData(String type) {
-            for (SmartInterfaceData data : parent.boundData) {
+            for (SmartInterfaceData data : boundData) {
                 if (data.getType().equals(type)) {
                     return data;
                 }
@@ -109,7 +111,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
         @Nullable
         public SmartInterfaceData getMachineData(BlockPos pos) {
-            for (SmartInterfaceData data : parent.boundData) {
+            for (SmartInterfaceData data : boundData) {
                 if (data.getPos().equals(pos)) {
                     return data;
                 }
@@ -119,31 +121,35 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
         @Nullable
         public SmartInterfaceData getMachineData(int index) {
-            return parent.boundData.size() >= index ? parent.boundData.get(index) : null;
+            return boundData.size() > index ? boundData.get(index) : null;
         }
 
-        public boolean hasMachineData(BlockPos pos) {
-            return getMachineData(pos) != null;
-        }
-
-        public boolean hasMachineData(BlockPos pos, String type) {
-            SmartInterfaceData data = getMachineData(pos);
-            if (data == null) {
-                return false;
-            }
-            return data.getType().equals(type);
-        }
-
-        public void addMachineData(BlockPos pos, ResourceLocation parent, String type, float defaultValue) {
+        public void addMachineData(BlockPos pos, ResourceLocation parent, String type, float defaultValue, boolean override) {
             SmartInterfaceData data = getMachineData(pos);
             if (data != null) {
-                return;
+                if (override) {
+                    removeMachineData(pos);
+                } else {
+                    return;
+                }
             }
-            this.parent.boundData.add(new SmartInterfaceData(pos, parent, type, defaultValue));
+            this.boundData.add(new SmartInterfaceData(pos, parent, type, defaultValue));
+            this.parent.markForUpdate();
+        }
+
+        public void removeMachineData(BlockPos pos) {
+            for (int i = 0; i < this.boundData.size(); i++) {
+                SmartInterfaceData data = this.boundData.get(i);
+                if (data.getPos().equals(pos)) {
+                    this.boundData.remove(i);
+                    this.parent.markForUpdate();
+                    return;
+                }
+            }
         }
 
         public int getBoundSize() {
-            return parent.boundData.size();
+            return boundData.size();
         }
 
         @Override
