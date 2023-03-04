@@ -803,7 +803,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
                 while (offset != rot) {
                     replacements = replacements.rotateYCCW();
-                    offset = offset.rotateY();
+                    offset = offset.rotateYCCW();
                     pattern = pattern.rotateYCCW(offset);
                 }
                 this.patternRotation = rot;

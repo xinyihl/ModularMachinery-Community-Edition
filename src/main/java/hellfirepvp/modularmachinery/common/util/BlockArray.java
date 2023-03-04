@@ -54,7 +54,7 @@ public class BlockArray {
 
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
     protected final long traitNum;
-    protected final EnumFacing facing;
+    protected EnumFacing facing;
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
@@ -63,9 +63,9 @@ public class BlockArray {
         this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
     }
 
-    public BlockArray(EnumFacing facing) {
+    public BlockArray(long traitNum, EnumFacing facing) {
+        this.traitNum = traitNum;
         this.facing = facing;
-        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
     }
 
     public BlockArray(BlockArray other) {
@@ -223,24 +223,25 @@ public class BlockArray {
     }
 
     public BlockArray rotateYCCW(EnumFacing facing) {
+        if (this.facing == facing) {
+            return this;
+        }
         BlockArray rotated = BlockArrayCache.getBlockArrayCache(traitNum, facing);
         if (rotated != null) {
             return rotated;
         }
 
-        rotated = new BlockArray(this);
-        EnumFacing newFacing = this.facing;
-        while (newFacing != facing) {
+        rotated = this;
+        while (rotated.facing != facing) {
             rotated = rotated.rotateYCCWInternal();
-            newFacing = newFacing.rotateYCCW();
         }
 
-        BlockArrayCache.putBlockArrayCache(traitNum, rotated);
+        BlockArrayCache.addBlockArrayCache(traitNum, rotated);
         return rotated;
     }
 
     private BlockArray rotateYCCWInternal() {
-        BlockArray out = new BlockArray();
+        BlockArray out = new BlockArray(traitNum, facing.rotateYCCW());
         Map<BlockPos, BlockInformation> outPattern = out.pattern;
 
         for (BlockPos pos : pattern.keySet()) {

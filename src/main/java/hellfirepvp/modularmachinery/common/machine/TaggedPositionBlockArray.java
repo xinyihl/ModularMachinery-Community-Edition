@@ -28,9 +28,8 @@ import java.util.Map;
 public class TaggedPositionBlockArray extends BlockArray {
     public TaggedPositionBlockArray() {
     }
-
-    public TaggedPositionBlockArray(BlockArray other) {
-        super(other);
+    public TaggedPositionBlockArray(long traitNum, EnumFacing facing) {
+        super(traitNum, facing);
     }
 
     //TODO 预先构建已翻转的 BlockArray。
@@ -47,24 +46,25 @@ public class TaggedPositionBlockArray extends BlockArray {
 
     @Override
     public TaggedPositionBlockArray rotateYCCW(EnumFacing facing) {
+        if (this.facing == facing) {
+            return this;
+        }
         TaggedPositionBlockArray rotated = BlockArrayCache.getTaggedPositionBlockArrayCache(traitNum, facing);
         if (rotated != null) {
             return rotated;
         }
 
-        rotated = new TaggedPositionBlockArray(this);
-        EnumFacing newFacing = this.facing;
-        while (newFacing != facing) {
+        rotated = this;
+        while (rotated.facing != facing) {
             rotated = rotated.rotateYCCWInternal();
-            newFacing = newFacing.rotateYCCW();
         }
 
-        BlockArrayCache.putTaggedPositionBlockArrayCache(traitNum, rotated);
+        BlockArrayCache.addTaggedPositionBlockArrayCache(traitNum, rotated);
         return rotated;
     }
 
     private TaggedPositionBlockArray rotateYCCWInternal() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray(this);
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum, facing.rotateYCCW());
 
         for (BlockPos pos : pattern.keySet()) {
             out.pattern.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), pattern.get(pos).copyRotateYCCW());

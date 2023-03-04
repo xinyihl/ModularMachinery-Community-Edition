@@ -20,7 +20,7 @@ public class BlockArrayCache {
         return blockArrayEnums.get(facing);
     }
 
-    public static void putBlockArrayCache(long traitNum, BlockArray blockArray) {
+    public static void addBlockArrayCache(long traitNum, BlockArray blockArray) {
         CACHE.putIfAbsent(traitNum, new EnumMap<>(EnumFacing.class));
         EnumMap<EnumFacing, BlockArray> blockArrayEnums = CACHE.get(traitNum);
         if (blockArrayEnums != null) {
@@ -36,7 +36,7 @@ public class BlockArrayCache {
         return blockArrayEnums.get(facing);
     }
 
-    public static void putTaggedPositionBlockArrayCache(long traitNum, TaggedPositionBlockArray blockArray) {
+    public static void addTaggedPositionBlockArrayCache(long traitNum, TaggedPositionBlockArray blockArray) {
         TAGGED_POSITION_CACHE.putIfAbsent(traitNum, new EnumMap<>(EnumFacing.class));
         EnumMap<EnumFacing, TaggedPositionBlockArray> blockArrayEnums = TAGGED_POSITION_CACHE.get(traitNum);
         if (blockArrayEnums != null) {
