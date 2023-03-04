@@ -23,6 +23,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.Tuple;
@@ -40,7 +41,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,10 +53,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BlockArray {
 
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
-    protected Map<BlockPos, BlockInformation> pattern = new ConcurrentHashMap<>();
+    protected final long traitNum;
+    protected final EnumFacing facing;
+    protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
     public BlockArray() {
+        this.facing = EnumFacing.NORTH;
+        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
+    }
+
+    public BlockArray(EnumFacing facing) {
+        this.facing = facing;
+        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
     }
 
     public BlockArray(BlockArray other) {
@@ -64,6 +73,9 @@ public class BlockArray {
         this.min = new Vec3i(other.min.getX(), other.min.getY(), other.min.getZ());
         this.max = new Vec3i(other.max.getX(), other.max.getY(), other.max.getZ());
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+
+        this.facing = other.facing;
+        this.traitNum = other.traitNum;
     }
 
     public BlockArray(BlockArray other, Vec3i offset) {
@@ -73,6 +85,9 @@ public class BlockArray {
         this.min = new Vec3i(offset.getX() + other.min.getX(), offset.getY() + other.min.getY(), offset.getZ() + other.min.getZ());
         this.max = new Vec3i(offset.getX() + other.max.getX(), offset.getY() + other.max.getY(), offset.getZ() + other.max.getZ());
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+
+        this.facing = other.facing;
+        this.traitNum = other.traitNum;
     }
 
     public void addBlock(int x, int y, int z, @Nonnull BlockInformation info) {
@@ -207,18 +222,30 @@ public class BlockArray {
         return null;
     }
 
-    public BlockArray rotateYCCW() {
+    public BlockArray rotateYCCW(EnumFacing facing) {
+        BlockArray rotated = BlockArrayCache.getBlockArrayCache(traitNum, facing);
+        if (rotated != null) {
+            return rotated;
+        }
+
+        rotated = new BlockArray(this);
+        EnumFacing newFacing = this.facing;
+        while (newFacing != facing) {
+            rotated = rotated.rotateYCCWInternal();
+            newFacing = newFacing.rotateYCCW();
+        }
+
+        BlockArrayCache.putBlockArrayCache(traitNum, rotated);
+        return rotated;
+    }
+
+    private BlockArray rotateYCCWInternal() {
         BlockArray out = new BlockArray();
         Map<BlockPos, BlockInformation> outPattern = out.pattern;
 
-        if (pattern.size() > 1000) {
-            pattern.keySet().stream().parallel().forEach(pos ->
-                    outPattern.put(MiscUtils.rotateYCCW(pos), pattern.get(pos).copyRotateYCCW()));
-        } else {
-            for (BlockPos pos : pattern.keySet()) {
-                BlockInformation info = pattern.get(pos);
-                outPattern.put(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
-            }
+        for (BlockPos pos : pattern.keySet()) {
+            BlockInformation info = pattern.get(pos);
+            outPattern.put(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
         }
 
         return out;
@@ -505,5 +532,4 @@ public class BlockArray {
             }
         }
     }
-
 }

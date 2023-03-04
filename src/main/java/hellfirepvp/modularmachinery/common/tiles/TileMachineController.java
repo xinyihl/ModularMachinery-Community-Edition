@@ -130,7 +130,13 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
 
         checkStructure();
-        updateComponents();
+        if (!updateComponents()) {
+            if (craftingStatus != CraftingStatus.CHUNK_UNLOADED) {
+                craftingStatus = CraftingStatus.CHUNK_UNLOADED;
+                markForUpdate();
+            }
+            return;
+        }
 
         if (!isStructureFormed()) {
             if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
@@ -157,12 +163,12 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         CraftingStatus statusTmp = this.craftingStatus;
         MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
+
+        //Handle perTick IO and tick progression
         if (!onPreTick()) {
-            //Handle perTick IO and tick progression
             this.activeRecipe.tick(this, this.context);
             this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
         } else {
-            //Handle perTick IO and tick progression
             if (statusTmp != this.craftingStatus) {
                 this.activeRecipe.tick(this, this.context);
             } else {
@@ -227,7 +233,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.activeRecipe = activeRecipe;
         this.context = context;
 
-        activeRecipe.start(context);
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeStartEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
             for (IEventHandler<RecipeEvent> handler : handlerList) {
@@ -235,6 +240,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 handler.handle(event);
             }
         }
+        activeRecipe.start(context);
 
         markForUpdate();
     }
@@ -253,7 +259,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             handler.handle(event);
 
             if (event.isPreventProgressing()) {
-                craftingStatus = CraftingStatus.failure(event.getPreventReason());
+                craftingStatus = CraftingStatus.working(event.getPreventReason());
                 return false;
             }
         }
@@ -624,24 +630,24 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 return true;
             }
             face = face.rotateYCCW();
-            pattern = pattern.rotateYCCW();
+            pattern = pattern.rotateYCCW(face);
             replacements = replacements.rotateYCCW();
         } while (face != EnumFacing.NORTH);
         resetMachine(false);
         return false;
     }
 
-    private void updateComponents() {
+    private boolean updateComponents() {
         if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
             this.foundComponents.clear();
             this.foundModifiers.clear();
             this.foundSmartInterfaces.clear();
 
             resetMachine(false);
-            return;
+            return true;
         }
         if (ticksExisted % currentStructureCheckDelay() != 0) {
-            return;
+            return true;
         }
 
         this.foundComponents.clear();
@@ -649,6 +655,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
             BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
+            //Is Chunk Loaded? Prevention of unanticipated consumption of something.
+            if (!getWorld().isBlockLoaded(realPos)) {
+                return false;
+            }
             if (!(te instanceof MachineComponentTile)) {
                 continue;
             }
@@ -714,6 +724,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 }
             }
         }
+
+        return true;
     }
 
     @Deprecated
@@ -791,8 +803,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
                 while (offset != rot) {
                     replacements = replacements.rotateYCCW();
-                    pattern = pattern.rotateYCCW();
                     offset = offset.rotateY();
+                    pattern = pattern.rotateYCCW(offset);
                 }
                 this.patternRotation = rot;
                 this.foundPattern = pattern;
@@ -887,6 +899,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public enum Type {
 
         MISSING_STRUCTURE,
+        CHUNK_UNLOADED,
         NO_RECIPE,
         CRAFTING;
 
@@ -900,7 +913,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         private static final CraftingStatus SUCCESS = new CraftingStatus(Type.CRAFTING, "");
         private static final CraftingStatus MISSING_STRUCTURE = new CraftingStatus(Type.MISSING_STRUCTURE, "");
-
+        private static final CraftingStatus CHUNK_UNLOADED = new CraftingStatus(Type.CHUNK_UNLOADED, "");
         private final Type status;
         private String unlocalizedMessage;
 
@@ -911,6 +924,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         public static CraftingStatus working() {
             return SUCCESS;
+        }
+
+        public static CraftingStatus working(String unlocMessage) {
+            return new CraftingStatus(Type.CRAFTING, unlocMessage);
         }
 
         public static CraftingStatus failure(String unlocMessage) {

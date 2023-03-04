@@ -10,11 +10,13 @@ package hellfirepvp.modularmachinery.common.machine;
 
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -24,9 +26,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * Date: 04.03.2019 / 21:33
  */
 public class TaggedPositionBlockArray extends BlockArray {
-    //TODO 预先构建已翻转的 BlockArray。
+    public TaggedPositionBlockArray() {
+    }
 
-    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new ConcurrentHashMap<>();
+    public TaggedPositionBlockArray(BlockArray other) {
+        super(other);
+    }
+
+    //TODO 预先构建已翻转的 BlockArray。
+    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
 
     public void setTag(BlockPos pos, ComponentSelectorTag tag) {
         this.taggedPositions.put(pos, tag);
@@ -38,23 +46,31 @@ public class TaggedPositionBlockArray extends BlockArray {
     }
 
     @Override
-    public TaggedPositionBlockArray rotateYCCW() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray();
-        Map<BlockPos, BlockInformation> outPattern = out.pattern;
-        Map<BlockPos, ComponentSelectorTag> outTaggedPos = out.taggedPositions;
+    public TaggedPositionBlockArray rotateYCCW(EnumFacing facing) {
+        TaggedPositionBlockArray rotated = BlockArrayCache.getTaggedPositionBlockArrayCache(traitNum, facing);
+        if (rotated != null) {
+            return rotated;
+        }
 
-        if (pattern.size() > 1000) {
-            pattern.keySet().stream().parallel().forEach(pos ->
-                    outPattern.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), pattern.get(pos).copyRotateYCCW()));
-            taggedPositions.keySet().stream().parallel().forEach(pos ->
-                    outTaggedPos.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), taggedPositions.get(pos)));
-        } else {
-            for (BlockPos pos : pattern.keySet()) {
-                outPattern.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), pattern.get(pos).copyRotateYCCW());
-            }
-            for (BlockPos pos : taggedPositions.keySet()) {
-                outTaggedPos.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), taggedPositions.get(pos));
-            }
+        rotated = new TaggedPositionBlockArray(this);
+        EnumFacing newFacing = this.facing;
+        while (newFacing != facing) {
+            rotated = rotated.rotateYCCWInternal();
+            newFacing = newFacing.rotateYCCW();
+        }
+
+        BlockArrayCache.putTaggedPositionBlockArrayCache(traitNum, rotated);
+        return rotated;
+    }
+
+    private TaggedPositionBlockArray rotateYCCWInternal() {
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(this);
+
+        for (BlockPos pos : pattern.keySet()) {
+            out.pattern.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), pattern.get(pos).copyRotateYCCW());
+        }
+        for (BlockPos pos : taggedPositions.keySet()) {
+            out.taggedPositions.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), taggedPositions.get(pos));
         }
 
         return out;

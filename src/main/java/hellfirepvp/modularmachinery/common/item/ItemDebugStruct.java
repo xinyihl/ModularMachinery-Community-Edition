@@ -59,7 +59,7 @@ public class ItemDebugStruct extends Item {
                             }
                         }
                         face = face.rotateYCCW();
-                        pattern = pattern.rotateYCCW();
+                        pattern = pattern.rotateYCCW(face);
                         replacements = replacements.rotateYCCW();
                     } while (face != EnumFacing.NORTH);
                 }

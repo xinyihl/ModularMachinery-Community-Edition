@@ -27,6 +27,7 @@ gui.controller.status=状态：
 gui.controller.status.redstone_stopped=机器因红石信号停止工作
 gui.controller.status.missing_structure=结构不完整
 gui.controller.status.no_recipe=没有相匹配的配方
+gui.controller.status.chunk_unloaded=多方块结构中有方块被卸载，停止工作
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 

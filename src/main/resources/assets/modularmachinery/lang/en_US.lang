@@ -24,6 +24,7 @@ gui.controller.status=Status:
 gui.controller.status.redstone_stopped=Machine stopped by incoming redstone signal
 gui.controller.status.missing_structure=Missing structure
 gui.controller.status.no_recipe=No matching recipe found
+gui.controller.status.chunk_unloaded=A block in the multiblock structure was unloaded and stopped working
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 

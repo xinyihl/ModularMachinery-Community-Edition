@@ -81,7 +81,7 @@ public class PlayerStructureSelectionHelper {
             while (face != EnumFacing.NORTH) {
                 face = face.rotateYCCW();
                 rotation += 90;
-                out = out.rotateYCCW();
+                out = out.rotateYCCW(face);
             }
             player.sendMessage(new TextComponentTranslation("message.structurebuild.confirmrotation.rotating", String.valueOf(rotation)));
         }

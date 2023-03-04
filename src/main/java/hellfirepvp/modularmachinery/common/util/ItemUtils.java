@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.util;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,7 +24,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -148,6 +148,49 @@ public class ItemUtils {
             }
         }
         return cAmt <= 0;
+    }
+
+    public static int maxCanConsumed(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker);
+        return maxCanConsumedInternal(contents, parallelism);
+    }
+
+    public static int maxCanConsumed(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
+        return maxCanConsumedInternal(contents, parallelism);
+    }
+
+    public static int maxCanConsumed(IItemHandlerModifiable handler, String oreName, int parallelism, AdvancedItemNBTChecker nbtChecker) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker);
+        return maxCanConsumedInternal(contents, parallelism);
+    }
+
+    public static int maxCanConsumed(IItemHandlerModifiable handler, String oreName, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+        Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
+        return maxCanConsumedInternal(contents, parallelism);
+    }
+
+    private static int maxCanConsumedInternal(Map<Integer, ItemStack> contents, int parallelism) {
+        int cAmt = 0;
+        for (int slot : contents.keySet()) {
+            ItemStack inSlot = contents.get(slot);
+            if (inSlot.getItem().hasContainerItem(inSlot)) {
+                if (inSlot.getCount() > 1) {
+                    continue; //uh... rip. we won't consume 16 buckets at once.
+                }
+                cAmt++;
+                if (cAmt <= 0) {
+                    break;
+                }
+            }
+            int toRemove = Math.min(cAmt, inSlot.getCount());
+            cAmt += toRemove;
+            if (cAmt <= 0) {
+                break;
+            }
+        }
+
+        return Math.min(cAmt, parallelism);
     }
 
     public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, @Nullable NBTTagCompound matchNBTTag) {
@@ -302,7 +345,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryFuel(IItemHandlerModifiable handler, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (TileEntityFurnace.getItemBurnTime(s) > 0 && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -313,7 +356,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -328,7 +371,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker) {
-        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -343,7 +386,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -354,7 +397,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker) {
-        Map<Integer, ItemStack> stacksOut = new HashMap<>();
+        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(CraftTweakerMC.getIItemStack(s))) {
