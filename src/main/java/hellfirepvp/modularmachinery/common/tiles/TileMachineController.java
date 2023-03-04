@@ -62,6 +62,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -392,6 +393,43 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     @Override
     public void overrideStatusInfo(String newInfo) {
         this.craftingStatus.overrideStatusMessage(newInfo);
+    }
+
+    @Override
+    @Nullable
+    public SmartInterfaceData getSmartInterfaceData(String requiredType) {
+        AtomicReference<TileSmartInterface> reference = new AtomicReference<>(null);
+        foundSmartInterfaces.forEach((pos, type) -> {
+            if (type.equals(requiredType)) {
+                TileEntity te = getWorld().getTileEntity(pos);
+                if (te instanceof TileSmartInterface) {
+                    reference.set((TileSmartInterface) te);
+                }
+            }
+        });
+        TileSmartInterface smartInterface = reference.get();
+        if (smartInterface != null) {
+            return smartInterface.provideComponent().getMachineData(getPos());
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public SmartInterfaceData[] getSmartInterfaceDataList() {
+        List<SmartInterfaceData> dataList = new ArrayList<>();
+        BlockPos ctrlPos = getPos();
+        foundSmartInterfaces.forEach((pos, type) -> {
+            TileEntity te = getWorld().getTileEntity(pos);
+            if (te instanceof TileSmartInterface) {
+                TileSmartInterface.SmartInterfaceProvider smartInterface = ((TileSmartInterface) te).provideComponent();
+                SmartInterfaceData data = smartInterface.getMachineData(ctrlPos);
+                if (data != null) {
+                    dataList.add(data);
+                }
+            }
+        });
+        return dataList.toArray(new SmartInterfaceData[0]);
     }
 
     @Override

@@ -8,10 +8,13 @@ import crafttweaker.api.world.IWorld;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenSetter;
+
+import javax.annotation.Nullable;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.IMachineController")
@@ -45,6 +48,7 @@ public interface IMachineController {
      *
      * @return 配方
      */
+    @Nullable
     @ZenGetter("activeRecipe")
     ActiveMachineRecipe getActiveRecipe();
 
@@ -61,6 +65,7 @@ public interface IMachineController {
      *
      * @return 机械的注册名，如果未形成结构则返回 null
      */
+    @Nullable
     @ZenGetter("formedMachineName")
     String getFormedMachineName();
 
@@ -112,6 +117,22 @@ public interface IMachineController {
      */
     @ZenSetter("statusMessage")
     void overrideStatusInfo(String newInfo);
+
+    /**
+     * 获取控制器绑定的指定智能数据接口数据
+     * @param type 类型过滤
+     * @return 智能数据接口的内部数据，如果没有则为 null
+     */
+    @Nullable
+    @ZenMethod
+    SmartInterfaceData getSmartInterfaceData(String type);
+
+    /**
+     * 获取控制器绑定的所有智能数据接口数据
+     * @return 一组智能数据接口的内部数据，如果没有则为空数组
+     */
+    @ZenGetter("smartInterfaceDataList")
+    SmartInterfaceData[] getSmartInterfaceDataList();
 
     TileMachineController getController();
 }

@@ -1,9 +1,17 @@
 package hellfirepvp.modularmachinery.common.util;
 
+import crafttweaker.annotations.ZenRegister;
+import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.api.world.IBlockPos;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenGetter;
+import stanhebben.zenscript.annotations.ZenSetter;
 
+@ZenRegister
+@ZenClass("mods.modularmachinery.SmartInterfaceData")
 public class SmartInterfaceData {
     private final BlockPos pos;
     private final ResourceLocation parent;
@@ -27,18 +35,31 @@ public class SmartInterfaceData {
         return pos;
     }
 
+    @ZenGetter("pos")
+    public IBlockPos getIPos() {
+        return CraftTweakerMC.getIBlockPos(pos);
+    }
+
     public ResourceLocation getParent() {
         return parent;
     }
 
+    @ZenGetter("parentMachineName")
+    public String getParentMachineName() {
+        return parent.getNamespace();
+    }
+
+    @ZenGetter("interfaceType")
     public String getType() {
         return type;
     }
 
+    @ZenGetter("value")
     public float getValue() {
         return value;
     }
 
+    @ZenSetter("value")
     public void setValue(float value) {
         this.value = value;
     }
