@@ -647,7 +647,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return true;
         }
         if (ticksExisted % currentStructureCheckDelay() != 0) {
-            return true;
+            if (this.activeRecipe != null && !this.foundComponents.isEmpty()) {
+                return true;
+            }
         }
 
         this.foundComponents.clear();
