@@ -63,7 +63,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -677,14 +676,12 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return;
         }
         if (ticksExisted % currentStructureCheckDelay() != 0) {
-            if (this.activeRecipe != null && !this.foundComponents.isEmpty()) {
-                return;
-            }
+            return;
         }
 
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
-        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet().stream().sorted().collect(Collectors.toList())) {
+        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
             BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {
@@ -829,7 +826,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
                 while (offset != rot) {
                     replacements = replacements.rotateYCCW();
-                    offset = offset.rotateYCCW();
+                    offset = offset.rotateY();
                     pattern = pattern.rotateYCCW(offset);
                 }
                 this.patternRotation = rot;

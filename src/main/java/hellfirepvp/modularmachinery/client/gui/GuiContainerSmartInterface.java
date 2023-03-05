@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
+import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.FontRenderer;
@@ -23,7 +24,7 @@ import net.minecraftforge.client.model.animation.Animation;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
-import java.util.MissingFormatArgumentException;
+import java.util.IllegalFormatException;
 
 public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartInterface> {
     public static final ResourceLocation TEXTURES_SMART_INTERFACE = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guismartinterface.png");
@@ -91,7 +92,8 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
             valueInfo = type.getValueInfo().isEmpty()
                     ? I18n.format("gui.smartinterface.value", data.getValue())
                     : String.format(type.getValueInfo(), data.getValue());
-        } catch (MissingFormatArgumentException ex) {
+        } catch (IllegalFormatException ex) {
+            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(ex));
             valueInfo = I18n.format("gui.smartinterface.value", data.getValue());
         }
         fr.drawStringWithShadow(valueInfo, offsetX, offsetY, 0xFFFFFF);

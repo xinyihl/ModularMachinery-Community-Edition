@@ -128,7 +128,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.activeIO, false)) * durationMultiplier);
+        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * durationMultiplier);
     }
 
     @Nonnull
