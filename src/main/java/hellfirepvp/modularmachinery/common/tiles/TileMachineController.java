@@ -77,6 +77,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public static int structureCheckDelay = 30;
     public static boolean delayedStructureCheck = true;
     public static int maxStructureCheckDelay = 100;
+    public static boolean cleanCustomDataOnStructureCheckFailed = false;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final Map<BlockPos, String> foundSmartInterfaces = new HashMap<>();
@@ -118,6 +119,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             structureCheckDelay = 40;
             maxStructureCheckDelay = 100;
         }
+
+        //当结构检查失败时，是否清空自定义信息
+        cleanCustomDataOnStructureCheckFailed = config.getBoolean("clean-custom-data-on-structure-check-failed", "general",
+                false, "When enabled, the customData will be cleared when multiblock structure check failed.");
     }
 
     @Override
@@ -129,14 +134,18 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return;
         }
 
-        checkStructure();
-        if (!updateComponents()) {
+        //检查多方块结构中的某个方块的区块是否被卸载，以免一些重要的配方运行失败。
+        //可能会提高一些性能开销，但是玩家体验更加重要。
+        //Check if a block of a chunk in a multiblock structure is unloaded, so that some important recipes do not fail to run.
+        //It may raise some performance overhead, but the player experience is more important.
+        if (!checkStructure()) {
             if (craftingStatus != CraftingStatus.CHUNK_UNLOADED) {
                 craftingStatus = CraftingStatus.CHUNK_UNLOADED;
                 markForUpdate();
             }
             return;
         }
+        updateComponents();
 
         if (!isStructureFormed()) {
             if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
@@ -164,23 +173,28 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         CraftingStatus statusTmp = this.craftingStatus;
         MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
 
-        //Handle perTick IO and tick progression
+        //检查预 Tick 事件是否阻止进一步运行。
+        //Check if the PreTick event prevents further runs.
         if (!onPreTick()) {
             this.activeRecipe.tick(this, this.context);
             this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+            markForUpdate();
+            return;
+        }
+
+        //当脚本修改了运行状态时，内部不再覆盖运行状态。
+        //When scripts changed craftingStatus, it is no longer modified internally.
+        if (statusTmp != this.craftingStatus) {
+            this.activeRecipe.tick(this, this.context);
         } else {
-            if (statusTmp != this.craftingStatus) {
-                this.activeRecipe.tick(this, this.context);
-            } else {
-                this.craftingStatus = this.activeRecipe.tick(this, this.context);
-            }
-            if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
-                this.activeRecipe = null;
-            } else if (this.activeRecipe.isCompleted()) {
-                onFinished();
-            } else {
-                onTick();
-            }
+            this.craftingStatus = this.activeRecipe.tick(this, this.context);
+        }
+        if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
+            this.activeRecipe = null;
+        } else if (this.activeRecipe.isCompleted()) {
+            onFinished();
+        } else {
+            onTick();
         }
 
         markForUpdate();
@@ -504,8 +518,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             structureCheckFailedCount++;
             recipeResearchRetryCount = 0;
 
-            customData = new NBTTagCompound();
-            customModifiers.clear();
+            if (cleanCustomDataOnStructureCheckFailed) {
+                customData = new NBTTagCompound();
+                customModifiers.clear();
+            }
         }
         foundMachine = null;
         foundPattern = null;
@@ -542,12 +558,23 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
     }
 
-    private void checkStructure() {
+    private boolean checkStructure() {
         if (ticksExisted % currentStructureCheckDelay() != 0) {
-            return;
+            if (!foundComponents.isEmpty()) {
+                return true;
+            }
         }
 
         if (isStructureFormed()) {
+            if (foundComponents.isEmpty()) {
+                for (BlockPos potentialPosition : foundPattern.getPattern().keySet()) {
+                    BlockPos realPos = getPos().add(potentialPosition);
+                    //Is Chunk Loaded? Prevention of unanticipated consumption of something.
+                    if (!getWorld().isBlockLoaded(realPos)) {
+                        return false;
+                    }
+                }
+            }
             if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
             } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
@@ -556,7 +583,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
 
         if (this.foundMachine != null && this.foundPattern != null && this.patternRotation != null && this.foundReplacements != null) {
-            return;
+            return true;
         }
 
         resetMachine(false);
@@ -591,6 +618,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 }
             }
         }
+
+        return true;
     }
 
     private void distributeCasingColor() {
@@ -637,18 +666,18 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         return false;
     }
 
-    private boolean updateComponents() {
+    private void updateComponents() {
         if (this.foundMachine == null || this.foundPattern == null || this.patternRotation == null || this.foundReplacements == null) {
             this.foundComponents.clear();
             this.foundModifiers.clear();
             this.foundSmartInterfaces.clear();
 
             resetMachine(false);
-            return true;
+            return;
         }
         if (ticksExisted % currentStructureCheckDelay() != 0) {
             if (this.activeRecipe != null && !this.foundComponents.isEmpty()) {
-                return true;
+                return;
             }
         }
 
@@ -657,10 +686,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
             BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
-            //Is Chunk Loaded? Prevention of unanticipated consumption of something.
-            if (!getWorld().isBlockLoaded(realPos)) {
-                return false;
-            }
             if (!(te instanceof MachineComponentTile)) {
                 continue;
             }
@@ -726,8 +751,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 }
             }
         }
-
-        return true;
     }
 
     @Deprecated

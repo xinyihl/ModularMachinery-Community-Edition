@@ -271,12 +271,16 @@ public class RecipeCraftingContext {
     }
 
     public void addModifier(RecipeModifier modifier) {
-        this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+        if (modifier != null) {
+            this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+        }
     }
 
     public void addPermanentModifier(RecipeModifier modifier) {
-        this.permanentModifierList.add(modifier);
-        addModifier(modifier);
+        if (modifier != null) {
+            this.permanentModifierList.add(modifier);
+            addModifier(modifier);
+        }
     }
 
     public void overrideModifier(Collection<ModifierReplacement> modifiers) {

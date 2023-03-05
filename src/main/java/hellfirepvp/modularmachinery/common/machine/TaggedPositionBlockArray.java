@@ -32,7 +32,6 @@ public class TaggedPositionBlockArray extends BlockArray {
         super(traitNum, facing);
     }
 
-    //TODO 预先构建已翻转的 BlockArray。
     private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
 
     public void setTag(BlockPos pos, ComponentSelectorTag tag) {
