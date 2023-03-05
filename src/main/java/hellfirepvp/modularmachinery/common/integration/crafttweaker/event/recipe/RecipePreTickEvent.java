@@ -9,7 +9,9 @@ import stanhebben.zenscript.annotations.ZenMethod;
 @ZenClass("mods.modularmachinery.RecipePreTickEvent")
 public class RecipePreTickEvent extends RecipeEvent {
     private boolean preventProgressing = false;
-    private String preventReason = "";
+    private boolean isFailure = false;
+    private boolean destructRecipe = false;
+    private String reason = null;
 
     public RecipePreTickEvent(IMachineController controller) {
         super(controller);
@@ -18,14 +20,29 @@ public class RecipePreTickEvent extends RecipeEvent {
     @ZenMethod
     public void preventProgressing(String reason) {
         this.preventProgressing = true;
-        this.preventReason = reason;
+        this.reason = reason;
+    }
+
+    @ZenMethod
+    public void setFailed(boolean destructRecipe, String reason) {
+        this.isFailure = true;
+        this.destructRecipe = destructRecipe;
+        this.reason = reason;
+    }
+
+    public boolean isFailure() {
+        return isFailure;
+    }
+
+    public boolean isDestructRecipe() {
+        return destructRecipe;
     }
 
     public boolean isPreventProgressing() {
         return preventProgressing;
     }
 
-    public String getPreventReason() {
-        return preventReason;
+    public String getReason() {
+        return reason;
     }
 }

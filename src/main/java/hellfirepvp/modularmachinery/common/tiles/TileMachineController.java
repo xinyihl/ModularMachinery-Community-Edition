@@ -176,8 +176,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         //检查预 Tick 事件是否阻止进一步运行。
         //Check if the PreTick event prevents further runs.
         if (!onPreTick()) {
-            this.activeRecipe.tick(this, this.context);
-            this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+            if (this.activeRecipe != null) {
+                this.activeRecipe.tick(this, this.context);
+                this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+            }
             markForUpdate();
             return;
         }
@@ -189,12 +191,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         } else {
             this.craftingStatus = this.activeRecipe.tick(this, this.context);
         }
-        if (machineRecipe.doesCancelRecipeOnPerTickFailure() && !this.craftingStatus.isCrafting()) {
+        if (this.craftingStatus.isCrafting()) {
+            if (this.activeRecipe.isCompleted()) {
+                onFinished();
+            } else {
+                onTick();
+            }
+        } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()){
             this.activeRecipe = null;
-        } else if (this.activeRecipe.isCompleted()) {
-            onFinished();
-        } else {
-            onTick();
+            this.context = null;
         }
 
         markForUpdate();
@@ -273,7 +278,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             handler.handle(event);
 
             if (event.isPreventProgressing()) {
-                craftingStatus = CraftingStatus.working(event.getPreventReason());
+                craftingStatus = CraftingStatus.working(event.getReason());
+                return false;
+            }
+            if (event.isFailure()) {
+                if (event.isDestructRecipe()) {
+                    this.activeRecipe = null;
+                    this.context = null;
+                }
+                craftingStatus = CraftingStatus.failure(event.getReason());
                 return false;
             }
         }
