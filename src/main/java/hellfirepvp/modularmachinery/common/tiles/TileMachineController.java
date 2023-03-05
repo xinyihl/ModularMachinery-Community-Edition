@@ -63,6 +63,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -683,7 +684,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
-        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
+        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet().stream().sorted().collect(Collectors.toList())) {
             BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {

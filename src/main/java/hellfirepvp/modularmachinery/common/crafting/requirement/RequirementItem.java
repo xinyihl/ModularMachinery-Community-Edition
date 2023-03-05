@@ -220,7 +220,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     inReq.setCount(amt);
 
                     boolean isSuccess = (this.nbtChecker != null)
-                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.nbtChecker)
+                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.nbtChecker, context.getMachineController())
                             : ItemUtils.consumeFromInventory(handler, inReq, true, this.tag);
                     if (isSuccess) {
                         return CraftCheck.success();
@@ -230,7 +230,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
 
                     isSuccess = (this.nbtChecker != null)
-                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, nbtChecker)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, nbtChecker, context.getMachineController())
                             : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag);
                     if (isSuccess) {
                         return CraftCheck.success();
@@ -303,28 +303,28 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     stackRequired.setCount(amt);
                     if (!itemModifierList.isEmpty()) {
                         for (AdvancedItemModifier modifier : itemModifierList) {
-                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStackMutable(stackRequired)));
+                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(context.getMachineController(), CraftTweakerMC.getIItemStackMutable(stackRequired)));
                         }
                     }
 
                     if (chance.canProduce(productionChance)) {
                         return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.nbtChecker)
+                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.nbtChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
                     } else {
                         return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.nbtChecker)
+                                ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.nbtChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
                     }
                 case OREDICT:
                     int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false));
                     if (chance.canProduce(productionChance)) {
                         return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker)
+                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
                     } else {
                         return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, nbtChecker)
+                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, nbtChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
                     }
                 case FUEL:
@@ -360,7 +360,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             if (!itemModifierList.isEmpty()) {
                 for (AdvancedItemModifier modifier : itemModifierList) {
-                    stack = CraftTweakerMC.getItemStack(modifier.apply(CraftTweakerMC.getIItemStackMutable(stack)));
+                    stack = CraftTweakerMC.getItemStack(modifier.apply(context.getMachineController(), CraftTweakerMC.getIItemStackMutable(stack)));
                 }
             } else {
                 if (tag != null) {
