@@ -7,7 +7,6 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.locks.LockSupport;
 
 /**
  * 一个简单的单 Tick 并发执行器
@@ -20,15 +19,9 @@ public class TaskExecutor {
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
-    public final PoolExecutor poolExecutor = new PoolExecutor();
-    public final Thread poolExecutorThread = new Thread(poolExecutor);
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> asyncActions = new ConcurrentLinkedQueue<>();
-    public Thread serverThread = null;
 
     public void init() {
-        poolExecutorThread.setName("MMCE-PoolExecutor");
-        poolExecutorThread.start();
     }
 
     @SubscribeEvent
@@ -36,8 +29,6 @@ public class TaskExecutor {
         if (event.side == Side.CLIENT) {
             return;
         }
-
-        serverThread = Thread.currentThread();
 
         long executed = executeActions();
         if (executed > 0) {
@@ -52,12 +43,8 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public long executeActions() {
-        if (asyncActions.isEmpty() && executors.isEmpty()) {
+        if (executors.isEmpty()) {
             return 0;
-        }
-
-        if (!asyncActions.isEmpty()) {
-            executeAsyncActions();
         }
 
         int executed = 0;
@@ -77,7 +64,7 @@ public class TaskExecutor {
         }
 
         //Empty Check
-        if (!asyncActions.isEmpty() || !executors.isEmpty()) {
+        if (!executors.isEmpty()) {
             executed += executeActions();
         }
 
@@ -91,38 +78,8 @@ public class TaskExecutor {
      * @param action 要执行的异步任务
      */
     public void addAsyncTask(final Action action) {
-        asyncActions.add(action);
-        if (poolExecutorThread.getState() == Thread.State.TIMED_WAITING) {
-            LockSupport.unpark(poolExecutorThread);
-        }
-    }
-
-    private void executeAsyncActions() {
-        Action action;
-        while ((action = asyncActions.poll()) != null) {
-            ActionExecutor executor = new ActionExecutor(action);
-            executors.add(executor);
-            FORK_JOIN_POOL.execute(executor);
-        }
-    }
-
-    private class PoolExecutor implements Runnable {
-        private int emptyQueueCounter = 0;
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                if (asyncActions.isEmpty()) {
-                    //If is no actions, park 250μs + delayedTime(queueEmptyCount * 100μs, max: 25ms).
-                    LockSupport.parkNanos(
-                            250 * 1000 + Math.min(emptyQueueCounter * 100 * 1000, 25 * 1000 * 1000)
-                    );
-                    emptyQueueCounter++;
-                } else {
-                    emptyQueueCounter = 0;
-                    executeAsyncActions();
-                }
-            }
-        }
+        ActionExecutor executor = new ActionExecutor(action);
+        executors.offer(executor);
+        FORK_JOIN_POOL.submit(executor);
     }
 }
