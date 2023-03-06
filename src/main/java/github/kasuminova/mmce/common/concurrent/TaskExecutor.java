@@ -78,8 +78,6 @@ public class TaskExecutor {
      * @param action 要执行的异步任务
      */
     public void addAsyncTask(final Action action) {
-        ActionExecutor executor = new ActionExecutor(action);
-        executors.offer(executor);
-        FORK_JOIN_POOL.submit(executor);
+        executors.offer((ActionExecutor) FORK_JOIN_POOL.submit(new ActionExecutor(action)));
     }
 }

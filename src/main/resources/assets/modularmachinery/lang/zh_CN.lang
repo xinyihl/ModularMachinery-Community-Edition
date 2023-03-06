@@ -12,10 +12,8 @@ command.modularmachinery.performance_report.tasks_avg_per_execution=平均每次
 command.modularmachinery.performance_report.total_used_time=总耗时: %s 毫秒
 command.modularmachinery.performance_report.used_time_avg_per_execution=每次执行平均耗时: %.2f 毫秒
 
-command.modularmachinery.performance_report.main_thread_total_used_time=主线程总耗时：%s 毫秒
 command.modularmachinery.performance_report.task_used_time=并行操作总耗时: %s 毫秒
 
-command.modularmachinery.performance_report.main_thread_used_time_avg=主线程平均耗时：%.2f 毫秒
 command.modularmachinery.performance_report.task_used_time_avg=并行操作平均耗时: %.2f 毫秒
 command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时: %s 微秒
 
