@@ -16,7 +16,9 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.util.ResourceLocation;
 
@@ -31,7 +33,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> {
+public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable {
 
     public final long requirementPerTick;
     private long activeIO;
@@ -152,21 +154,51 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
-                if (handler.getCurrentEnergy() >= this.activeIO) {
-                    handler.setCurrentEnergy(handler.getCurrentEnergy() - this.activeIO);
-                    this.activeIO = 0;
-                    return CraftCheck.success();
+                long currentEnergy = handler.getCurrentEnergy();
+                if (handler instanceof IEnergyHandlerAsync) {
+                    IEnergyHandlerAsync asyncHandler = (IEnergyHandlerAsync) handler;
+                    if (currentEnergy >= this.activeIO) {
+                        if (asyncHandler.extractEnergy(this.activeIO)) {
+                            this.activeIO = 0;
+                            return CraftCheck.success();
+                        } else {
+                            return CraftCheck.partialSuccess();
+                        }
+                    } else {
+                        return CraftCheck.partialSuccess();
+                    }
                 } else {
-                    return CraftCheck.partialSuccess();
+                    if (currentEnergy >= this.activeIO) {
+                        handler.setCurrentEnergy(currentEnergy - this.activeIO);
+                        this.activeIO = 0;
+                        return CraftCheck.success();
+                    } else {
+                        return CraftCheck.partialSuccess();
+                    }
                 }
             case OUTPUT:
+                currentEnergy = handler.getCurrentEnergy();
                 this.remaining = handler.getRemainingCapacity();
-                if (remaining < this.activeIO) {
-                    return CraftCheck.partialSuccess();
+                if (handler instanceof IEnergyHandlerAsync) {
+                    IEnergyHandlerAsync asyncHandler = (IEnergyHandlerAsync) handler;
+                    if (remaining < this.activeIO) {
+                        return CraftCheck.partialSuccess();
+                    } else {
+                        if (asyncHandler.receiveEnergy(this.activeIO)) {
+                            this.activeIO = 0;
+                            return CraftCheck.success();
+                        } else {
+                            return CraftCheck.partialSuccess();
+                        }
+                    }
+                } else {
+                    if (remaining < this.activeIO) {
+                        return CraftCheck.partialSuccess();
+                    }
+                    handler.setCurrentEnergy(Math.min(currentEnergy + this.activeIO, handler.getMaxEnergy()));
+                    this.activeIO = 0;
+                    return CraftCheck.success();
                 }
-                handler.setCurrentEnergy(Math.min(handler.getCurrentEnergy() + this.activeIO, handler.getMaxEnergy()));
-                this.activeIO = 0;
-                return CraftCheck.success();
         }
         //This is neither input nor output? when do we actually end up in this case down here?
         return CraftCheck.skipComponent();

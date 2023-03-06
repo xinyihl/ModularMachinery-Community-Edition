@@ -10,11 +10,12 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import com.brandon3055.draconicevolution.DEFeatures;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
+import github.kasuminova.mmce.common.concurrent.Locks;
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTPrimitive;
@@ -40,7 +41,7 @@ import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
  * Date: 08.07.2017 / 10:14
  */
 @Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyStorage", modid = "redstoneflux")
-public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandler, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage {
+public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandlerAsync, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage {
 
     protected long energy = 0;
     protected EnergyHatchData size;
@@ -204,6 +205,34 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     public void setCurrentEnergy(long energy) {
         this.energy = MiscUtils.clamp(energy, 0, getMaxEnergy());
         markForUpdate();
+    }
+
+    @Override
+    public boolean extractEnergy(long extract) {
+        Locks.UPDATE_LOCK.lock();
+        if (this.energy >= extract) {
+            this.energy -= extract;
+
+            markForUpdate();
+            Locks.UPDATE_LOCK.unlock();
+            return true;
+        }
+        Locks.UPDATE_LOCK.unlock();
+        return false;
+    }
+
+    @Override
+    public boolean receiveEnergy(long receive) {
+        Locks.UPDATE_LOCK.lock();
+        if (getRemainingCapacity() >= receive) {
+            this.energy += receive;
+
+            markForUpdate();
+            Locks.UPDATE_LOCK.unlock();
+            return true;
+        }
+        Locks.UPDATE_LOCK.unlock();
+        return false;
     }
 
     @Override

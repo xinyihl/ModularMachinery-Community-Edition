@@ -19,27 +19,18 @@ public class TaskExecutor {
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
-    private final TaskExecutorThread[] executors = new TaskExecutorThread[THREAD_COUNT];
+    public final PoolExecutor poolExecutor = new PoolExecutor();
+    public final Thread poolExecutorThread = new Thread(poolExecutor);
+    private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> preActions = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> postActions = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Action> asyncActions = new ConcurrentLinkedQueue<>();
     public volatile ConcurrentLinkedQueue<Action> activeActions = null;
-    public volatile int completedThreadCounter = 0;
     public Thread serverThread = null;
 
     public void init() {
-        for (int i = 0; i < THREAD_COUNT; i++) {
-            (executors[i] = new TaskExecutorThread(this)).start();
-        }
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            activeActions = null;
-            for (TaskExecutorThread executor : executors) {
-                Thread executorThread = executor.executorThread;
-                executorThread.interrupt();
-                LockSupport.unpark(executorThread);
-            }
-        }));
+        poolExecutorThread.setName("MMCE-PoolExecutor");
+        poolExecutorThread.start();
     }
 
     @SubscribeEvent
@@ -73,38 +64,47 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public long executeActions() {
-        if (activeActions.isEmpty()) return 0;
+        if (activeActions.isEmpty() && executors.isEmpty()) {
+            return 0;
+        }
+
+        if (asyncActions.isEmpty() && !poolExecutor.isRunning) {
+            executeAsyncActions();
+        }
 
         int executed = 0;
-        completedThreadCounter = Math.max(executors.length - activeActions.size(), 0);
-        for (int i = 0; i < Math.min(activeActions.size(), executors.length); i++) {
-            Thread executorThread = executors[i].executorThread;
-            LockSupport.unpark(executorThread);
-        }
-
         long time = System.nanoTime() / 1000;
-        await();
-
-        for (TaskExecutorThread executor : executors) {
-            taskUsedTime += executor.usedTime;
-            executed += executor.executed;
-        }
-
-        completedThreadCounter = 0;
-        totalUsedTime += System.nanoTime() / 1000 - time;
 
         Action action;
-        while ((action = mainThreadActions.poll()) != null) {
+        while ((action = activeActions.poll()) != null) {
+            ActionExecutor executorAction = new ActionExecutor(action);
+            executors.add(executorAction);
+            FORK_JOIN_POOL.execute(executorAction);
+        }
+
+        ActionExecutor actionExecutor;
+        while ((actionExecutor = executors.poll()) != null) {
+            actionExecutor.join();
+            taskUsedTime += actionExecutor.usedTime;
+            executed++;
+        }
+
+        if ((System.nanoTime() / 1000) - (50 * 1000 * 1000) > time) {
+            ModularMachinery.log.warn(
+                    "[Modular Machinery] Parallel action execute timeout for 50ms."
+            );
+        }
+
+        while ((action = asyncActions.poll()) != null) {
             action.doAction();
         }
 
-        totalUsedTime += System.nanoTime() / 1000 - time;
-
         //Empty Check
-        if (!activeActions.isEmpty()) {
+        if (!activeActions.isEmpty() || !executors.isEmpty()) {
             executed += executeActions();
         }
 
+        totalUsedTime += System.nanoTime() / 1000 - time;
         return executed;
     }
 
@@ -127,70 +127,39 @@ public class TaskExecutor {
     }
 
     /**
-     * <p>添加一个接口引用，这个引用会在并行操作完成后执行。</p>
-     * <p>通常用来执行一些必须在主线程操作的内容。</p>
+     * <p>添加一个异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
-     * @param action 要执行的任务队列
+     * @param action 要执行的异步任务
      */
-    public void addMainThreadTask(final Action action) {
-        mainThreadActions.add(action);
-    }
-
-    /**
-     * 等待任务线程执行完毕，最多超时等待 250ms，超过时间则取消等待并打印警告信息。
-     */
-    private void await() {
-        long time = System.currentTimeMillis();
-        LockSupport.parkNanos(1000 * 1000 * 250);
-        if (System.currentTimeMillis() - time > 250) {
-            ModularMachinery.log.warn(
-                    "[Modular Machinery] Parallel task execute timeout for 250ms ({} Threads Completed / {} Thread Total, {} Tasks Left).",
-                    completedThreadCounter, executors, activeActions.size()
-            );
-
-            if (THREAD_COUNT > completedThreadCounter) {
-                ModularMachinery.log.warn("[Modular Machinery] Some thread are not execute complete, printing stacktrace...");
-                printThreadStackTrace();
-            }
+    public void addAsyncTask(final Action action) {
+        asyncActions.add(action);
+        if (!poolExecutor.isRunning) {
+            LockSupport.unpark(poolExecutorThread);
         }
     }
 
-    /**
-     * 打印未完成的线程堆栈信息
-     */
-    private void printThreadStackTrace() {
-        for (TaskExecutorThread executor : executors) {
-            if (executor.isRunning) {
-                Thread executorThread = executor.executorThread;
+    private void executeAsyncActions() {
+        Action action;
+        while ((action = asyncActions.poll()) != null) {
+            ActionExecutor executor = new ActionExecutor(action);
+            executors.add(executor);
+            FORK_JOIN_POOL.execute(executor);
+        }
+    }
 
-                StringBuilder stackTrace = new StringBuilder(100).append(String.format(
-                        "ThreadName: %s, State: %s, StackTrace: \n",
-                        executorThread.getName(), executorThread.getState()));
+    private class PoolExecutor implements Runnable {
+        private volatile boolean isRunning = false;
 
-                StackTraceElement[] threadStackTrace = executorThread.getStackTrace();
-                for (int i = 0; i < threadStackTrace.length; i++) {
-                    if (i == 0) {
-                        stackTrace.append(threadStackTrace[i]).append("\n");
-                    } else {
-                        stackTrace.append("    ").append(threadStackTrace[i]).append("\n");
-                    }
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (asyncActions.isEmpty()) {
+                    LockSupport.park();
                 }
-                ModularMachinery.log.warn(stackTrace);
+                isRunning = true;
+                executeAsyncActions();
+                isRunning = false;
             }
-        }
-    }
-
-    /**
-     * <p>当一个线程完成执行时，调用此同步方法。</p>
-     * <p>当所有线程完成后，使服务器线程继续执行逻辑。</p>
-     */
-    public void onThreadFinished() {
-        synchronized (this) {
-            completedThreadCounter++;
-        }
-
-        if (completedThreadCounter >= THREAD_COUNT) {
-            LockSupport.unpark(serverThread);
         }
     }
 }

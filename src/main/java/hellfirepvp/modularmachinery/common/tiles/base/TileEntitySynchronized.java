@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.tiles.base;
 
+import github.kasuminova.mmce.common.concurrent.Locks;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
@@ -77,6 +78,12 @@ public class TileEntitySynchronized extends TileEntity {
         IBlockState thisState = world.getBlockState(pos);
         world.notifyBlockUpdate(pos, thisState, thisState, 3);
         markDirty();
+    }
+
+    public void markForUpdateSync() {
+        Locks.UPDATE_LOCK.lock();
+        markForUpdate();
+        Locks.UPDATE_LOCK.unlock();
     }
 
 }

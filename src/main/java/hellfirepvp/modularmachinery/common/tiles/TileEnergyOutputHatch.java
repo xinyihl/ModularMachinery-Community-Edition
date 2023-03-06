@@ -20,7 +20,7 @@ import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandle
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
-import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergyAcceptor;
@@ -245,10 +245,10 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponent<IEnergyHandlerAsync> provideComponent() {
         return new MachineComponent.EnergyHatch(IOType.OUTPUT) {
             @Override
-            public IEnergyHandler getContainerProvider() {
+            public IEnergyHandlerAsync getContainerProvider() {
                 return TileEnergyOutputHatch.this;
             }
         };

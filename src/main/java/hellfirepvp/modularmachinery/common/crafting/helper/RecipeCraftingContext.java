@@ -10,16 +10,17 @@ package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
+import github.kasuminova.mmce.common.concurrent.Locks;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSender;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
-import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.PriorityProvider;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 
@@ -112,17 +113,23 @@ public class RecipeCraftingContext {
     public CraftingCheckResult ioTick(int currentTick) {
         float durMultiplier = this.getDurationMultiplier();
 
-        //Input tick
+        //Input / Output tick
         for (ComponentRequirement<?, ?> requirement : requirements) {
-            if (!(requirement instanceof ComponentRequirement.PerTick) ||
-                    requirement.actionType == IOType.OUTPUT) continue;
+            if (!(requirement instanceof ComponentRequirement.PerTick)) continue;
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
 
             perTickRequirement.resetIOTick(this);
             perTickRequirement.startIOTick(this, durMultiplier);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                CraftCheck result = perTickRequirement.doIOTick(component, this);
+                CraftCheck result;
+                if (perTickRequirement instanceof Asyncable) {
+                    result = perTickRequirement.doIOTick(component, this);
+                } else {
+                    Locks.UPDATE_LOCK.lock();
+                    result = perTickRequirement.doIOTick(component, this);
+                    Locks.UPDATE_LOCK.unlock();
+                }
                 if (result.isSuccess()) {
                     break;
                 }
@@ -137,28 +144,28 @@ public class RecipeCraftingContext {
         }
 
         //Output tick
-        for (ComponentRequirement<?, ?> requirement : requirements) {
-            if (!(requirement instanceof ComponentRequirement.PerTick) ||
-                    requirement.actionType == IOType.INPUT) continue;
-            ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
-
-            perTickRequirement.resetIOTick(this);
-            perTickRequirement.startIOTick(this, durMultiplier);
-
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                CraftCheck result = perTickRequirement.doIOTick(component, this);
-                if (result.isSuccess()) {
-                    break;
-                }
-            }
-
-            CraftCheck result = perTickRequirement.resetIOTick(this);
-            if (!result.isSuccess()) {
-                CraftingCheckResult res = new CraftingCheckResult();
-                res.addError(result.getUnlocalizedMessage());
-                return res;
-            }
-        }
+//        for (ComponentRequirement<?, ?> requirement : requirements) {
+//            if (!(requirement instanceof ComponentRequirement.PerTick) ||
+//                    requirement.actionType == IOType.INPUT) continue;
+//            ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
+//
+//            perTickRequirement.resetIOTick(this);
+//            perTickRequirement.startIOTick(this, durMultiplier);
+//
+//            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
+//                CraftCheck result = perTickRequirement.doIOTick(component, this);
+//                if (result.isSuccess()) {
+//                    break;
+//                }
+//            }
+//
+//            CraftCheck result = perTickRequirement.resetIOTick(this);
+//            if (!result.isSuccess()) {
+//                CraftingCheckResult res = new CraftingCheckResult();
+//                res.addError(result.getUnlocalizedMessage());
+//                return res;
+//            }
+//        }
 
         this.getParentRecipe().getCommandContainer().runTickCommands(this.commandSender, currentTick);
 
@@ -175,7 +182,15 @@ public class RecipeCraftingContext {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                if (requirement.startCrafting(component, this, chance)) {
+                boolean success;
+                if (requirement instanceof Asyncable) {
+                    success = requirement.startCrafting(component, this, chance);
+                } else {
+                    Locks.UPDATE_LOCK.lock();
+                    success = requirement.startCrafting(component, this, chance);
+                    Locks.UPDATE_LOCK.unlock();
+                }
+                if (success) {
                     requirement.endRequirementCheck();
                     break;
                 }
@@ -196,7 +211,14 @@ public class RecipeCraftingContext {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                CraftCheck check = requirement.finishCrafting(component, this, chance);
+                CraftCheck check;
+                if (requirement instanceof Asyncable) {
+                    check = requirement.finishCrafting(component, this, chance);
+                } else {
+                    Locks.UPDATE_LOCK.lock();
+                    check = requirement.finishCrafting(component, this, chance);
+                    Locks.UPDATE_LOCK.unlock();
+                }
                 if (check.isSuccess()) {
                     requirement.endRequirementCheck();
                     break;

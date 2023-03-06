@@ -14,6 +14,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.concurrent.Locks;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -155,54 +156,56 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             return;
         }
 
-        boolean updateRequired = onMachineTick();
+        ModularMachinery.EXECUTE_MANAGER.addAsyncTask(() -> {
+            boolean updateRequired = onMachineTick();
 
-        if (this.activeRecipe == null) {
-            searchAndStartRecipe();
-            if (updateRequired) {
-                markForUpdate();
+            if (this.activeRecipe == null) {
+                searchAndStartRecipe();
+                if (updateRequired) {
+                    markForUpdateSync();
+                }
+                return;
             }
-            return;
-        }
 
-        if (this.context == null) {
-            //context preInit
-            context = createContext(this.activeRecipe);
-        }
+            if (this.context == null) {
+                //context preInit
+                context = createContext(this.activeRecipe);
+            }
 
-        CraftingStatus statusTmp = this.craftingStatus;
-        MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
+            CraftingStatus statusTmp = this.craftingStatus;
+            MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
 
-        //检查预 Tick 事件是否阻止进一步运行。
-        //Check if the PreTick event prevents further runs.
-        if (!onPreTick()) {
-            if (this.activeRecipe != null) {
+            //检查预 Tick 事件是否阻止进一步运行。
+            //Check if the PreTick event prevents further runs.
+            if (!onPreTick()) {
+                if (this.activeRecipe != null) {
+                    this.activeRecipe.tick(this, this.context);
+                    this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+                }
+                markForUpdateSync();
+                return;
+            }
+
+            //当脚本修改了运行状态时，内部不再覆盖运行状态。
+            //When scripts changed craftingStatus, it is no longer modified internally.
+            if (statusTmp != this.craftingStatus) {
                 this.activeRecipe.tick(this, this.context);
-                this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
-            }
-            markForUpdate();
-            return;
-        }
-
-        //当脚本修改了运行状态时，内部不再覆盖运行状态。
-        //When scripts changed craftingStatus, it is no longer modified internally.
-        if (statusTmp != this.craftingStatus) {
-            this.activeRecipe.tick(this, this.context);
-        } else {
-            this.craftingStatus = this.activeRecipe.tick(this, this.context);
-        }
-        if (this.craftingStatus.isCrafting()) {
-            if (this.activeRecipe.isCompleted()) {
-                onFinished();
             } else {
-                onTick();
+                this.craftingStatus = this.activeRecipe.tick(this, this.context);
             }
-        } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()){
-            this.activeRecipe = null;
-            this.context = null;
-        }
-
-        markForUpdate();
+            if (this.craftingStatus.isCrafting()) {
+                onTick();
+                if (this.activeRecipe != null) {
+                    if (this.activeRecipe.isCompleted()) {
+                        onFinished();
+                    }
+                }
+            } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()){
+                this.activeRecipe = null;
+                this.context = null;
+            }
+            markForUpdateSync();
+        });
     }
 
     /**
@@ -330,7 +333,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.context.finishCrafting();
         this.activeRecipe.reset();
         this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
-        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryStartRecipe(activeRecipe, null));
+        tryStartRecipe(activeRecipe, null);
     }
 
     /**
@@ -346,7 +349,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(finalContext);
 
         if (tryResult.isSuccess()) {
-            ModularMachinery.EXECUTE_MANAGER.addMainThreadTask(() -> onStart(activeRecipe, finalContext));
+            Locks.UPDATE_LOCK.lock();
+            onStart(activeRecipe, finalContext);
+            Locks.UPDATE_LOCK.unlock();
         } else {
             this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
             this.activeRecipe = null;
@@ -506,7 +511,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 try {
                     RecipeCraftingContext context = searchTask.get();
                     if (context != null) {
-                        ModularMachinery.EXECUTE_MANAGER.addPostTickTask(() -> tryStartRecipe(context.getActiveRecipe(), context));
+                        tryStartRecipe(context.getActiveRecipe(), context);
                     }
                 } catch (Exception e) {
                     ModularMachinery.log.warn(e);

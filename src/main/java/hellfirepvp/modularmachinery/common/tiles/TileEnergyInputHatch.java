@@ -15,7 +15,7 @@ import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandle
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
-import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergyEmitter;
@@ -82,17 +82,13 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
         if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
             foundCore = null;
             findCore();
+            return 0;
         }
 
-        if (foundCore != null && te instanceof TileEnergyStorageCore) {
-            TileEnergyStorageCore core = (TileEnergyStorageCore) te;
-
-            long received = Math.min(core.energy.value, maxCanReceive);
-            core.energy.value -= received;
-
-            return received;
-        }
-        return 0;
+        TileEnergyStorageCore core = (TileEnergyStorageCore) te;
+        long received = Math.min(core.energy.value, maxCanReceive);
+        core.energy.value -= received;
+        return received;
     }
 
     @Override
@@ -141,10 +137,10 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponent<IEnergyHandlerAsync> provideComponent() {
         return new MachineComponent.EnergyHatch(IOType.INPUT) {
             @Override
-            public IEnergyHandler getContainerProvider() {
+            public IEnergyHandlerAsync getContainerProvider() {
                 return TileEnergyInputHatch.this;
             }
         };
