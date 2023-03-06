@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import github.kasuminova.mmce.common.concurrent.Locks;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -128,6 +129,7 @@ public class IOInventory implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
+        Locks.UPDATE_LOCK.lock();
         if (this.inventory.containsKey(slot)) {
             this.inventory.get(slot).itemStack = stack;
             owner.markForUpdate();
@@ -135,6 +137,7 @@ public class IOInventory implements IItemHandlerModifiable {
                 listener.onChange();
             }
         }
+        Locks.UPDATE_LOCK.unlock();
     }
 
     @Override
@@ -160,10 +163,17 @@ public class IOInventory implements IItemHandlerModifiable {
     @Nonnull
     public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) return stack;
+        Locks.UPDATE_LOCK.lock();
         if (!allowAnySlots) {
-            if (!arrayContains(inSlots, slot)) return stack;
+            if (!arrayContains(inSlots, slot)) {
+                Locks.UPDATE_LOCK.unlock();
+                return stack;
+            }
         }
-        if (!this.inventory.containsKey(slot)) return stack; //Shouldn't happen anymore here tho
+        if (!this.inventory.containsKey(slot)) {
+            Locks.UPDATE_LOCK.unlock();
+            return stack; //Shouldn't happen anymore here tho
+        }
 
         SlotStackHolder holder = this.inventory.get(slot);
         ItemStack toInsert = copyWithSize(stack, stack.getCount());
@@ -171,6 +181,7 @@ public class IOInventory implements IItemHandlerModifiable {
             ItemStack existing = copyWithSize(holder.itemStack, holder.itemStack.getCount());
             int max = Math.min(existing.getMaxStackSize(), getSlotLimit(slot));
             if (existing.getCount() >= max || !canMergeItemStacks(existing, toInsert)) {
+                Locks.UPDATE_LOCK.unlock();
                 return stack;
             }
             int movable = Math.min(max - existing.getCount(), stack.getCount());
@@ -182,10 +193,12 @@ public class IOInventory implements IItemHandlerModifiable {
                 }
             }
             if (movable >= stack.getCount()) {
+                Locks.UPDATE_LOCK.unlock();
                 return ItemStack.EMPTY;
             } else {
                 ItemStack copy = stack.copy();
                 copy.shrink(movable);
+                Locks.UPDATE_LOCK.unlock();
                 return copy;
             }
         } else {
@@ -198,6 +211,7 @@ public class IOInventory implements IItemHandlerModifiable {
                         listener.onChange();
                     }
                 }
+                Locks.UPDATE_LOCK.unlock();
                 return ItemStack.EMPTY;
             } else {
                 ItemStack copy = stack.copy();
@@ -211,6 +225,7 @@ public class IOInventory implements IItemHandlerModifiable {
                 }
                 copy = stack.copy();
                 copy.shrink(max);
+                Locks.UPDATE_LOCK.unlock();
                 return copy;
             }
         }
@@ -219,15 +234,28 @@ public class IOInventory implements IItemHandlerModifiable {
     @Override
     @Nonnull
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        Locks.UPDATE_LOCK.lock();
         if (!allowAnySlots) {
-            if (!arrayContains(outSlots, slot)) return ItemStack.EMPTY;
+            if (!arrayContains(outSlots, slot)) {
+                Locks.UPDATE_LOCK.unlock();
+                return ItemStack.EMPTY;
+            }
         }
-        if (!this.inventory.containsKey(slot)) return ItemStack.EMPTY; //Shouldn't happen anymore here tho
+        if (!this.inventory.containsKey(slot)) {
+            Locks.UPDATE_LOCK.unlock();
+            return ItemStack.EMPTY; //Shouldn't happen anymore here tho
+        }
         SlotStackHolder holder = this.inventory.get(slot);
-        if (holder.itemStack.isEmpty()) return ItemStack.EMPTY;
+        if (holder.itemStack.isEmpty()) {
+            Locks.UPDATE_LOCK.unlock();
+            return ItemStack.EMPTY;
+        }
 
         ItemStack extract = copyWithSize(holder.itemStack, Math.min(amount, holder.itemStack.getCount()));
-        if (extract.isEmpty()) return ItemStack.EMPTY;
+        if (extract.isEmpty()) {
+            Locks.UPDATE_LOCK.unlock();
+            return ItemStack.EMPTY;
+        }
         if (!simulate) {
             holder.itemStack = copyWithSize(holder.itemStack, holder.itemStack.getCount() - extract.getCount());
             if (listener != null) {
@@ -235,6 +263,7 @@ public class IOInventory implements IItemHandlerModifiable {
             }
         }
         owner.markForUpdate();
+        Locks.UPDATE_LOCK.unlock();
         return extract;
     }
 

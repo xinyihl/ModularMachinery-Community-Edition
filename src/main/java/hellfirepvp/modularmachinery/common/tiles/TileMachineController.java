@@ -81,7 +81,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
-    private final Map<BlockPos, String> foundSmartInterfaces = new HashMap<>();
+    private final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
@@ -146,8 +146,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
             return;
         }
-        updateComponents();
-
         if (!isStructureFormed()) {
             if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
                 craftingStatus = CraftingStatus.MISSING_STRUCTURE;
@@ -155,6 +153,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
             return;
         }
+        updateComponents();
 
         ModularMachinery.EXECUTE_MANAGER.addAsyncTask(() -> {
             boolean updateRequired = onMachineTick();
@@ -263,8 +262,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
         }
         activeRecipe.start(context);
-
-        markForUpdate();
     }
 
     /**
@@ -351,6 +348,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (tryResult.isSuccess()) {
             Locks.UPDATE_LOCK.lock();
             onStart(activeRecipe, finalContext);
+            markForUpdate();
             Locks.UPDATE_LOCK.unlock();
         } else {
             this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
@@ -436,18 +434,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     @Override
     @Nullable
     public SmartInterfaceData getSmartInterfaceData(String requiredType) {
-        AtomicReference<TileSmartInterface> reference = new AtomicReference<>(null);
-        foundSmartInterfaces.forEach((pos, type) -> {
+        AtomicReference<TileSmartInterface.SmartInterfaceProvider> reference = new AtomicReference<>(null);
+        foundSmartInterfaces.forEach((provider, type) -> {
             if (type.equals(requiredType)) {
-                TileEntity te = getWorld().getTileEntity(pos);
-                if (te instanceof TileSmartInterface) {
-                    reference.set((TileSmartInterface) te);
-                }
+                reference.set(provider);
             }
         });
-        TileSmartInterface smartInterface = reference.get();
+        TileSmartInterface.SmartInterfaceProvider smartInterface = reference.get();
         if (smartInterface != null) {
-            return smartInterface.provideComponent().getMachineData(getPos());
+            return smartInterface.getMachineData(getPos());
         } else {
             return null;
         }
@@ -457,14 +452,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public SmartInterfaceData[] getSmartInterfaceDataList() {
         List<SmartInterfaceData> dataList = new ArrayList<>();
         BlockPos ctrlPos = getPos();
-        foundSmartInterfaces.forEach((pos, type) -> {
-            TileEntity te = getWorld().getTileEntity(pos);
-            if (te instanceof TileSmartInterface) {
-                TileSmartInterface.SmartInterfaceProvider smartInterface = ((TileSmartInterface) te).provideComponent();
-                SmartInterfaceData data = smartInterface.getMachineData(ctrlPos);
-                if (data != null) {
-                    dataList.add(data);
-                }
+        foundSmartInterfaces.forEach((provider, type) -> {
+            SmartInterfaceData data = provider.getMachineData(ctrlPos);
+            if (data != null) {
+                dataList.add(data);
             }
         });
         return dataList.toArray(new SmartInterfaceData[0]);
@@ -726,7 +717,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 String type = data.getType();
 
                 if (notFoundInterface.containsKey(type)) {
-                    foundSmartInterfaces.put(realPos, type);
+                    foundSmartInterfaces.put(smartInterface, type);
                 } else {
                     smartInterface.removeMachineData(realPos);
                 }
@@ -736,12 +727,12 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                     if (typeOpt.isPresent()) {
                         SmartInterfaceType type = typeOpt.get();
                         smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), type.getDefaultValue(), true);
-                        foundSmartInterfaces.put(realPos, type.getType());
+                        foundSmartInterfaces.put(smartInterface, type.getType());
                     }
                 } else {
                     SmartInterfaceType type = notFoundInterface.values().stream().sorted().findFirst().get();
                     smartInterface.addMachineData(getPos(), foundMachine.getRegistryName(), type.getType(), type.getDefaultValue(), true);
-                    foundSmartInterfaces.put(realPos, type.getType());
+                    foundSmartInterfaces.put(smartInterface, type.getType());
                 }
             }
         }

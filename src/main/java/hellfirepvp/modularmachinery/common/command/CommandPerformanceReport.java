@@ -41,7 +41,6 @@ public class CommandPerformanceReport extends CommandBase {
 
         long executedAvgPerExecution = executedCount == 0 ? 0 : totalExecuted / executedCount;
         float usedTimeAvgPerExecution = executedCount == 0 ? 0 : (float) (totalUsedTime / executedCount) / 1000;
-        long mainThreadUsedTimeAvg = executedCount == 0 ? 0 : ((totalUsedTime - taskUsedTime) / executedCount) / 1000;
         long taskUsedTimeAvg = totalExecuted == 0 ? 0 : (taskUsedTime / totalExecuted) / 1000;
         long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
 
@@ -56,13 +55,10 @@ public class CommandPerformanceReport extends CommandBase {
         sender.sendMessage(new TextComponentTranslation(langKey + ".used_time_avg_per_execution", usedTimeAvgPerExecution));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(langKey + ".main_thread_total_used_time", (totalUsedTime - taskUsedTime) / 1000));
         sender.sendMessage(new TextComponentTranslation(langKey + ".task_used_time", taskUsedTime / 1000));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(langKey + ".main_thread_used_time_avg", mainThreadUsedTimeAvg));
         sender.sendMessage(new TextComponentTranslation(langKey + ".task_used_time_avg", taskUsedTimeAvg));
-
         sender.sendMessage(new TextComponentTranslation(langKey + ".used_time_avg", usedTimeAvg));
 
         sender.sendMessage(new TextComponentString(""));

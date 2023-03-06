@@ -3,6 +3,7 @@ package github.kasuminova.mmce.common.concurrent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
@@ -22,10 +23,7 @@ public class TaskExecutor {
     public final PoolExecutor poolExecutor = new PoolExecutor();
     public final Thread poolExecutorThread = new Thread(poolExecutor);
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> preActions = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> postActions = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> asyncActions = new ConcurrentLinkedQueue<>();
-    public volatile ConcurrentLinkedQueue<Action> activeActions = null;
     public Thread serverThread = null;
 
     public void init() {
@@ -34,27 +32,17 @@ public class TaskExecutor {
     }
 
     @SubscribeEvent
-    public void onTick(final TickEvent.ServerTickEvent event) {
-        serverThread = Thread.currentThread();
-
-        switch (event.phase) {
-            case START:
-                activeActions = preActions;
-                break;
-            case END:
-                activeActions = postActions;
-                break;
-            default:
-                activeActions = null;
-                return;
+    public void onWorldTick(final TickEvent.WorldTickEvent event) {
+        if (event.side == Side.CLIENT) {
+            return;
         }
 
-        if (activeActions != null) {
-            long executed = executeActions();
-            if (executed > 0) {
-                totalExecuted += executed;
-                executedCount++;
-            }
+        serverThread = Thread.currentThread();
+
+        long executed = executeActions();
+        if (executed > 0) {
+            totalExecuted += executed;
+            executedCount++;
         }
     }
 
@@ -64,23 +52,16 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public long executeActions() {
-        if (activeActions.isEmpty() && executors.isEmpty()) {
+        if (asyncActions.isEmpty() && executors.isEmpty()) {
             return 0;
         }
 
-        if (asyncActions.isEmpty() && !poolExecutor.isRunning) {
+        if (!asyncActions.isEmpty()) {
             executeAsyncActions();
         }
 
         int executed = 0;
         long time = System.nanoTime() / 1000;
-
-        Action action;
-        while ((action = activeActions.poll()) != null) {
-            ActionExecutor executorAction = new ActionExecutor(action);
-            executors.add(executorAction);
-            FORK_JOIN_POOL.execute(executorAction);
-        }
 
         ActionExecutor actionExecutor;
         while ((actionExecutor = executors.poll()) != null) {
@@ -95,35 +76,13 @@ public class TaskExecutor {
             );
         }
 
-        while ((action = asyncActions.poll()) != null) {
-            action.doAction();
-        }
-
         //Empty Check
-        if (!activeActions.isEmpty() || !executors.isEmpty()) {
+        if (!asyncActions.isEmpty() || !executors.isEmpty()) {
             executed += executeActions();
         }
 
         totalUsedTime += System.nanoTime() / 1000 - time;
         return executed;
-    }
-
-    /**
-     * 添加一个接口引用，这个引用必定会在下一个 tick 开始时完成
-     *
-     * @param action 引用
-     */
-    public void addPreTickTask(final Action action) {
-        preActions.add(action);
-    }
-
-    /**
-     * 添加一个接口引用，这个引用必定会在该 tick 结束前完成
-     *
-     * @param action 引用
-     */
-    public void addPostTickTask(final Action action) {
-        postActions.add(action);
     }
 
     /**
@@ -133,7 +92,7 @@ public class TaskExecutor {
      */
     public void addAsyncTask(final Action action) {
         asyncActions.add(action);
-        if (!poolExecutor.isRunning) {
+        if (poolExecutorThread.getState() == Thread.State.TIMED_WAITING) {
             LockSupport.unpark(poolExecutorThread);
         }
     }
@@ -148,17 +107,21 @@ public class TaskExecutor {
     }
 
     private class PoolExecutor implements Runnable {
-        private volatile boolean isRunning = false;
+        private int emptyQueueCounter = 0;
 
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 if (asyncActions.isEmpty()) {
-                    LockSupport.park();
+                    //If is no actions, park 250μs + delayedTime(queueEmptyCount * 100μs, max: 25ms).
+                    LockSupport.parkNanos(
+                            250 * 1000 + Math.min(emptyQueueCounter * 100 * 1000, 25 * 1000 * 1000)
+                    );
+                    emptyQueueCounter++;
+                } else {
+                    emptyQueueCounter = 0;
+                    executeAsyncActions();
                 }
-                isRunning = true;
-                executeAsyncActions();
-                isRunning = false;
             }
         }
     }
