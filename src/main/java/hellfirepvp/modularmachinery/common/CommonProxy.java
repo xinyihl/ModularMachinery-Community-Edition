@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.common.crafting.IntegrationTypeHelper;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistry;
 import hellfirepvp.modularmachinery.common.data.ModDataHolder;
+import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
@@ -85,6 +86,7 @@ public class CommonProxy implements IGuiHandler {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
 
+        MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         ModularMachinery.EXECUTE_MANAGER.init();
         ModularMachinery.log.info(String.format("[ModularMachinery] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.FORK_JOIN_POOL.getParallelism()));
