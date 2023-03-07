@@ -11,8 +11,6 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -49,7 +47,6 @@ public class MMEvents {
     }
 
     @ZenMethod
-    @SideOnly(Side.CLIENT)
     public static void onControllerGUIRender(String machineRegistryName, IEventHandler<ControllerGUIRenderEvent> function) {
         WAIT_FOR_REGISTER_LIST.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
