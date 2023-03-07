@@ -1,12 +1,10 @@
 package github.kasuminova.mmce.common.concurrent;
 
-import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.*;
 
 /**
  * 一个简单的单 Tick 并发执行器
@@ -55,12 +53,6 @@ public class TaskExecutor {
             actionExecutor.join();
             taskUsedTime += actionExecutor.usedTime;
             executed++;
-        }
-
-        if ((System.nanoTime() / 1000) - (50 * 1000 * 1000) > time) {
-            ModularMachinery.log.warn(
-                    "[Modular Machinery] Parallel action execute timeout for 50ms."
-            );
         }
 
         //Empty Check
