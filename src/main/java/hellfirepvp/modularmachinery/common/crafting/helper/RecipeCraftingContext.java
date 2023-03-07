@@ -10,7 +10,7 @@ package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import github.kasuminova.mmce.common.concurrent.Locks;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSender;
@@ -27,6 +27,8 @@ import hellfirepvp.modularmachinery.common.util.ResultChance;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -122,15 +124,13 @@ public class RecipeCraftingContext {
             perTickRequirement.startIOTick(this, durMultiplier);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                CraftCheck result;
+                AtomicReference<CraftCheck> result = new AtomicReference<>();
                 if (perTickRequirement instanceof Asyncable) {
-                    result = perTickRequirement.doIOTick(component, this);
+                    result.set(perTickRequirement.doIOTick(component, this));
                 } else {
-                    Locks.UPDATE_LOCK.lock();
-                    result = perTickRequirement.doIOTick(component, this);
-                    Locks.UPDATE_LOCK.unlock();
+                    Sync.doSyncAction(() -> result.set(perTickRequirement.doIOTick(component, this)));
                 }
-                if (result.isSuccess()) {
+                if (result.get().isSuccess()) {
                     break;
                 }
             }
@@ -182,15 +182,13 @@ public class RecipeCraftingContext {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                boolean success;
+                AtomicBoolean success = new AtomicBoolean(false);
                 if (requirement instanceof Asyncable) {
-                    success = requirement.startCrafting(component, this, chance);
+                    success.set(requirement.startCrafting(component, this, chance));
                 } else {
-                    Locks.UPDATE_LOCK.lock();
-                    success = requirement.startCrafting(component, this, chance);
-                    Locks.UPDATE_LOCK.unlock();
+                    Sync.doSyncAction(() -> success.set(requirement.startCrafting(component, this, chance)));
                 }
-                if (success) {
+                if (success.get()) {
                     requirement.endRequirementCheck();
                     break;
                 }
@@ -211,15 +209,13 @@ public class RecipeCraftingContext {
             requirement.startRequirementCheck(chance, this);
 
             for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-                CraftCheck check;
+                AtomicReference<CraftCheck> check = new AtomicReference<>();
                 if (requirement instanceof Asyncable) {
-                    check = requirement.finishCrafting(component, this, chance);
+                    check.set(requirement.finishCrafting(component, this, chance));
                 } else {
-                    Locks.UPDATE_LOCK.lock();
-                    check = requirement.finishCrafting(component, this, chance);
-                    Locks.UPDATE_LOCK.unlock();
+                    Sync.doSyncAction(() -> check.set(requirement.finishCrafting(component, this, chance)));
                 }
-                if (check.isSuccess()) {
+                if (check.get().isSuccess()) {
                     requirement.endRequirementCheck();
                     break;
                 }

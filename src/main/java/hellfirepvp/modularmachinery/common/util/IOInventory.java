@@ -8,7 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import github.kasuminova.mmce.common.concurrent.Locks;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,6 +20,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -129,15 +130,15 @@ public class IOInventory implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        Locks.UPDATE_LOCK.lock();
-        if (this.inventory.containsKey(slot)) {
-            this.inventory.get(slot).itemStack = stack;
-            owner.markForUpdate();
-            if (listener != null) {
-                listener.onChange();
+        Sync.doSyncAction(() -> {
+            if (this.inventory.containsKey(slot)) {
+                this.inventory.get(slot).itemStack = stack;
+                owner.markForUpdate();
+                if (listener != null) {
+                    listener.onChange();
+                }
             }
-        }
-        Locks.UPDATE_LOCK.unlock();
+        });
     }
 
     @Override
@@ -163,15 +164,19 @@ public class IOInventory implements IItemHandlerModifiable {
     @Nonnull
     public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) return stack;
-        Locks.UPDATE_LOCK.lock();
+
+        AtomicReference<ItemStack> stackRef = new AtomicReference<>(stack);
+        Sync.doSyncAction(() -> stackRef.set(insertItemInternal(slot, stack, simulate)));
+        return stackRef.get();
+    }
+
+    private ItemStack insertItemInternal(int slot, @Nonnull ItemStack stack, boolean simulate) {
         if (!allowAnySlots) {
             if (!arrayContains(inSlots, slot)) {
-                Locks.UPDATE_LOCK.unlock();
                 return stack;
             }
         }
         if (!this.inventory.containsKey(slot)) {
-            Locks.UPDATE_LOCK.unlock();
             return stack; //Shouldn't happen anymore here tho
         }
 
@@ -181,7 +186,6 @@ public class IOInventory implements IItemHandlerModifiable {
             ItemStack existing = copyWithSize(holder.itemStack, holder.itemStack.getCount());
             int max = Math.min(existing.getMaxStackSize(), getSlotLimit(slot));
             if (existing.getCount() >= max || !canMergeItemStacks(existing, toInsert)) {
-                Locks.UPDATE_LOCK.unlock();
                 return stack;
             }
             int movable = Math.min(max - existing.getCount(), stack.getCount());
@@ -193,12 +197,10 @@ public class IOInventory implements IItemHandlerModifiable {
                 }
             }
             if (movable >= stack.getCount()) {
-                Locks.UPDATE_LOCK.unlock();
                 return ItemStack.EMPTY;
             } else {
                 ItemStack copy = stack.copy();
                 copy.shrink(movable);
-                Locks.UPDATE_LOCK.unlock();
                 return copy;
             }
         } else {
@@ -211,7 +213,6 @@ public class IOInventory implements IItemHandlerModifiable {
                         listener.onChange();
                     }
                 }
-                Locks.UPDATE_LOCK.unlock();
                 return ItemStack.EMPTY;
             } else {
                 ItemStack copy = stack.copy();
@@ -225,7 +226,6 @@ public class IOInventory implements IItemHandlerModifiable {
                 }
                 copy = stack.copy();
                 copy.shrink(max);
-                Locks.UPDATE_LOCK.unlock();
                 return copy;
             }
         }
@@ -234,26 +234,27 @@ public class IOInventory implements IItemHandlerModifiable {
     @Override
     @Nonnull
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        Locks.UPDATE_LOCK.lock();
+        AtomicReference<ItemStack> stackRef = new AtomicReference<>(ItemStack.EMPTY);
+        Sync.doSyncAction(() -> stackRef.set(extractItemInternal(slot, amount, simulate)));
+        return stackRef.get();
+    }
+
+    private ItemStack extractItemInternal(int slot, int amount, boolean simulate) {
         if (!allowAnySlots) {
             if (!arrayContains(outSlots, slot)) {
-                Locks.UPDATE_LOCK.unlock();
                 return ItemStack.EMPTY;
             }
         }
         if (!this.inventory.containsKey(slot)) {
-            Locks.UPDATE_LOCK.unlock();
             return ItemStack.EMPTY; //Shouldn't happen anymore here tho
         }
         SlotStackHolder holder = this.inventory.get(slot);
         if (holder.itemStack.isEmpty()) {
-            Locks.UPDATE_LOCK.unlock();
             return ItemStack.EMPTY;
         }
 
         ItemStack extract = copyWithSize(holder.itemStack, Math.min(amount, holder.itemStack.getCount()));
         if (extract.isEmpty()) {
-            Locks.UPDATE_LOCK.unlock();
             return ItemStack.EMPTY;
         }
         if (!simulate) {
@@ -263,7 +264,6 @@ public class IOInventory implements IItemHandlerModifiable {
             }
         }
         owner.markForUpdate();
-        Locks.UPDATE_LOCK.unlock();
         return extract;
     }
 

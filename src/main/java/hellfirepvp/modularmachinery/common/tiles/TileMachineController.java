@@ -14,7 +14,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import crafttweaker.util.IEventHandler;
-import github.kasuminova.mmce.common.concurrent.Locks;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -346,10 +346,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(finalContext);
 
         if (tryResult.isSuccess()) {
-            Locks.UPDATE_LOCK.lock();
-            onStart(activeRecipe, finalContext);
-            markForUpdate();
-            Locks.UPDATE_LOCK.unlock();
+            Sync.doSyncAction(() -> {
+                onStart(activeRecipe, finalContext);
+                markForUpdate();
+            });
         } else {
             this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
             this.activeRecipe = null;

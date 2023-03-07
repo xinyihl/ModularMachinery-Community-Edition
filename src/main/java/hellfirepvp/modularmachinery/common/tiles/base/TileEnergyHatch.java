@@ -10,7 +10,7 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import com.brandon3055.draconicevolution.DEFeatures;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
-import github.kasuminova.mmce.common.concurrent.Locks;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
@@ -30,6 +30,8 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
 
@@ -209,30 +211,30 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public boolean extractEnergy(long extract) {
-        Locks.UPDATE_LOCK.lock();
-        if (this.energy >= extract) {
-            this.energy -= extract;
+        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+        Sync.doSyncAction(() -> {
+            if (this.energy >= extract) {
+                this.energy -= extract;
 
-            markForUpdate();
-            Locks.UPDATE_LOCK.unlock();
-            return true;
-        }
-        Locks.UPDATE_LOCK.unlock();
-        return false;
+                markForUpdate();
+                atomicBoolean.set(true);
+            }
+        });
+        return atomicBoolean.get();
     }
 
     @Override
     public boolean receiveEnergy(long receive) {
-        Locks.UPDATE_LOCK.lock();
-        if (getRemainingCapacity() >= receive) {
-            this.energy += receive;
+        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+        Sync.doSyncAction(() -> {
+            if (getRemainingCapacity() >= receive) {
+                this.energy += receive;
 
-            markForUpdate();
-            Locks.UPDATE_LOCK.unlock();
-            return true;
-        }
-        Locks.UPDATE_LOCK.unlock();
-        return false;
+                markForUpdate();
+                atomicBoolean.set(true);
+            }
+        });
+        return atomicBoolean.get();
     }
 
     @Override
