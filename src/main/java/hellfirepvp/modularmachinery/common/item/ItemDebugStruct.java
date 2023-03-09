@@ -34,7 +34,7 @@ public class ItemDebugStruct extends Item {
 
     public ItemDebugStruct() {
         setMaxStackSize(1);
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        setCreativeTab(CommonProxy.creativeTabMM);
     }
 
     @Override

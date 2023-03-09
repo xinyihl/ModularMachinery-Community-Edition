@@ -42,7 +42,7 @@ public class ItemBlueprint extends Item {
 
     public ItemBlueprint() {
         setMaxStackSize(16);
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        setCreativeTab(CommonProxy.creativeTabMM);
     }
 
     @Nullable

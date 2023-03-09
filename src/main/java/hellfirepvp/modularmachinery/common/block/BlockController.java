@@ -47,7 +47,7 @@ public class BlockController extends BlockMachineComponent {
         setResistance(10F);
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        setCreativeTab(CommonProxy.creativeTabMM);
         setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
     }
 

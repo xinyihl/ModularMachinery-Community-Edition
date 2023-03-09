@@ -41,7 +41,7 @@ public class ItemConstructTool extends Item {
 
     public ItemConstructTool() {
         setMaxStackSize(1);
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        setCreativeTab(CommonProxy.creativeTabMM);
     }
 
     @Override

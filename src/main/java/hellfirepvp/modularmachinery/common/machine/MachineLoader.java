@@ -32,7 +32,7 @@ import java.util.*;
  */
 public class MachineLoader {
 
-    public static final Map<String, BlockArray.BlockInformation> variableContext = new HashMap<>();
+    public static final Map<String, BlockArray.BlockInformation> VARIABLE_CONTEXT = new HashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachine.MachineDeserializer())
             .registerTypeHierarchyAdapter(BlockInformationVariable.class, new BlockInformationVariable.Deserializer())
@@ -70,9 +70,12 @@ public class MachineLoader {
     public static List<DynamicMachine> loadMachines(List<File> machineCandidates) {
         List<DynamicMachine> loadedMachines = Lists.newArrayList();
 
-        machineCandidates.forEach(file -> {
+        machineCandidates.parallelStream().forEach(file -> {
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
-                loadedMachines.add(JsonUtils.fromJson(GSON, isr, DynamicMachine.class));
+                DynamicMachine machine = JsonUtils.fromJson(GSON, isr, DynamicMachine.class);
+                synchronized (loadedMachines) {
+                    loadedMachines.add(machine);
+                }
             } catch (Exception exc) {
                 failedAttempts.put(file.getPath(), exc);
             }
@@ -87,13 +90,13 @@ public class MachineLoader {
     }
 
     public static void prepareContext(List<File> files) {
-        variableContext.clear();
+        VARIABLE_CONTEXT.clear();
 
         files.forEach(file -> {
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 Map<String, BlockArray.BlockInformation> variables = JsonUtils.fromJson(GSON, isr, BlockInformationVariable.class).getDefinedVariables();
                 for (String key : variables.keySet()) {
-                    variableContext.put(key, variables.get(key));
+                    VARIABLE_CONTEXT.put(key, variables.get(key));
                 }
             } catch (Exception exc) {
                 failedAttempts.put(file.getPath(), exc);

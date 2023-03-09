@@ -31,7 +31,7 @@ public class BlockSmartInterface extends BlockMachineComponent implements BlockC
         setResistance(10F);
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
-        setCreativeTab(CommonProxy.creativeTabModularMachinery);
+        setCreativeTab(CommonProxy.creativeTabMM);
     }
 
     @Override

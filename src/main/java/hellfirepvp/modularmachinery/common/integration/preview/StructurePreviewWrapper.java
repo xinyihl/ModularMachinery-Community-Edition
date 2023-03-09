@@ -23,6 +23,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.ingredients.IIngredients;
@@ -307,7 +308,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             double scaleJump = jumpWidth * scale;
             Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
             if (dynamnicContext.getRenderSlice() == 0) {
-                slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new BlockArray.IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
+                slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
             }
             for (BlockPos pos : slice.keySet()) {
                 int xMod = pos.getX() + 1 + this.dynamnicContext.getMoveOffset().getX();
@@ -316,7 +317,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
                 if (rct.contains(mouseX, mouseY)) {
                     BlockArray.BlockInformation bi = slice.get(pos);
                     IBlockState state = bi.getSampleState(dynamnicContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(dynamnicContext.getShiftSnap()));
-                    Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, bi.matchingTag,
+                    Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, bi.previewTag,
                             new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                     state = recovered.getFirst();
                     Block type = state.getBlock();

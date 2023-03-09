@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.*;
 import hellfirepvp.modularmachinery.common.machine.MachineLoader;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.nbt.NBTException;
@@ -77,7 +78,7 @@ public class ModifierReplacement {
             JsonElement partElement = part.get("elements");
             if (partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
                 String strDesc = partElement.getAsString();
-                blockInfo = MachineLoader.variableContext.get(strDesc);
+                blockInfo = MachineLoader.VARIABLE_CONTEXT.get(strDesc);
                 if (blockInfo == null) {
                     blockInfo = new BlockArray.BlockInformation(Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(partElement.getAsString())));
                 } else {
@@ -88,14 +89,14 @@ public class ModifierReplacement {
                 }
             } else if (partElement.isJsonArray()) {
                 JsonArray elementArray = partElement.getAsJsonArray();
-                List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
+                List<IBlockStateDescriptor> descriptors = Lists.newArrayList();
                 for (int xx = 0; xx < elementArray.size(); xx++) {
                     JsonElement p = elementArray.get(xx);
                     if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
                         throw new JsonParseException("Part elements of 'elements' have to be blockstate descriptions!");
                     }
                     String prim = p.getAsString();
-                    BlockArray.BlockInformation descr = MachineLoader.variableContext.get(prim);
+                    BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(prim);
                     if (descr != null) {
                         descriptors.addAll(descr.copy().matchingStates);
                     } else {

@@ -22,6 +22,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.client.resources.I18n;
@@ -59,8 +60,8 @@ public class DynamicMachine {
     private boolean requiresBlueprint = false;
     private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
-    public DynamicMachine(@Nonnull ResourceLocation registryName) {
-        this.registryName = registryName;
+    public DynamicMachine(String registryName) {
+        this.registryName = new ResourceLocation(ModularMachinery.MODID, registryName);
     }
 
     public boolean hasSmartInterfaceType(String type) {
@@ -117,8 +118,8 @@ public class DynamicMachine {
         this.failureAction = failureAction;
     }
 
-    public void setRequiresBlueprint() {
-        this.requiresBlueprint = true;
+    public void setRequiresBlueprint(boolean requiresBlueprint) {
+        this.requiresBlueprint = requiresBlueprint;
     }
 
     public boolean requiresBlueprint() {
@@ -158,6 +159,11 @@ public class DynamicMachine {
 
     public int getMachineColor() {
         return definedColor;
+    }
+
+    public DynamicMachine setDefinedColor(int definedColor) {
+        this.definedColor = definedColor;
+        return this;
     }
 
     @Nonnull
@@ -250,7 +256,7 @@ public class DynamicMachine {
             if (parts.size() == 0) {
                 throw new JsonParseException("Empty/Missing 'parts'!");
             }
-            DynamicMachine machine = new DynamicMachine(new ResourceLocation(ModularMachinery.MODID, registryName));
+            DynamicMachine machine = new DynamicMachine(registryName);
             machine.setLocalizedName(localized);
 
             //Failure Action
@@ -269,10 +275,7 @@ public class DynamicMachine {
                 if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
                     throw new JsonParseException("'requires-blueprint' has to be either 'true' or 'false'!");
                 }
-                boolean requiresBlueprint = elementBlueprint.getAsJsonPrimitive().getAsBoolean();
-                if (requiresBlueprint) {
-                    machine.setRequiresBlueprint();
-                }
+                machine.setRequiresBlueprint(elementBlueprint.getAsJsonPrimitive().getAsBoolean());
             }
 
             //Color
@@ -318,7 +321,7 @@ public class DynamicMachine {
                 JsonElement partElement = part.get("elements");
                 if (partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
                     String strDesc = partElement.getAsString();
-                    BlockArray.BlockInformation descr = MachineLoader.variableContext.get(strDesc);
+                    BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(strDesc);
                     if (descr == null) {
                         descr = new BlockArray.BlockInformation(Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(partElement.getAsString())));
                     } else {
@@ -330,14 +333,14 @@ public class DynamicMachine {
                     addDescriptorWithPattern(machine.getPattern(), descr, part);
                 } else if (partElement.isJsonArray()) {
                     JsonArray elementArray = partElement.getAsJsonArray();
-                    List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
+                    List<IBlockStateDescriptor> descriptors = Lists.newArrayList();
                     for (int xx = 0; xx < elementArray.size(); xx++) {
                         JsonElement p = elementArray.get(xx);
                         if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
                             throw new JsonParseException("Part elements of 'elements' have to be blockstate descriptions!");
                         }
                         String prim = p.getAsString();
-                        BlockArray.BlockInformation descr = MachineLoader.variableContext.get(prim);
+                        BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(prim);
                         if (descr != null) {
                             descriptors.addAll(descr.copy().matchingStates);
                         } else {

@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
@@ -58,7 +59,7 @@ public class DynamicMachineRenderContext {
         copy.addBlock(new BlockPos(this.moveOffset),
                 new BlockArray.BlockInformation(
                         Lists.newArrayList(
-                                new BlockArray.IBlockStateDescriptor(
+                                new IBlockStateDescriptor(
                                         BlocksMM.blockController.getDefaultState()))));
         this.render = new BlockArrayRenderHelper(copy);
     }
