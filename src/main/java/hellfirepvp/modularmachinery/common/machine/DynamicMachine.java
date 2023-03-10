@@ -11,13 +11,11 @@ package hellfirepvp.modularmachinery.common.machine;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
@@ -25,15 +23,11 @@ import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.JsonUtils;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,20 +42,14 @@ import java.util.stream.Collectors;
  * Created by HellFirePvP
  * Date: 27.06.2017 / 13:57
  */
-public class DynamicMachine {
-    @Nonnull
-    private final ResourceLocation registryName;
+public class DynamicMachine extends AbstractMachine {
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
     private final HashMap<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
-    private String localizedName = null;
-    private int definedColor = Config.machineColor;
-    private boolean requiresBlueprint = false;
-    private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
     public DynamicMachine(String registryName) {
-        this.registryName = new ResourceLocation(ModularMachinery.MODID, registryName);
+        super(registryName);
     }
 
     public boolean hasSmartInterfaceType(String type) {
@@ -110,22 +98,6 @@ public class DynamicMachine {
         return machineEventHandlers;
     }
 
-    public RecipeFailureActions getFailureAction() {
-        return failureAction;
-    }
-
-    public void setFailureAction(RecipeFailureActions failureAction) {
-        this.failureAction = failureAction;
-    }
-
-    public void setRequiresBlueprint(boolean requiresBlueprint) {
-        this.requiresBlueprint = requiresBlueprint;
-    }
-
-    public boolean requiresBlueprint() {
-        return requiresBlueprint;
-    }
-
     public TaggedPositionBlockArray getPattern() {
         return pattern;
     }
@@ -144,31 +116,6 @@ public class DynamicMachine {
                     .collect(Collectors.toList()));
         }
         return infoMap;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public String getLocalizedName() {
-        String localizationKey = registryName.getNamespace() + "." + registryName.getPath();
-        return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :
-                localizedName != null ? localizedName : localizationKey;
-    }
-
-    public void setLocalizedName(String localizedName) {
-        this.localizedName = localizedName;
-    }
-
-    public int getMachineColor() {
-        return definedColor;
-    }
-
-    public DynamicMachine setDefinedColor(int definedColor) {
-        this.definedColor = definedColor;
-        return this;
-    }
-
-    @Nonnull
-    public ResourceLocation getRegistryName() {
-        return registryName;
     }
 
     @Nonnull
@@ -191,18 +138,6 @@ public class DynamicMachine {
             context.addModifier(modifier);
         }
         return context;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof DynamicMachine)) return false;
-        DynamicMachine machine = (DynamicMachine) obj;
-        return machine.registryName.toString().equals(registryName.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(registryName);
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {
@@ -236,6 +171,72 @@ public class DynamicMachine {
                 }
             }
             return out;
+        }
+
+        private static void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
+            List<Integer> avX = new ArrayList<>();
+            List<Integer> avY = new ArrayList<>();
+            List<Integer> avZ = new ArrayList<>();
+            addCoordinates("x", part, avX);
+            addCoordinates("y", part, avY);
+            addCoordinates("z", part, avZ);
+
+            for (BlockPos permutation : buildPermutations(avX, avY, avZ)) {
+                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
+                    continue; //We're not going to overwrite the controller.
+                }
+                machine.modifiers.putIfAbsent(permutation, Lists.newArrayList());
+                machine.modifiers.get(permutation).add(mod);
+            }
+        }
+
+        private static void addDescriptorWithPattern(TaggedPositionBlockArray pattern, BlockArray.BlockInformation information, JsonObject part) throws JsonParseException {
+            List<Integer> avX = new ArrayList<>();
+            List<Integer> avY = new ArrayList<>();
+            List<Integer> avZ = new ArrayList<>();
+            addCoordinates("x", part, avX);
+            addCoordinates("y", part, avY);
+            addCoordinates("z", part, avZ);
+
+            String tag = null;
+            if (part.has("selector-tag")) {
+                JsonElement strTag = part.get("selector-tag");
+                if (!strTag.isJsonPrimitive()) {
+                    throw new JsonParseException("The 'selector-tag' in an element must be a string!");
+                }
+                tag = strTag.getAsString();
+            }
+            ComponentSelectorTag selector = tag != null && !tag.isEmpty() ? new ComponentSelectorTag(tag) : null;
+
+            for (BlockPos permutation : buildPermutations(avX, avY, avZ)) {
+                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
+                    continue; //We're not going to overwrite the controller.
+                }
+                pattern.addBlock(permutation, information);
+
+                if (tag != null && !tag.isEmpty()) {
+                    pattern.setTag(permutation, selector);
+                }
+            }
+        }
+
+        private static void addCoordinates(String key, JsonObject part, List<Integer> out) throws JsonParseException {
+            if (!part.has(key)) {
+                out.add(0);
+                return;
+            }
+            JsonElement coordinateElement = part.get(key);
+            if (coordinateElement.isJsonPrimitive() && coordinateElement.getAsJsonPrimitive().isNumber()) {
+                out.add(coordinateElement.getAsInt());
+            } else if (coordinateElement.isJsonArray() && coordinateElement.getAsJsonArray().size() > 0) {
+                for (JsonElement element : coordinateElement.getAsJsonArray()) {
+                    if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
+                        out.add(element.getAsInt());
+                    } else {
+                        throw new JsonParseException("Expected only numbers in JsonArray " + coordinateElement + " but found " + element);
+                    }
+                }
+            }
         }
 
         @Override
@@ -376,72 +377,6 @@ public class DynamicMachine {
                 }
             }
             return machine;
-        }
-
-        private static void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
-            List<Integer> avX = new ArrayList<>();
-            List<Integer> avY = new ArrayList<>();
-            List<Integer> avZ = new ArrayList<>();
-            addCoordinates("x", part, avX);
-            addCoordinates("y", part, avY);
-            addCoordinates("z", part, avZ);
-
-            for (BlockPos permutation : buildPermutations(avX, avY, avZ)) {
-                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
-                    continue; //We're not going to overwrite the controller.
-                }
-                machine.modifiers.putIfAbsent(permutation, Lists.newArrayList());
-                machine.modifiers.get(permutation).add(mod);
-            }
-        }
-
-        private static void addDescriptorWithPattern(TaggedPositionBlockArray pattern, BlockArray.BlockInformation information, JsonObject part) throws JsonParseException {
-            List<Integer> avX = new ArrayList<>();
-            List<Integer> avY = new ArrayList<>();
-            List<Integer> avZ = new ArrayList<>();
-            addCoordinates("x", part, avX);
-            addCoordinates("y", part, avY);
-            addCoordinates("z", part, avZ);
-
-            String tag = null;
-            if (part.has("selector-tag")) {
-                JsonElement strTag = part.get("selector-tag");
-                if (!strTag.isJsonPrimitive()) {
-                    throw new JsonParseException("The 'selector-tag' in an element must be a string!");
-                }
-                tag = strTag.getAsString();
-            }
-            ComponentSelectorTag selector = tag != null && !tag.isEmpty() ? new ComponentSelectorTag(tag) : null;
-
-            for (BlockPos permutation : buildPermutations(avX, avY, avZ)) {
-                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
-                    continue; //We're not going to overwrite the controller.
-                }
-                pattern.addBlock(permutation, information);
-
-                if (tag != null && !tag.isEmpty()) {
-                    pattern.setTag(permutation, selector);
-                }
-            }
-        }
-
-        private static void addCoordinates(String key, JsonObject part, List<Integer> out) throws JsonParseException {
-            if (!part.has(key)) {
-                out.add(0);
-                return;
-            }
-            JsonElement coordinateElement = part.get(key);
-            if (coordinateElement.isJsonPrimitive() && coordinateElement.getAsJsonPrimitive().isNumber()) {
-                out.add(coordinateElement.getAsInt());
-            } else if (coordinateElement.isJsonArray() && coordinateElement.getAsJsonArray().size() > 0) {
-                for (JsonElement element : coordinateElement.getAsJsonArray()) {
-                    if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber()) {
-                        out.add(element.getAsInt());
-                    } else {
-                        throw new JsonParseException("Expected only numbers in JsonArray " + coordinateElement + " but found " + element);
-                    }
-                }
-            }
         }
     }
 

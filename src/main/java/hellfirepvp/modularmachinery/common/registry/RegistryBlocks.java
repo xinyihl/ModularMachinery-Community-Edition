@@ -14,13 +14,17 @@ import hellfirepvp.modularmachinery.common.block.*;
 import hellfirepvp.modularmachinery.common.item.ItemBlockCustomName;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,6 +54,20 @@ public class RegistryBlocks {
     private static void registerBlocks() {
         blockController = prepareRegister(new BlockController());
         prepareItemBlockRegister(blockController);
+
+        List<DynamicMachine> waitForLoadMachines = MachineRegistry.getWaitForLoadMachines();
+        for (DynamicMachine machine : waitForLoadMachines) {
+            BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController(machine));
+            ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
+                @Nonnull
+                @Override
+                public String getItemStackDisplayName(ItemStack stack) {
+                    return ctrlBlock.getLocalizedName();
+                }
+            }.setRegistryName(ctrlBlock.getRegistryName());
+
+            prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
+        }
 
         blockCasing = prepareRegister(new BlockCasing());
         prepareItemBlockRegister(blockCasing);
@@ -123,10 +141,19 @@ public class RegistryBlocks {
         return item;
     }
 
+    private static <T extends ItemBlock> T prepareItemBlockRegisterWithCustomName(T item) {
+        RegistryItems.itemBlocks.add(item);
+        return item;
+    }
+
     private static <T extends Block> T prepareRegister(T block) {
         String name = block.getClass().getSimpleName().toLowerCase();
         block.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
 
+        return prepareRegisterWithCustomName(block);
+    }
+
+    private static <T extends Block> T prepareRegisterWithCustomName(T block) {
         blockModelRegister.add(block);
         CommonProxy.registryPrimer.register(block);
         if (block instanceof BlockDynamicColor) {
@@ -134,5 +161,4 @@ public class RegistryBlocks {
         }
         return block;
     }
-
 }

@@ -8,6 +8,7 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
@@ -23,20 +24,19 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineBuilder")
 public class MachineBuilder {
     public static final List<DynamicMachine> WAIT_FOR_REGISTRY = new ArrayList<>();
-
+    private static final Map<ResourceLocation, MachineBuilder> PRE_INIT_MACHINES = new HashMap<>();
     private final DynamicMachine machine;
     private BlockArray.BlockInformation lastInformation = null;
 
@@ -54,32 +54,51 @@ public class MachineBuilder {
     }
 
     /**
-     * 创建一个新的机械构建器。
-     * 结构创建完成后，应调用 build() 方法。
+     * 注册一个新的机械构建器。
+     * 此方法应在 preInit 阶段调用！
      *
-     * @param registryName 注册名
+     * @param registryName  注册名
      * @param localizedName 译名
-     * @return 构建器
      */
     @ZenMethod
-    public static MachineBuilder create(String registryName, String localizedName) {
-        return new MachineBuilder(registryName, localizedName);
+    public static void registerMachine(String registryName, String localizedName) {
+        if (PRE_INIT_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+            CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
+            return;
+        }
+        MachineBuilder builder = new MachineBuilder(registryName, localizedName);
+        PRE_INIT_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
     /**
-     * 创建一个新的机械构建器。
-     * 结构创建完成后，应调用 build() 方法。
+     * 注册一个新的机械构建器。
+     * 此方法应在 preInit 阶段调用！
      *
-     * @param registryName 注册名
-     * @param localizedName 译名
+     * @param registryName      注册名
+     * @param localizedName     译名
      * @param requiresBlueprint 是否需要蓝图
-     * @param failureAction 失败操作
-     * @param color 颜色
-     * @return 构建器
+     * @param failureAction     失败操作
+     * @param color             颜色
      */
     @ZenMethod
-    public static MachineBuilder create(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
-        return new MachineBuilder(registryName, localizedName, requiresBlueprint, failureAction, color);
+    public static void registerMachine(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
+        if (PRE_INIT_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+            CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
+            return;
+        }
+        MachineBuilder builder = new MachineBuilder(registryName, localizedName, requiresBlueprint, failureAction, color);
+        PRE_INIT_MACHINES.put(builder.machine.getRegistryName(), builder);
+    }
+
+    /**
+     * 获取在 preInit 注册的机械构建器。
+     *
+     * @param registryName 注册名
+     * @return 机械构建器，若先前未注册则返回 null。
+     */
+    @ZenMethod
+    public static MachineBuilder getBuilder(String registryName) {
+        return PRE_INIT_MACHINES.get(new ResourceLocation(ModularMachinery.MODID, registryName));
     }
 
     /**
