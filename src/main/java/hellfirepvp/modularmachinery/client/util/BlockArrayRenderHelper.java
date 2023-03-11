@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.client.util;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
-import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -230,9 +229,9 @@ public class BlockArrayRenderHelper {
         private final BlockArrayRenderHelper ref;
         private final List<SampleRenderState> renderStates = new ArrayList<>();
 
-        private BakedBlockData(BlockArrayRenderHelper ref, List<IBlockStateDescriptor> states, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
+        private BakedBlockData(BlockArrayRenderHelper ref, List<BlockArray.IBlockStateDescriptor> states, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
             this.ref = ref;
-            for (IBlockStateDescriptor desc : states) {
+            for (BlockArray.IBlockStateDescriptor desc : states) {
                 for (IBlockState state : desc.applicable) {
                     renderStates.add(new SampleRenderState(state, matchTag, context));
                 }
@@ -288,7 +287,7 @@ public class BlockArrayRenderHelper {
                 BlockPos offset = entry.getKey();
                 BlockArray.BlockInformation info = entry.getValue();
                 BlockArray.TileInstantiateContext context = new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, offset);
-                blockRenderData.put(offset, new BakedBlockData(ref, info.matchingStates, info.previewTag, context));
+                blockRenderData.put(offset, new BakedBlockData(ref, info.matchingStates, info.matchingTag, context));
             }
         }
 

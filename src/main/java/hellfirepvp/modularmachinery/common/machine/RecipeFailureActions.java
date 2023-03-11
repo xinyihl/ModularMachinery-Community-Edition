@@ -1,23 +1,16 @@
 package hellfirepvp.modularmachinery.common.machine;
 
-import crafttweaker.annotations.ZenRegister;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Configuration;
-import stanhebben.zenscript.annotations.ZenClass;
-import stanhebben.zenscript.annotations.ZenGetter;
-import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@ZenRegister
-@ZenClass("mods.modularmachinery.RecipeFailureActions")
 public enum RecipeFailureActions {
     RESET("reset"),
     STILL("still"),
     DECREASE("decrease");
 
-    @ZenGetter("name")
     public String getName() {
         return name;
     }
@@ -51,7 +44,6 @@ public enum RecipeFailureActions {
         }
     }
 
-    @ZenMethod
     public static RecipeFailureActions getFailureAction(String key) {
         RecipeFailureActions actions = NAME_MAP.get(key);
         if (actions != null) return actions;
@@ -59,7 +51,6 @@ public enum RecipeFailureActions {
         return defaultAction;
     }
 
-    @ZenMethod
     public static RecipeFailureActions getDefaultAction() {
         return defaultAction;
     }

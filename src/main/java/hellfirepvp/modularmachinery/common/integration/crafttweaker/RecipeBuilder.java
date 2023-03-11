@@ -46,8 +46,8 @@ public class RecipeBuilder {
             machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
         }
         if (processingTickTime <= 0) {
-            CraftTweakerAPI.logWarning("Recipe processing tick time has to be at least 1 tick!");
-            processingTickTime = 1;
+            CraftTweakerAPI.logError("Recipe processing tick time has to be at least 1 tick!");
+            return null;
         }
 
         return new RecipePrimer(recipeLoc, machineLoc, processingTickTime, sortingPriority, cancelIfPerTickFails);

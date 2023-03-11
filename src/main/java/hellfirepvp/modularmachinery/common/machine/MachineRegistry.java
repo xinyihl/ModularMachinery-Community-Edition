@@ -52,7 +52,7 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         DataLoadProfiler.Status success = variables.appendStatus("%s loaded");
         DataLoadProfiler.Status failed = variables.appendStatus("%s failed");
 
-        success.setCounter(MachineLoader.VARIABLE_CONTEXT.size());
+        success.setCounter(MachineLoader.variableContext.size());
 
         Map<String, Exception> failures = MachineLoader.captureFailedAttempts();
 

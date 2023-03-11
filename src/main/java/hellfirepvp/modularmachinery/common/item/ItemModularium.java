@@ -24,7 +24,7 @@ public class ItemModularium extends Item implements ItemDynamicColor {
 
     public ItemModularium() {
         setMaxStackSize(64);
-        setCreativeTab(CommonProxy.creativeTabMM);
+        setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
     @Override

@@ -17,26 +17,22 @@ import java.util.List;
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineModifier")
 public class MachineModifier {
-    public static final List<Action> WAIT_FOR_MODIFY = new LinkedList<>();
+    public static final List<Action> WAIT_FOR_MODIFY_LIST = new LinkedList<>();
 
     @ZenMethod
     public static void addSmartInterfaceType(String machineName, SmartInterfaceType type) {
-        WAIT_FOR_MODIFY.add(() -> {
+        WAIT_FOR_MODIFY_LIST.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
             if (machine == null) {
                 CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
                 return;
             }
-            if (!machine.hasSmartInterfaceType(type.getType())) {
-                machine.addSmartInterfaceType(type);
-            } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] DynamicMachine `" + machine.getRegistryName() + "` is already has SmartInterfaceType `" + type.getType() + "`!");
-            }
+            machine.addSmartInterfaceType(type);
         });
     }
 
     public static void loadAll() {
-        for (Action waitForRegister : WAIT_FOR_MODIFY) {
+        for (Action waitForRegister : WAIT_FOR_MODIFY_LIST) {
             waitForRegister.doAction();
         }
     }

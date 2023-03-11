@@ -10,9 +10,7 @@ package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonParseException;
-import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.block.Block;
@@ -310,8 +308,6 @@ public class BlockArray {
         public final List<IBlockStateDescriptor> matchingStates;
         private final List<IBlockState> samples = new LinkedList<>();
         public NBTTagCompound matchingTag = null;
-        public NBTTagCompound previewTag = null;
-        public AdvancedBlockChecker nbtChecker = null;
 
         public BlockInformation(List<IBlockStateDescriptor> matching) {
             this.matchingStates = Lists.newLinkedList(matching);
@@ -454,6 +450,17 @@ public class BlockArray {
                 return default_;
             }
 
+            if (matchingTag != null) {
+                TileEntity te = world.getTileEntity(at);
+                if (te != null && matchingTag.getSize() > 0) {
+                    NBTTagCompound cmp = new NBTTagCompound();
+                    te.writeToNBT(cmp);
+                    if (!NBTMatchingHelper.matchNBTCompound(matchingTag, cmp)) {
+                        return false; //No match at this position.
+                    }
+                }
+            }
+
             IBlockState state = world.getBlockState(at);
             Block atBlock = state.getBlock();
             int atMeta = atBlock.getMetaFromState(state);
@@ -462,38 +469,41 @@ public class BlockArray {
                 for (IBlockState applicable : descriptor.applicable) {
                     Block type = applicable.getBlock();
                     int meta = type.getMetaFromState(applicable);
-                    if (!type.equals(state.getBlock()) || meta != atMeta) {
-                        continue;
+                    if (type.equals(state.getBlock()) && meta == atMeta) {
+                        return true;
                     }
-
-                    if (nbtChecker != null) {
-                        TileEntity te = world.getTileEntity(at);
-                        if (te != null) {
-                            NBTTagCompound cmp = new NBTTagCompound();
-                            te.writeToNBT(cmp);
-                            if (!nbtChecker.isMatch(
-                                    CraftTweakerMC.getIWorld(world),
-                                    CraftTweakerMC.getIBlockPos(at),
-                                    CraftTweakerMC.getBlockState(applicable),
-                                    CraftTweakerMC.getIData(cmp)))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-
-                    if (matchingTag != null) {
-                        TileEntity te = world.getTileEntity(at);
-                        if (te != null && matchingTag.getSize() > 0) {
-                            NBTTagCompound cmp = new NBTTagCompound();
-                            te.writeToNBT(cmp);
-                            return NBTMatchingHelper.matchNBTCompound(matchingTag, cmp); //No match at this position.
-                        }
-                    }
-                    return true;
                 }
             }
             return false;
+        }
+
+    }
+
+    public static class IBlockStateDescriptor {
+
+        public final List<IBlockState> applicable = Lists.newArrayList();
+
+        private IBlockStateDescriptor() {
+        }
+
+        private IBlockStateDescriptor(Block block) {
+            List<Integer> usedMetas = Lists.newArrayList();
+            if (!(block instanceof BlockLiquid) && !(block instanceof BlockFluidBase)) {
+                for (IBlockState state : block.getBlockState().getValidStates()) {
+                    int meta = block.getMetaFromState(state);
+                    if (!usedMetas.contains(meta)) {
+                        usedMetas.add(meta);
+                        this.applicable.add(state);
+                    }
+                }
+            }
+            if (applicable.isEmpty()) {
+                applicable.add(block.getDefaultState());
+            }
+        }
+
+        public IBlockStateDescriptor(IBlockState state) {
+            this.applicable.add(state);
         }
 
     }

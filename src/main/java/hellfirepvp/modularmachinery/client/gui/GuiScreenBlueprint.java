@@ -19,7 +19,6 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
-import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -194,7 +193,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         double scaleJump = jumpWidth * scale;
         Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(renderContext.getRenderSlice());
         if (renderContext.getRenderSlice() == 0) {
-            slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
+            slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new BlockArray.IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
         }
         for (BlockPos pos : slice.keySet()) {
             int xMod = pos.getX() + 1 + this.renderContext.getMoveOffset().getX();
@@ -202,7 +201,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             Rectangle.Double rct = new Rectangle2D.Double(offset.x - xMod * scaleJump, offset.y - zMod * scaleJump, scaleJump, scaleJump);
             if (rct.contains(mouseX, mouseY)) {
                 IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
-                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).previewTag,
+                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).matchingTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                 state = recovered.getFirst();
                 Block type = state.getBlock();

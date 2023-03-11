@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.common.util;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.item.Item;

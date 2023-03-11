@@ -40,7 +40,7 @@ public abstract class BlockFluidHatch extends BlockMachineComponent implements B
         setResistance(10F);
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
-        setCreativeTab(CommonProxy.creativeTabMM);
+        setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
     @Override

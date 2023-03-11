@@ -19,7 +19,6 @@ import hellfirepvp.modularmachinery.common.data.ModDataHolder;
 import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEvents;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
@@ -45,7 +44,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 
@@ -59,7 +57,7 @@ import java.io.File;
 public class CommonProxy implements IGuiHandler {
 
     public static final ModDataHolder dataHolder = new ModDataHolder();
-    public static CreativeTabMM creativeTabMM;
+    public static CreativeTabs creativeTabModularMachinery;
     public static InternalRegistryPrimer registryPrimer;
 
     public CommonProxy() {
@@ -75,7 +73,12 @@ public class CommonProxy implements IGuiHandler {
     }
 
     public void preInit() {
-        creativeTabMM = new CreativeTabMM();
+        creativeTabModularMachinery = new CreativeTabs(ModularMachinery.MODID) {
+            @Override
+            public ItemStack createIcon() {
+                return new ItemStack(BlocksMM.blockController);
+            }
+        };
 
         NetworkRegistry.INSTANCE.registerGuiHandler(ModularMachinery.MODID, this);
 
@@ -95,7 +98,6 @@ public class CommonProxy implements IGuiHandler {
         IntegrationTypeHelper.filterModIdRequirementTypes();
 
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
-        MachineRegistry.registerMachines(MachineBuilder.WAIT_FOR_REGISTRY);
         MachineModifier.loadAll();
         MMEvents.registryAll();
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
@@ -169,15 +171,4 @@ public class CommonProxy implements IGuiHandler {
         }
     }
 
-    private static class CreativeTabMM extends CreativeTabs {
-        private CreativeTabMM() {
-            super(ModularMachinery.MODID);
-        }
-
-        @Nonnull
-        @Override
-        public ItemStack createIcon() {
-            return new ItemStack(BlocksMM.blockController);
-        }
-    }
 }
