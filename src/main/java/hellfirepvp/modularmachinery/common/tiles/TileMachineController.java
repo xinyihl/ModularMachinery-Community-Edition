@@ -550,7 +550,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     private int currentRecipeSearchDelay() {
-        return Math.min(20 + this.recipeResearchRetryCount * 10, 80);
+        return Math.min(10 + this.recipeResearchRetryCount * 5, 80);
     }
 
     public boolean isStructureFormed() {
