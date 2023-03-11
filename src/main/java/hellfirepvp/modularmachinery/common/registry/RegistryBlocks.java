@@ -30,6 +30,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -121,6 +123,7 @@ public class RegistryBlocks {
                 ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
                     @Nonnull
                     @Override
+                    @SideOnly(Side.CLIENT)
                     public String getItemStackDisplayName(ItemStack stack) {
                         return ctrlBlock.getLocalizedName();
                     }

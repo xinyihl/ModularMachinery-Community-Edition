@@ -4,6 +4,8 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.data.Config;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -37,6 +39,7 @@ public abstract class AbstractMachine {
         return requiresBlueprint;
     }
 
+    @SideOnly(Side.CLIENT)
     public String getLocalizedName() {
         String localizationKey = registryName.getNamespace() + "." + registryName.getPath();
         return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :

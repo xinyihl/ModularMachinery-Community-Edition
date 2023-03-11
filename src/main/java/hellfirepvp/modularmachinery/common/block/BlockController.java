@@ -219,6 +219,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Nonnull
     @Override
+    @SideOnly(Side.CLIENT)
     public String getLocalizedName() {
         if (parentMachine != null) {
             return I18n.format("tile.modularmachinery.machinecontroller.name", parentMachine.getLocalizedName());
