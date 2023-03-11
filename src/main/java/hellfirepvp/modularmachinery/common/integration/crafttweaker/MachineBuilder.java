@@ -35,8 +35,8 @@ import java.util.*;
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineBuilder")
 public class MachineBuilder {
-    public static final List<DynamicMachine> WAIT_FOR_REGISTRY = new ArrayList<>();
-    public static final Map<ResourceLocation, MachineBuilder> PRE_INIT_MACHINES = new HashMap<>();
+    public static final List<DynamicMachine> WAIT_FOR_LOAD = new ArrayList<>();
+    public static final Map<ResourceLocation, MachineBuilder> PRE_LOAD_MACHINES = new HashMap<>();
     private final DynamicMachine machine;
     private BlockArray.BlockInformation lastInformation = null;
 
@@ -62,12 +62,12 @@ public class MachineBuilder {
      */
     @ZenMethod
     public static void registerMachine(String registryName, String localizedName) {
-        if (PRE_INIT_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+        if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
             CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
             return;
         }
         MachineBuilder builder = new MachineBuilder(registryName, localizedName);
-        PRE_INIT_MACHINES.put(builder.machine.getRegistryName(), builder);
+        PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
     /**
@@ -82,12 +82,12 @@ public class MachineBuilder {
      */
     @ZenMethod
     public static void registerMachine(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
-        if (PRE_INIT_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+        if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
             CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
             return;
         }
         MachineBuilder builder = new MachineBuilder(registryName, localizedName, requiresBlueprint, failureAction, color);
-        PRE_INIT_MACHINES.put(builder.machine.getRegistryName(), builder);
+        PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
     /**
@@ -98,7 +98,7 @@ public class MachineBuilder {
      */
     @ZenMethod
     public static MachineBuilder getBuilder(String registryName) {
-        return PRE_INIT_MACHINES.get(new ResourceLocation(ModularMachinery.MODID, registryName));
+        return PRE_LOAD_MACHINES.get(new ResourceLocation(ModularMachinery.MODID, registryName));
     }
 
     public DynamicMachine getMachine() {
@@ -489,7 +489,7 @@ public class MachineBuilder {
      */
     @ZenMethod
     public void build() {
-        WAIT_FOR_REGISTRY.add(machine);
+        WAIT_FOR_LOAD.add(machine);
     }
 
     private void addBlock(BlockPos pos, BlockArray.BlockInformation information) {

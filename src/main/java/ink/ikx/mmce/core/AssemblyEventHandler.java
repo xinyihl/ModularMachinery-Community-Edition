@@ -77,7 +77,7 @@ public class AssemblyEventHandler {
         }
     }
 
-    private boolean assemblyBefore(DynamicMachine machine, EntityPlayer player, BlockPos pos) {
+    private static boolean assemblyBefore(DynamicMachine machine, EntityPlayer player, BlockPos pos) {
         if (machine == null) {
             player.sendMessage(MiscUtils.translate(1));
             return false;
@@ -85,30 +85,30 @@ public class AssemblyEventHandler {
 
         EnumFacing controllerFacing = player.world.getBlockState(pos).getValue(BlockController.FACING);
         BlockArray blockArray = hellfirepvp.modularmachinery.common.util.MiscUtils.rotateYCCWNorthUntil(machine.getPattern(), controllerFacing);
-        MachineAssembly Machine = new MachineAssembly(pos, player, blockArray.getPattern());
+        MachineAssembly assembly = new MachineAssembly(pos, player, blockArray.getPattern());
 
-        if (MachineAssemblyManager.checkMachineExist(Machine)) {
+        if (MachineAssemblyManager.checkMachineExist(assembly)) {
             player.sendMessage(MiscUtils.translate(2));
             return false;
         }
         if (isPlayerNotCreative(player)) {
-            if (!Machine.isAllItemsContains() && AssemblyConfig.needAllBlocks) {
+            if (!assembly.isAllItemsContains() && AssemblyConfig.needAllBlocks) {
                 player.sendMessage(MiscUtils.translate(3));
                 return false;
             } else {
-                MachineAssemblyManager.addMachineAssembly(Machine);
+                MachineAssemblyManager.addMachineAssembly(assembly);
             }
         } else {
-            Machine.buildWithCreative();
+            assembly.buildWithCreative();
         }
         return true;
     }
 
-    private ItemStack getBlueprint(TileMachineController controller) {
+    private static ItemStack getBlueprint(TileMachineController controller) {
         return controller.getInventory().getStackInSlot(TileMachineController.BLUEPRINT_SLOT);
     }
 
-    private boolean isPlayerNotCreative(EntityPlayer player) {
+    private static boolean isPlayerNotCreative(EntityPlayer player) {
         return !player.isCreative();
     }
 

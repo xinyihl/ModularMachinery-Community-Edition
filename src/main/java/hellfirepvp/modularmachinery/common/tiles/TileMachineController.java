@@ -895,6 +895,13 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         } else {
             resetMachine(false);
         }
+        if (compound.hasKey("parentMachine")) {
+            ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
+            if (machine == null) {
+                ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
+            }
+        }
         if (compound.hasKey("activeRecipe")) {
             NBTTagCompound tag = compound.getCompoundTag("activeRecipe");
             ActiveMachineRecipe recipe = new ActiveMachineRecipe(tag);
@@ -943,6 +950,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 }
             });
             compound.setTag("customModifier", tagList);
+        }
+        if (this.parentMachine != null) {
+            compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());
         }
         if (this.activeRecipe != null) {
             compound.setTag("activeRecipe", this.activeRecipe.serialize());

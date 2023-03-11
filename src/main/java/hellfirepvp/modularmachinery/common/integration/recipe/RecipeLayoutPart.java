@@ -330,7 +330,7 @@ public abstract class RecipeLayoutPart<T> {
 
         @Override
         public int getMaxHorizontalCount() {
-            return 3;
+            return 4;
         }
 
         @Override

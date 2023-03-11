@@ -31,7 +31,7 @@ public class ModIntegrationCrafttweaker {
     @SubscribeEvent
     public void onScriptsReloading(ScriptRunEvent.Pre event) {
         RecipeRegistry.getRegistry().clearLingeringRecipes();
-        MachineBuilder.WAIT_FOR_REGISTRY.clear();
+        MachineBuilder.WAIT_FOR_LOAD.clear();
         MachineModifier.WAIT_FOR_MODIFY.clear();
     }
 

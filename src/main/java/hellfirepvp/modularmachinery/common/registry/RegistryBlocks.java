@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.registry;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.*;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
@@ -55,9 +56,15 @@ public class RegistryBlocks {
 
     public static void initialize() {
         registerBlocks();
+        if (Mods.RESOURCELOADER.isPresent()) {
+            try {
+                RegistryBlocks.writeAllCustomControllerModels();
+            } catch (IOException e) {
+                ModularMachinery.log.error("failed to write controller models", e);
+            }
+        }
 
         registerTiles();
-
         registerBlockModels();
     }
 
@@ -102,7 +109,7 @@ public class RegistryBlocks {
 
     private static void registerCustomControllers() {
         List<DynamicMachine> waitForLoadMachines = MachineRegistry.getWaitForLoadMachines();
-        for (MachineBuilder builder : MachineBuilder.PRE_INIT_MACHINES.values()) {
+        for (MachineBuilder builder : MachineBuilder.PRE_LOAD_MACHINES.values()) {
             waitForLoadMachines.add(builder.getMachine());
         }
 
@@ -201,17 +208,21 @@ public class RegistryBlocks {
     public static void writeAllCustomControllerModels() throws IOException {
         IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
         for (BlockController controller : BlockController.MACHINE_CONTROLLERS.values()) {
-            IResource blockStateResource = resourceManager.getResource(
-                    new ResourceLocation(ModularMachinery.MODID, "blockstates/block_machine_controller.json"));
+            writeModelInternal(resourceManager, controller);
+        }
+    }
 
-            File blockStateFile = new File("resources/modularmachinery/blockstates/" + controller.getRegistryName().getPath() + ".json");
-            if (!blockStateFile.exists()) {
-                final InputStream inputStream = blockStateResource.getInputStream();
-                final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
-                IOUtils.copy(inputStream, fileOutputStream);
-                inputStream.close();
-                fileOutputStream.close();
-            }
+    private static void writeModelInternal(IResourceManager resourceManager, BlockController controller) throws IOException {
+        IResource blockStateResource = resourceManager.getResource(
+                new ResourceLocation(ModularMachinery.MODID, "blockstates/block_machine_controller.json"));
+
+        File blockStateFile = new File("resources/modularmachinery/blockstates/" + controller.getRegistryName().getPath() + ".json");
+        if (!blockStateFile.exists()) {
+            final InputStream inputStream = blockStateResource.getInputStream();
+            final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
+            IOUtils.copy(inputStream, fileOutputStream);
+            inputStream.close();
+            fileOutputStream.close();
         }
     }
 }
