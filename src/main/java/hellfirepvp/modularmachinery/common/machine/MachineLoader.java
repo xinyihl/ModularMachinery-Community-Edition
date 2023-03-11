@@ -11,14 +11,11 @@ package hellfirepvp.modularmachinery.common.machine;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockInformationVariable;
-import hellfirepvp.modularmachinery.common.util.FileUtils;
 import net.minecraft.util.JsonUtils;
-import net.minecraft.util.Tuple;
 
 import java.io.File;
 import java.io.InputStreamReader;
@@ -41,9 +38,6 @@ public class MachineLoader {
             .registerTypeHierarchyAdapter(BlockInformationVariable.class, new BlockInformationVariable.Deserializer())
             .registerTypeHierarchyAdapter(ModifierReplacement.class, new ModifierReplacement.Deserializer())
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
-            .create();
-    private static final Gson PRELOAD_GSON = new GsonBuilder()
-            .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachinePreDeserializer())
             .create();
     private static Map<String, Exception> failedAttempts = new HashMap<>();
 
@@ -72,37 +66,18 @@ public class MachineLoader {
         return candidates;
     }
 
-    public static List<Tuple<DynamicMachine, String>> registerMachines(Collection<File> machineCandidates) {
-        List<Tuple<DynamicMachine, String>> registeredMachinery = Lists.newArrayList();
 
-        machineCandidates.parallelStream().forEach(file -> {
-            try {
-                String jsonString = FileUtils.readFile(file);
-                DynamicMachine machine = JsonUtils.fromJson(PRELOAD_GSON, jsonString, DynamicMachine.class, false);
-                if (machine != null) {
-                    synchronized (registeredMachinery) {
-                        registeredMachinery.add(new Tuple<>(machine, jsonString));
-                    }
-                }
-            } catch (Exception exc) {
-                failedAttempts.put(file.getPath(), exc);
-            }
-        });
-        return registeredMachinery;
-    }
-
-
-    public static List<DynamicMachine> loadMachines(Collection<Tuple<DynamicMachine, String>> registeredMachineList) {
+    public static List<DynamicMachine> loadMachines(List<File> machineCandidates) {
         List<DynamicMachine> loadedMachines = Lists.newArrayList();
 
-        registeredMachineList.parallelStream().forEach(registryAndJsonStr -> {
-            try {
-                DynamicMachine machine = JsonUtils.fromJson(GSON, registryAndJsonStr.getSecond(), DynamicMachine.class, false);
+        machineCandidates.parallelStream().forEach(file -> {
+            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
+                DynamicMachine machine = JsonUtils.fromJson(GSON, isr, DynamicMachine.class);
                 synchronized (loadedMachines) {
                     loadedMachines.add(machine);
                 }
             } catch (Exception exc) {
-                ModularMachinery.log.warn(registryAndJsonStr.getFirst().registryName, exc);
+                failedAttempts.put(file.getPath(), exc);
             }
         });
         return loadedMachines;

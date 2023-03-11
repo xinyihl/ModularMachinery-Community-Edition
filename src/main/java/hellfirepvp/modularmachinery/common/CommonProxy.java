@@ -83,8 +83,6 @@ public class CommonProxy implements IGuiHandler {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
 
-        MachineRegistry.preloadMachines();
-
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         ModularMachinery.EXECUTE_MANAGER.init();

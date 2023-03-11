@@ -45,7 +45,6 @@ public class CommandSyntax extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
         player.sendMessage(new TextComponentString("Testing Machines:"));
-        MachineRegistry.preloadMachines();
         MachineRegistry.loadMachines(player);
         player.sendMessage(new TextComponentString(""));
         player.sendMessage(new TextComponentString("Testing Recipes:"));

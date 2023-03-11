@@ -8,12 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.machine;
 
+import com.google.common.collect.ImmutableList;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.data.DataLoadProfiler;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.ProgressManager;
 
 import javax.annotation.Nullable;
@@ -30,45 +30,13 @@ import java.util.*;
 public class MachineRegistry implements Iterable<DynamicMachine> {
 
     private static final MachineRegistry INSTANCE = new MachineRegistry();
-    //Type: <MachineName, <Machine, JSONString>>
-    private static final Map<ResourceLocation, Tuple<DynamicMachine, String>> WAIT_FOR_LOAD_MACHINERY = new HashMap<>();
-    private static final Map<ResourceLocation, DynamicMachine> LOADED_MACHINERY = new HashMap<>();
+    private static final Map<ResourceLocation, DynamicMachine> REGISTRY_MACHINERY = new HashMap<>();
 
     private MachineRegistry() {
     }
 
     public static MachineRegistry getRegistry() {
         return INSTANCE;
-    }
-
-    public static void preloadMachines() {
-        ProgressManager.ProgressBar barMachinery = ProgressManager.push("MachineRegistry", 2);
-        barMachinery.step("Discovering Files");
-        DataLoadProfiler profiler = new DataLoadProfiler();
-
-        Map<MachineLoader.FileType, List<File>> candidates = MachineLoader.discoverDirectory(CommonProxy.dataHolder.getMachineryDirectory());
-        barMachinery.step("Registry Machines");
-
-        DataLoadProfiler.StatusLine machines = profiler.createLine("Machines: ");
-        DataLoadProfiler.Status success = machines.appendStatus("%s registered");
-        DataLoadProfiler.Status failed = machines.appendStatus("%s failed");
-
-        List<Tuple<DynamicMachine, String>> found = MachineLoader.registerMachines(candidates.get(MachineLoader.FileType.MACHINE));
-        success.setCounter(found.size());
-        Map<String, Exception> failures = MachineLoader.captureFailedAttempts();
-        failed.setCounter(failures.size());
-        if (!failures.isEmpty()) {
-            ModularMachinery.log.warn("Encountered " + failures.size() + " problems while registering machinery!");
-            for (String fileName : failures.keySet()) {
-                ModularMachinery.log.warn("Couldn't load machinery " + fileName);
-                failures.get(fileName).printStackTrace();
-            }
-        }
-        ProgressManager.pop(barMachinery);
-
-        for (Tuple<DynamicMachine, String> waitForRegistry : found) {
-            WAIT_FOR_LOAD_MACHINERY.put(waitForRegistry.getFirst().getRegistryName(), waitForRegistry);
-        }
     }
 
     public static Collection<DynamicMachine> loadMachines(@Nullable EntityPlayer player) {
@@ -102,9 +70,7 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         success = machines.appendStatus("%s loaded");
         failed = machines.appendStatus("%s failed");
 
-        List<DynamicMachine> found = MachineLoader.loadMachines(WAIT_FOR_LOAD_MACHINERY.values());
-        WAIT_FOR_LOAD_MACHINERY.clear();
-
+        List<DynamicMachine> found = MachineLoader.loadMachines(candidates.get(MachineLoader.FileType.MACHINE));
         success.setCounter(found.size());
         failures = MachineLoader.captureFailedAttempts();
         failed.setCounter(failures.size());
@@ -117,38 +83,24 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         }
         ProgressManager.pop(barMachinery);
         profiler.printLines(player);
-        return Collections.unmodifiableList(found);
+        return ImmutableList.copyOf(found);
     }
 
     public static void registerMachines(Collection<DynamicMachine> machines) {
         for (DynamicMachine machine : machines) {
-            LOADED_MACHINERY.put(machine.getRegistryName(), machine);
+            REGISTRY_MACHINERY.put(machine.getRegistryName(), machine);
         }
-    }
-
-    public static List<DynamicMachine> getWaitForLoadMachines() {
-        List<DynamicMachine> machineList = new ArrayList<>();
-        for (Tuple<DynamicMachine, String> value : WAIT_FOR_LOAD_MACHINERY.values()) {
-            machineList.add(value.getFirst());
-        }
-
-        return machineList;
-    }
-
-    public static List<DynamicMachine> getLoadedMachines() {
-        List<DynamicMachine> machineList = new ArrayList<>(LOADED_MACHINERY.values());
-        return Collections.unmodifiableList(machineList);
     }
 
     @Nullable
     public DynamicMachine getMachine(@Nullable ResourceLocation name) {
         if (name == null) return null;
-        return LOADED_MACHINERY.get(name);
+        return REGISTRY_MACHINERY.get(name);
     }
 
     @Override
     public Iterator<DynamicMachine> iterator() {
-        return LOADED_MACHINERY.values().iterator();
+        return REGISTRY_MACHINERY.values().iterator();
     }
 
 }

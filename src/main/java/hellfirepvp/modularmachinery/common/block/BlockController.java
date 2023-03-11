@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.machine.AbstractMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.block.SoundType;
@@ -18,7 +17,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -30,7 +28,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -41,8 +38,8 @@ import javax.annotation.Nullable;
  * Date: 28.06.2017 / 20:48
  */
 public class BlockController extends BlockMachineComponent {
+
     public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
-    private AbstractMachine machine = null;
 
     public BlockController() {
         super(Material.IRON);
@@ -54,17 +51,8 @@ public class BlockController extends BlockMachineComponent {
         setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
     }
 
-    public BlockController(AbstractMachine machine) {
-        this();
-        this.machine = machine;
-        setRegistryName(new ResourceLocation(
-                ModularMachinery.MODID,
-                machine.getRegistryName().getPath() + "_controller")
-        );
-    }
-
     @Override
-    public void breakBlock(World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
+    public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
         TileEntity te = worldIn.getTileEntity(pos);
         if (te instanceof TileMachineController) {
             IOInventory inv = ((TileMachineController) te).getInventory();
@@ -80,25 +68,22 @@ public class BlockController extends BlockMachineComponent {
     }
 
     @Override
-    public boolean canConnectRedstone(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nullable EnumFacing side) {
+    public boolean canConnectRedstone(IBlockState state, IBlockAccess world, BlockPos pos, @Nullable EnumFacing side) {
         return true;
     }
 
-    @Nonnull
     @Override
-    public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
+    public EnumBlockRenderType getRenderType(IBlockState state) {
         return EnumBlockRenderType.MODEL;
     }
 
-    @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
-    public IBlockState getStateForPlacement(@Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing().getOpposite());
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
             if (te instanceof TileMachineController) {
@@ -113,28 +98,23 @@ public class BlockController extends BlockMachineComponent {
         return state.getValue(FACING).getHorizontalIndex();
     }
 
-    @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
     public IBlockState getStateFromMeta(int meta) {
         return this.getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
     }
 
-    @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, FACING);
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public boolean hasComparatorInputOverride(@Nonnull IBlockState state) {
+    public boolean hasComparatorInputOverride(IBlockState state) {
         return true;
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public int getComparatorInputOverride(@Nonnull IBlockState blockState, World worldIn, @Nonnull BlockPos pos) {
+    public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos) {
         TileEntity te = worldIn.getTileEntity(pos);
         if (te instanceof TileMachineController) {
             TileMachineController ctrl = (TileMachineController) te;
@@ -143,16 +123,13 @@ public class BlockController extends BlockMachineComponent {
         return 0;
     }
 
-    @Nonnull
     @Override
     @SideOnly(Side.CLIENT)
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
-    @Nonnull
     @Override
-    @SuppressWarnings("deprecation")
     public IBlockState withRotation(IBlockState state, Rotation rot) {
         return state.withProperty(FACING, rot.rotate(state.getValue(FACING)));
     }
@@ -179,12 +156,4 @@ public class BlockController extends BlockMachineComponent {
         return new TileMachineController();
     }
 
-    @Nonnull
-    @Override
-    public String getLocalizedName() {
-        if (machine != null) {
-            return I18n.format("tile.modularmachinery.machinecontroller.name", machine.getLocalizedName());
-        }
-        return I18n.format("tile.modularmachinery.blockcontroller.name");
-    }
 }

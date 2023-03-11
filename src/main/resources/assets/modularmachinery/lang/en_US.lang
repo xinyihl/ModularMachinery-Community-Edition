@@ -156,7 +156,6 @@ item.modularmachinery.itemmodularium.name=Modularium
 item.modularmachinery.itemconstructtool.name=Construct Selection Tool
 
 tile.modularmachinery.blockcontroller.name=Machine Controller
-tile.modularmachinery.machinecontroller.name=%s Controller
 
 tile.modularmachinery.blockcasing.plain.name=Machine Casing
 tile.modularmachinery.blockcasing.vent.name=Machine Vent
