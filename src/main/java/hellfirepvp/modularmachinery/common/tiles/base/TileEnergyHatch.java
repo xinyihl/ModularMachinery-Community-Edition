@@ -206,35 +206,37 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     @Override
     public void setCurrentEnergy(long energy) {
         this.energy = MiscUtils.clamp(energy, 0, getMaxEnergy());
-        markForUpdate();
+        markForUpdateSync();
     }
 
     @Override
     public boolean extractEnergy(long extract) {
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+        AtomicBoolean success = new AtomicBoolean(false);
         Sync.doSyncAction(() -> {
             if (this.energy >= extract) {
                 this.energy -= extract;
-
-                markForUpdate();
-                atomicBoolean.set(true);
+                success.set(true);
             }
         });
-        return atomicBoolean.get();
+        if (success.get()) {
+            markForUpdateSync();
+        }
+        return success.get();
     }
 
     @Override
     public boolean receiveEnergy(long receive) {
-        AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+        AtomicBoolean success = new AtomicBoolean(false);
         Sync.doSyncAction(() -> {
             if (getRemainingCapacity() >= receive) {
                 this.energy += receive;
-
-                markForUpdate();
-                atomicBoolean.set(true);
+                success.set(true);
             }
         });
-        return atomicBoolean.get();
+        if (success.get()) {
+            markForUpdateSync();
+        }
+        return success.get();
     }
 
     @Override

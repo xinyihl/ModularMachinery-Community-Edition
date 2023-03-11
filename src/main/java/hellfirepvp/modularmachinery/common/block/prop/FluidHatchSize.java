@@ -63,7 +63,7 @@ public enum FluidHatchSize implements IStringSerializable {
             @Override
             protected void onContentsChanged() {
                 super.onContentsChanged();
-                tileEntity.markForUpdate();
+                tileEntity.markForUpdateSync();
             }
         };
     }
@@ -74,7 +74,7 @@ public enum FluidHatchSize implements IStringSerializable {
             @Override
             protected void onContentsChanged() {
                 super.onContentsChanged();
-                tileEntity.markForUpdate();
+                tileEntity.markForUpdateSync();
             }
         };
     }

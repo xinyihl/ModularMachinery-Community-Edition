@@ -133,7 +133,7 @@ public class IOInventory implements IItemHandlerModifiable {
         Sync.doSyncAction(() -> {
             if (this.inventory.containsKey(slot)) {
                 this.inventory.get(slot).itemStack = stack;
-                owner.markForUpdate();
+                owner.markForUpdateSync();
                 if (listener != null) {
                     listener.onChange();
                 }
@@ -191,7 +191,7 @@ public class IOInventory implements IItemHandlerModifiable {
             int movable = Math.min(max - existing.getCount(), stack.getCount());
             if (!simulate) {
                 holder.itemStack.grow(movable);
-                owner.markForUpdate();
+                owner.markForUpdateSync();
                 if (listener != null) {
                     listener.onChange();
                 }
@@ -208,7 +208,7 @@ public class IOInventory implements IItemHandlerModifiable {
             if (max >= stack.getCount()) {
                 if (!simulate) {
                     holder.itemStack = stack.copy();
-                    owner.markForUpdate();
+                    owner.markForUpdateSync();
                     if (listener != null) {
                         listener.onChange();
                     }
@@ -219,7 +219,7 @@ public class IOInventory implements IItemHandlerModifiable {
                 copy.setCount(max);
                 if (!simulate) {
                     holder.itemStack = copy;
-                    owner.markForUpdate();
+                    owner.markForUpdateSync();
                     if (listener != null) {
                         listener.onChange();
                     }
@@ -263,7 +263,7 @@ public class IOInventory implements IItemHandlerModifiable {
                 listener.onChange();
             }
         }
-        owner.markForUpdate();
+        owner.markForUpdateSync();
         return extract;
     }
 

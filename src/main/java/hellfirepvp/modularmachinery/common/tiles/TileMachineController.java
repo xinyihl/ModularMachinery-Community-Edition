@@ -346,10 +346,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(finalContext);
 
         if (tryResult.isSuccess()) {
-            Sync.doSyncAction(() -> {
-                onStart(activeRecipe, finalContext);
-                markForUpdate();
-            });
+            Sync.doSyncAction(() -> onStart(activeRecipe, finalContext));
+            markForUpdateSync();
         } else {
             this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
             this.activeRecipe = null;
