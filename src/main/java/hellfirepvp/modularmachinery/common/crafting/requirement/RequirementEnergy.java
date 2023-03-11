@@ -110,10 +110,8 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                 }
                 return CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
-                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) < 0) {
-                    return CraftCheck.failure("craftcheck.failure.energy.output.space");
-                }
-                return CraftCheck.success();
+                this.remaining = handler.getRemainingCapacity();
+                return remaining - this.activeIO < 0 ? CraftCheck.failure("craftcheck.failure.energy.output.space") : CraftCheck.success();
         }
 
         return CraftCheck.skipComponent();
