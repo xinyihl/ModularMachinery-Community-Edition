@@ -40,7 +40,7 @@ public class BlockInformationVariable {
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
                 JsonElement variableElement = entry.getValue();
                 if (variableElement.isJsonArray()) {
-                    List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
+                    List<IBlockStateDescriptor> descriptors = Lists.newArrayList();
                     JsonArray elements = variableElement.getAsJsonArray();
                     for (int i = 0; i < elements.size(); i++) {
                         JsonElement p = elements.get(i);

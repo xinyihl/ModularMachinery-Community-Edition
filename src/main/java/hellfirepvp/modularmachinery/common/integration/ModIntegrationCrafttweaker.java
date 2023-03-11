@@ -10,6 +10,8 @@ package hellfirepvp.modularmachinery.common.integration;
 
 import crafttweaker.mc1120.events.ScriptRunEvent;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**
@@ -29,6 +31,8 @@ public class ModIntegrationCrafttweaker {
     @SubscribeEvent
     public void onScriptsReloading(ScriptRunEvent.Pre event) {
         RecipeRegistry.getRegistry().clearLingeringRecipes();
+        MachineBuilder.WAIT_FOR_REGISTRY.clear();
+        MachineModifier.WAIT_FOR_MODIFY.clear();
     }
 
 }

@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.network.PktSyncSelection;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -153,7 +154,7 @@ public class PlayerStructureSelectionHelper {
             BlockArray out = new BlockArray();
             for (BlockPos pos : this.selectedPositions) {
                 IBlockState state = world.getBlockState(pos);
-                BlockArray.IBlockStateDescriptor descr = new BlockArray.IBlockStateDescriptor(state);
+                IBlockStateDescriptor descr = new IBlockStateDescriptor(state);
                 BlockArray.BlockInformation bi = new BlockArray.BlockInformation(Lists.newArrayList(descr));
                 TileEntity te = world.getTileEntity(pos);
                 if (te != null) {
