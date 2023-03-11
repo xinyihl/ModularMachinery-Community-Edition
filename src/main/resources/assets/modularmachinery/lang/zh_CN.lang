@@ -72,6 +72,11 @@ message.structurebuild.warndedicated=你现在是在服务器上保存机器配�
 message.structurebuild.save=机器配置已保存在机器文件夹下的 '%s' 中！
 message.structurebuild.fail=机器配置保存失败！请查阅日志文件获取详细信息！
 message.machine_projector.project=正在投影%s的结构
+message.assembly.tip.1=模块化组装: 没有找到对应的模块化机器！
+message.assembly.tip.2=模块化组装: 机器已在组装队列中！
+message.assembly.tip.3=模块化组装: 库存中没有足够的方块或地面上有方块阻挡或没有找到对应的流体桶！
+message.assembly.tip.4=模块化组装: 没有足够的方块用于组装！
+message.assembly.tip.5=模块化组装: 组装完成！
 
 tooltip.machinery.empty=空
 

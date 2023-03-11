@@ -7,8 +7,8 @@
         "mcversion": "${mcversion}",
         "url": "https://minecraft.curseforge.com/projects/modular-machinery",
         "updateUrl": "",
-        "authorList": [ "HellFirePvP", "wiiv", "KasumiNova"],
-        "credits": "HellFirePvP code, wiiv ALL THE TEXTURES :3, and... KasumiNova Improvements",
+        "authorList": [ "HellFirePvP", "wiiv", "KasumiNova", "youyihj", "ikexing"],
+        "credits": "HellFirePvP code, wiiv ALL THE TEXTURES :3, and KasumiNova Improvements! And more community edition contributors!",
         "logoFile": "assets/modularmachinery/textures/logo.png",
         "screenshots": [],
         "dependencies": []

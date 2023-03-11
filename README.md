@@ -87,13 +87,10 @@ The Community Edition is all about modernizing the Modular Machinery and providi
 ### Experimental features:
 
 * High-performance asynchronous implementation
-    * The original Modular Machinery offers a lot of powerful features, but it runs with worrisome performance,
-      especially with a large number of controllers.
-    * The community version adds an asynchronizable interface, and all implementations of this interface can safely do a
-      lot of work in an asynchronous form.
+    * The original Modular Machinery offers a lot of powerful features, but it runs with worrisome performance, especially with a large number of controllers.
+    * The community version adds an asynchronizable interface, and all implementations of this interface can safely do a lot of work in an asynchronous form.
     * Based on extensive modpack testing, the maximum performance improvement can be over **10** times.
-    * The only main thread consumed is structure check, but it is **impossible** to do asynchronously because it is *
-      *unsafe** to operate on the side of some third-party plugin services.
+    * The only main thread consumed is structure check, but it is **impossible** to do asynchronously because it is **unsafe** to operate on the side of some third-party plugin services.
 
 * Redrawn JEI recipe interface icon to support stuffing more recipe elements
 

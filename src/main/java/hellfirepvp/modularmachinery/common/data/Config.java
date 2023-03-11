@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.CatalystNameUtil;
+import ink.ikx.mmce.core.AssemblyConfig;
 import net.minecraftforge.common.config.Configuration;
 
 import java.io.File;
@@ -52,6 +53,7 @@ public class Config {
         CatalystNameUtil.loadFromConfig(lastReadConfig);
         RecipeFailureActions.loadFromConfig(lastReadConfig);
         TileMachineController.loadFromConfig(lastReadConfig);
+        AssemblyConfig.loadFormConfig(lastReadConfig);
         if (Mods.TOP.isPresent()) {
             ModIntegrationTOP.loadFromConfig(lastReadConfig);
         }

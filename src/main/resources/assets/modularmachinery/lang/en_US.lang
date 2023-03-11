@@ -69,6 +69,11 @@ message.structurebuild.warndedicated=You're saving the machine on a dedicated se
 message.structurebuild.save=Machine saved as %s in the machinery directory!
 message.structurebuild.fail=Failed to save the machine to a file! Check the log for more information!
 message.machine_projector.project=Projecting the structure of %s
+message.assembly.tip.1=Modular Assembly: No modular machine found!
+message.assembly.tip.2=Modular Assembly: The machine is in the assembly queue!
+message.assembly.tip.3=Modular Assembly: Not enough blocks in inventory or blocked by blocks on the ground or no corresponding fluid bucket was found！
+message.assembly.tip.4=Modular Assembly: Not enough blocks for assembly.
+message.assembly.tip.5=Modular Assembly: Assembled successfully!
 
 tooltip.machinery.empty=Empty
 
