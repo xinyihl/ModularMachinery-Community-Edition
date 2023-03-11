@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.item;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockController;
-import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.selection.PlayerStructureSelectionHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -55,7 +54,7 @@ public class ItemConstructTool extends Item {
         if (!worldIn.isRemote && player.isCreative() && worldIn.getMinecraftServer().getPlayerList().canSendCommands(player.getGameProfile())) {
             IBlockState clicked = worldIn.getBlockState(pos);
             Block block = clicked.getBlock();
-            if (block.equals(BlocksMM.blockController)) {
+            if (block instanceof BlockController) {
                 PlayerStructureSelectionHelper.finalizeSelection(clicked.getValue(BlockController.FACING), worldIn, pos, player);
 
                 PlayerStructureSelectionHelper.purgeSelection(player);

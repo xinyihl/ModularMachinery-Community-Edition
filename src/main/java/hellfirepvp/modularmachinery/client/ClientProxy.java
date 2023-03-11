@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.client.util.DebugOverlayHelper;
 import hellfirepvp.modularmachinery.client.util.SelectionBoxRenderHelper;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockDynamicColor;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
@@ -44,11 +45,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
@@ -61,6 +65,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 26.06.2017 / 21:01
  */
+@Mod.EventBusSubscriber(Side.CLIENT)
 public class ClientProxy extends CommonProxy {
 
     public static final ClientScheduler clientScheduler = new ClientScheduler();
@@ -79,6 +84,12 @@ public class ClientProxy extends CommonProxy {
         for (BlockDynamicColor dynamicColor : RegistryBlocks.pendingIBlockColorBlocks) {
             colors.registerBlockColorHandler(dynamicColor::getColorMultiplier, (Block) dynamicColor);
         }
+        BlockController.MACHINE_CONTROLLERS.values().forEach(block ->
+            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+        );
+        BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
+            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+        );
     }
 
     private static void registerPendingIItemColorItems() {
@@ -86,6 +97,12 @@ public class ClientProxy extends CommonProxy {
         for (ItemDynamicColor dynamicColor : RegistryItems.pendingDynamicColorItems) {
             colors.registerItemColorHandler(dynamicColor::getColorFromItemstack, (Item) dynamicColor);
         }
+        BlockController.MACHINE_CONTROLLERS.values().forEach(block ->
+            colors.registerItemColorHandler(block::getColorFromItemstack, block)
+        );
+        BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
+            colors.registerItemColorHandler(block::getColorFromItemstack, block)
+        );
     }
 
     @Override
@@ -205,4 +222,6 @@ public class ClientProxy extends CommonProxy {
         }
         return null;
     }
+
+
 }

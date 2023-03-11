@@ -24,6 +24,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModif
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEvents;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.registry.RegistryBlocks;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
@@ -48,6 +49,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -84,6 +86,13 @@ public class CommonProxy implements IGuiHandler {
         }
 
         MachineRegistry.preloadMachines();
+        if (Mods.RESOURCELOADER.isPresent()) {
+            try {
+                RegistryBlocks.writeAllCustomControllerModels();
+            } catch (IOException e) {
+                ModularMachinery.log.error("failed to write controller models", e);
+            }
+        }
 
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);

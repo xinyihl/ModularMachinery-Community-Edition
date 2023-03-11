@@ -13,11 +13,37 @@ public class FileUtils {
         char[] chars = new char[formatBufferSize(file.length())];
         StringBuilder sb = new StringBuilder((int) file.length());
         int length;
-        while ((length = reader.read(chars)) != -1) {
-            sb.append(chars, 0, length);
+
+        try {
+            while ((length = reader.read(chars)) != -1) {
+                sb.append(chars, 0, length);
+            }
+        } catch (IOException e) {
+            reader.close();
+            throw e;
+        } finally {
+            reader.close();
         }
 
         return sb.toString();
+    }
+
+    public static void writeFile(String content, File file) throws IOException {
+        if (!file.exists()) {
+            if (!file.createNewFile()) {
+                throw new IOException("Could not create file " + file.getAbsolutePath());
+            }
+        }
+        OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8);
+        try {
+            writer.write(content);
+        } catch (IOException e) {
+            writer.close();
+            throw e;
+        } finally {
+            writer.close();
+
+        }
     }
 
     public static int formatBufferSize(long size) {

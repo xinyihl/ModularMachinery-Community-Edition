@@ -36,7 +36,7 @@ import java.util.*;
 @ZenClass("mods.modularmachinery.MachineBuilder")
 public class MachineBuilder {
     public static final List<DynamicMachine> WAIT_FOR_REGISTRY = new ArrayList<>();
-    private static final Map<ResourceLocation, MachineBuilder> PRE_INIT_MACHINES = new HashMap<>();
+    public static final Map<ResourceLocation, MachineBuilder> PRE_INIT_MACHINES = new HashMap<>();
     private final DynamicMachine machine;
     private BlockArray.BlockInformation lastInformation = null;
 
@@ -99,6 +99,10 @@ public class MachineBuilder {
     @ZenMethod
     public static MachineBuilder getBuilder(String registryName) {
         return PRE_INIT_MACHINES.get(new ResourceLocation(ModularMachinery.MODID, registryName));
+    }
+
+    public DynamicMachine getMachine() {
+        return machine;
     }
 
     /**

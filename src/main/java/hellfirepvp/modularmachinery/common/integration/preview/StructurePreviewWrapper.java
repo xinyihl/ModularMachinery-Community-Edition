@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.client.ClientMouseJEIGuiEventHandler;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
@@ -27,6 +28,8 @@ import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.ingredients.VanillaTypes;
+import mezz.jei.api.recipe.IIngredientType;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.gui.recipes.RecipeLayout;
 import mezz.jei.gui.recipes.RecipesGui;
@@ -58,13 +61,12 @@ import net.minecraftforge.fluids.IFluidBlock;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Field;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -306,9 +308,11 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             Vec2f offset = dynamnicContext.getCurrentRenderOffset(x, z);
             int jumpWidth = 14;
             double scaleJump = jumpWidth * scale;
+            BlockController ctrl = BlockController.getControllerWithMachine(machine);
+            if (ctrl == null) ctrl = BlocksMM.blockController;
             Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
             if (dynamnicContext.getRenderSlice() == 0) {
-                slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
+                slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
             }
             for (BlockPos pos : slice.keySet()) {
                 int xMod = pos.getX() + 1 + this.dynamnicContext.getMoveOffset().getX();
@@ -475,8 +479,10 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         if (drawContents) {
             java.util.List<ItemStack> contents = dynamnicContext.getDescriptiveStacks();
             java.util.List<Tuple<ItemStack, String>> contentMap = Lists.newArrayList();
-            ItemStack ctrl = new ItemStack(BlocksMM.blockController);
-            contentMap.add(new Tuple<>(ctrl, "1x " + Iterables.getFirst(ctrl.getTooltip(Minecraft.getMinecraft().player,
+            BlockController ctrl = BlockController.getControllerWithMachine(machine);
+            if (ctrl == null) ctrl = BlocksMM.blockController;
+            ItemStack ctrlStack = new ItemStack(ctrl);
+            contentMap.add(new Tuple<>(ctrlStack, "1x " + Iterables.getFirst(ctrlStack.getTooltip(Minecraft.getMinecraft().player,
                     Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));
             for (ItemStack stack : contents) {
                 contentMap.add(new Tuple<>(stack, stack.getCount() + "x " + Iterables.getFirst(stack.getTooltip(Minecraft.getMinecraft().player,
@@ -517,9 +523,22 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
     }
 
     @Override
-    public void getIngredients(IIngredients ingredients) {
+    public void getIngredients(@Nonnull IIngredients ingredients) {
         ItemStack bOut = new ItemStack(ItemsMM.blueprint);
         ItemBlueprint.setAssociatedMachine(bOut, this.machine);
-        ingredients.setOutput(ItemStack.class, bOut);
+        BlockController ctrl = BlockController.getControllerWithMachine(this.machine);
+        List<ItemStack> stackList = new ArrayList<>();
+        if (ctrl != null) {
+            ItemStack ctrlStack = new ItemStack(ctrl);
+            stackList.add(ctrlStack);
+        }
+        BlockController mocCtrl = BlockController.getMocControllerWithMachine(this.machine);
+        if (mocCtrl != null) {
+            ItemStack ctrlStack = new ItemStack(mocCtrl);
+            stackList.add(ctrlStack);
+        }
+        stackList.add(bOut);
+
+        ingredients.setOutputs(VanillaTypes.ITEM, stackList);
     }
 }

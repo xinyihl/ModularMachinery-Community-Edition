@@ -68,6 +68,7 @@ message.structurebuild.empty=You have nothing selected to save.
 message.structurebuild.warndedicated=You're saving the machine on a dedicated server! Be sure to download it from the server!
 message.structurebuild.save=Machine saved as %s in the machinery directory!
 message.structurebuild.fail=Failed to save the machine to a file! Check the log for more information!
+message.machine_projector.project=Projecting the structure of %s
 
 tooltip.machinery.empty=Empty
 
@@ -151,12 +152,17 @@ tooltip.ic2.powertier.10.name=UEV
 tooltip.ic2.powertier.11.name=UIV
 tooltip.ic2.powertier.12.name=UXV
 
+tooltip.modularcontroller.machine_projector=Sneak and right-click the controller to project the structure of the machine
+
 item.modularmachinery.itemblueprint.name=Machine Blueprint
 item.modularmachinery.itemmodularium.name=Modularium
 item.modularmachinery.itemconstructtool.name=Construct Selection Tool
+item.modularmachinery.machine_projector.name=Machine Projector
 
 tile.modularmachinery.blockcontroller.name=Machine Controller
 tile.modularmachinery.machinecontroller.name=%s Controller
+tile.modularmachinery.machinecontroller.deprecated.tip.0=Modular controller compatibility will be removed in a future release.
+tile.modularmachinery.machinecontroller.deprecated.tip.1=Please contact the modpack author to transfer the controller to MMCE's controller.
 
 tile.modularmachinery.blockcasing.plain.name=Machine Casing
 tile.modularmachinery.blockcasing.vent.name=Machine Vent

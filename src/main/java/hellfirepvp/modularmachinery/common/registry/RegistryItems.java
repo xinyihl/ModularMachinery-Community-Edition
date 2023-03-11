@@ -12,6 +12,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.item.*;
 import net.minecraft.item.Item;
+import youyihj.mmce.common.item.MachineProjector;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ public class RegistryItems {
         blueprint = prepareRegister(new ItemBlueprint());
         modularium = prepareRegister(new ItemModularium());
         constructTool = prepareRegister(new ItemConstructTool());
+        prepareRegisterWithCustomName(MachineProjector.INSTANCE);
 
         registerItemBlocks();
         registerItemModels();
@@ -45,6 +47,10 @@ public class RegistryItems {
         String name = item.getClass().getSimpleName().toLowerCase();
         item.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
 
+        return register(item);
+    }
+
+    private static <T extends Item> T prepareRegisterWithCustomName(T item) {
         return register(item);
     }
 

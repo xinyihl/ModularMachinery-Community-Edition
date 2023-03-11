@@ -10,7 +10,9 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.machine.AbstractMachine;
+import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.item.ItemDynamicColor;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.block.SoundType;
@@ -19,6 +21,7 @@ import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -32,6 +35,9 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -40,9 +46,12 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 20:48
  */
-public class BlockController extends BlockMachineComponent {
+public class BlockController extends BlockMachineComponent implements ItemDynamicColor {
     public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
-    private AbstractMachine machine = null;
+    public static final Map<DynamicMachine, BlockController> MACHINE_CONTROLLERS = new HashMap<>();
+    public static final Map<DynamicMachine, BlockController> MOC_MACHINE_CONTROLLERS = new HashMap<>();
+
+    private DynamicMachine parentMachine = null;
 
     public BlockController() {
         super(Material.IRON);
@@ -54,13 +63,42 @@ public class BlockController extends BlockMachineComponent {
         setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
     }
 
-    public BlockController(AbstractMachine machine) {
+    public BlockController(DynamicMachine parentMachine) {
         this();
-        this.machine = machine;
+        this.parentMachine = parentMachine;
         setRegistryName(new ResourceLocation(
-                ModularMachinery.MODID,
-                machine.getRegistryName().getPath() + "_controller")
+                ModularMachinery.MODID, parentMachine.getRegistryName().getPath() + "_controller")
         );
+    }
+
+    public BlockController(String namespace, DynamicMachine parentMachine) {
+        this();
+        this.parentMachine = parentMachine;
+        setRegistryName(new ResourceLocation(
+                namespace, parentMachine.getRegistryName().getPath() + "_controller")
+        );
+    }
+
+    public static BlockController getControllerWithMachine(DynamicMachine machine) {
+        return MACHINE_CONTROLLERS.get(machine);
+    }
+
+    public static BlockController getMocControllerWithMachine(DynamicMachine machine) {
+        return MOC_MACHINE_CONTROLLERS.get(machine);
+    }
+
+    public DynamicMachine getParentMachine() {
+        return parentMachine;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+        if (this.getRegistryName().getNamespace().equals("modularcontroller")) {
+            tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.0"));
+            tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.1"));
+        }
     }
 
     @Override
@@ -170,21 +208,33 @@ public class BlockController extends BlockMachineComponent {
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileMachineController();
+        return new TileMachineController(this);
     }
 
     @Nullable
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
-        return new TileMachineController();
+        return new TileMachineController(this);
     }
 
     @Nonnull
     @Override
     public String getLocalizedName() {
-        if (machine != null) {
-            return I18n.format("tile.modularmachinery.machinecontroller.name", machine.getLocalizedName());
+        if (parentMachine != null) {
+            return I18n.format("tile.modularmachinery.machinecontroller.name", parentMachine.getLocalizedName());
         }
         return I18n.format("tile.modularmachinery.blockcontroller.name");
+    }
+
+    @Override
+    public int getColorFromItemstack(ItemStack stack, int tintIndex) {
+        if (parentMachine == null) return Config.machineColor;
+        return parentMachine.getMachineColor();
+    }
+
+    @Override
+    public int getColorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex) {
+        if (parentMachine == null) return Config.machineColor;
+        return parentMachine.getMachineColor();
     }
 }

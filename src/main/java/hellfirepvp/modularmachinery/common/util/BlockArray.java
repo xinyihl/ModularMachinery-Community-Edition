@@ -54,7 +54,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class BlockArray {
 
-    private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
+    private static final ResourceLocation IC_2_TILE_BLOCK = new ResourceLocation("ic2", "te");
     protected final long traitNum;
     protected EnumFacing facing;
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
@@ -373,7 +373,7 @@ public class BlockArray {
             ItemStack stack = ItemStack.EMPTY;
 
             try {
-                if (ic2TileBlock.equals(type.getRegistryName())) {
+                if (IC_2_TILE_BLOCK.equals(type.getRegistryName())) {
                     stack = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
                 } else {
                     stack = state.getBlock().getPickBlock(state, null, null, BlockPos.ORIGIN, null);

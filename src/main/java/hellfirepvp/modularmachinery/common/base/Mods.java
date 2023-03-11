@@ -26,7 +26,9 @@ public enum Mods {
     MEKANISM("mekanism"),
     IC2("ic2"),
     TOP("theoneprobe"),
-    NUCLEARCRAFT("nuclearcraft");
+    NUCLEARCRAFT("nuclearcraft"),
+    RESOURCELOADER("resourceloader"),
+    ;
 
     public final String modid;
     private final boolean loaded;

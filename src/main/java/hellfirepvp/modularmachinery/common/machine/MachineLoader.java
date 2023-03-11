@@ -93,16 +93,20 @@ public class MachineLoader {
 
 
     public static List<DynamicMachine> loadMachines(Collection<Tuple<DynamicMachine, String>> registeredMachineList) {
-        List<DynamicMachine> loadedMachines = Lists.newArrayList();
+        List<DynamicMachine> loadedMachines = new ArrayList<>();
 
         registeredMachineList.parallelStream().forEach(registryAndJsonStr -> {
+            DynamicMachine preloadMachine = registryAndJsonStr.getFirst();
             try {
-                DynamicMachine machine = JsonUtils.fromJson(GSON, registryAndJsonStr.getSecond(), DynamicMachine.class, false);
-                synchronized (loadedMachines) {
-                    loadedMachines.add(machine);
+                DynamicMachine loadedMachine = JsonUtils.fromJson(GSON, registryAndJsonStr.getSecond(), DynamicMachine.class, false);
+                if (loadedMachine != null) {
+                    preloadMachine.mergeFrom(loadedMachine);
+                    synchronized (loadedMachines) {
+                        loadedMachines.add(preloadMachine);
+                    }
                 }
             } catch (Exception exc) {
-                ModularMachinery.log.warn(registryAndJsonStr.getFirst().registryName, exc);
+                ModularMachinery.log.warn(preloadMachine.registryName, exc);
             }
         });
         return loadedMachines;

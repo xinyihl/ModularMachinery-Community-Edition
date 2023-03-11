@@ -43,10 +43,10 @@ import java.util.stream.Collectors;
  * Date: 27.06.2017 / 13:57
  */
 public class DynamicMachine extends AbstractMachine {
-    private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
     private final HashMap<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
+    private TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
 
     public DynamicMachine(String registryName) {
         super(registryName);
@@ -138,6 +138,13 @@ public class DynamicMachine extends AbstractMachine {
             context.addModifier(modifier);
         }
         return context;
+    }
+
+    public void mergeFrom(DynamicMachine another) {
+        smartInterfaces.putAll(another.smartInterfaces);
+        modifiers.putAll(another.modifiers);
+        pattern = another.pattern;
+        machineEventHandlers.putAll(another.machineEventHandlers);
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {

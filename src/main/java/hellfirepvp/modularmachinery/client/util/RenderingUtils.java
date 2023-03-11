@@ -38,7 +38,7 @@ public class RenderingUtils {
     static void drawWhiteOutlineCubes(List<BlockPos> positions, float partialTicks) {
         GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.color(1F, 1F, 1F, 0.25F);
+        GlStateManager.color(1F, 1F, 1F, 0.1F);
         GlStateManager.disableTexture2D();
         GlStateManager.enableColorMaterial();
         GlStateManager.disableCull();

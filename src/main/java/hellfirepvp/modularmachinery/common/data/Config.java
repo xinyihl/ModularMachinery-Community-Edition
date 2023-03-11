@@ -29,7 +29,7 @@ import java.io.File;
  * Date: 26.06.2017 / 22:34
  */
 public class Config {
-
+    public static boolean mocCompatibleMode = false;
     public static int machineColor;
     private static File lastReadFile;
     private static Configuration lastReadConfig;
@@ -65,6 +65,8 @@ public class Config {
             ModularMachinery.log.error("Using default color instead...");
         }
         machineColor = col;
+        mocCompatibleMode = lastReadConfig.getBoolean(
+                "modular-controller-compatible-mode", "general", false,
+                "When enabled, the mod registers a controller block under the name modularcontroller to prevent incompatibility with older saves.");
     }
-
 }
