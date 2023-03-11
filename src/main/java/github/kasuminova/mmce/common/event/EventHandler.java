@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.common.event;
 
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -21,7 +22,7 @@ public class EventHandler {
 
         TileEntity te = world.getTileEntity(event.getPos());
         if (te instanceof TileMachineController) {
-            ((TileMachineController) te).markForUpdate();
+            ((TileEntitySynchronized) te).markForUpdate();
         }
     }
 }

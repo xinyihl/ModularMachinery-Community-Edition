@@ -14,11 +14,13 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -192,8 +194,10 @@ public class GuiScreenBlueprint extends GuiScreen {
         int jumpWidth = 14;
         double scaleJump = jumpWidth * scale;
         Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(renderContext.getRenderSlice());
+        BlockController ctrl = BlockController.getControllerWithMachine(machine);
+        if (ctrl == null) ctrl = BlocksMM.blockController;
         if (renderContext.getRenderSlice() == 0) {
-            slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new BlockArray.IBlockStateDescriptor(BlocksMM.blockController.getDefaultState()))));
+            slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
         }
         for (BlockPos pos : slice.keySet()) {
             int xMod = pos.getX() + 1 + this.renderContext.getMoveOffset().getX();
@@ -201,7 +205,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             Rectangle.Double rct = new Rectangle2D.Double(offset.x - xMod * scaleJump, offset.y - zMod * scaleJump, scaleJump, scaleJump);
             if (rct.contains(mouseX, mouseY)) {
                 IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
-                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).matchingTag,
+                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).previewTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                 state = recovered.getFirst();
                 Block type = state.getBlock();
@@ -333,8 +337,11 @@ public class GuiScreenBlueprint extends GuiScreen {
         if (drawContents) {
             List<ItemStack> contents = this.renderContext.getDescriptiveStacks();
             List<Tuple<ItemStack, String>> contentMap = Lists.newArrayList();
-            ItemStack ctrl = new ItemStack(BlocksMM.blockController);
-            contentMap.add(new Tuple<>(ctrl, "1x " + Iterables.getFirst(ctrl.getTooltip(Minecraft.getMinecraft().player,
+
+            BlockController ctrl = BlockController.getControllerWithMachine(machine);
+            if (ctrl == null) ctrl = BlocksMM.blockController;
+            ItemStack ctrlStack = new ItemStack(ctrl);
+            contentMap.add(new Tuple<>(ctrlStack, "1x " + Iterables.getFirst(ctrlStack.getTooltip(Minecraft.getMinecraft().player,
                     Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));
             for (ItemStack stack : contents) {
                 contentMap.add(new Tuple<>(stack, stack.getCount() + "x " + Iterables.getFirst(stack.getTooltip(Minecraft.getMinecraft().player,

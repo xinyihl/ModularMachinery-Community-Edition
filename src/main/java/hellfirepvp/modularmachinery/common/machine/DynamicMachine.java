@@ -11,28 +11,23 @@ package hellfirepvp.modularmachinery.common.machine;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.JsonUtils;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -47,20 +42,14 @@ import java.util.stream.Collectors;
  * Created by HellFirePvP
  * Date: 27.06.2017 / 13:57
  */
-public class DynamicMachine {
-    @Nonnull
-    private final ResourceLocation registryName;
+public class DynamicMachine extends AbstractMachine {
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
     private final HashMap<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
-    private String localizedName = null;
-    private int definedColor = Config.machineColor;
-    private boolean requiresBlueprint = false;
-    private RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
-    public DynamicMachine(@Nonnull ResourceLocation registryName) {
-        this.registryName = registryName;
+    public DynamicMachine(String registryName) {
+        super(registryName);
     }
 
     public boolean hasSmartInterfaceType(String type) {
@@ -109,22 +98,6 @@ public class DynamicMachine {
         return machineEventHandlers;
     }
 
-    public RecipeFailureActions getFailureAction() {
-        return failureAction;
-    }
-
-    public void setFailureAction(RecipeFailureActions failureAction) {
-        this.failureAction = failureAction;
-    }
-
-    public void setRequiresBlueprint() {
-        this.requiresBlueprint = true;
-    }
-
-    public boolean requiresBlueprint() {
-        return requiresBlueprint;
-    }
-
     public TaggedPositionBlockArray getPattern() {
         return pattern;
     }
@@ -143,26 +116,6 @@ public class DynamicMachine {
                     .collect(Collectors.toList()));
         }
         return infoMap;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public String getLocalizedName() {
-        String localizationKey = registryName.getNamespace() + "." + registryName.getPath();
-        return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :
-                localizedName != null ? localizedName : localizationKey;
-    }
-
-    public void setLocalizedName(String localizedName) {
-        this.localizedName = localizedName;
-    }
-
-    public int getMachineColor() {
-        return definedColor;
-    }
-
-    @Nonnull
-    public ResourceLocation getRegistryName() {
-        return registryName;
     }
 
     @Nonnull
@@ -187,16 +140,11 @@ public class DynamicMachine {
         return context;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof DynamicMachine)) return false;
-        DynamicMachine machine = (DynamicMachine) obj;
-        return machine.registryName.toString().equals(registryName.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(registryName);
+    public void mergeFrom(DynamicMachine another) {
+        smartInterfaces.putAll(another.smartInterfaces);
+        modifiers.putAll(another.modifiers);
+        pattern = another.pattern;
+        machineEventHandlers.putAll(another.machineEventHandlers);
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {
@@ -230,149 +178,6 @@ public class DynamicMachine {
                 }
             }
             return out;
-        }
-
-        @Override
-        public DynamicMachine deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-            JsonObject root = json.getAsJsonObject();
-            String registryName = JsonUtils.getString(root, "registryname", "");
-            if (registryName.isEmpty()) {
-                registryName = JsonUtils.getString(root, "registryName", "");
-                if (registryName.isEmpty()) {
-                    throw new JsonParseException("Invalid/Missing 'registryname' !");
-                }
-            }
-            String localized = JsonUtils.getString(root, "localizedname", "");
-            if (localized.isEmpty()) {
-                throw new JsonParseException("Invalid/Missing 'localizedname' !");
-            }
-            JsonArray parts = JsonUtils.getJsonArray(root, "parts", new JsonArray());
-            if (parts.size() == 0) {
-                throw new JsonParseException("Empty/Missing 'parts'!");
-            }
-            DynamicMachine machine = new DynamicMachine(new ResourceLocation(ModularMachinery.MODID, registryName));
-            machine.setLocalizedName(localized);
-
-            //Failure Action
-            if (root.has("failure-action")) {
-                JsonElement failureAction = root.get("failure-action");
-                if (!failureAction.isJsonPrimitive() || !failureAction.getAsJsonPrimitive().isString()) {
-                    throw new JsonParseException("'failure-action' has to be 'reset', 'still' or 'decrease'!");
-                }
-                String action = failureAction.getAsJsonPrimitive().getAsString();
-                machine.setFailureAction(RecipeFailureActions.getFailureAction(action));
-            }
-
-            //Requires Blueprint
-            if (root.has("requires-blueprint")) {
-                JsonElement elementBlueprint = root.get("requires-blueprint");
-                if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
-                    throw new JsonParseException("'requires-blueprint' has to be either 'true' or 'false'!");
-                }
-                boolean requiresBlueprint = elementBlueprint.getAsJsonPrimitive().getAsBoolean();
-                if (requiresBlueprint) {
-                    machine.setRequiresBlueprint();
-                }
-            }
-
-            //Color
-            if (root.has("color")) {
-                JsonElement elementColor = root.get("color");
-                if (!elementColor.isJsonPrimitive()) {
-                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!");
-                }
-                int hexColor;
-                String hexStr = elementColor.getAsJsonPrimitive().getAsString();
-                try {
-                    hexColor = Integer.parseInt(hexStr, 16);
-                } catch (NumberFormatException parseExc) {
-                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!", parseExc);
-                }
-                machine.definedColor = hexColor;
-            }
-
-            //Parts
-            for (int i = 0; i < parts.size(); i++) {
-                JsonElement element = parts.get(i);
-                if (!element.isJsonObject()) {
-                    throw new JsonParseException("A part of 'parts' is not a compound object!");
-                }
-                JsonObject part = element.getAsJsonObject();
-                NBTTagCompound match = null;
-                if (part.has("nbt")) {
-                    JsonElement je = part.get("nbt");
-                    if (!je.isJsonObject()) {
-                        throw new JsonParseException("The ComponentType 'nbt' expects a json compound that defines the NBT tag to match the tileentity's nbt against!");
-                    }
-                    String jsonStr = je.toString();
-                    try {
-                        match = NBTJsonDeserializer.deserialize(jsonStr);
-                    } catch (NBTException exc) {
-                        throw new JsonParseException("Error trying to parse NBTTag! Rethrowing exception...", exc);
-                    }
-                }
-
-                if (!part.has("elements")) {
-                    throw new JsonParseException("Part contained no element!");
-                }
-                JsonElement partElement = part.get("elements");
-                if (partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
-                    String strDesc = partElement.getAsString();
-                    BlockArray.BlockInformation descr = MachineLoader.variableContext.get(strDesc);
-                    if (descr == null) {
-                        descr = new BlockArray.BlockInformation(Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(partElement.getAsString())));
-                    } else {
-                        descr = descr.copy(); //Avoid NBT-definitions bleed into variable context
-                    }
-                    if (match != null) {
-                        descr.setMatchingTag(match);
-                    }
-                    addDescriptorWithPattern(machine.getPattern(), descr, part);
-                } else if (partElement.isJsonArray()) {
-                    JsonArray elementArray = partElement.getAsJsonArray();
-                    List<BlockArray.IBlockStateDescriptor> descriptors = Lists.newArrayList();
-                    for (int xx = 0; xx < elementArray.size(); xx++) {
-                        JsonElement p = elementArray.get(xx);
-                        if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
-                            throw new JsonParseException("Part elements of 'elements' have to be blockstate descriptions!");
-                        }
-                        String prim = p.getAsString();
-                        BlockArray.BlockInformation descr = MachineLoader.variableContext.get(prim);
-                        if (descr != null) {
-                            descriptors.addAll(descr.copy().matchingStates);
-                        } else {
-                            descriptors.add(BlockArray.BlockInformation.getDescriptor(prim));
-                        }
-                    }
-                    if (descriptors.isEmpty()) {
-                        throw new JsonParseException("'elements' array didn't contain any blockstate descriptors!");
-                    }
-                    BlockArray.BlockInformation bi = new BlockArray.BlockInformation(descriptors);
-                    if (match != null) {
-                        bi.setMatchingTag(match);
-                    }
-                    addDescriptorWithPattern(machine.getPattern(), bi, part);
-                } else {
-                    throw new JsonParseException("'elements' has to either be a blockstate description, variable or array of blockstate descriptions!");
-                }
-            }
-
-            //Modifiers
-            if (root.has("modifiers")) {
-                JsonElement partModifiers = root.get("modifiers");
-                if (!partModifiers.isJsonArray()) {
-                    throw new JsonParseException("'modifiers' has to be an array of modifiers!");
-                }
-                JsonArray modifiersArray = partModifiers.getAsJsonArray();
-                for (int j = 0; j < modifiersArray.size(); j++) {
-                    JsonElement modifier = modifiersArray.get(j);
-                    if (!modifier.isJsonObject()) {
-                        throw new JsonParseException("Elements of 'modifiers' have to be objects!");
-                    }
-                    addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), ModifierReplacement.class), modifier.getAsJsonObject());
-                }
-            }
-            return machine;
         }
 
         private static void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
@@ -439,6 +244,146 @@ public class DynamicMachine {
                     }
                 }
             }
+        }
+
+        @Override
+        public DynamicMachine deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject root = json.getAsJsonObject();
+            String registryName = JsonUtils.getString(root, "registryname", "");
+            if (registryName.isEmpty()) {
+                registryName = JsonUtils.getString(root, "registryName", "");
+                if (registryName.isEmpty()) {
+                    throw new JsonParseException("Invalid/Missing 'registryname' !");
+                }
+            }
+            String localized = JsonUtils.getString(root, "localizedname", "");
+            if (localized.isEmpty()) {
+                throw new JsonParseException("Invalid/Missing 'localizedname' !");
+            }
+            JsonArray parts = JsonUtils.getJsonArray(root, "parts", new JsonArray());
+            if (parts.size() == 0) {
+                throw new JsonParseException("Empty/Missing 'parts'!");
+            }
+            DynamicMachine machine = new DynamicMachine(registryName);
+            machine.setLocalizedName(localized);
+
+            //Failure Action
+            if (root.has("failure-action")) {
+                JsonElement failureAction = root.get("failure-action");
+                if (!failureAction.isJsonPrimitive() || !failureAction.getAsJsonPrimitive().isString()) {
+                    throw new JsonParseException("'failure-action' has to be 'reset', 'still' or 'decrease'!");
+                }
+                String action = failureAction.getAsJsonPrimitive().getAsString();
+                machine.setFailureAction(RecipeFailureActions.getFailureAction(action));
+            }
+
+            //Requires Blueprint
+            if (root.has("requires-blueprint")) {
+                JsonElement elementBlueprint = root.get("requires-blueprint");
+                if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
+                    throw new JsonParseException("'requires-blueprint' has to be either 'true' or 'false'!");
+                }
+                machine.setRequiresBlueprint(elementBlueprint.getAsJsonPrimitive().getAsBoolean());
+            }
+
+            //Color
+            if (root.has("color")) {
+                JsonElement elementColor = root.get("color");
+                if (!elementColor.isJsonPrimitive()) {
+                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!");
+                }
+                int hexColor;
+                String hexStr = elementColor.getAsJsonPrimitive().getAsString();
+                try {
+                    hexColor = Integer.parseInt(hexStr, 16);
+                } catch (NumberFormatException parseExc) {
+                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!", parseExc);
+                }
+                machine.definedColor = hexColor;
+            }
+
+            //Parts
+            for (int i = 0; i < parts.size(); i++) {
+                JsonElement element = parts.get(i);
+                if (!element.isJsonObject()) {
+                    throw new JsonParseException("A part of 'parts' is not a compound object!");
+                }
+                JsonObject part = element.getAsJsonObject();
+                NBTTagCompound match = null;
+                if (part.has("nbt")) {
+                    JsonElement je = part.get("nbt");
+                    if (!je.isJsonObject()) {
+                        throw new JsonParseException("The ComponentType 'nbt' expects a json compound that defines the NBT tag to match the tileentity's nbt against!");
+                    }
+                    String jsonStr = je.toString();
+                    try {
+                        match = NBTJsonDeserializer.deserialize(jsonStr);
+                    } catch (NBTException exc) {
+                        throw new JsonParseException("Error trying to parse NBTTag! Rethrowing exception...", exc);
+                    }
+                }
+
+                if (!part.has("elements")) {
+                    throw new JsonParseException("Part contained no element!");
+                }
+                JsonElement partElement = part.get("elements");
+                if (partElement.isJsonPrimitive() && partElement.getAsJsonPrimitive().isString()) {
+                    String strDesc = partElement.getAsString();
+                    BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(strDesc);
+                    if (descr == null) {
+                        descr = new BlockArray.BlockInformation(Lists.newArrayList(BlockArray.BlockInformation.getDescriptor(partElement.getAsString())));
+                    } else {
+                        descr = descr.copy(); //Avoid NBT-definitions bleed into variable context
+                    }
+                    if (match != null) {
+                        descr.setMatchingTag(match);
+                    }
+                    addDescriptorWithPattern(machine.getPattern(), descr, part);
+                } else if (partElement.isJsonArray()) {
+                    JsonArray elementArray = partElement.getAsJsonArray();
+                    List<IBlockStateDescriptor> descriptors = Lists.newArrayList();
+                    for (int xx = 0; xx < elementArray.size(); xx++) {
+                        JsonElement p = elementArray.get(xx);
+                        if (!p.isJsonPrimitive() || !p.getAsJsonPrimitive().isString()) {
+                            throw new JsonParseException("Part elements of 'elements' have to be blockstate descriptions!");
+                        }
+                        String prim = p.getAsString();
+                        BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(prim);
+                        if (descr != null) {
+                            descriptors.addAll(descr.copy().matchingStates);
+                        } else {
+                            descriptors.add(BlockArray.BlockInformation.getDescriptor(prim));
+                        }
+                    }
+                    if (descriptors.isEmpty()) {
+                        throw new JsonParseException("'elements' array didn't contain any blockstate descriptors!");
+                    }
+                    BlockArray.BlockInformation bi = new BlockArray.BlockInformation(descriptors);
+                    if (match != null) {
+                        bi.setMatchingTag(match);
+                    }
+                    addDescriptorWithPattern(machine.getPattern(), bi, part);
+                } else {
+                    throw new JsonParseException("'elements' has to either be a blockstate description, variable or array of blockstate descriptions!");
+                }
+            }
+
+            //Modifiers
+            if (root.has("modifiers")) {
+                JsonElement partModifiers = root.get("modifiers");
+                if (!partModifiers.isJsonArray()) {
+                    throw new JsonParseException("'modifiers' has to be an array of modifiers!");
+                }
+                JsonArray modifiersArray = partModifiers.getAsJsonArray();
+                for (int j = 0; j < modifiersArray.size(); j++) {
+                    JsonElement modifier = modifiersArray.get(j);
+                    if (!modifier.isJsonObject()) {
+                        throw new JsonParseException("Elements of 'modifiers' have to be objects!");
+                    }
+                    addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), ModifierReplacement.class), modifier.getAsJsonObject());
+                }
+            }
+            return machine;
         }
     }
 

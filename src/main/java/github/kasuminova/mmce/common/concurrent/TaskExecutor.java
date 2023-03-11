@@ -72,11 +72,11 @@ public class TaskExecutor {
     }
 
     /**
-     * <p>添加一个异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
+     * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
      * @param action 要执行的异步任务
      */
-    public void addAsyncTask(final Action action) {
+    public void addParallelAsyncTask(final Action action) {
         executors.offer((ActionExecutor) FORK_JOIN_POOL.submit(new ActionExecutor(action)));
     }
 

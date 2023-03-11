@@ -31,7 +31,10 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
-import hellfirepvp.modularmachinery.common.machine.*;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
@@ -83,6 +86,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
+    private BlockController parentController = null;
+    private DynamicMachine parentMachine = null;
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
@@ -99,6 +104,13 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     public TileMachineController() {
         this.inventory = buildInventory();
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
+    }
+
+    public TileMachineController(BlockController parentController) {
+        this();
+
+        this.parentController = parentController;
+        this.parentMachine = parentController.getParentMachine();
     }
 
     public static void loadFromConfig(Configuration config) {
@@ -155,7 +167,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
         updateComponents();
 
-        ModularMachinery.EXECUTE_MANAGER.addAsyncTask(() -> {
+        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
             boolean updateRequired = onMachineTick();
 
             if (this.activeRecipe == null) {
@@ -199,12 +211,20 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                         onFinished();
                     }
                 }
-            } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()){
+            } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
                 this.activeRecipe = null;
                 this.context = null;
             }
             markForUpdateSync();
         });
+    }
+
+    public BlockController getParentController() {
+        return parentController;
+    }
+
+    public DynamicMachine getParentMachine() {
+        return parentMachine;
     }
 
     /**
@@ -556,6 +576,16 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     }
 
     private void onStructureFormed() {
+        if (parentController != null) {
+            this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+        } else {
+            this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
+        }
+
+        if (this.foundMachine.getMachineColor() != Config.machineColor) {
+            distributeCasingColor();
+        }
+
         List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineStructureFormedEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
             for (IEventHandler<MachineEvent> handler : handlerList) {
@@ -563,6 +593,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 handler.handle(event);
             }
         }
+
+        structureCheckFailedCount = 0;
+        markForUpdate();
     }
 
     private boolean checkStructure() {
@@ -595,33 +628,23 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         resetMachine(false);
 
-        DynamicMachine blueprint = getBlueprintMachine();
-        if (blueprint != null) {
-            if (matchesRotation(blueprint.getPattern(), blueprint)) {
-                this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
-
-                if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                    distributeCasingColor();
-                }
-
+        if (parentMachine != null) {
+            if (matchesRotation(parentMachine.getPattern(), parentMachine)) {
                 onStructureFormed();
-                structureCheckFailedCount = 0;
-                markForUpdate();
             }
         } else {
-            for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-                if (machine.requiresBlueprint()) continue;
-                if (matchesRotation(machine.getPattern(), machine)) {
-                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.patternRotation));
-
-                    if (this.foundMachine.getMachineColor() != Config.machineColor) {
-                        distributeCasingColor();
-                    }
-
+            DynamicMachine blueprint = getBlueprintMachine();
+            if (blueprint != null) {
+                if (matchesRotation(blueprint.getPattern(), blueprint)) {
                     onStructureFormed();
-                    structureCheckFailedCount = 0;
-                    markForUpdate();
-                    break;
+                }
+            } else {
+                for (DynamicMachine machine : MachineRegistry.getRegistry()) {
+                    if (machine.requiresBlueprint()) continue;
+                    if (matchesRotation(machine.getPattern(), machine)) {
+                        onStructureFormed();
+                        break;
+                    }
                 }
             }
         }

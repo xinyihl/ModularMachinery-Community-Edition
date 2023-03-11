@@ -26,6 +26,7 @@ import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -212,28 +213,32 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         return new Point(offsetX, highestY);
     }
 
+    @Nonnull
     @Override
     public String getUid() {
         return this.category;
     }
 
+    @Nonnull
     @Override
     public String getTitle() {
         return this.title;
     }
 
+    @Nonnull
     @Override
     public String getModName() {
         return ModularMachinery.NAME;
     }
 
+    @Nonnull
     @Override
     public IDrawable getBackground() {
         return this.sizeEmptyDrawable;
     }
 
     @Override
-    public void drawExtras(Minecraft minecraft) {
+    public void drawExtras(@Nonnull Minecraft minecraft) {
         RecipeLayoutHelper.PART_PROCESS_ARROW.drawable.draw(minecraft, offsetProcessArrow.x, offsetProcessArrow.y);
 
         inputComponents.forEach(slot -> slot.drawBackground(minecraft));
@@ -241,7 +246,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
     }
 
     @Override
-    public void setRecipe(IRecipeLayout recipeLayout, DynamicRecipeWrapper recipeWrapper, IIngredients ingredients) {
+    public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull DynamicRecipeWrapper recipeWrapper, @Nonnull IIngredients ingredients) {
         List<Class<?>> foundClasses = new LinkedList<>();
 
         for (IOType type : IOType.values()) {

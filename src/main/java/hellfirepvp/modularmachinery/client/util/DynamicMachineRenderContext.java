@@ -8,11 +8,12 @@
 
 package hellfirepvp.modularmachinery.client.util;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
@@ -23,6 +24,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,11 +57,11 @@ public class DynamicMachineRenderContext {
                 -min.getY(),
                 (min.getZ() + (max.getZ() - min.getZ()) / 2) * -1);
         BlockArray copy = new BlockArray(pattern, this.moveOffset);
+        BlockController ctrl = BlockController.getControllerWithMachine(machine);
+        if (ctrl == null) ctrl = BlocksMM.blockController;
         copy.addBlock(new BlockPos(this.moveOffset),
                 new BlockArray.BlockInformation(
-                        Lists.newArrayList(
-                                new BlockArray.IBlockStateDescriptor(
-                                        BlocksMM.blockController.getDefaultState()))));
+                        Collections.singletonList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
         this.render = new BlockArrayRenderHelper(copy);
     }
 

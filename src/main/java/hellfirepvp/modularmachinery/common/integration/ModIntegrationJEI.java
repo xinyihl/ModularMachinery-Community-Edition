@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.integration;
 import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
@@ -119,7 +120,8 @@ public class ModIntegrationJEI implements IModPlugin {
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             ItemStack stack = new ItemStack(ItemsMM.blueprint);
             ItemBlueprint.setAssociatedMachine(stack, machine);
-            registry.addRecipeCatalyst(stack, getCategoryStringFor(machine));
+            String machineCategory = getCategoryStringFor(machine);
+            registry.addRecipeCatalyst(stack, machineCategory);
         }
 
         List<StructurePreviewWrapper> previews = Lists.newArrayList();
@@ -136,6 +138,15 @@ public class ModIntegrationJEI implements IModPlugin {
             }
             registry.addRecipes(recipeWrappers, getCategoryStringFor(machine));
         }
+
+        BlockController.MACHINE_CONTROLLERS.values().forEach(controller ->
+                registry.addRecipeCatalyst(new ItemStack(controller),
+                        getCategoryStringFor(controller.getParentMachine()))
+        );
+        BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(controller ->
+                registry.addRecipeCatalyst(new ItemStack(controller),
+                        getCategoryStringFor(controller.getParentMachine()))
+        );
     }
 
     @Override

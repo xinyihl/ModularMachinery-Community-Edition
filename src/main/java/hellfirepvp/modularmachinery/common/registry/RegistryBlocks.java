@@ -11,19 +11,33 @@ package hellfirepvp.modularmachinery.common.registry;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.*;
+import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
 import hellfirepvp.modularmachinery.common.item.ItemBlockCustomName;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 import static hellfirepvp.modularmachinery.common.lib.BlocksMM.*;
 
@@ -50,6 +64,7 @@ public class RegistryBlocks {
     private static void registerBlocks() {
         blockController = prepareRegister(new BlockController());
         prepareItemBlockRegister(blockController);
+        registerCustomControllers();
 
         blockCasing = prepareRegister(new BlockCasing());
         prepareItemBlockRegister(blockCasing);
@@ -83,6 +98,45 @@ public class RegistryBlocks {
         registerTile(TileEnergyOutputHatch.class);
 
         registerTile(TileSmartInterface.class);
+    }
+
+    private static void registerCustomControllers() {
+        List<DynamicMachine> waitForLoadMachines = MachineRegistry.getWaitForLoadMachines();
+        for (MachineBuilder builder : MachineBuilder.PRE_INIT_MACHINES.values()) {
+            waitForLoadMachines.add(builder.getMachine());
+        }
+
+        if (Config.mocCompatibleMode) {
+            for (DynamicMachine machine : waitForLoadMachines) {
+                BlockController ctrlBlock =  prepareRegisterWithCustomName(new BlockController("modularcontroller", machine));
+                BlockController.MOC_MACHINE_CONTROLLERS.put(machine, ctrlBlock);
+
+                ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
+                    @Nonnull
+                    @Override
+                    public String getItemStackDisplayName(ItemStack stack) {
+                        return ctrlBlock.getLocalizedName();
+                    }
+                }.setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
+
+                prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
+            }
+        }
+
+        for (DynamicMachine machine : waitForLoadMachines) {
+            BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController(machine));
+            BlockController.MACHINE_CONTROLLERS.put(machine, ctrlBlock);
+
+            ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
+                @Nonnull
+                @Override
+                public String getItemStackDisplayName(ItemStack stack) {
+                    return ctrlBlock.getLocalizedName();
+                }
+            }.setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
+
+            prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
+        }
     }
 
     private static void registerBlockModels() {
@@ -123,10 +177,19 @@ public class RegistryBlocks {
         return item;
     }
 
+    private static <T extends ItemBlock> T prepareItemBlockRegisterWithCustomName(T item) {
+        RegistryItems.itemBlocks.add(item);
+        return item;
+    }
+
     private static <T extends Block> T prepareRegister(T block) {
         String name = block.getClass().getSimpleName().toLowerCase();
         block.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
 
+        return prepareRegisterWithCustomName(block);
+    }
+
+    private static <T extends Block> T prepareRegisterWithCustomName(T block) {
         blockModelRegister.add(block);
         CommonProxy.registryPrimer.register(block);
         if (block instanceof BlockDynamicColor) {
@@ -135,4 +198,20 @@ public class RegistryBlocks {
         return block;
     }
 
+    public static void writeAllCustomControllerModels() throws IOException {
+        IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
+        for (BlockController controller : BlockController.MACHINE_CONTROLLERS.values()) {
+            IResource blockStateResource = resourceManager.getResource(
+                    new ResourceLocation(ModularMachinery.MODID, "blockstates/block_machine_controller.json"));
+
+            File blockStateFile = new File("resources/modularmachinery/blockstates/" + controller.getRegistryName().getPath() + ".json");
+            if (!blockStateFile.exists()) {
+                final InputStream inputStream = blockStateResource.getInputStream();
+                final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
+                IOUtils.copy(inputStream, fileOutputStream);
+                inputStream.close();
+                fileOutputStream.close();
+            }
+        }
+    }
 }

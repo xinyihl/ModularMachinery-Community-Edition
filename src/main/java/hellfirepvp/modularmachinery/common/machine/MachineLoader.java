@@ -11,11 +11,14 @@ package hellfirepvp.modularmachinery.common.machine;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockInformationVariable;
+import hellfirepvp.modularmachinery.common.util.FileUtils;
 import net.minecraft.util.JsonUtils;
+import net.minecraft.util.Tuple;
 
 import java.io.File;
 import java.io.InputStreamReader;
@@ -32,12 +35,15 @@ import java.util.*;
  */
 public class MachineLoader {
 
-    public static final Map<String, BlockArray.BlockInformation> variableContext = new HashMap<>();
+    public static final Map<String, BlockArray.BlockInformation> VARIABLE_CONTEXT = new HashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachine.MachineDeserializer())
             .registerTypeHierarchyAdapter(BlockInformationVariable.class, new BlockInformationVariable.Deserializer())
             .registerTypeHierarchyAdapter(ModifierReplacement.class, new ModifierReplacement.Deserializer())
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
+            .create();
+    private static final Gson PRELOAD_GSON = new GsonBuilder()
+            .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachinePreDeserializer())
             .create();
     private static Map<String, Exception> failedAttempts = new HashMap<>();
 
@@ -66,15 +72,41 @@ public class MachineLoader {
         return candidates;
     }
 
+    public static List<Tuple<DynamicMachine, String>> registerMachines(Collection<File> machineCandidates) {
+        List<Tuple<DynamicMachine, String>> registeredMachinery = Lists.newArrayList();
 
-    public static List<DynamicMachine> loadMachines(List<File> machineCandidates) {
-        List<DynamicMachine> loadedMachines = Lists.newArrayList();
-
-        machineCandidates.forEach(file -> {
-            try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
-                loadedMachines.add(JsonUtils.fromJson(GSON, isr, DynamicMachine.class));
+        machineCandidates.parallelStream().forEach(file -> {
+            try {
+                String jsonString = FileUtils.readFile(file);
+                DynamicMachine machine = JsonUtils.fromJson(PRELOAD_GSON, jsonString, DynamicMachine.class, false);
+                if (machine != null) {
+                    synchronized (registeredMachinery) {
+                        registeredMachinery.add(new Tuple<>(machine, jsonString));
+                    }
+                }
             } catch (Exception exc) {
                 failedAttempts.put(file.getPath(), exc);
+            }
+        });
+        return registeredMachinery;
+    }
+
+
+    public static List<DynamicMachine> loadMachines(Collection<Tuple<DynamicMachine, String>> registeredMachineList) {
+        List<DynamicMachine> loadedMachines = new ArrayList<>();
+
+        registeredMachineList.parallelStream().forEach(registryAndJsonStr -> {
+            DynamicMachine preloadMachine = registryAndJsonStr.getFirst();
+            try {
+                DynamicMachine loadedMachine = JsonUtils.fromJson(GSON, registryAndJsonStr.getSecond(), DynamicMachine.class, false);
+                if (loadedMachine != null) {
+                    preloadMachine.mergeFrom(loadedMachine);
+                    synchronized (loadedMachines) {
+                        loadedMachines.add(preloadMachine);
+                    }
+                }
+            } catch (Exception exc) {
+                ModularMachinery.log.warn(preloadMachine.registryName, exc);
             }
         });
         return loadedMachines;
@@ -87,13 +119,13 @@ public class MachineLoader {
     }
 
     public static void prepareContext(List<File> files) {
-        variableContext.clear();
+        VARIABLE_CONTEXT.clear();
 
         files.forEach(file -> {
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 Map<String, BlockArray.BlockInformation> variables = JsonUtils.fromJson(GSON, isr, BlockInformationVariable.class).getDefinedVariables();
                 for (String key : variables.keySet()) {
-                    variableContext.put(key, variables.get(key));
+                    VARIABLE_CONTEXT.put(key, variables.get(key));
                 }
             } catch (Exception exc) {
                 failedAttempts.put(file.getPath(), exc);
