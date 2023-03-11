@@ -18,6 +18,7 @@ public class TaskExecutor {
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
 
     public void init() {
     }
@@ -55,6 +56,12 @@ public class TaskExecutor {
             executed++;
         }
 
+        Action action;
+        while ((action = mainThreadActions.poll()) != null) {
+            action.doAction();
+            executed++;
+        }
+
         //Empty Check
         if (!executors.isEmpty()) {
             executed += executeActions();
@@ -71,5 +78,13 @@ public class TaskExecutor {
      */
     public void addAsyncTask(final Action action) {
         executors.offer((ActionExecutor) FORK_JOIN_POOL.submit(new ActionExecutor(action)));
+    }
+
+    /**
+     * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在***主线程***执行。</p>
+     * @param action 要执行的同步任务
+     */
+    public void addSyncTask(final Action action) {
+        mainThreadActions.offer(action);
     }
 }

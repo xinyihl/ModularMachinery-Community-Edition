@@ -51,6 +51,7 @@ public class ModularMachinery {
     public static final String COMMON_PROXY = "hellfirepvp.modularmachinery.common.CommonProxy";
     public static final SimpleNetworkWrapper NET_CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
     public static final TaskExecutor EXECUTE_MANAGER = new TaskExecutor();
+    public static boolean pluginServerCompatibleMode;
     @Mod.Instance(MODID)
     public static ModularMachinery instance;
     public static Logger log;
@@ -81,6 +82,8 @@ public class ModularMachinery {
         proxy.loadModData(event.getModConfigurationDirectory());
 
         proxy.preInit();
+
+        checkThirdPartyServer();
     }
 
     @Mod.EventHandler
@@ -99,6 +102,19 @@ public class ModularMachinery {
         event.registerServerCommand(new CommandSyntax());
         event.registerServerCommand(new CommandHand());
         event.registerServerCommand(new CommandPerformanceReport());
+    }
+
+    private static void checkThirdPartyServer() {
+        try {
+            Class.forName("catserver.server.CatServer");
+            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
+            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
+            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
+            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
+            pluginServerCompatibleMode = true;
+        } catch (Exception e) {
+            pluginServerCompatibleMode = false;
+        }
     }
 
 }
