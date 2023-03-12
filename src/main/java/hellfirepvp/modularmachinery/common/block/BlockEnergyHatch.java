@@ -35,7 +35,7 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
         setResistance(10F);
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
-        setCreativeTab(CommonProxy.creativeTabMM);
+        setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
     @Optional.Method(modid = "gregtech")

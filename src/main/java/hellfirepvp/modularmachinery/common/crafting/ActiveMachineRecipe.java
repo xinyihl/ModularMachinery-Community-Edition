@@ -125,7 +125,9 @@ public class ActiveMachineRecipe {
         tag.setInteger("totalTick", this.totalTick);
         tag.setString("recipeName", this.recipe.getRegistryName().toString());
 
-        tag.setTag("data", data);
+        if (!data.isEmpty()) {
+            tag.setTag("data", data);
+        }
         return tag;
     }
 

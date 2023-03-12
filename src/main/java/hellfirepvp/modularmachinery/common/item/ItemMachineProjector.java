@@ -6,7 +6,7 @@ import net.minecraft.item.Item;
 public class ItemMachineProjector extends Item {
     public ItemMachineProjector() {
         setMaxStackSize(1);
-        setCreativeTab(CommonProxy.creativeTabMM);
+        setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
 

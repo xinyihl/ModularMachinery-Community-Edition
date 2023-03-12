@@ -44,12 +44,10 @@ import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
-import hellfirepvp.modularmachinery.common.util.nbt.NBTHelper;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -864,23 +862,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 this.foundMachine = machine;
                 this.foundReplacements = replacements;
 
-                if (compound.hasKey("modifierOffsets")) {
-                    NBTTagList list = compound.getTagList("modifierOffsets", Constants.NBT.TAG_COMPOUND);
-                    for (int i = 0; i < list.tagCount(); i++) {
-                        NBTTagCompound posTag = list.getCompoundTagAt(i);
-                        BlockPos modOffset = NBTUtil.getPosFromTag(posTag.getCompoundTag("position"));
-                        IBlockState state = NBTHelper.getBlockState(posTag, "state");
-                        if (state != null) {
-                            for (ModifierReplacement mod : this.foundMachine.getModifiers().getOrDefault(modOffset, Lists.newArrayList())) {
-                                if (mod.getBlockInformation().matchesState(state)) {
-                                    this.foundModifiers.putIfAbsent(modOffset, Lists.newArrayList());
-                                    this.foundModifiers.get(modOffset).add(mod);
-                                }
-                            }
-                        }
-                    }
-                }
-
                 if (compound.hasKey("customData")) {
                     this.customData = compound.getCompoundTag("customData");
                 }
@@ -926,30 +907,21 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             compound.setString("machine", this.foundMachine.getRegistryName().toString());
             compound.setInteger("rotation", this.patternRotation.getHorizontalIndex());
 
-            NBTTagList listModifierOffsets = new NBTTagList();
-            for (BlockPos offset : this.foundModifiers.keySet()) {
-                NBTTagCompound tag = new NBTTagCompound();
-
-                tag.setTag("position", NBTUtil.createPosTag(offset));
-                NBTHelper.setBlockState(tag, "state", world.getBlockState(getPos().add(offset)));
-
-                listModifierOffsets.appendTag(tag);
-            }
-            compound.setTag("modifierOffsets", listModifierOffsets);
-
-            if (customData != null) {
+            if (!customData.isEmpty()) {
                 compound.setTag("customData", customData);
             }
-            NBTTagList tagList = new NBTTagList();
-            customModifiers.forEach((key, modifier) -> {
-                if (key != null && modifier != null) {
-                    NBTTagCompound modifierTag = new NBTTagCompound();
-                    modifierTag.setString("key", key);
-                    modifierTag.setTag("modifier", modifier.serialize());
-                    tagList.appendTag(modifierTag);
-                }
-            });
-            compound.setTag("customModifier", tagList);
+            if (!customModifiers.isEmpty()) {
+                NBTTagList tagList = new NBTTagList();
+                customModifiers.forEach((key, modifier) -> {
+                    if (key != null && modifier != null) {
+                        NBTTagCompound modifierTag = new NBTTagCompound();
+                        modifierTag.setString("key", key);
+                        modifierTag.setTag("modifier", modifier.serialize());
+                        tagList.appendTag(modifierTag);
+                    }
+                });
+                compound.setTag("customModifier", tagList);
+            }
         }
         if (this.parentMachine != null) {
             compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());

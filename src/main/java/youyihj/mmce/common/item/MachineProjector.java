@@ -32,7 +32,7 @@ public class MachineProjector extends Item {
         setMaxStackSize(1);
         setRegistryName(new ResourceLocation(ModularMachinery.MODID,"machine_projector"));
         setTranslationKey(ModularMachinery.MODID + '.' + "machine_projector");
-        setCreativeTab(CommonProxy.creativeTabMM);
+        setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
     @Nonnull
