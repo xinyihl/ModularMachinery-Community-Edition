@@ -33,7 +33,7 @@ public class Config {
     public static int machineColor;
     private static File lastReadFile;
     private static Configuration lastReadConfig;
-
+    public static boolean selectiveUpdateTileEntity = false;
     public static void loadFrom(File file) {
         lastReadFile = file;
         lastReadConfig = new Configuration(file);
@@ -68,5 +68,7 @@ public class Config {
         mocCompatibleMode = lastReadConfig.getBoolean(
                 "modular-controller-compatible-mode", "general", false,
                 "When enabled, the mod registers a controller block under the name modularcontroller to prevent incompatibility with older saves.");
+        selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
+                "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
     }
 }

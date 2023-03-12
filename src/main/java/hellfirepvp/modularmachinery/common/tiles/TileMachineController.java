@@ -39,6 +39,7 @@ import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
+import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
@@ -48,6 +49,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -73,7 +75,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 17:14
  */
-public class TileMachineController extends TileEntityRestrictedTick implements IMachineController {
+public class TileMachineController extends TileEntityRestrictedTick implements IMachineController, SelectiveUpdateTileEntity {
     public static final int BLUEPRINT_SLOT = 0;
     public static final int ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30;
@@ -165,56 +167,58 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
         updateComponents();
 
-        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
-            boolean updateRequired = onMachineTick();
+        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doMachineTick);
+    }
 
-            if (this.activeRecipe == null) {
-                searchAndStartRecipe();
-                if (updateRequired) {
-                    markForUpdateSync();
-                }
-                return;
-            }
+    private void doMachineTick() {
+        boolean updateRequired = onMachineTick();
 
-            if (this.context == null) {
-                //context preInit
-                context = createContext(this.activeRecipe);
-            }
-
-            CraftingStatus statusTmp = this.craftingStatus;
-            MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
-
-            //检查预 Tick 事件是否阻止进一步运行。
-            //Check if the PreTick event prevents further runs.
-            if (!onPreTick()) {
-                if (this.activeRecipe != null) {
-                    this.activeRecipe.tick(this, this.context);
-                    this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
-                }
+        if (this.activeRecipe == null) {
+            searchAndStartRecipe();
+            if (updateRequired) {
                 markForUpdateSync();
-                return;
             }
+            return;
+        }
 
-            //当脚本修改了运行状态时，内部不再覆盖运行状态。
-            //When scripts changed craftingStatus, it is no longer modified internally.
-            if (statusTmp != this.craftingStatus) {
+        if (this.context == null) {
+            //context preInit
+            context = createContext(this.activeRecipe);
+        }
+
+        CraftingStatus prevStatus = this.craftingStatus;
+        MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
+
+        //检查预 Tick 事件是否阻止进一步运行。
+        //Check if the PreTick event prevents further runs.
+        if (!onPreTick()) {
+            if (this.activeRecipe != null) {
                 this.activeRecipe.tick(this, this.context);
-            } else {
-                this.craftingStatus = this.activeRecipe.tick(this, this.context);
-            }
-            if (this.craftingStatus.isCrafting()) {
-                onTick();
-                if (this.activeRecipe != null) {
-                    if (this.activeRecipe.isCompleted()) {
-                        onFinished();
-                    }
-                }
-            } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
-                this.activeRecipe = null;
-                this.context = null;
+                this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
             }
             markForUpdateSync();
-        });
+            return;
+        }
+
+        //当脚本修改了运行状态时，内部不再覆盖运行状态。
+        //When scripts changed craftingStatus, it is no longer modified internally.
+        if (prevStatus != this.craftingStatus) {
+            this.activeRecipe.tick(this, this.context);
+        } else {
+            this.craftingStatus = this.activeRecipe.tick(this, this.context);
+        }
+        if (this.craftingStatus.isCrafting()) {
+            onTick();
+            if (this.activeRecipe != null) {
+                if (this.activeRecipe.isCompleted()) {
+                    onFinished();
+                }
+            }
+        } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
+            this.activeRecipe = null;
+            this.context = null;
+        }
+        markForUpdateSync();
     }
 
     public BlockController getParentController() {
@@ -827,6 +831,22 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
     public CraftingStatus getCraftingStatus() {
         return craftingStatus;
+    }
+
+    /**
+     * <p>一定程度上缓解过大的带宽占用问题。</p>
+     * <p>如果你想知道更多原因，请查看<a href="https://github.com/HellFirePvP/ModularMachinery/issues/228">此链接</a>。</p>
+     * <p>Alleviate excessive bandwidth usage to a certain extent</p>
+     * <p>If you want to know more about why, please <a href="https://github.com/HellFirePvP/ModularMachinery/issues/228">Click This Link</a>.</p>
+     */
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getTrueUpdatePacket() {
+        return super.getUpdatePacket();
     }
 
     @Override

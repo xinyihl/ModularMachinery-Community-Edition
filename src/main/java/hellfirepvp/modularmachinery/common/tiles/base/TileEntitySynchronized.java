@@ -53,7 +53,7 @@ public class TileEntitySynchronized extends TileEntity {
     }
 
     @Override
-    public final SPacketUpdateTileEntity getUpdatePacket() {
+    public SPacketUpdateTileEntity getUpdatePacket() {
         NBTTagCompound compound = new NBTTagCompound();
         super.writeToNBT(compound);
         writeCustomNBT(compound);
