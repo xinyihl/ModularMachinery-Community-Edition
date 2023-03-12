@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.data.ModDataHolder;
 import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEvents;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
@@ -102,6 +103,7 @@ public class CommonProxy implements IGuiHandler {
         IntegrationTypeHelper.filterModIdRequirementTypes();
 
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
+        MachineRegistry.registerMachines(MachineBuilder.WAIT_FOR_LOAD);
         MachineModifier.loadAll();
         MMEvents.registryAll();
         RecipeAdapterRegistry.registerDynamicMachineAdapters();

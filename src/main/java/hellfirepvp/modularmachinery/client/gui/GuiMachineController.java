@@ -146,9 +146,11 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         offsetY += 15;
         if (controller.hasActiveRecipe()) {
             ActiveMachineRecipe activeRecipe = controller.getActiveRecipe();
-            int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
-            String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
-            fr.drawStringWithShadow(progressStr, offsetX, offsetY, 0xFFFFFF);
+            if (activeRecipe.getTotalTick() > 0) {
+                int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
+                String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
+                fr.drawStringWithShadow(progressStr, offsetX, offsetY, 0xFFFFFF);
+            }
         }
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

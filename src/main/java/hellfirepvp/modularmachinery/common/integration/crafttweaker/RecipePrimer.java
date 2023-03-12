@@ -428,7 +428,7 @@ public class RecipePrimer implements PreparedRecipe {
     // Catalyst
     //----------------------------------------------------------------------------------------------
     @ZenMethod
-    public RecipePrimer addCatalystInput(IIngredient input, String[] tooltips, RecipeModifierBuilder[] modifiers) {
+    public RecipePrimer addCatalystInput(IIngredient input, String[] tooltips, RecipeModifier[] modifiers) {
         if (input instanceof IItemStack) {
             requireCatalyst((IItemStack) input, tooltips, modifiers);
         } else if (input instanceof IOreDictEntry) {
@@ -501,13 +501,12 @@ public class RecipePrimer implements PreparedRecipe {
         appendComponent(new RequirementItem(ioType, oreDictName, amount));
     }
 
-    private void requireCatalyst(String oreDictName, int amount, String[] tooltips, RecipeModifierBuilder[] builders) {
+    private void requireCatalyst(String oreDictName, int amount, String[] tooltips, RecipeModifier[] modifiers) {
         RequirementCatalyst catalyst = new RequirementCatalyst(oreDictName, amount);
         for (String tooltip : tooltips) {
             catalyst.addTooltip(tooltip);
         }
-        for (RecipeModifierBuilder builder : builders) {
-            RecipeModifier modifier = builder.build();
+        for (RecipeModifier modifier : modifiers) {
             if (modifier != null) {
                 catalyst.addModifier(modifier);
             }
@@ -515,7 +514,7 @@ public class RecipePrimer implements PreparedRecipe {
         appendComponent(catalyst);
     }
 
-    private void requireCatalyst(IItemStack stack, String[] tooltips, RecipeModifierBuilder[] builders) {
+    private void requireCatalyst(IItemStack stack, String[] tooltips, RecipeModifier[] modifiers) {
         ItemStack mcStack = CraftTweakerMC.getItemStack(stack);
         if (mcStack.isEmpty()) {
             CraftTweakerAPI.logError("[ModularMachinery] ItemStack not found/unknown item: " + stack.toString());
@@ -529,8 +528,7 @@ public class RecipePrimer implements PreparedRecipe {
         for (String tooltip : tooltips) {
             catalyst.addTooltip(tooltip);
         }
-        for (RecipeModifierBuilder builder : builders) {
-            RecipeModifier modifier = builder.build();
+        for (RecipeModifier modifier : modifiers) {
             if (modifier != null) {
                 catalyst.addModifier(modifier);
             }

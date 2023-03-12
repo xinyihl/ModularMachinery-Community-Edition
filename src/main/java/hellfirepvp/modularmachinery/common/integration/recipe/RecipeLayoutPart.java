@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.integration.recipe;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.integration.ingredient.CatalystRenderer;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidRenderer;
 import mezz.jei.api.ingredients.IIngredientRenderer;
@@ -229,82 +228,6 @@ public abstract class RecipeLayoutPart<T> {
             }
         }
 
-    }
-
-    public abstract static class EmptyLayoutPart<T> extends RecipeLayoutPart<T> {
-
-        protected EmptyLayoutPart(Point offset) {
-            super(offset);
-        }
-
-        @Override
-        public final int getComponentHeight() {
-            return 0;
-        }
-
-        @Override
-        public final int getComponentWidth() {
-            return 0;
-        }
-
-        @Override
-        public abstract Class<T> getLayoutTypeClass();
-
-        @Override
-        public final int getMaxHorizontalCount() {
-            return 0;
-        }
-
-        @Override
-        public final int getComponentVerticalGap() {
-            return 0;
-        }
-
-        @Override
-        public final int getComponentHorizontalGap() {
-            return 0;
-        }
-
-        @Override
-        public final int getComponentHorizontalSortingOrder() {
-            return 0;
-        }
-
-        @Override
-        public final boolean canBeScaled() {
-            return false;
-        }
-
-        @Override
-        public final IIngredientRenderer<T> provideIngredientRenderer() {
-            throw new UnsupportedOperationException("Cannot provide Empty Layout Part!");
-        }
-
-        @Override
-        public final int getRendererPaddingX() {
-            return 0;
-        }
-
-        @Override
-        public final int getRendererPaddingY() {
-            return 0;
-        }
-
-        @Override
-        public final void drawBackground(Minecraft mc) {
-        }
-    }
-
-    public static class Catalyst extends Item {
-
-        public Catalyst(Point offset) {
-            super(offset);
-        }
-
-        @Override
-        public IIngredientRenderer<ItemStack> provideIngredientRenderer() {
-            return new CatalystRenderer(RecipeLayoutHelper.PART_INVENTORY_CATALYST_CELL.drawable);
-        }
     }
 
     public static class Item extends RecipeLayoutPart<ItemStack> {

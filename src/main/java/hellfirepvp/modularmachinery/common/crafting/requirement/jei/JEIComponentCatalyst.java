@@ -21,7 +21,7 @@ public class JEIComponentCatalyst extends JEIComponentItem {
     @Override
     @SideOnly(Side.CLIENT)
     public RecipeLayoutPart<ItemStack> getLayoutPart(Point offset) {
-        return new RecipeLayoutPart.Catalyst(offset);
+        return new RecipeLayoutPart.Item(offset);
     }
 
     @Override

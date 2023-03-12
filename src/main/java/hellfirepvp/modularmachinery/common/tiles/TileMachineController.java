@@ -878,8 +878,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
         if (compound.hasKey("parentMachine")) {
             ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
-            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
-            if (machine == null) {
+            parentMachine = MachineRegistry.getRegistry().getMachine(rl);
+            if (parentMachine == null) {
                 ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
             }
         }

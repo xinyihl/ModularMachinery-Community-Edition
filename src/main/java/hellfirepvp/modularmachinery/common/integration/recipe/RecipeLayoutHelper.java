@@ -30,7 +30,6 @@ public class RecipeLayoutHelper {
     static RecipePart PART_ENERGY_BACKGROUND;
     static RecipePart PART_ENERGY_FOREGROUND;
     static RecipePart PART_INVENTORY_CELL;
-    static RecipePart PART_INVENTORY_CATALYST_CELL;
     static RecipePart PART_PROCESS_ARROW;
     static RecipePart PART_PROCESS_ARROW_ACTIVE;
 
@@ -39,11 +38,10 @@ public class RecipeLayoutHelper {
 
         PART_TANK_SHELL              = new RecipePart(LOCATION_JEI_ICONS, 0,  0,  18, 18);
         PART_GAS_TANK_SHELL          = new RecipePart(LOCATION_JEI_ICONS, 0,  18, 18, 18);
-        PART_TANK_SHELL_BACKGROUND   = new RecipePart(LOCATION_JEI_ICONS, 0,  36, 18, 18);
+        PART_TANK_SHELL_BACKGROUND   = new RecipePart(LOCATION_JEI_ICONS, 54, 0,  18, 18);
         PART_ENERGY_FOREGROUND       = new RecipePart(LOCATION_JEI_ICONS, 18, 0,  18, 54);
         PART_ENERGY_BACKGROUND       = new RecipePart(LOCATION_JEI_ICONS, 36, 0,  18, 54);
         PART_INVENTORY_CELL          = new RecipePart(LOCATION_JEI_ICONS, 54, 0,  18, 18);
-        PART_INVENTORY_CATALYST_CELL = new RecipePart(LOCATION_JEI_ICONS, 54, 18, 18, 18);
         PART_PROCESS_ARROW           = new RecipePart(LOCATION_JEI_ICONS, 72, 0,  22, 15);
         PART_PROCESS_ARROW_ACTIVE    = new RecipePart(LOCATION_JEI_ICONS, 72, 15, 22, 15);
     }

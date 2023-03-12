@@ -17,6 +17,7 @@ import java.util.List;
 public class RequirementCatalyst extends RequirementItem {
     private final List<RecipeModifier> modifierList = new ArrayList<>();
     private final List<String> toolTipList = new ArrayList<>();
+    private boolean isRequired = false;
 
     public RequirementCatalyst(ItemStack item) {
         super(IOType.INPUT, item);
@@ -50,8 +51,10 @@ public class RequirementCatalyst extends RequirementItem {
             for (RecipeModifier modifier : modifierList) {
                 context.addPermanentModifier(modifier);
             }
+            isRequired = true;
+            return CraftCheck.success();
         }
-        return CraftCheck.success();
+        return CraftCheck.skipComponent();
     }
 
     @Override
@@ -123,7 +126,11 @@ public class RequirementCatalyst extends RequirementItem {
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return super.startCrafting(component, context, chance);
+        if (isRequired) {
+            return super.startCrafting(component, context, chance);
+        } else {
+            return true;
+        }
     }
 
     @Override
