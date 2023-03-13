@@ -26,11 +26,13 @@ public class ComponentTypesMM {
     public static final ResourceLocation KEY_COMPONENT_GAS = new ResourceLocation(ModularMachinery.MODID, "gas");
     public static final ResourceLocation KEY_COMPONENT_ENERGY = new ResourceLocation(ModularMachinery.MODID, "energy");
     public static final ResourceLocation KEY_COMPONENT_SMART_INTERFACE = new ResourceLocation(ModularMachinery.MODID, "interface_number");
+    public static final ResourceLocation KEY_COMPONENT_PARALLEL_CONTROLLER = new ResourceLocation(ModularMachinery.MODID, "parallel_controller");
     public static ComponentType COMPONENT_ITEM;
     public static ComponentType COMPONENT_FLUID;
     public static ComponentType COMPONENT_ENERGY;
     public static ComponentType COMPONENT_GAS;
     public static ComponentType COMPONENT_SMART_INTERFACE;
+    public static ComponentType COMPONENT_PARALLEL_CONTROLLER;
 
     private ComponentTypesMM() {
     }

@@ -14,12 +14,14 @@ import github.kasuminova.mmce.common.concurrent.Sync;
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -43,7 +45,7 @@ import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
  * Date: 08.07.2017 / 10:14
  */
 @Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyStorage", modid = "redstoneflux")
-public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandlerAsync, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage {
+public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandlerAsync, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage, SelectiveUpdateTileEntity {
 
     protected long energy = 0;
     protected EnergyHatchData size;
@@ -171,6 +173,16 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         }
 
         return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getTrueUpdatePacket() {
+        return super.getUpdatePacket();
     }
 
     @Override

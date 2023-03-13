@@ -27,6 +27,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
@@ -94,6 +95,7 @@ public class CommonProxy implements IGuiHandler {
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         ModularMachinery.EXECUTE_MANAGER.init();
+        checkThirdPartyServer();
         ModularMachinery.log.info(String.format("[ModularMachinery] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.FORK_JOIN_POOL.getParallelism()));
     }
 
@@ -149,6 +151,8 @@ public class CommonProxy implements IGuiHandler {
                 return new ContainerEnergyHatch((TileEnergyHatch) present, player);
             case SMART_INTERFACE:
                 return new ContainerSmartInterface((TileSmartInterface) present, player);
+            case PARALLEL_CONTROLLER:
+                return new ContainerParallelController((TileParallelController) present, player);
             case BLUEPRINT_PREVIEW:
                 break;
         }
@@ -168,6 +172,7 @@ public class CommonProxy implements IGuiHandler {
         TANK_INVENTORY(TileFluidTank.class),
         ENERGY_INVENTORY(TileEnergyHatch.class),
         SMART_INTERFACE(TileSmartInterface.class),
+        PARALLEL_CONTROLLER(TileParallelController.class),
         BLUEPRINT_PREVIEW(null);
 
         public final Class<? extends TileEntity> requiredTileEntity;
@@ -177,4 +182,16 @@ public class CommonProxy implements IGuiHandler {
         }
     }
 
+    private static void checkThirdPartyServer() {
+        try {
+            Class.forName("catserver.server.CatServer");
+            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
+            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
+            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
+            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
+            ModularMachinery.pluginServerCompatibleMode = true;
+        } catch (Exception e) {
+            ModularMachinery.pluginServerCompatibleMode = false;
+        }
+    }
 }

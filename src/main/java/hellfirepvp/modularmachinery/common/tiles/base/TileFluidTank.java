@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.HybridGasTank;
@@ -19,6 +20,7 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import mekanism.api.gas.ITubeConnection;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
@@ -38,7 +40,7 @@ import javax.annotation.Nullable;
         @Optional.Interface(modid = "mekanism", iface = "mekanism.api.gas.IGasHandler"),
         @Optional.Interface(modid = "mekanism", iface = "mekanism.api.gas.ITubeConnection")
 })
-public abstract class TileFluidTank extends TileColorableMachineComponent implements MachineComponentTile, IGasHandler, ITubeConnection {
+public abstract class TileFluidTank extends TileColorableMachineComponent implements MachineComponentTile, IGasHandler, ITubeConnection, SelectiveUpdateTileEntity {
 
     private HybridTank tank;
     private IOType ioType;
@@ -94,6 +96,16 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
             }
         }
         return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getTrueUpdatePacket() {
+        return super.getUpdatePacket();
     }
 
     @Override

@@ -115,24 +115,17 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     }
 
     /**
-     * <p>Parallelize（可并行）</p>
+     * <p>Parallelizable（可并行）</p>
      * <p>这个接口由 {@link ComponentRequirement} 及其子类实现，用于实现内置的并行功能。</p>
      */
-    public interface Parallelize {
+    public interface Parallelizable {
         /**
          * 获取当前需求的最大可并行数量。
          *
          * @param context Context
          * @return 最大可并行数量
          */
-        int maxParallelism(RecipeCraftingContext context);
-
-        /**
-         * 设置配方并行数
-         *
-         * @param parallelism 并行数量
-         */
-        void setParallelism(int parallelism);
+        int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism);
 
         /**
          * 设置并行倍率（例如能量输入倍率）

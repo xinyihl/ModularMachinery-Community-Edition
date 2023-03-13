@@ -92,6 +92,8 @@ public class RegistryBlocks {
         prepareItemBlockRegister(energyOutputHatch);
         smartInterface = prepareRegister(new BlockSmartInterface());
         prepareItemBlockRegister(smartInterface);
+        parallelController = prepareRegister(new BlockParallelController());
+        prepareItemBlockRegister(parallelController);
     }
 
     private static void registerTiles() {
@@ -107,6 +109,7 @@ public class RegistryBlocks {
         registerTile(TileEnergyOutputHatch.class);
 
         registerTile(TileSmartInterface.class);
+        registerTile(TileParallelController.class);
     }
 
     private static void registerCustomControllers() {

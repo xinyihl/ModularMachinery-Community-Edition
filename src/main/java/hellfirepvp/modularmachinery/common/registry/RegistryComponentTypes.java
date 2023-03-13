@@ -33,6 +33,7 @@ public class RegistryComponentTypes {
         COMPONENT_ENERGY = register(new ComponentEnergy(), KEY_COMPONENT_ENERGY);
         COMPONENT_GAS = register(new ComponentGas(), KEY_COMPONENT_GAS);
         COMPONENT_SMART_INTERFACE = register(new ComponentSmartInterface(), KEY_COMPONENT_SMART_INTERFACE);
+        COMPONENT_PARALLEL_CONTROLLER = register(new ComponentSmartInterface(), KEY_COMPONENT_PARALLEL_CONTROLLER);
     }
 
     private static <T extends ComponentType> T register(T componentType, ResourceLocation registryName) {

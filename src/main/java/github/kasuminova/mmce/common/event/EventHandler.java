@@ -2,9 +2,7 @@ package github.kasuminova.mmce.common.event;
 
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.data.Config;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
-import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -24,13 +22,14 @@ public class EventHandler {
     @SideOnly(Side.SERVER)
     public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         World world = event.getWorld();
-        if (Config.selectiveUpdateTileEntity) {
+        if (Config.selectiveUpdateTileEntity || !(event.getEntityPlayer() instanceof EntityPlayerMP)) {
             return;
         }
 
         TileEntity te = world.getTileEntity(event.getPos());
-        if (te instanceof TileMachineController) {
-            ((TileEntitySynchronized) te).markForUpdate();
+        EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
+        if (te instanceof SelectiveUpdateTileEntity) {
+            player.connection.sendPacket(((SelectiveUpdateTileEntity) te).getTrueUpdatePacket());
         }
     }
 

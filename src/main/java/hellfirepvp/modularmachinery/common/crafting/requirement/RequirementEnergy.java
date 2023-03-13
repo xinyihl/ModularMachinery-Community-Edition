@@ -33,11 +33,12 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable {
+public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.Parallelizable {
 
     public final long requirementPerTick;
     private long activeIO;
     private long remaining;
+    public float parallelMultiplier = 1F;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
@@ -204,5 +205,25 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         }
         //This is neither input nor output? when do we actually end up in this case down here?
         return CraftCheck.skipComponent();
+    }
+
+    @Override
+    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
+        switch (actionType) {
+            case INPUT:
+                long inTick = (long) ((long) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelMultiplier);
+                return (int) Math.min(handler.getCurrentEnergy() / inTick, maxParallelism);
+            case OUTPUT:
+                long outTick = (long) ((long) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelMultiplier);
+                return (int) Math.min(handler.getRemainingCapacity() / outTick, maxParallelism);
+        }
+
+        return 0;
+    }
+
+    @Override
+    public void setParallelMultiplier(float multiplier) {
+        this.parallelMultiplier = multiplier;
     }
 }

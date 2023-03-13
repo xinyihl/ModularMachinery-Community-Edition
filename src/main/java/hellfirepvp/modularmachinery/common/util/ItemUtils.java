@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.common.util;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import net.minecraft.item.Item;
@@ -152,24 +151,61 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static int maxCanConsumed(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker, controller);
-        return maxCanConsumedInternal(contents, parallelism);
+        int canConsumed = maxCanConsumedInternal(contents, parallelism);
+        if (toConsume.getCount() > canConsumed) {
+            return 0;
+        }
+        return Math.min(toConsume.getCount() / canConsumed, parallelism);
     }
 
-    public static int maxCanConsumed(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
-        return maxCanConsumedInternal(contents, parallelism);
+        int canConsumed = maxCanConsumedInternal(contents, parallelism);
+        if (toConsume.getCount() > canConsumed) {
+            return 0;
+        }
+        return Math.min(toConsume.getCount() / canConsumed, parallelism);
     }
 
-    public static int maxCanConsumed(IItemHandlerModifiable handler, String oreName, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker, controller);
-        return maxCanConsumedInternal(contents, parallelism);
+        int canConsumed = maxCanConsumedInternal(contents, parallelism);
+        if (amount > canConsumed) {
+            return 0;
+        }
+        return Math.min(amount / canConsumed, parallelism);
     }
 
-    public static int maxCanConsumed(IItemHandlerModifiable handler, String oreName, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
-        return maxCanConsumedInternal(contents, parallelism);
+        int canConsumed = maxCanConsumedInternal(contents, parallelism);
+        if (amount > canConsumed) {
+            return 0;
+        }
+        return Math.min(amount / canConsumed, parallelism);
+    }
+
+    public static int maxOutputParallelism(@Nonnull ItemStack stack, IItemHandler handler, int maxParallelism) {
+        int inserted = 0;
+        int maxStackSize = stack.getMaxStackSize();
+        for (int i = 0; i < handler.getSlots() && stack.getCount() > 0; i++) {
+            ItemStack in = handler.getStackInSlot(i);
+            if (in.isEmpty()) {
+                inserted += maxStackSize;
+            } else {
+                if (stackEqualsNonNBT(stack, in) && matchTags(stack, in)) {
+                    int space = maxStackSize - in.getCount();
+                    inserted += space;
+                }
+            }
+        }
+        if (stack.getCount() > 0) {
+            return Math.min(inserted / stack.getCount(), maxParallelism);
+        } else {
+            return 0;
+        }
     }
 
     private static int maxCanConsumedInternal(Map<Integer, ItemStack> contents, int parallelism) {

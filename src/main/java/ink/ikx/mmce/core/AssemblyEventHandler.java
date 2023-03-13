@@ -53,10 +53,10 @@ public class AssemblyEventHandler {
                 }
                 event.setCanceled(true);
             } else if (stack.isItemEqual(new ItemStack(item, 1, AssemblyConfig.itemMeta))) {
-                DynamicMachine machine = controller.getParentMachine() != null
-                        ? controller.getParentMachine()
-                        : controller.getBlueprintMachine();
-
+                DynamicMachine machine = controller.getBlueprintMachine();
+                if (machine == null && block instanceof BlockController) {
+                    machine = ((BlockController) block).getParentMachine();
+                }
                 assemblyBefore(machine, player, blockPos);
                 event.setCanceled(true);
             }

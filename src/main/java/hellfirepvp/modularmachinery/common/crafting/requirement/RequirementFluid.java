@@ -19,10 +19,7 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.CopyHandlerHelper;
-import hellfirepvp.modularmachinery.common.util.HybridGasTank;
-import hellfirepvp.modularmachinery.common.util.HybridTank;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
+import hellfirepvp.modularmachinery.common.util.*;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import mekanism.api.gas.GasStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -44,10 +41,11 @@ import java.util.Optional;
  * Date: 24.02.2018 / 12:28
  */
 
-public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid> implements ComponentRequirement.ChancedRequirement {
+public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
 
     public final HybridFluid required;
     public float chance = 1F;
+    public float parallelMultiplier = 1F;
 
     private HybridFluid requirementCheck;
     private boolean doesntConsumeInput;
@@ -415,4 +413,42 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
         return CraftCheck.skipComponent();
     }
 
+    @Override
+    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        HybridTank handler = (HybridTank) component.providedComponent;
+        switch (actionType) {
+            case INPUT: {
+                if (this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
+                    GasStack gas = ((HybridFluidGas) requirementCheck).asGasStack().copy();
+                    gas.amount *= parallelMultiplier;
+                    return HybridFluidUtils.maxGasInputParallelism(
+                            (HybridGasTank) handler, gas, maxParallelism);
+                } else {
+                    FluidStack fluid = requirementCheck.asFluidStack().copy();
+                    fluid.amount *= parallelMultiplier;
+                    return HybridFluidUtils.maxFluidInputParallelism(
+                            handler, fluid, maxParallelism);
+                }
+            }
+            case OUTPUT: {
+                if (this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
+                    GasStack gas = ((HybridFluidGas) requirementCheck).asGasStack().copy();
+                    gas.amount *= parallelMultiplier;
+                    return HybridFluidUtils.maxGasOutputParallelism(
+                            (HybridGasTank) handler, gas, maxParallelism);
+                } else {
+                    FluidStack fluid = requirementCheck.asFluidStack().copy();
+                    fluid.amount *= parallelMultiplier;
+                    return HybridFluidUtils.maxFluidOutputParallelism(
+                            handler, fluid, maxParallelism);
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public void setParallelMultiplier(float multiplier) {
+        this.parallelMultiplier = multiplier;
+    }
 }

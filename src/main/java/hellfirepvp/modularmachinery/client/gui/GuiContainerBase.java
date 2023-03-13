@@ -8,9 +8,11 @@
 
 package hellfirepvp.modularmachinery.client.gui;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.util.ResourceLocation;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -19,8 +21,9 @@ import net.minecraft.client.gui.inventory.GuiContainer;
  * Created by HellFirePvP
  * Date: 09.07.2017 / 11:20
  */
-public abstract class GuiContainerBase<T extends ContainerBase> extends GuiContainer {
+public abstract class GuiContainerBase<T extends ContainerBase<?>> extends GuiContainer {
 
+    public static final ResourceLocation TEXTURES_EMPTY_GUI = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guismartinterface.png");
     protected final T container;
 
     public GuiContainerBase(T container) {

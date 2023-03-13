@@ -230,3 +230,9 @@ tile.modularmachinery.blockenergyoutputhatch.ultimate.name=Ultimate Energy Outpu
 
 tile.modularmachinery.blocksmartinterface.number.name=Smart Data Interface (Number)
 tile.modularmachinery.blocksmartinterface.string.name=Smart Data Interface (String)
+
+tile.modularmachinery.blockparallelcontroller.normal.name=Normal Parallel Controller
+tile.modularmachinery.blockparallelcontroller.reinforced.name=Reinforced Parallel Controller
+tile.modularmachinery.blockparallelcontroller.elite.name=Elite Parallel Controller
+tile.modularmachinery.blockparallelcontroller.super.name=Super Parallel Controller
+tile.modularmachinery.blockparallelcontroller.ultimate.name=Ultimate Parallel Controller

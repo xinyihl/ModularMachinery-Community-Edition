@@ -95,7 +95,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
-        if (this.getRegistryName().getNamespace().equals("modularcontroller")) {
+        if (this.getRegistryName().getNamespace().equals("modularcontroller") && !Config.disableMocDeprecatedTip) {
             tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.0"));
             tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.1"));
         }

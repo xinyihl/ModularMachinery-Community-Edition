@@ -233,3 +233,9 @@ tile.modularmachinery.blockenergyoutputhatch.ultimate.name=终极能源输出仓
 
 tile.modularmachinery.blocksmartinterface.number.name=智能数据接口（数值）
 tile.modularmachinery.blocksmartinterface.string.name=智能数据接口（字符串）
+
+tile.modularmachinery.blockparallelcontroller.normal.name=并行控制器
+tile.modularmachinery.blockparallelcontroller.reinforced.name=强化并行控制器
+tile.modularmachinery.blockparallelcontroller.elite.name=精英并行控制器
+tile.modularmachinery.blockparallelcontroller.super.name=超级并行控制器
+tile.modularmachinery.blockparallelcontroller.ultimate.name=终极并行控制器

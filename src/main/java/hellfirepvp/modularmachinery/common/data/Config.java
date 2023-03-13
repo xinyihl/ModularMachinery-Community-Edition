@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
+import hellfirepvp.modularmachinery.common.block.prop.ParallelControllerData;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
@@ -30,6 +31,7 @@ import java.io.File;
  */
 public class Config {
     public static boolean mocCompatibleMode = false;
+    public static boolean disableMocDeprecatedTip = false;
     public static int machineColor;
     private static File lastReadFile;
     private static Configuration lastReadConfig;
@@ -48,6 +50,7 @@ public class Config {
     private static void load() {
         FluidHatchSize.loadFromConfig(lastReadConfig);
         EnergyHatchData.loadFromConfig(lastReadConfig);
+        ParallelControllerData.loadFromConfig(lastReadConfig);
         EnergyDisplayUtil.loadFromConfig(lastReadConfig);
         RecipeFailureActions.loadFromConfig(lastReadConfig);
         TileMachineController.loadFromConfig(lastReadConfig);
@@ -68,6 +71,9 @@ public class Config {
         mocCompatibleMode = lastReadConfig.getBoolean(
                 "modular-controller-compatible-mode", "general", false,
                 "When enabled, the mod registers a controller block under the name modularcontroller to prevent incompatibility with older saves.");
+        disableMocDeprecatedTip = lastReadConfig.getBoolean(
+                "disable-moc-deprecated-tip", "general", false,
+                "Disable the ModularController is deprecated tooltip.");
         selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
                 "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
     }

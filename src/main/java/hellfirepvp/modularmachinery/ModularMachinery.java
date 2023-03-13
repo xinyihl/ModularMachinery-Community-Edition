@@ -82,8 +82,6 @@ public class ModularMachinery {
         proxy.loadModData(event.getModConfigurationDirectory());
 
         proxy.preInit();
-
-        checkThirdPartyServer();
     }
 
     @Mod.EventHandler
@@ -102,19 +100,6 @@ public class ModularMachinery {
         event.registerServerCommand(new CommandSyntax());
         event.registerServerCommand(new CommandHand());
         event.registerServerCommand(new CommandPerformanceReport());
-    }
-
-    private static void checkThirdPartyServer() {
-        try {
-            Class.forName("catserver.server.CatServer");
-            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
-            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
-            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
-            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
-            pluginServerCompatibleMode = true;
-        } catch (Exception e) {
-            pluginServerCompatibleMode = false;
-        }
     }
 
 }

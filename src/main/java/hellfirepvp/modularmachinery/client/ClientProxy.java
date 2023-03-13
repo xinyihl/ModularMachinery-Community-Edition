@@ -24,6 +24,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.registry.RegistryBlocks;
 import hellfirepvp.modularmachinery.common.registry.RegistryItems;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
@@ -45,7 +46,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
@@ -207,6 +207,8 @@ public class ClientProxy extends CommonProxy {
                 return new GuiContainerEnergyHatch((TileEnergyHatch) present, player);
             case SMART_INTERFACE:
                 return new GuiContainerSmartInterface((TileSmartInterface) present, player);
+            case PARALLEL_CONTROLLER:
+                return new GuiContainerParallelController((TileParallelController) present, player);
             case BLUEPRINT_PREVIEW:
                 ItemStack stack;
                 if (x == 0) {

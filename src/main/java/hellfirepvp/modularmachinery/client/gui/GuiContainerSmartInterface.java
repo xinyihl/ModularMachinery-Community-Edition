@@ -18,7 +18,6 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.model.animation.Animation;
 import org.lwjgl.input.Keyboard;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.util.IllegalFormatException;
 
 public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartInterface> {
-    public static final ResourceLocation TEXTURES_SMART_INTERFACE = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guismartinterface.png");
     private final TileSmartInterface smartInterface;
     private GuiTextField textField;
     private GuiButton prev;
@@ -108,7 +106,7 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(TEXTURES_SMART_INTERFACE);
+        this.mc.getTextureManager().bindTexture(TEXTURES_EMPTY_GUI);
         int i = (this.width - this.xSize) / 2;
         int j = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
@@ -197,11 +195,11 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
     @Override
     public void initGui() {
         super.initGui();
-        textField = new GuiTextField(0, fontRenderer, this.width / 2, this.height / 2 - 48, 80, 10);
+        textField = new GuiTextField(0, fontRenderer, this.width / 2 + 10, this.height / 2 - 48, 70, 10);
         textField.setMaxStringLength(16);
-        prev = new GuiButton(1, this.width / 2 - 80, this.height / 2 - 25, 40, 20,
+        prev = new GuiButton(1, this.width / 2 - 81, this.height / 2 - 25, 40, 20,
                 I18n.format("gui.smartinterface.prev"));
-        next = new GuiButton(2, this.width / 2 + 40, this.height / 2 - 25, 40, 20,
+        next = new GuiButton(2, this.width / 2 + 41, this.height / 2 - 25, 40, 20,
                 I18n.format("gui.smartinterface.next"));
     }
 }

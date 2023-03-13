@@ -31,5 +31,6 @@ public class BlocksMM {
     public static BlockEnergyOutputHatch energyOutputHatch;
 
     public static BlockSmartInterface smartInterface;
+    public static BlockParallelController parallelController;
 
 }
