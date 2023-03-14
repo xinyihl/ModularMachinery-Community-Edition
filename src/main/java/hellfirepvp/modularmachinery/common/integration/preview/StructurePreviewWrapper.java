@@ -29,7 +29,6 @@ import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
-import mezz.jei.api.recipe.IIngredientType;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.gui.recipes.RecipeLayout;
 import mezz.jei.gui.recipes.RecipesGui;
@@ -296,7 +295,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         minecraft.fontRenderer.drawStringWithShadow(machine.getLocalizedName(),
                 4, 0,
                 0x222222);
-        if (machine.requiresBlueprint()) {
+        if (machine.isRequiresBlueprint()) {
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
             minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 6, 108, 0xFFFFFF);
         }

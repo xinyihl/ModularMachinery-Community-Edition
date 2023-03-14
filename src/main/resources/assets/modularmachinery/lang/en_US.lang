@@ -25,12 +25,18 @@ gui.controller.status.no_recipe=No matching recipe found
 gui.controller.status.chunk_unloaded=A block in the multiblock structure was unloaded and stopped working
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
+gui.controller.parallelism=Parallelism：%s
+gui.controller.max_parallelism=Max Parallelism：%s
 
 gui.smartinterface.title=Smart Data Interface (TotalBound: %s, Current: %s)
 gui.smartinterface.notfound=Not Found Bound Machine.
 gui.smartinterface.value=Current Value: %.0f
 gui.smartinterface.prev=Previous
 gui.smartinterface.next=Next
+
+gui.parallelcontroller.title=Parallel Controller
+gui.parallelcontroller.max_value=Max Parallelism: %s
+gui.parallelcontroller.current_value=Current Parallelism: %s
 
 top.recipe.progress=Progress
 top.machine.working=Processing
@@ -231,8 +237,9 @@ tile.modularmachinery.blockenergyoutputhatch.ultimate.name=Ultimate Energy Outpu
 tile.modularmachinery.blocksmartinterface.number.name=Smart Data Interface (Number)
 tile.modularmachinery.blocksmartinterface.string.name=Smart Data Interface (String)
 
-tile.modularmachinery.blockparallelcontroller.normal.name=Normal Parallel Controller
-tile.modularmachinery.blockparallelcontroller.reinforced.name=Reinforced Parallel Controller
-tile.modularmachinery.blockparallelcontroller.elite.name=Elite Parallel Controller
-tile.modularmachinery.blockparallelcontroller.super.name=Super Parallel Controller
-tile.modularmachinery.blockparallelcontroller.ultimate.name=Ultimate Parallel Controller
+tile.modularmachinery.blockparallelcontroller.normal.name=§aNormal Parallel Controller
+tile.modularmachinery.blockparallelcontroller.reinforced.name=§6Reinforced Parallel Controller
+tile.modularmachinery.blockparallelcontroller.elite.name=§bElite Parallel Controller
+tile.modularmachinery.blockparallelcontroller.super.name=§5Super Parallel Controller
+tile.modularmachinery.blockparallelcontroller.ultimate.name=§cUltimate Parallel Controller
+tile.modularmachinery.blockparallelcontroller.tip=Up to §a%s§7 of identical recipes can be run simultaneously.

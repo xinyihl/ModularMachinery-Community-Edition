@@ -24,6 +24,7 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.*;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
@@ -64,6 +65,7 @@ public class RecipePrimer implements PreparedRecipe {
     private final List<Action> needAfterInitActions = new LinkedList<>();
     private final List<String> toolTipList = new ArrayList<>();
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
+    private boolean isParallelized = Config.recipeParallelizeEnabledByDefault;
     private ComponentRequirement<?, ?> lastComponent = null;
 
     public RecipePrimer(ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean doesVoidPerTick) {
@@ -72,6 +74,22 @@ public class RecipePrimer implements PreparedRecipe {
         this.tickTime = tickTime;
         this.priority = configuredPriority;
         this.doesVoidPerTick = doesVoidPerTick;
+    }
+
+    @ZenMethod
+    public RecipePrimer setParallelizeUnaffected(boolean unaffected) {
+        if (lastComponent instanceof ComponentRequirement.Parallelizable) {
+            ((ComponentRequirement.Parallelizable) lastComponent).setParallelizeUnaffected(unaffected);
+        } else {
+            CraftTweakerAPI.logWarning("The Input / Output must can be parallelized!");
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer setParallelized(boolean isParallelized) {
+        this.isParallelized = isParallelized;
+        return this;
     }
 
     @ZenMethod
@@ -596,6 +614,11 @@ public class RecipePrimer implements PreparedRecipe {
     @Override
     public List<String> getTooltipList() {
         return toolTipList;
+    }
+
+    @Override
+    public boolean isParallelized() {
+        return isParallelized;
     }
 
     @Override

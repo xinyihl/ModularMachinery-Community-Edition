@@ -153,38 +153,38 @@ public class ItemUtils {
 
     public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker, controller);
-        int canConsumed = maxCanConsumedInternal(contents, parallelism);
-        if (toConsume.getCount() > canConsumed) {
+        int canConsumed = maxCanConsumedInternal(contents);
+        if (toConsume.getCount() <= 0 || toConsume.getCount() > canConsumed) {
             return 0;
         }
-        return Math.min(toConsume.getCount() / canConsumed, parallelism);
+        return Math.min(canConsumed / toConsume.getCount(), parallelism);
     }
 
     public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
-        int canConsumed = maxCanConsumedInternal(contents, parallelism);
-        if (toConsume.getCount() > canConsumed) {
+        int canConsumed = maxCanConsumedInternal(contents);
+        if (toConsume.getCount() <= 0 || toConsume.getCount() > canConsumed) {
             return 0;
         }
-        return Math.min(toConsume.getCount() / canConsumed, parallelism);
+        return Math.min(canConsumed / toConsume.getCount(), parallelism);
     }
 
     public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker, controller);
-        int canConsumed = maxCanConsumedInternal(contents, parallelism);
-        if (amount > canConsumed) {
+        int canConsumed = maxCanConsumedInternal(contents);
+        if (amount <= 0 || amount > canConsumed) {
             return 0;
         }
-        return Math.min(amount / canConsumed, parallelism);
+        return Math.min(canConsumed / amount, parallelism);
     }
 
     public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
-        int canConsumed = maxCanConsumedInternal(contents, parallelism);
-        if (amount > canConsumed) {
+        int canConsumed = maxCanConsumedInternal(contents);
+        if (amount <= 0 || amount > canConsumed) {
             return 0;
         }
-        return Math.min(amount / canConsumed, parallelism);
+        return Math.min(canConsumed / amount, parallelism);
     }
 
     public static int maxOutputParallelism(@Nonnull ItemStack stack, IItemHandler handler, int maxParallelism) {
@@ -201,34 +201,27 @@ public class ItemUtils {
                 }
             }
         }
-        if (stack.getCount() > 0) {
-            return Math.min(inserted / stack.getCount(), maxParallelism);
-        } else {
+        if (stack.getCount() <= 0 || inserted < stack.getCount()) {
             return 0;
         }
+        return Math.min(inserted / stack.getCount(), maxParallelism);
     }
 
-    private static int maxCanConsumedInternal(Map<Integer, ItemStack> contents, int parallelism) {
+    private static int maxCanConsumedInternal(Map<Integer, ItemStack> contents) {
         int cAmt = 0;
         for (int slot : contents.keySet()) {
-            ItemStack inSlot = contents.get(slot);
-            if (inSlot.getItem().hasContainerItem(inSlot)) {
-                if (inSlot.getCount() > 1) {
+            ItemStack stack = contents.get(slot);
+            if (stack.getItem().hasContainerItem(stack)) {
+                if (stack.getCount() > 1) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
                 cAmt++;
-                if (cAmt <= 0) {
-                    break;
-                }
+                continue;
             }
-            int toRemove = Math.min(cAmt, inSlot.getCount());
-            cAmt += toRemove;
-            if (cAmt <= 0) {
-                break;
-            }
+            cAmt += stack.getCount();
         }
 
-        return Math.min(cAmt, parallelism);
+        return cAmt;
     }
 
     public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, @Nullable NBTTagCompound matchNBTTag) {
@@ -362,9 +355,9 @@ public class ItemUtils {
         Item oItem = other.getItem();
         if (sItem.getHasSubtypes() || oItem.getHasSubtypes()) {
             return sItem.equals(other.getItem()) &&
-                    (stack.getItemDamage() == other.getItemDamage() ||
-                            stack.getItemDamage() == OreDictionary.WILDCARD_VALUE ||
-                            other.getItemDamage() == OreDictionary.WILDCARD_VALUE);
+                   (stack.getItemDamage() == other.getItemDamage() ||
+                    stack.getItemDamage() == OreDictionary.WILDCARD_VALUE ||
+                    other.getItemDamage() == OreDictionary.WILDCARD_VALUE);
         } else {
             return sItem.equals(other.getItem());
         }

@@ -101,8 +101,23 @@ public class MachineBuilder {
         return PRE_LOAD_MACHINES.get(new ResourceLocation(ModularMachinery.MODID, registryName));
     }
 
-    public DynamicMachine getMachine() {
-        return machine;
+    /**
+     * 设置此机械是否受并行控制器影响。
+     */
+    @ZenMethod
+    public MachineBuilder setParallelizable(boolean isParallelizable) {
+        machine.setParallelizable(isParallelizable);
+        return this;
+    }
+
+    /**
+     * 设置此机械的最大并行数。
+     * @param maxParallelism 并行数
+     */
+    @ZenMethod
+    public MachineBuilder setMaxParallelism(int maxParallelism) {
+        machine.setMaxParallelism(maxParallelism);
+        return this;
     }
 
     /**
@@ -503,4 +518,7 @@ public class MachineBuilder {
         lastInformation = information;
     }
 
+    public DynamicMachine getMachine() {
+        return machine;
+    }
 }

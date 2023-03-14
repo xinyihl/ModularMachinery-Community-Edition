@@ -2,6 +2,7 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.block.prop.ParallelControllerData;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import net.minecraft.block.SoundType;
@@ -9,18 +10,22 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.util.LinkedList;
+import java.util.List;
 
 public class BlockParallelController extends BlockMachineComponent implements BlockCustomName, BlockVariants {
     protected static final PropertyEnum<ParallelControllerData> INTERFACE_TYPE = PropertyEnum.create("type", ParallelControllerData.class);
@@ -32,6 +37,13 @@ public class BlockParallelController extends BlockMachineComponent implements Bl
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+        ParallelControllerData data = ParallelControllerData.values()[MathHelper.clamp(stack.getMetadata(), 0, EnergyHatchData.values().length - 1)];
+        tooltip.add(I18n.format("tile.modularmachinery.blockparallelcontroller.tip", data.getMaxParallelism()));
     }
 
     @Override

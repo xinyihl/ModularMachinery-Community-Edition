@@ -33,22 +33,22 @@ public class TileParallelController extends TileColorableMachineComponent implem
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        if (compound.hasKey("maxParallelism")) {
+            maxParallelism = compound.getInteger("maxParallelism");
+        }
         if (compound.hasKey("parallelism")) {
             parallelism = compound.getInteger("parallelism");
             if (parallelism > maxParallelism) {
                 parallelism = maxParallelism;
             }
         }
-        if (compound.hasKey("maxParallelism")) {
-            maxParallelism = compound.getInteger("maxParallelism");
-        }
     }
 
     @Override
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
-        compound.setInteger("parallelism", parallelism);
         compound.setInteger("maxParallelism", maxParallelism);
+        compound.setInteger("parallelism", parallelism);
     }
 
     public class ParallelControllerProvider extends MachineComponent<ParallelControllerProvider> {

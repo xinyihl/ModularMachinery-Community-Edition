@@ -57,7 +57,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public NBTTagCompound previewDisplayTag = null;
     public AdvancedItemNBTChecker nbtChecker = null;
     public float chance = 1F;
-    public float parallelMultiplier = 1F;
+    private int parallelism = 1;
+    private boolean parallelizeUnaffected = false;
 
     public RequirementItem(IOType ioType, ItemStack item) {
         super(RequirementTypesMM.REQUIREMENT_ITEM, ioType);
@@ -180,7 +181,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 this.countIOBuffer = this.fuelBurntime;
                 break;
         }
-        this.countIOBuffer = Math.round(RecipeModifier.applyModifiers(context, this, this.countIOBuffer, false) * parallelMultiplier);
+        this.countIOBuffer = Math.round(RecipeModifier.applyModifiers(context, this, this.countIOBuffer, false) * parallelism);
     }
 
     @Override
@@ -218,7 +219,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             switch (this.requirementType) {
                 case ITEMSTACKS:
                     ItemStack inReq = this.required.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false) * parallelMultiplier);
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false) * parallelism);
                     inReq.setCount(amt);
 
                     boolean isSuccess = (this.nbtChecker != null)
@@ -229,7 +230,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     }
                     break;
                 case OREDICT:
-                    int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelMultiplier);
+                    int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
 
                     isSuccess = (this.nbtChecker != null)
                             ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, nbtChecker, context.getMachineController())
@@ -301,7 +302,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             switch (this.requirementType) {
                 case ITEMSTACKS:
                     ItemStack stackRequired = this.required.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false) * parallelMultiplier);
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false) * parallelism);
                     stackRequired.setCount(amt);
                     if (!itemModifierList.isEmpty()) {
                         for (AdvancedItemModifier modifier : itemModifierList) {
@@ -319,7 +320,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                                 : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
                     }
                 case OREDICT:
-                    int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelMultiplier);
+                    int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
                     if (chance.canProduce(productionChance)) {
                         return (this.nbtChecker != null)
                                 ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker, context.getMachineController())
@@ -390,13 +391,17 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected) {
+            return maxParallelism;
+        }
         IOInventory handler = (IOInventory) component.providedComponent;
         switch (actionType) {
             case INPUT:
                 switch (this.requirementType) {
                     case ITEMSTACKS: {
-                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(this.countIOBuffer * parallelMultiplier));
-                        stack.setCount(Math.round(stack.getCount() * parallelMultiplier));
+                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
+                                RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
+                                parallelism);
                         if (nbtChecker != null) {
                             return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, nbtChecker, context.getMachineController());
                         } else {
@@ -404,7 +409,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         }
                     }
                     case OREDICT: {
-                        int amount = Math.round(oreDictItemAmount * parallelMultiplier);
+                        int amount = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false) * parallelism);
                         if (nbtChecker != null) {
                             return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, nbtChecker, context.getMachineController());
                         } else {
@@ -416,7 +421,9 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             case OUTPUT:
                 switch (this.requirementType) {
                     case ITEMSTACKS: {
-                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(this.countIOBuffer * parallelMultiplier));
+                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
+                                RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
+                                                                                parallelism);
                         return ItemUtils.maxOutputParallelism(stack, handler, maxParallelism);
                     }
                     case OREDICT: {
@@ -425,14 +432,14 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                             if (oreInstance.isEmpty()) {
                                 continue;
                             }
-                            stack = ItemUtils.copyStackWithSize(oreInstance, Math.round(this.countIOBuffer * parallelMultiplier));
+                            stack = ItemUtils.copyStackWithSize(oreInstance, Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false) * parallelism));
 
                             if (!stack.isEmpty()) { //Try all options first..
                                 break;
                             }
                         }
 
-                        if (this.countIOBuffer > 0 && stack.isEmpty()) {
+                        if (oreDictItemAmount > 0 && stack.isEmpty()) {
                             throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
                         }
 
@@ -444,12 +451,22 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 }
                 break;
         }
-        return 0;
+        return maxParallelism;
     }
 
     @Override
-    public void setParallelMultiplier(float multiplier) {
-        this.parallelMultiplier = multiplier;
+    public void setParallelism(int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    @Override
+    public void setParallelizeUnaffected(boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+        }
     }
 
     public enum ItemRequirementType {

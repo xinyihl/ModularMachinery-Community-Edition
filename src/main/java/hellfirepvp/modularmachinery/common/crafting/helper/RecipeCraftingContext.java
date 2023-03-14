@@ -50,7 +50,6 @@ public class RecipeCraftingContext {
     private final List<RecipeModifier> permanentModifierList = new ArrayList<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements;
-    private int currentCraftingTick = 0;
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMachineController controller) {
         this.activeRecipe = activeRecipe;
@@ -73,14 +72,6 @@ public class RecipeCraftingContext {
 
     public ActiveMachineRecipe getActiveRecipe() {
         return activeRecipe;
-    }
-
-    public int getCurrentCraftingTick() {
-        return currentCraftingTick;
-    }
-
-    public void setCurrentCraftingTick(int currentCraftingTick) {
-        this.currentCraftingTick = currentCraftingTick;
     }
 
     @Nonnull
@@ -226,6 +217,46 @@ public class RecipeCraftingContext {
         this.getParentRecipe().getCommandContainer().runFinishCommands(this.commandSender);
     }
 
+    public int getMaxParallelism() {
+        int maxParallelism = this.activeRecipe.getMaxParallelism();
+        List<ComponentRequirement<?, ?>> parallelizableList = requirements.stream()
+                .filter(requirement -> requirement instanceof ComponentRequirement.Parallelizable)
+                .collect(Collectors.toList());
+
+        for (ComponentRequirement<?, ?> requirement : parallelizableList) {
+            Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
+            ComponentRequirement.Parallelizable parallelizable = (ComponentRequirement.Parallelizable) requirement;
+            int componentMaxParallelism = maxParallelism;
+            for (ProcessingComponent<?> component : components) {
+                componentMaxParallelism = Math.min(
+                        parallelizable.maxParallelism(component, this, maxParallelism),
+                        componentMaxParallelism);
+                if (componentMaxParallelism == maxParallelism) {
+                    break;
+                }
+            }
+            maxParallelism = Math.min(componentMaxParallelism, maxParallelism);
+            if (maxParallelism <= 1) {
+                break;
+            }
+        }
+
+        return maxParallelism;
+    }
+
+    public void setParallelism(int parallelism) {
+        List<ComponentRequirement<?, ?>> parallelizableList = requirements.stream()
+                .filter(requirement -> requirement instanceof ComponentRequirement.Parallelizable)
+                .collect(Collectors.toList());
+
+        for (ComponentRequirement<?, ?> requirement : parallelizableList) {
+            ComponentRequirement.Parallelizable parallelizable = (ComponentRequirement.Parallelizable) requirement;
+            parallelizable.setParallelism(parallelism);
+        }
+
+        activeRecipe.setParallelism(parallelism);
+    }
+
     public CraftingCheckResult canStartCrafting() {
         return this.canStartCrafting(req -> true);
     }
@@ -237,6 +268,11 @@ public class RecipeCraftingContext {
         List<ComponentRequirement<?, ?>> requirements = this.requirements.stream()
                 .filter(requirementFilter)
                 .collect(Collectors.toList());
+
+        if (getParentRecipe().isParallelized() && machineController.isParallelized() && activeRecipe.getMaxParallelism() > 1) {
+            int parallelism = Math.max(1, getMaxParallelism());
+            setParallelism(parallelism);
+        }
 
         lblRequirements:
         for (ComponentRequirement<?, ?> requirement : requirements) {

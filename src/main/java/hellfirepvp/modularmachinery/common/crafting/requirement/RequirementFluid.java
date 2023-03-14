@@ -45,8 +45,8 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     public final HybridFluid required;
     public float chance = 1F;
-    public float parallelMultiplier = 1F;
-
+    private int parallelism = 1;
+    private boolean parallelizeUnaffected = false;
     private HybridFluid requirementCheck;
     private boolean doesntConsumeInput;
 
@@ -130,7 +130,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Override
     public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
         this.requirementCheck = this.required.copy();
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.requirementCheck.getAmount(), false)));
+        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.requirementCheck.getAmount(), false) * parallelism));
         this.doesntConsumeInput = contextChance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true));
     }
 
@@ -415,17 +415,18 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Override
     public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected) {
+            return maxParallelism;
+        }
         HybridTank handler = (HybridTank) component.providedComponent;
         switch (actionType) {
             case INPUT: {
                 if (this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
                     GasStack gas = ((HybridFluidGas) requirementCheck).asGasStack().copy();
-                    gas.amount *= parallelMultiplier;
                     return HybridFluidUtils.maxGasInputParallelism(
                             (HybridGasTank) handler, gas, maxParallelism);
                 } else {
                     FluidStack fluid = requirementCheck.asFluidStack().copy();
-                    fluid.amount *= parallelMultiplier;
                     return HybridFluidUtils.maxFluidInputParallelism(
                             handler, fluid, maxParallelism);
                 }
@@ -433,22 +434,30 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
             case OUTPUT: {
                 if (this.requirementCheck instanceof HybridFluidGas && handler instanceof HybridGasTank) {
                     GasStack gas = ((HybridFluidGas) requirementCheck).asGasStack().copy();
-                    gas.amount *= parallelMultiplier;
                     return HybridFluidUtils.maxGasOutputParallelism(
                             (HybridGasTank) handler, gas, maxParallelism);
                 } else {
                     FluidStack fluid = requirementCheck.asFluidStack().copy();
-                    fluid.amount *= parallelMultiplier;
                     return HybridFluidUtils.maxFluidOutputParallelism(
                             handler, fluid, maxParallelism);
                 }
             }
         }
-        return 0;
+        return maxParallelism;
     }
 
     @Override
-    public void setParallelMultiplier(float multiplier) {
-        this.parallelMultiplier = multiplier;
+    public void setParallelism(int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    @Override
+    public void setParallelizeUnaffected(boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+        }
     }
 }

@@ -144,12 +144,25 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;
-        if (controller.hasActiveRecipe()) {
-            ActiveMachineRecipe activeRecipe = controller.getActiveRecipe();
+
+        ActiveMachineRecipe activeRecipe = controller.getActiveRecipe();
+        if (activeRecipe != null) {
             if (activeRecipe.getTotalTick() > 0) {
                 int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
                 String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
                 fr.drawStringWithShadow(progressStr, offsetX, offsetY, 0xFFFFFF);
+            }
+            int parallelism = activeRecipe.getParallelism();
+            if (parallelism > 1) {
+                offsetY += 10;
+                String parallelismStr = I18n.format("gui.controller.parallelism", parallelism);
+                fr.drawStringWithShadow(parallelismStr, offsetX, offsetY, 0xFFFFFF);
+            }
+            int maxParallelism = activeRecipe.getMaxParallelism();
+            if (maxParallelism > 1) {
+                offsetY += 10;
+                String maxParallelismStr = I18n.format("gui.controller.max_parallelism", maxParallelism);
+                fr.drawStringWithShadow(maxParallelismStr, offsetX, offsetY, 0xFFFFFF);
             }
         }
 

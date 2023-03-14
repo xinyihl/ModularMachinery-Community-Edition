@@ -39,12 +39,13 @@ public class ActiveMachineRecipe {
 
     private final MachineRecipe recipe;
     private NBTTagCompound data = new NBTTagCompound();
-    private int tick = 0;
-    private int totalTick;
+    private int tick = 0, totalTick;
+    private int maxParallelism, parallelism = 1;
 
-    public ActiveMachineRecipe(MachineRecipe recipe) {
+    public ActiveMachineRecipe(MachineRecipe recipe, int maxParallelism) {
         this.recipe = recipe;
         this.totalTick = recipe.getRecipeTotalTickTime();
+        this.maxParallelism = maxParallelism;
     }
 
     public ActiveMachineRecipe(NBTTagCompound serialized) {
@@ -53,6 +54,12 @@ public class ActiveMachineRecipe {
         this.totalTick = serialized.getInteger("totalTick");
         if (serialized.hasKey("data", Constants.NBT.TAG_COMPOUND)) {
             data = serialized.getCompoundTag("data");
+        }
+        if (serialized.hasKey("maxParallelism")) {
+            maxParallelism = serialized.getInteger("maxParallelism");
+        }
+        if (serialized.hasKey("parallelism")) {
+            parallelism = serialized.getInteger("parallelism");
         }
     }
 
@@ -124,11 +131,33 @@ public class ActiveMachineRecipe {
         tag.setInteger("tick", this.tick);
         tag.setInteger("totalTick", this.totalTick);
         tag.setString("recipeName", this.recipe.getRegistryName().toString());
+        tag.setInteger("maxParallelism", this.maxParallelism);
+        tag.setInteger("parallelism", this.parallelism);
 
         if (!data.isEmpty()) {
             tag.setTag("data", data);
         }
         return tag;
+    }
+
+    @ZenSetter("maxParallelism")
+    public void setMaxParallelism(int maxParallelism) {
+        this.maxParallelism = maxParallelism;
+    }
+
+    @ZenGetter("maxParallelism")
+    public int getMaxParallelism() {
+        return maxParallelism;
+    }
+
+    @ZenGetter("parallelism")
+    public int getParallelism() {
+        return parallelism;
+    }
+
+    @ZenSetter("parallelism")
+    public void setParallelism(int parallelism) {
+        this.parallelism = parallelism;
     }
 
     @ZenGetter("tick")

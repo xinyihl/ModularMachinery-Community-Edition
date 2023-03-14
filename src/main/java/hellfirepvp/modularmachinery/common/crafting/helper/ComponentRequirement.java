@@ -128,6 +128,25 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism);
 
         /**
+         * 设置需求并行数。
+         *
+         * @param parallelism 并行数
+         */
+        void setParallelism(int parallelism);
+
+        /**
+         * 设置该并行类型是否不受并行数影响（即并行数始终为 1）。
+         * @param unaffected 是否不受影响
+         */
+        void setParallelizeUnaffected(boolean unaffected);
+    }
+
+    /**
+     * <p>ModifiableParallelize（可修改并行）</p>
+     * <p>在实现了 {@link Parallelizable} 的基础上，它还支持为并行添加额外的乘数。</p>
+     */
+    public interface ModifiableParallelize extends Parallelizable {
+        /**
          * 设置并行倍率（例如能量输入倍率）
          *
          * @param multiplier 倍率

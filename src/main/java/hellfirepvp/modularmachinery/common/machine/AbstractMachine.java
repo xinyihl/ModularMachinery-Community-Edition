@@ -16,7 +16,8 @@ public abstract class AbstractMachine {
 
     protected String localizedName = "";
     protected int definedColor = Config.machineColor;
-    protected boolean requiresBlueprint = false;
+    protected int maxParallelism = Config.maxMachineParallelism;
+    protected boolean requiresBlueprint = false, parallelizable = Config.machineParallelizeEnabledByDefault;
     protected RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
     public AbstractMachine(String registryName) {
@@ -35,7 +36,7 @@ public abstract class AbstractMachine {
         this.requiresBlueprint = requiresBlueprint;
     }
 
-    public boolean requiresBlueprint() {
+    public boolean isRequiresBlueprint() {
         return requiresBlueprint;
     }
 
@@ -61,6 +62,22 @@ public abstract class AbstractMachine {
     @Nonnull
     public ResourceLocation getRegistryName() {
         return registryName;
+    }
+
+    public boolean isParallelizable() {
+        return parallelizable;
+    }
+
+    public void setParallelizable(boolean parallelizable) {
+        this.parallelizable = parallelizable;
+    }
+
+    public int getMaxParallelism() {
+        return maxParallelism;
+    }
+
+    public void setMaxParallelism(int maxParallelism) {
+        this.maxParallelism = maxParallelism;
     }
 
     @Override

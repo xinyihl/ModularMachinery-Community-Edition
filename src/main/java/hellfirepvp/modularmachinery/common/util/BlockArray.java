@@ -65,6 +65,11 @@ public class BlockArray {
         this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
     }
 
+    public BlockArray(EnumFacing facing) {
+        this.facing = facing;
+        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
+    }
+
     public BlockArray(long traitNum, EnumFacing facing) {
         this.traitNum = traitNum;
         this.facing = facing;

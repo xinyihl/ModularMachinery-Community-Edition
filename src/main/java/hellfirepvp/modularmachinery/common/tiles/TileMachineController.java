@@ -76,30 +76,26 @@ import java.util.concurrent.atomic.AtomicReference;
  * Date: 28.06.2017 / 17:14
  */
 public class TileMachineController extends TileEntityRestrictedTick implements IMachineController, SelectiveUpdateTileEntity {
-    public static final int BLUEPRINT_SLOT = 0;
-    public static final int ACCELERATOR_SLOT = 1;
-    public static int structureCheckDelay = 30;
+    public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
+    public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
-    public static int maxStructureCheckDelay = 100;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
     private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
     private BlockController parentController = null;
-    private DynamicMachine parentMachine = null;
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     private DynamicMachine.ModifierReplacementMap foundReplacements = null;
     private IOInventory inventory;
-    private DynamicMachine foundMachine = null;
+    private DynamicMachine foundMachine = null, parentMachine = null;
     private TaggedPositionBlockArray foundPattern = null;
     private EnumFacing patternRotation = null;
     private ActiveMachineRecipe activeRecipe = null;
     private RecipeCraftingContext context = null;
     private RecipeSearchTask searchTask = null;
-    private int recipeResearchRetryCount = 0;
-    private int structureCheckFailedCount = 0;
+    private int recipeResearchRetryCount = 0, structureCheckFailedCount = 0;
 
     public TileMachineController() {
         this.inventory = buildInventory();
@@ -184,6 +180,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (this.context == null) {
             //context preInit
             context = createContext(this.activeRecipe);
+            context.setParallelism(this.activeRecipe.getParallelism());
         }
 
         CraftingStatus prevStatus = this.craftingStatus;
@@ -351,7 +348,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         this.context.finishCrafting();
         this.activeRecipe.reset();
-        this.context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
+        this.activeRecipe.setMaxParallelism(getMaxParallelism());
+        this.context = null;
         tryStartRecipe(activeRecipe, null);
     }
 
@@ -617,7 +615,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                     }
                 }
             }
-            if (this.foundMachine.requiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
+            if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
             } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
                 resetMachine(true);
@@ -642,7 +640,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 }
             } else {
                 for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-                    if (machine.requiresBlueprint()) continue;
+                    if (machine.isRequiresBlueprint()) continue;
                     if (matchesRotation(machine.getPattern(), machine)) {
                         onStructureFormed();
                         break;
@@ -696,6 +694,17 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         } while (face != EnumFacing.NORTH);
         resetMachine(false);
         return false;
+    }
+
+    public int getMaxParallelism() {
+        int parallelism = 0;
+        for (Tuple<MachineComponent<?>, ComponentSelectorTag> foundComponent : foundComponents) {
+            if (foundComponent.getFirst() instanceof TileParallelController.ParallelControllerProvider) {
+                TileParallelController.ParallelControllerProvider provider = (TileParallelController.ParallelControllerProvider) foundComponent.getFirst();
+                parallelism += provider.getParallelism();
+            }
+        }
+        return Math.min(Math.max(1, parallelism), foundMachine.getMaxParallelism());
     }
 
     private void updateComponents() {
@@ -805,6 +814,14 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         return foundMachine;
     }
 
+    public boolean isParallelized() {
+        if (foundMachine != null) {
+            return foundMachine.isParallelizable() && getMaxParallelism() > 1;
+        } else {
+            return false;
+        }
+    }
+
     @Nullable
     public DynamicMachine getBlueprintMachine() {
         ItemStack blueprintSlotted = this.inventory.getStackInSlot(BLUEPRINT_SLOT);
@@ -899,7 +916,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (compound.hasKey("parentMachine")) {
             ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
             parentMachine = MachineRegistry.getRegistry().getMachine(rl);
-            if (parentMachine == null) {
+            if (parentMachine != null) {
+                parentController = BlockController.MACHINE_CONTROLLERS.get(parentMachine);
+            } else {
                 ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
             }
         }
@@ -1035,7 +1054,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             float validity = 0F;
 
             for (MachineRecipe recipe : availableRecipes) {
-                ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe);
+                ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, getMaxParallelism());
                 RecipeCraftingContext context = createContext(activeRecipe);
                 RecipeCraftingContext.CraftingCheckResult result = onCheck(context);
                 if (result.isSuccess()) {

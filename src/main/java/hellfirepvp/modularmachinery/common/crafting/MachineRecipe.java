@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
@@ -55,9 +56,10 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     private final boolean voidPerTickFailure;
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
     private final List<String> tooltipList;
+    private final boolean isParallelized;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
-                         int tickTime, int configuredPriority, boolean voidPerTickFailure) {
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -66,12 +68,13 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = tickTime;
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
+        this.isParallelized = isParallelized;
         this.recipeEventHandlers = new HashMap<>();
         this.tooltipList = new ArrayList<>();
     }
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
-                         int tickTime, int configuredPriority, boolean voidPerTickFailure,
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized,
                          Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList) {
         this.sortId = counter;
         counter++;
@@ -81,6 +84,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = tickTime;
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
+        this.isParallelized = isParallelized;
         this.recipeEventHandlers = recipeEventHandlers;
         this.tooltipList = tooltipList;
     }
@@ -93,6 +97,10 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     public <H extends RecipeEvent> void addRecipeEventHandler(Class<H> hClass, IEventHandler<H> handler) {
         recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
         recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
+    }
+
+    public boolean isParallelized() {
+        return isParallelized;
     }
 
     @Nullable
@@ -160,7 +168,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 newOwningMachineIdentifier,
                 Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, this.tickTime, false)),
                 this.configuredPriority,
-                this.doesCancelRecipeOnPerTickFailure());
+                this.doesCancelRecipeOnPerTickFailure(),
+                this.isParallelized);
 
         for (ComponentRequirement<?, ?> requirement : this.getCraftingRequirements()) {
             copy.addRequirement(requirement.deepCopyModified(modifiers));
@@ -200,7 +209,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 ResourceLocation location = recipeOwnerList.get(i);
                 MachineRecipe rec = new MachineRecipe(parent.recipeFilePath + "_sub_" + i,
                         new ResourceLocation(parent.registryName.getNamespace(), parent.registryName.getPath() + "_sub_" + i),
-                        location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure);
+                        location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.isParallelized);
                 for (ComponentRequirement<?, ?> req : parent.recipeRequirements) {
                     rec.recipeRequirements.add(req.deepCopy());
                 }
@@ -301,7 +310,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             int recipeTime = elementTime.getAsJsonPrimitive().getAsInt();
             MachineRecipe recipe = new MachineRecipe(RecipeLoader.currentlyReadingPath,
                     new ResourceLocation(ModularMachinery.MODID, registryName),
-                    parentName, recipeTime, priority, voidPerTickFailure);
+                    parentName, recipeTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
 
             MachineRecipeContainer outContainer = new MachineRecipeContainer(recipe);
             outContainer.recipeOwnerList.addAll(qualifiedMachineNames);

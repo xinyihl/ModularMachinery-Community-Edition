@@ -20,9 +20,11 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements ComponentRequirement.ChancedRequirement {
+public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
     public final List<ChancedIngredientStack> itemArray;
     public float chance = 1.0F;
+    private int parallelism = 1;
+    private boolean parallelizeUnaffected = false;
 
     /**
      * <p>物品组输入，仅消耗组内的其中一个</p>
@@ -52,7 +54,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             switch (stack.ingredientType) {
                 case ITEMSTACK: {
                     ItemStack copiedStack = stack.itemStack.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false));
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
                     copiedStack.setCount(amt);
 
                     if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.tag)) {
@@ -65,7 +67,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     break;
                 }
                 case ORE_DICT: {
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false));
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
 
                     if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
                         if (chance.canProduce(productionChance)) {
@@ -97,7 +99,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             switch (stack.ingredientType) {
                 case ITEMSTACK: {
                     ItemStack copiedStack = stack.itemStack.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false));
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
                     copiedStack.setCount(amt);
                     if (ItemUtils.consumeFromInventory(handler, copiedStack, true, copiedStack.getTagCompound())) {
                         return CraftCheck.success();
@@ -105,7 +107,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     break;
                 }
                 case ORE_DICT: {
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false));
+                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
                     if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt,true, stack.tag)) {
                         return CraftCheck.success();
                     }
@@ -169,5 +171,42 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
     @Override
     public void setChance(float chance) {
         this.chance = chance;
+    }
+
+    @Override
+    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected) {
+            return maxParallelism;
+        }
+        IOInventory handler = (IOInventory) component.providedComponent;
+        for (ChancedIngredientStack ingredientStack : this.itemArray) {
+            switch (ingredientStack.ingredientType) {
+                case ITEMSTACK: {
+                    ItemStack stack = ItemUtils.copyStackWithSize(ingredientStack.itemStack, ingredientStack.count);
+                    stack.setCount(Math.round(stack.getCount() * parallelism));
+                    return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, ingredientStack.tag);
+                }
+                case ORE_DICT: {
+                    int amount = ingredientStack.count;
+                    return ItemUtils.maxInputParallelism(handler, ingredientStack.oreDictName, amount, maxParallelism, ingredientStack.tag);
+                }
+            }
+        }
+        return maxParallelism;
+    }
+
+    @Override
+    public void setParallelism(int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    @Override
+    public void setParallelizeUnaffected(boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+        }
     }
 }

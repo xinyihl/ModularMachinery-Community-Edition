@@ -302,6 +302,24 @@ public class DynamicMachine extends AbstractMachine {
                 machine.definedColor = hexColor;
             }
 
+            //Parallelizable
+            if (root.has("parallelizable")) {
+                JsonElement parallelizable = root.get("parallelizable");
+                if (!parallelizable.isJsonPrimitive()) {
+                    throw new JsonParseException("The 'parallelizable' should be a boolean! Found " + parallelizable + " instead!");
+                }
+                machine.parallelizable = parallelizable.getAsBoolean();
+            }
+
+            //Max Parallelism
+            if (root.has("max-parallelism")) {
+                JsonElement maxParallelism = root.get("max-parallelism");
+                if (!maxParallelism.isJsonPrimitive()) {
+                    throw new JsonParseException("The 'max-parallelism' should be a integer! Found " + maxParallelism + " instead!");
+                }
+                machine.maxParallelism = maxParallelism.getAsInt();
+            }
+
             //Parts
             for (int i = 0; i < parts.size(); i++) {
                 JsonElement element = parts.get(i);

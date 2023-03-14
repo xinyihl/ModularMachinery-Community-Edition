@@ -33,9 +33,14 @@ public class Config {
     public static boolean mocCompatibleMode = false;
     public static boolean disableMocDeprecatedTip = false;
     public static int machineColor;
+    public static boolean selectiveUpdateTileEntity = false;
+    public static boolean machineParallelizeEnabledByDefault = true;
+    public static boolean recipeParallelizeEnabledByDefault = true;
+    public static int maxMachineParallelism = 2048;
+
     private static File lastReadFile;
     private static Configuration lastReadConfig;
-    public static boolean selectiveUpdateTileEntity = false;
+
     public static void loadFrom(File file) {
         lastReadFile = file;
         lastReadConfig = new Configuration(file);
@@ -76,5 +81,11 @@ public class Config {
                 "Disable the ModularController is deprecated tooltip.");
         selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
                 "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
+        machineParallelizeEnabledByDefault = lastReadConfig.getBoolean("machine-parallelize-enabled-bydefault",
+                "parallel-controller", true, "Whether the machine parallel recipe processing is enabled by default.");
+        recipeParallelizeEnabledByDefault = lastReadConfig.getBoolean("recipe-parallelize-enabled-bydefault",
+                "parallel-controller", true, "Whether parallel recipe processing is enabled by default.");
+        maxMachineParallelism = lastReadConfig.getInt("max-machine-parallelism", "parallel-controller",
+                2048, 1, Integer.MAX_VALUE, "The default max number of parallelism for a machine.");
     }
 }

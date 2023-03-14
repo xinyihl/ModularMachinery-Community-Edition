@@ -3,14 +3,16 @@ package github.kasuminova.mmce.common.event;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EventHandler {
     /**
@@ -19,17 +21,21 @@ public class EventHandler {
      * Avoid the problem of some messages being out of sync.</p>
      */
     @SubscribeEvent
-    @SideOnly(Side.SERVER)
     public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         World world = event.getWorld();
-        if (Config.selectiveUpdateTileEntity || !(event.getEntityPlayer() instanceof EntityPlayerMP)) {
+        if (Config.selectiveUpdateTileEntity || world.isRemote) {
             return;
         }
 
         TileEntity te = world.getTileEntity(event.getPos());
-        EntityPlayerMP player = (EntityPlayerMP) event.getEntityPlayer();
-        if (te instanceof SelectiveUpdateTileEntity) {
-            player.connection.sendPacket(((SelectiveUpdateTileEntity) te).getTrueUpdatePacket());
+        if (!(te instanceof SelectiveUpdateTileEntity)) {
+            return;
+        }
+        SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
+        if (event.getEntityPlayer() instanceof EntityPlayerSP) {
+            ((EntityPlayerSP) event.getEntityPlayer()).connection.sendPacket(packet);
+        } else if (event.getEntityPlayer() instanceof EntityPlayerMP) {
+            ((EntityPlayerMP) event.getEntityPlayer()).connection.sendPacket(packet);
         }
     }
 
@@ -38,18 +44,25 @@ public class EventHandler {
      * <p>Provide selective updates for certain square entities that tend to consume a lot of bandwidth to relieve network pressure.</p>
      */
     @SubscribeEvent
-    @SideOnly(Side.SERVER)
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || !Config.selectiveUpdateTileEntity || !(event.player instanceof EntityPlayerMP)) {
+        if (event.phase != TickEvent.Phase.START || !Config.selectiveUpdateTileEntity || event.side == Side.CLIENT) {
             return;
         }
 
-        EntityPlayerMP player = (EntityPlayerMP) event.player;
-        if (player.openContainer instanceof ContainerBase) {
-            TileEntity te = ((ContainerBase<?>) player.openContainer).getOwner();
-            if (te instanceof SelectiveUpdateTileEntity) {
-                player.connection.sendPacket(((SelectiveUpdateTileEntity) te).getTrueUpdatePacket());
-            }
+        EntityPlayer player = event.player;
+        if (!(player.openContainer instanceof ContainerBase)) {
+            return;
+        }
+        TileEntity te = ((ContainerBase<?>) player.openContainer).getOwner();
+        if (!(te instanceof SelectiveUpdateTileEntity)) {
+            return;
+        }
+        SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
+
+        if (event.player instanceof EntityPlayerSP) {
+            ((EntityPlayerSP) event.player).connection.sendPacket(packet);
+        } else if (event.player instanceof EntityPlayerMP) {
+            ((EntityPlayerMP) event.player).connection.sendPacket(packet);
         }
     }
 }

@@ -64,11 +64,9 @@ public class RequirementCatalyst extends RequirementItem {
             case OREDICT:
                 catalyst = new RequirementCatalyst(this.oreDictName, this.oreDictItemAmount);
                 break;
-
             case FUEL:
                 catalyst = new RequirementCatalyst(this.fuelBurntime);
                 break;
-
             default:
             case ITEMSTACKS:
                 catalyst = new RequirementCatalyst(this.required.copy());

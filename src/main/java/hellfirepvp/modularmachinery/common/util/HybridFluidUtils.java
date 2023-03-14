@@ -12,7 +12,7 @@ public class HybridFluidUtils {
         if (!internal.isGasEqual(gas)) {
             return 0;
         }
-        if (internal.amount < gas.amount) {
+        if (internal.amount < gas.amount || gas.amount < 0) {
             return 0;
         }
         return Math.min(internal.amount / gas.amount, parallelism);
@@ -24,7 +24,7 @@ public class HybridFluidUtils {
         if (internal != null && !internal.isGasEqual(gas)) {
             return 0;
         }
-        if (handler.getCapacity() < gas.amount || internalAmount < gas.amount) {
+        if (handler.getCapacity() < gas.amount || internalAmount < gas.amount || gas.amount < 0) {
             return 0;
         }
         int remaining = handler.getCapacity() - internalAmount;
@@ -39,7 +39,7 @@ public class HybridFluidUtils {
         if (!internal.equals(fluid)) {
             return 0;
         }
-        if (internal.amount < fluid.amount) {
+        if (internal.amount < fluid.amount || fluid.amount < 0) {
             return 0;
         }
         return Math.min(internal.amount / fluid.amount, parallelism);
@@ -51,7 +51,7 @@ public class HybridFluidUtils {
         if (internal != null && !internal.equals(fluid)) {
             return 0;
         }
-        if (handler.getCapacity() < fluid.amount || internalAmount < fluid.amount) {
+        if (handler.getCapacity() < fluid.amount || internalAmount < fluid.amount || fluid.amount < 0) {
             return 0;
         }
         int remaining = handler.getCapacity() - internalAmount;

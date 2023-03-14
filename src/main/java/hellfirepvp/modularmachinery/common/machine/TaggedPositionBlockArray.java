@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.machine;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
@@ -65,11 +66,12 @@ public class TaggedPositionBlockArray extends BlockArray {
     private TaggedPositionBlockArray rotateYCCWInternal() {
         TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum, facing.rotateYCCW());
 
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
         for (BlockPos pos : pattern.keySet()) {
-            out.pattern.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), pattern.get(pos).copyRotateYCCW());
+            outPattern.put(MiscUtils.rotateYCCW(pos), pattern.get(pos).copyRotateYCCW());
         }
         for (BlockPos pos : taggedPositions.keySet()) {
-            out.taggedPositions.put(new BlockPos(pos.getZ(), pos.getY(), -pos.getX()), taggedPositions.get(pos));
+            out.taggedPositions.put(MiscUtils.rotateYCCW(pos), taggedPositions.get(pos));
         }
 
         return out;

@@ -54,7 +54,7 @@ public class GuiContainerSmartInterface extends GuiContainerBase<ContainerSmartI
         int offsetY = 4;
         FontRenderer fr = this.fontRenderer;
         fr.drawStringWithShadow(I18n.format("gui.smartinterface.title", component.getBoundSize(), showing + 1), offsetX, offsetY, 0xFFFFFF);
-        offsetX += 4;
+        offsetX += 3;
         offsetY += 12;
 
         SmartInterfaceData data = component.getMachineData(showing);

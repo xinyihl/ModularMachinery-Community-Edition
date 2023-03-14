@@ -28,12 +28,18 @@ gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.chunk_unloaded=多方块结构中有方块被卸载，停止工作
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
+gui.controller.parallelism=并行数：%s
+gui.controller.max_parallelism=最大并行数：%s
 
 gui.smartinterface.title=智能数据接口（已绑定：%s，当前：%s）
 gui.smartinterface.notfound=未找到绑定机械。
 gui.smartinterface.value=当前值：%.0f
 gui.smartinterface.prev=上一个
 gui.smartinterface.next=下一个
+
+gui.parallelcontroller.title=并行控制器
+gui.parallelcontroller.max_value=最大并行数：%s
+gui.parallelcontroller.current_value=当前并行数：%s
 
 top.recipe.progress=进度
 top.machine.working=工作中
@@ -234,8 +240,9 @@ tile.modularmachinery.blockenergyoutputhatch.ultimate.name=终极能源输出仓
 tile.modularmachinery.blocksmartinterface.number.name=智能数据接口（数值）
 tile.modularmachinery.blocksmartinterface.string.name=智能数据接口（字符串）
 
-tile.modularmachinery.blockparallelcontroller.normal.name=并行控制器
-tile.modularmachinery.blockparallelcontroller.reinforced.name=强化并行控制器
-tile.modularmachinery.blockparallelcontroller.elite.name=精英并行控制器
-tile.modularmachinery.blockparallelcontroller.super.name=超级并行控制器
-tile.modularmachinery.blockparallelcontroller.ultimate.name=终极并行控制器
+tile.modularmachinery.blockparallelcontroller.normal.name=§a并行控制器
+tile.modularmachinery.blockparallelcontroller.reinforced.name=§6强化并行控制器
+tile.modularmachinery.blockparallelcontroller.elite.name=§b精英并行控制器
+tile.modularmachinery.blockparallelcontroller.super.name=§5超级并行控制器
+tile.modularmachinery.blockparallelcontroller.ultimate.name=§c终极并行控制器
+tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。

@@ -33,12 +33,14 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.Parallelizable {
+public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.ModifiableParallelize {
 
     public final long requirementPerTick;
     private long activeIO;
     private long remaining;
+    private int parallelism = 1;
     public float parallelMultiplier = 1F;
+    private boolean parallelizeUnaffected = false;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
@@ -106,12 +108,12 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
-                if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) {
+                if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelism * parallelMultiplier) {
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
-                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) < 0) {
+                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelism * parallelMultiplier < 0) {
                     return CraftCheck.failure("craftcheck.failure.energy.output.space");
                 }
                 return CraftCheck.success();
@@ -133,7 +135,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * durationMultiplier);
+        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * durationMultiplier * parallelism * parallelMultiplier);
     }
 
     @Nonnull
@@ -209,6 +211,9 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected) {
+            return maxParallelism;
+        }
         IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
@@ -219,7 +224,23 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                 return (int) Math.min(handler.getRemainingCapacity() / outTick, maxParallelism);
         }
 
-        return 0;
+        return maxParallelism;
+    }
+
+    @Override
+    public void setParallelism(int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    @Override
+    public void setParallelizeUnaffected(boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+            this.parallelMultiplier = 1;
+        }
     }
 
     @Override

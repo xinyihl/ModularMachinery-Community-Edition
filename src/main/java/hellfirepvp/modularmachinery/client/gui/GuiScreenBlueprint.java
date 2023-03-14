@@ -177,7 +177,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
 
         fontRenderer.drawStringWithShadow(machine.getLocalizedName(), this.guiLeft + 10, this.guiTop + 11, 0xFFFFFFFF);
-        if (machine.requiresBlueprint()) {
+        if (machine.isRequiresBlueprint()) {
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
             fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0xFFFFFF);
         }
