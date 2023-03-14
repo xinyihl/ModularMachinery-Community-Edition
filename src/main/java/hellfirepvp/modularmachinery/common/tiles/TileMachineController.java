@@ -84,6 +84,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
+    private final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
     private BlockController parentController = null;
     private NBTTagCompound customData = new NBTTagCompound();
     private CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
@@ -698,11 +699,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
     public int getMaxParallelism() {
         int parallelism = 0;
-        for (Tuple<MachineComponent<?>, ComponentSelectorTag> foundComponent : foundComponents) {
-            if (foundComponent.getFirst() instanceof TileParallelController.ParallelControllerProvider) {
-                TileParallelController.ParallelControllerProvider provider = (TileParallelController.ParallelControllerProvider) foundComponent.getFirst();
-                parallelism += provider.getParallelism();
-            }
+        for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
+            parallelism += provider.getParallelism();
         }
         return Math.min(Math.max(1, parallelism), foundMachine.getMaxParallelism());
     }
@@ -722,6 +720,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
+        this.foundParallelControllers.clear();
         for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
             BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
@@ -736,6 +735,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
 
             this.foundComponents.add(new Tuple<>(component, tag));
+
+            if (component instanceof TileParallelController.ParallelControllerProvider) {
+                this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
+                continue;
+            }
 
             if (!(component instanceof TileSmartInterface.SmartInterfaceProvider) || foundMachine.smartInterfaceTypesIsEmpty()) {
                 continue;
@@ -877,7 +881,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         } else {
             this.craftingStatus = CraftingStatus.deserialize(compound.getCompoundTag("statusTag"));
         }
-
+        if (compound.hasKey("parentMachine")) {
+            ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
+            parentMachine = MachineRegistry.getRegistry().getMachine(rl);
+            if (parentMachine != null) {
+                parentController = BlockController.MACHINE_CONTROLLERS.get(parentMachine);
+            } else {
+                ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
+            }
+        }
         if (compound.hasKey("machine") && compound.hasKey("rotation")) {
             ResourceLocation rl = new ResourceLocation(compound.getString("machine"));
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
@@ -912,15 +924,6 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
         } else {
             resetMachine(false);
-        }
-        if (compound.hasKey("parentMachine")) {
-            ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
-            parentMachine = MachineRegistry.getRegistry().getMachine(rl);
-            if (parentMachine != null) {
-                parentController = BlockController.MACHINE_CONTROLLERS.get(parentMachine);
-            } else {
-                ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
-            }
         }
         if (compound.hasKey("activeRecipe")) {
             NBTTagCompound tag = compound.getCompoundTag("activeRecipe");

@@ -42,6 +42,8 @@ top.recipe.progress=Progress
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
 top.machine.structure.none=Missing structure
+top.max_parallelism=Max Parallelism：
+top.parallelism=Parallelism：
 
 craftcheck.failure.item.input=Missing input item!
 craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!

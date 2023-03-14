@@ -36,7 +36,6 @@ import org.apache.logging.log4j.Logger;
  */
 @Mod(modid = ModularMachinery.MODID, name = ModularMachinery.NAME, version = ModularMachinery.VERSION,
         dependencies = "required-after:forge@[14.21.0.2371,);after:crafttweaker@[4.0.4,);after:jei@[4.13.1.222,)",
-        certificateFingerprint = "a0f0b759d895c15ceb3e3bcb5f3c2db7c582edf0",
         acceptedMinecraftVersions = "[1.12, 1.13)"
 )
 public class ModularMachinery {

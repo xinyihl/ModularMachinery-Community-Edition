@@ -1,6 +1,6 @@
 package hellfirepvp.modularmachinery.common.integration;
 
-import hellfirepvp.modularmachinery.common.integration.theoneprobe.DynamicMachineInfoProvider;
+import hellfirepvp.modularmachinery.common.integration.theoneprobe.MMInfoProvider;
 import mcjty.theoneprobe.TheOneProbe;
 import mcjty.theoneprobe.apiimpl.TheOneProbeImp;
 import net.minecraftforge.common.config.Configuration;
@@ -11,11 +11,12 @@ public class ModIntegrationTOP {
     public static int recipeProgressBarBorderColor = 0xCC43CD80;
     public static int recipeProgressBarBackgroundColor = 0xFF000000;
     public static boolean showRecipeProgressBarDecimalPoints = true;
+    public static boolean showParallelControllerInfo = true;
 
     public static void registerProvider() {
         TheOneProbeImp top = TheOneProbe.theOneProbeImp;
 
-        top.registerProvider(new DynamicMachineInfoProvider());
+        top.registerProvider(new MMInfoProvider());
     }
 
     public static void loadFromConfig(Configuration cfg) {
@@ -41,5 +42,7 @@ public class ModIntegrationTOP {
         showRecipeProgressBarDecimalPoints = cfg.getBoolean("SHOW_RECIPE_PROGRESSBAR_DECIMAL_POINTS",
                 "display.theoneprobe", true,
                 "Show recipe progressbar decimal points if TheOneProbe mod is installed.");
+        showParallelControllerInfo = cfg.getBoolean("SHOW_PARALLEL_CONTROLLER_INFO", "display.theoneprobe",
+                true, "Show parallel controller info if TheOneProbe mod is installed.");
     }
 }

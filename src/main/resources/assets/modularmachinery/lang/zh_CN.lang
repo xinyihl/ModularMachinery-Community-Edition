@@ -45,6 +45,8 @@ top.recipe.progress=进度
 top.machine.working=工作中
 top.machine.structure.found=结构已形成
 top.machine.structure.none=结构不完整
+top.max_parallelism=最大并行数：
+top.parallelism=并行数：
 
 craftcheck.failure.item.input=缺少物品输入！
 craftcheck.failure.item.output.space=没有足够的库存空间用于物品输出！

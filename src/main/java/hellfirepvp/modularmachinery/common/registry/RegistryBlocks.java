@@ -113,6 +113,9 @@ public class RegistryBlocks {
     }
 
     private static void registerCustomControllers() {
+        if (Config.onlyOneMachineController) {
+            return;
+        }
         List<DynamicMachine> waitForLoadMachines = MachineRegistry.getWaitForLoadMachines();
         for (MachineBuilder builder : MachineBuilder.PRE_LOAD_MACHINES.values()) {
             waitForLoadMachines.add(builder.getMachine());

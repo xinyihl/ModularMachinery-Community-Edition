@@ -31,6 +31,7 @@ import java.io.File;
  */
 public class Config {
     public static boolean mocCompatibleMode = false;
+    public static boolean onlyOneMachineController = false;
     public static boolean disableMocDeprecatedTip = false;
     public static int machineColor;
     public static boolean selectiveUpdateTileEntity = false;
@@ -76,6 +77,8 @@ public class Config {
         mocCompatibleMode = lastReadConfig.getBoolean(
                 "modular-controller-compatible-mode", "general", false,
                 "When enabled, the mod registers a controller block under the name modularcontroller to prevent incompatibility with older saves.");
+        onlyOneMachineController = lastReadConfig.getBoolean("only-one-machine-controller", "general", false,
+                "When enabled, Modules no longer register a separate controller for each machine, and the modular-controller-compatible-mode option is turned off.");
         disableMocDeprecatedTip = lastReadConfig.getBoolean(
                 "disable-moc-deprecated-tip", "general", false,
                 "Disable the ModularController is deprecated tooltip.");
