@@ -699,10 +699,16 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
     public int getMaxParallelism() {
         int parallelism = 0;
+        int maxParallelism = foundMachine.getMaxParallelism();
         for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
             parallelism += provider.getParallelism();
+
+            if (parallelism > maxParallelism) {
+                parallelism = maxParallelism;
+                break;
+            }
         }
-        return Math.min(Math.max(1, parallelism), foundMachine.getMaxParallelism());
+        return Math.max(1, parallelism);
     }
 
     private void updateComponents() {

@@ -15,9 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RequirementCatalyst extends RequirementItem {
-    private final List<RecipeModifier> modifierList = new ArrayList<>();
-    private final List<String> toolTipList = new ArrayList<>();
-    private boolean isRequired = false;
+    protected final List<RecipeModifier> modifierList = new ArrayList<>();
+    protected final List<String> toolTipList = new ArrayList<>();
+    protected boolean isRequired = false;
 
     public RequirementCatalyst(ItemStack item) {
         super(IOType.INPUT, item);
@@ -73,6 +73,7 @@ public class RequirementCatalyst extends RequirementItem {
                 break;
         }
         catalyst.chance = this.chance;
+        catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
         if (this.nbtChecker != null) {
             catalyst.nbtChecker = this.nbtChecker;
         } else if (this.tag != null) {
@@ -111,6 +112,7 @@ public class RequirementCatalyst extends RequirementItem {
         }
 
         catalyst.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
+        catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
         if (this.tag != null) {
             catalyst.tag = this.tag.copy();
         }

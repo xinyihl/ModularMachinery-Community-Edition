@@ -18,9 +18,9 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 public class RequirementInterfaceNumInput extends ComponentRequirement<Float, RequirementTypeInterfaceNumInput> {
-    private final SmartInterfaceType type;
-    private final float minValue;
-    private final float maxValue;
+    protected final SmartInterfaceType type;
+    protected final float minValue;
+    protected final float maxValue;
 
     public RequirementInterfaceNumInput(ResourceLocation machineName, String type, float minValue, float maxValue) throws NullPointerException {
         super(RequirementTypesMM.REQUIREMENT_INTERFACE_NUMBER_INPUT, IOType.INPUT);

@@ -23,8 +23,8 @@ import java.util.List;
 public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
     public final List<ChancedIngredientStack> itemArray;
     public float chance = 1.0F;
-    private int parallelism = 1;
-    private boolean parallelizeUnaffected = false;
+    protected int parallelism = 1;
+    protected boolean parallelizeUnaffected = false;
 
     /**
      * <p>物品组输入，仅消耗组内的其中一个</p>
@@ -121,7 +121,9 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
 
     @Override
     public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopy() {
-        return new RequirementIngredientArray(this.itemArray);
+        RequirementIngredientArray copied = new RequirementIngredientArray(this.itemArray);
+        copied.parallelizeUnaffected = this.parallelizeUnaffected;
+        return copied;
     }
 
     @Override
@@ -143,8 +145,9 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
 
             item.chance = RecipeModifier.applyModifiers(modifiers, this, item.chance, true);
         });
-
-        return new RequirementIngredientArray(newArray);
+        RequirementIngredientArray copied = new RequirementIngredientArray(newArray);
+        copied.parallelizeUnaffected = this.parallelizeUnaffected;
+        return copied;
     }
 
     @Override

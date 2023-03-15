@@ -36,11 +36,11 @@ import java.util.List;
 public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.ModifiableParallelize {
 
     public final long requirementPerTick;
-    private long activeIO;
-    private long remaining;
-    private int parallelism = 1;
     public float parallelMultiplier = 1F;
-    private boolean parallelizeUnaffected = false;
+    protected long activeIO;
+    protected long remaining;
+    protected int parallelism = 1;
+    protected boolean parallelizeUnaffected = false;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
@@ -58,6 +58,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopy() {
         RequirementEnergy energy = new RequirementEnergy(this.actionType, this.requirementPerTick);
         energy.activeIO = this.activeIO;
+        energy.parallelizeUnaffected = this.parallelizeUnaffected;
         return energy;
     }
 
@@ -66,6 +67,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         long requirement = Math.round((double) RecipeModifier.applyModifiers(modifiers, this, this.requirementPerTick, false));
         RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
         energy.activeIO = this.activeIO;
+        energy.parallelizeUnaffected = this.parallelizeUnaffected;
         return energy;
     }
 
@@ -98,8 +100,8 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ENERGY) &&
-                cmp instanceof MachineComponent.EnergyHatch &&
-                cmp.ioType == this.actionType;
+               cmp instanceof MachineComponent.EnergyHatch &&
+               cmp.ioType == this.actionType;
     }
 
     @Nonnull

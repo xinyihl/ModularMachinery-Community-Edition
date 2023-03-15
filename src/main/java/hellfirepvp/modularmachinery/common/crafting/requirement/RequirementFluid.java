@@ -78,6 +78,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
         fluid.chance = this.chance;
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
+        fluid.parallelizeUnaffected = this.parallelizeUnaffected;
         return fluid;
     }
 
@@ -90,6 +91,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
         fluid.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
+        fluid.parallelizeUnaffected = this.parallelizeUnaffected;
         return fluid;
     }
 

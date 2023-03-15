@@ -57,8 +57,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public NBTTagCompound previewDisplayTag = null;
     public AdvancedItemNBTChecker nbtChecker = null;
     public float chance = 1F;
-    private int parallelism = 1;
-    private boolean parallelizeUnaffected = false;
+    protected int parallelism = 1;
+    protected boolean parallelizeUnaffected = false;
 
     public RequirementItem(IOType ioType, ItemStack item) {
         super(RequirementTypesMM.REQUIREMENT_ITEM, ioType);
@@ -118,6 +118,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 break;
         }
         item.chance = this.chance;
+        item.parallelizeUnaffected = this.parallelizeUnaffected;
         if (this.nbtChecker != null) {
             item.nbtChecker = this.nbtChecker;
         } else if (this.tag != null) {
@@ -154,6 +155,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         }
 
         item.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
+        item.parallelizeUnaffected = this.parallelizeUnaffected;
         if (this.tag != null) {
             item.tag = this.tag.copy();
         }

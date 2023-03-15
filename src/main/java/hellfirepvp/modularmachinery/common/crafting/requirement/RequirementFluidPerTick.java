@@ -23,9 +23,9 @@ import java.util.List;
 
 public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick> {
     public final HybridFluid required;
-    private final HybridFluid requirementCheck;
-    private NBTTagCompound tagMatch = null, tagDisplay = null;
-    private boolean isSuccess = false;
+    protected final HybridFluid requirementCheck;
+    protected NBTTagCompound tagMatch = null, tagDisplay = null;
+    protected boolean isSuccess = false;
 
     public RequirementFluidPerTick(IOType actionType, FluidStack required) {
         super(RequirementTypesMM.REQUIREMENT_FLUID_PERTICK, actionType);

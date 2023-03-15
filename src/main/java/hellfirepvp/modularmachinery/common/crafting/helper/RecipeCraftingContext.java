@@ -223,25 +223,22 @@ public class RecipeCraftingContext {
                 .filter(requirement -> requirement instanceof ComponentRequirement.Parallelizable)
                 .collect(Collectors.toList());
 
+        int requirementMaxParallelism = maxParallelism;
         for (ComponentRequirement<?, ?> requirement : parallelizableList) {
             Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
             ComponentRequirement.Parallelizable parallelizable = (ComponentRequirement.Parallelizable) requirement;
-            int componentMaxParallelism = maxParallelism;
+            int componentMaxParallelism = 1;
             for (ProcessingComponent<?> component : components) {
-                componentMaxParallelism = Math.min(
-                        parallelizable.maxParallelism(component, this, maxParallelism),
-                        componentMaxParallelism);
-                if (componentMaxParallelism == maxParallelism) {
+                componentMaxParallelism = Math.max(componentMaxParallelism, parallelizable.maxParallelism(component, this, maxParallelism));
+                if (componentMaxParallelism >= requirementMaxParallelism) {
                     break;
                 }
             }
-            maxParallelism = Math.min(componentMaxParallelism, maxParallelism);
-            if (maxParallelism <= 1) {
-                break;
-            }
+
+            requirementMaxParallelism = Math.min(requirementMaxParallelism, componentMaxParallelism);
         }
 
-        return maxParallelism;
+        return requirementMaxParallelism;
     }
 
     public void setParallelism(int parallelism) {
