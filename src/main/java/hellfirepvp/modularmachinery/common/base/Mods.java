@@ -26,7 +26,7 @@ public enum Mods {
     MEKANISM("mekanism"),
     IC2("ic2"),
     TOP("theoneprobe"),
-    NUCLEARCRAFT("nuclearcraft"),
+    NUCLEARCRAFT_OVERHAULED("nuclearcraft"),
     RESOURCELOADER("resourceloader"),
     ;
 

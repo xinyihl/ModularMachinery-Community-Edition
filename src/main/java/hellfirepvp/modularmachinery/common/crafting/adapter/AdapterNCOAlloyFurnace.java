@@ -24,12 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class AdapterNCAlloyFurnace extends RecipeAdapter {
+public class AdapterNCOAlloyFurnace extends RecipeAdapter {
     public static final int WORK_TIME = 400;
     public static final int BASE_ENERGY_USAGE = 10;
     private int incId = 0;
 
-    public AdapterNCAlloyFurnace() {
+    public AdapterNCOAlloyFurnace() {
         super(new ResourceLocation("nuclearcraft", "alloy_furnace"));
     }
 
