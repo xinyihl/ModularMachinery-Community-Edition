@@ -16,6 +16,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
+import javax.annotation.Nonnull;
 import java.util.Random;
 
 /**
@@ -40,10 +41,11 @@ public class TileEntitySynchronized extends TileEntity {
     public void readNetNBT(NBTTagCompound compound) {
     }
 
-    public final NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound = super.writeToNBT(compound);
-        writeCustomNBT(compound);
-        return compound;
+    @Nonnull
+    public final NBTTagCompound writeToNBT(@Nonnull NBTTagCompound compound) {
+        NBTTagCompound writeToNBT = super.writeToNBT(compound);
+        writeCustomNBT(writeToNBT);
+        return writeToNBT;
     }
 
     public void writeCustomNBT(NBTTagCompound compound) {
@@ -61,6 +63,7 @@ public class TileEntitySynchronized extends TileEntity {
         return new SPacketUpdateTileEntity(getPos(), 255, compound);
     }
 
+    @Nonnull
     @Override
     public NBTTagCompound getUpdateTag() {
         NBTTagCompound compound = new NBTTagCompound();
@@ -69,7 +72,7 @@ public class TileEntitySynchronized extends TileEntity {
         return compound;
     }
 
-    public final void onDataPacket(NetworkManager manager, SPacketUpdateTileEntity packet) {
+    public final void onDataPacket(@Nonnull NetworkManager manager, @Nonnull SPacketUpdateTileEntity packet) {
         super.onDataPacket(manager, packet);
         readCustomNBT(packet.getNbtCompound());
         readNetNBT(packet.getNbtCompound());

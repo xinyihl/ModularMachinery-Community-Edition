@@ -903,6 +903,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
                 resetMachine(false);
             } else {
+                if (parentMachine == null) {
+                    parentController = BlockController.MACHINE_CONTROLLERS.get(machine);
+                }
                 EnumFacing rot = EnumFacing.byHorizontalIndex(compound.getInteger("rotation"));
                 EnumFacing offset = EnumFacing.NORTH;
                 TaggedPositionBlockArray pattern = machine.getPattern();

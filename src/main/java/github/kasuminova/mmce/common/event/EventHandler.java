@@ -3,7 +3,6 @@ package github.kasuminova.mmce.common.event;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -32,9 +31,7 @@ public class EventHandler {
             return;
         }
         SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
-        if (event.getEntityPlayer() instanceof EntityPlayerSP) {
-            ((EntityPlayerSP) event.getEntityPlayer()).connection.sendPacket(packet);
-        } else if (event.getEntityPlayer() instanceof EntityPlayerMP) {
+        if (event.getEntityPlayer() instanceof EntityPlayerMP) {
             ((EntityPlayerMP) event.getEntityPlayer()).connection.sendPacket(packet);
         }
     }
@@ -59,9 +56,7 @@ public class EventHandler {
         }
         SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
 
-        if (event.player instanceof EntityPlayerSP) {
-            ((EntityPlayerSP) event.player).connection.sendPacket(packet);
-        } else if (event.player instanceof EntityPlayerMP) {
+        if (event.player instanceof EntityPlayerMP) {
             ((EntityPlayerMP) event.player).connection.sendPacket(packet);
         }
     }
