@@ -178,6 +178,11 @@ public class RecipePrimer implements PreparedRecipe {
         return this;
     }
 
+    @ZenMethod
+    public RecipePrimer addSmartInterfaceDataInput(String typeStr, float value) {
+        return addSmartInterfaceDataInput(typeStr, value, value);
+    }
+
     //----------------------------------------------------------------------------------------------
     // EventHandlers
     //----------------------------------------------------------------------------------------------

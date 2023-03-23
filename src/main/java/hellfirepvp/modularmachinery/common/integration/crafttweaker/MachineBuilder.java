@@ -9,12 +9,14 @@ import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
+import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
@@ -38,15 +40,21 @@ public class MachineBuilder {
     public static final List<DynamicMachine> WAIT_FOR_LOAD = new ArrayList<>();
     public static final Map<ResourceLocation, MachineBuilder> PRE_LOAD_MACHINES = new HashMap<>();
     private final DynamicMachine machine;
+    private final TaggedPositionBlockArray pattern;
+    private BlockPos lastPos = null;
     private BlockArray.BlockInformation lastInformation = null;
 
     private MachineBuilder(String registryName, String localizedName) {
         this.machine = new DynamicMachine(registryName);
+        this.pattern = this.machine.getPattern();
+
         this.machine.setLocalizedName(localizedName);
     }
 
     private MachineBuilder(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
         this.machine = new DynamicMachine(registryName);
+        this.pattern = this.machine.getPattern();
+
         this.machine.setLocalizedName(localizedName);
         this.machine.setFailureAction(failureAction);
         this.machine.setDefinedColor(color);
@@ -426,6 +434,18 @@ public class MachineBuilder {
     }
 
     /**
+     * 设置 ComponentSelectorTag，用于配方寻找组件时的额外条件。
+     * @param tag Tag 名称
+     */
+    @ZenMethod
+    public MachineBuilder setTag(String tag) {
+        if (lastInformation != null && lastPos != null) {
+            pattern.setTag(lastPos, new ComponentSelectorTag(tag));
+        }
+        return this;
+    }
+
+    /**
      * 设置方块的 NBT 判断，在 addBlock() 之后调用。
      *
      * @param data 要判断相同的 NBT
@@ -508,14 +528,16 @@ public class MachineBuilder {
     }
 
     private void addBlock(BlockPos pos, BlockArray.BlockInformation information) {
-        machine.getPattern().addBlock(pos, information);
+        pattern.addBlock(pos, information);
         lastInformation = information;
+        lastPos = pos;
     }
 
     private void addModifier(BlockPos pos, BlockArray.BlockInformation information, String description, RecipeModifier... modifiers) {
         this.machine.getModifiers().putIfAbsent(pos, new ArrayList<>());
         this.machine.getModifiers().get(pos).add(new ModifierReplacement(information, Arrays.asList(modifiers), description));
         lastInformation = information;
+        lastPos = pos;
     }
 
     public DynamicMachine getMachine() {
