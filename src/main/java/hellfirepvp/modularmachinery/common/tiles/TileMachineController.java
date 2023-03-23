@@ -351,23 +351,21 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.activeRecipe.reset();
         this.activeRecipe.setMaxParallelism(getMaxParallelism());
         this.context = null;
-        tryStartRecipe(activeRecipe, null);
+        tryStartRecipe(activeRecipe);
     }
 
     /**
      * <p>机器尝试开始执行一个配方。</p>
      *
      * @param activeRecipe ActiveMachineRecipe
-     * @param context      RecipeCraftingContext
      */
-    private void tryStartRecipe(@Nonnull ActiveMachineRecipe activeRecipe, @Nullable RecipeCraftingContext context) {
-        RecipeCraftingContext finalContext;
-        finalContext = context == null ? createContext(activeRecipe) : context;
+    private void tryStartRecipe(@Nonnull ActiveMachineRecipe activeRecipe) {
+        RecipeCraftingContext context = createContext(activeRecipe);
 
-        RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(finalContext);
+        RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(context);
 
         if (tryResult.isSuccess()) {
-            Sync.doSyncAction(() -> onStart(activeRecipe, finalContext));
+            Sync.doSyncAction(() -> onStart(activeRecipe, context));
             markForUpdateSync();
         } else {
             this.craftingStatus = CraftingStatus.failure(tryResult.getFirstErrorMessage(""));
@@ -521,7 +519,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 try {
                     RecipeCraftingContext context = searchTask.get();
                     if (context != null) {
-                        tryStartRecipe(context.getActiveRecipe(), context);
+                        tryStartRecipe(context.getActiveRecipe());
                     }
                 } catch (Exception e) {
                     ModularMachinery.log.warn(e);

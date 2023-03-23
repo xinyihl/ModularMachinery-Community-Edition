@@ -36,10 +36,6 @@ public class AdapterNCOInfuser extends RecipeAdapter {
         super(new ResourceLocation("nuclearcraft", "infuser"));
     }
 
-    public AdapterNCOInfuser(@Nonnull ResourceLocation registryName) {
-        super(registryName);
-    }
-
     @Nonnull
     @Override
     public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName, List<RecipeModifier> modifiers, List<ComponentRequirement<?, ?>> additionalRequirements) {

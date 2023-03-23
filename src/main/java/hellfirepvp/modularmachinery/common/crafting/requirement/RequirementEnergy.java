@@ -144,7 +144,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     @Override
     public CraftCheck resetIOTick(RecipeCraftingContext context) {
         boolean enough = this.activeIO <= 0;
-        this.activeIO = this.requirementPerTick;
+        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * parallelism * parallelMultiplier);
 
         switch (actionType) {
             case INPUT:
