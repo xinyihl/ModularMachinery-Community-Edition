@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterAccessor;
 import hellfirepvp.modularmachinery.common.crafting.command.RecipeRunnableCommand;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.JsonUtils;
 
@@ -32,8 +33,7 @@ import java.util.*;
  * Date: 27.06.2017 / 23:23
  */
 public class RecipeLoader {
-
-    public static final List<RecipeAdapterAccessor> recipeAdapters = new LinkedList<>();
+    public static final List<RecipeAdapterAccessor> RECIPE_ADAPTER_ACCESSORS = new LinkedList<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(MachineRecipe.MachineRecipeContainer.class, new MachineRecipe.Deserializer())
             .registerTypeHierarchyAdapter(ComponentRequirement.class, new MachineRecipe.ComponentDeserializer())
@@ -41,6 +41,7 @@ public class RecipeLoader {
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
             .registerTypeHierarchyAdapter(RecipeRunnableCommand.class, new RecipeRunnableCommand.Deserializer())
             .create();
+
     public static String currentlyReadingPath = null;
     private static Map<String, Exception> failedAttempts = new HashMap<>();
 
@@ -69,7 +70,7 @@ public class RecipeLoader {
     }
 
     public static List<MachineRecipe> loadRecipes(List<File> recipeCandidates, List<PreparedRecipe> preparedRecipes) {
-        recipeAdapters.clear();
+        RECIPE_ADAPTER_ACCESSORS.clear();
 
         List<MachineRecipe> loadedRecipes = Lists.newArrayList();
         for (File f : recipeCandidates) {
@@ -90,7 +91,7 @@ public class RecipeLoader {
         return loadedRecipes;
     }
 
-    public static List<MachineRecipe> loadAdapterRecipes(List<File> adapterCandidates) {
+    public static List<MachineRecipe> loadAdapterRecipes(List<File> adapterCandidates, List<RecipeAdapterBuilder> adapterBuilders) {
         List<MachineRecipe> loadedRecipes = Lists.newArrayList();
         for (File f : adapterCandidates) {
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()), StandardCharsets.UTF_8)) {
@@ -101,19 +102,26 @@ public class RecipeLoader {
                 } else {
                     loadedRecipes.addAll(recipes);
                 }
-                recipeAdapters.add(accessor);
+                RECIPE_ADAPTER_ACCESSORS.add(accessor);
             } catch (Exception exc) {
                 failedAttempts.put(f.getPath(), exc);
             }
+        }
+        for (RecipeAdapterBuilder builder : adapterBuilders) {
+            RecipeAdapterAccessor accessor = new RecipeAdapterAccessor(builder);
+            Collection<MachineRecipe> recipes = accessor.loadRecipesForAdapter();
+            if (recipes.isEmpty()) {
+                ModularMachinery.log.warn("Adapter with name " + accessor.getAdapterKey().toString() + " didn't provide have any recipes!");
+            } else {
+                loadedRecipes.addAll(recipes);
+            }
+            RECIPE_ADAPTER_ACCESSORS.add(accessor);
         }
         return loadedRecipes;
     }
 
     private static MachineRecipe convertPreparedRecipe(PreparedRecipe recipe) {
-        MachineRecipe mr = new MachineRecipe(recipe.getFilePath(),
-                recipe.getRecipeRegistryName(), recipe.getAssociatedMachineName(),
-                recipe.getTotalProcessingTickTime(), recipe.getPriority(), recipe.voidPerTickFailure(),
-                recipe.isParallelized(), recipe.getRecipeEventHandlers(), recipe.getTooltipList());
+        MachineRecipe mr = new MachineRecipe(recipe);
         recipe.getComponents().forEach(mr::addRequirement);
         return mr;
     }

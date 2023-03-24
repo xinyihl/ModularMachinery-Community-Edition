@@ -89,12 +89,30 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tooltipList = tooltipList;
     }
 
+    public MachineRecipe(PreparedRecipe preparedRecipe) {
+        this.sortId = counter;
+        counter++;
+        this.recipeFilePath = preparedRecipe.getFilePath();
+        this.registryName = preparedRecipe.getRecipeRegistryName();
+        this.owningMachine = preparedRecipe.getAssociatedMachineName();
+        this.tickTime = preparedRecipe.getTotalProcessingTickTime();
+        this.configuredPriority = preparedRecipe.getPriority();
+        this.voidPerTickFailure = preparedRecipe.voidPerTickFailure();
+        this.isParallelized = preparedRecipe.isParallelized();
+        this.recipeEventHandlers = preparedRecipe.getRecipeEventHandlers();
+        this.tooltipList = preparedRecipe.getTooltipList();
+    }
+
+    public void addTooltip(String tooltip) {
+        tooltipList.add(tooltip);
+    }
+
     public List<String> getTooltipList() {
         return tooltipList;
     }
 
     @SuppressWarnings("unchecked")
-    public <H extends RecipeEvent> void addRecipeEventHandler(Class<H> hClass, IEventHandler<H> handler) {
+    public <H extends RecipeEvent> void addRecipeEventHandler(Class<?> hClass, IEventHandler<H> handler) {
         recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
         recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
     }

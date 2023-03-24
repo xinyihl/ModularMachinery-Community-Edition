@@ -8,10 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.ResourceLocation;
@@ -20,6 +22,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -41,23 +44,23 @@ public class DynamicMachineRecipeAdapter extends RecipeAdapter {
     @Override
     public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName,
                                                       List<RecipeModifier> modifiers,
-                                                      List<ComponentRequirement<?, ?>> additionalRequirements) {
+                                                      List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                      Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                      List<String> recipeTooltips) {
         String newIdentifier = owningMachineName.getNamespace() + "." + owningMachineName.getPath();
 
-        List<MachineRecipe> recipesNew = new ArrayList<>();
+        List<MachineRecipe> newRecipeList = new ArrayList<>();
         for (MachineRecipe recipe : RecipeRegistry.getRecipesFor(this.originalMachine)) {
             MachineRecipe newRecipe = recipe.copy(
                     (res) -> new ResourceLocation(ModularMachinery.MODID, res.getPath() + ".copy." + newIdentifier + "_" + incId),
                     owningMachineName,
                     modifiers);
-            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
-                newRecipe.addRequirement(additionalRequirement.deepCopy());
-            }
-            recipesNew.add(newRecipe);
+            RecipeAdapter.addAdditionalRequirements(newRecipe, additionalRequirements, eventHandlers, recipeTooltips);
+            newRecipeList.add(newRecipe);
         }
 
         incId++;
-        return recipesNew;
+        return newRecipeList;
     }
 
 }

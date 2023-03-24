@@ -8,10 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
@@ -45,7 +47,9 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
     @Override
     public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName,
                                                       List<RecipeModifier> modifiers,
-                                                      List<ComponentRequirement<?, ?>> additionalRequirements) {
+                                                      List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                      Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                      List<String> recipeTooltips) {
         Map<ItemStack, ItemStack> inputOutputMap = FurnaceRecipes.instance().getSmeltingList();
         List<MachineRecipe> smeltingRecipes = new ArrayList<>(inputOutputMap.size());
         for (Map.Entry<ItemStack, ItemStack> smelting : inputOutputMap.entrySet()) {
@@ -71,9 +75,7 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
                 recipe.addRequirement(new RequirementEnergy(IOType.INPUT, inEnergy));
             }
 
-            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
-                recipe.addRequirement(additionalRequirement.deepCopy());
-            }
+            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             smeltingRecipes.add(recipe);
             incId++;

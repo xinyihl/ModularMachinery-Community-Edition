@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterAccessor;
 import hellfirepvp.modularmachinery.common.data.DataLoadProfiler;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -39,6 +40,7 @@ public class RecipeRegistry {
     private static final Map<ResourceLocation, MachineRecipe> RECIPE_REGISTRY = new HashMap<>();
 
     private final List<PreparedRecipe> earlyRecipes = new LinkedList<>();
+    private final List<RecipeAdapterBuilder> earlyRecipeAdapters = new LinkedList<>();
 
     private RecipeRegistry() {
     }
@@ -61,7 +63,9 @@ public class RecipeRegistry {
         return RECIPE_REGISTRY.get(key);
     }
 
-    private static Map<DynamicMachine, List<MachineRecipe>> loadAdapters(@Nullable EntityPlayer player, Map<ResourceLocation, MachineRecipe> sharedLoadRegistry) {
+    private static Map<DynamicMachine, List<MachineRecipe>> loadAdapters(@Nullable EntityPlayer player,
+                                                                         Map<ResourceLocation, MachineRecipe> sharedLoadRegistry,
+                                                                         List<RecipeAdapterBuilder> earlyRecipeAdapters) {
         ProgressManager.ProgressBar barRecipes = ProgressManager.push("RecipeRegistry - Adapters", 3);
         barRecipes.step("Discovering Adapter-Files");
         DataLoadProfiler profiler = new DataLoadProfiler();
@@ -69,7 +73,7 @@ public class RecipeRegistry {
         Map<RecipeLoader.FileType, List<File>> potentialRecipes = RecipeLoader.discoverDirectory(CommonProxy.dataHolder.getRecipeDirectory());
         barRecipes.step("Loading Adapters");
 
-        List<MachineRecipe> recipes = RecipeLoader.loadAdapterRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.ADAPTER, Lists.newArrayList()));
+        List<MachineRecipe> recipes = RecipeLoader.loadAdapterRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.ADAPTER, Lists.newArrayList()), earlyRecipeAdapters);
         DataLoadProfiler.StatusLine sl = profiler.createLine("Load-Phase: ");
         DataLoadProfiler.Status success = sl.appendStatus("%s adapter-recipes loaded");
         DataLoadProfiler.Status failed = sl.appendStatus("%s adapter-recipes failed");
@@ -139,7 +143,7 @@ public class RecipeRegistry {
     }
 
     public static void reloadAdapters() {
-        for (RecipeAdapterAccessor accessor : RecipeLoader.recipeAdapters) {
+        for (RecipeAdapterAccessor accessor : RecipeLoader.RECIPE_ADAPTER_ACCESSORS) {
             Map<Integer, TreeSet<MachineRecipe>> machineRecipeList = REGISTRY_RECIPE_BY_MACHINE.get(accessor.getOwningMachine());
             for (MachineRecipe cached : accessor.getCachedRecipes()) {
                 RECIPE_REGISTRY.remove(cached.getRegistryName());
@@ -152,7 +156,7 @@ public class RecipeRegistry {
             }
         }
 
-        for (RecipeAdapterAccessor accessor : RecipeLoader.recipeAdapters) {
+        for (RecipeAdapterAccessor accessor : RecipeLoader.RECIPE_ADAPTER_ACCESSORS) {
             for (MachineRecipe recipe : accessor.loadRecipesForAdapter()) {
                 RECIPE_REGISTRY.put(recipe.getRegistryName(), recipe);
                 Map<Integer, TreeSet<MachineRecipe>> recipeList = REGISTRY_RECIPE_BY_MACHINE.computeIfAbsent(accessor.getOwningMachine(), k -> new TreeMap<>());
@@ -181,7 +185,7 @@ public class RecipeRegistry {
         if (doRegister) {
             registerRecipes(recipes);
         }
-        recipes = loadAdapters(player, sharedLoadRegistry);
+        recipes = loadAdapters(player, sharedLoadRegistry, earlyRecipeAdapters);
         if (doRegister) {
             registerRecipes(recipes);
         }
@@ -225,8 +229,13 @@ public class RecipeRegistry {
         this.earlyRecipes.add(recipe);
     }
 
+    public void registerRecipeAdapterEarly(RecipeAdapterBuilder recipeAdapter) {
+        this.earlyRecipeAdapters.add(recipeAdapter);
+    }
+
     public void clearLingeringRecipes() {
         this.earlyRecipes.clear();
+        this.earlyRecipeAdapters.clear();
     }
 
 }

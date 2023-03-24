@@ -30,6 +30,7 @@ public interface PreparedRecipe {
     ResourceLocation getRecipeRegistryName();
 
     ResourceLocation getAssociatedMachineName();
+    ResourceLocation getParentMachineName();
 
     int getTotalProcessingTickTime();
 

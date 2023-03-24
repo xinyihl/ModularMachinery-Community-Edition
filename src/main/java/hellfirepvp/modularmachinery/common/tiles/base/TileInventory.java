@@ -14,6 +14,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -23,7 +24,7 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 07.07.2017 / 17:43
  */
-public abstract class TileInventory extends TileColorableMachineComponent {
+public abstract class TileInventory extends TileEntityRestrictedTick {
 
     protected IOInventory inventory;
 
@@ -32,6 +33,11 @@ public abstract class TileInventory extends TileColorableMachineComponent {
 
     public TileInventory(int size) {
         this.inventory = buildInventory(this, size);
+    }
+
+    @Override
+    public void doRestrictedTick() {
+
     }
 
     public abstract IOInventory buildInventory(TileInventory tile, int size);
@@ -55,13 +61,13 @@ public abstract class TileInventory extends TileColorableMachineComponent {
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     }
 
     @Nullable
     @Override
-    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return (T) inventory;
         }

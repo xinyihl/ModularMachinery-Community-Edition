@@ -592,6 +592,11 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @Override
+    public ResourceLocation getParentMachineName() {
+        return machineName;
+    }
+
+    @Override
     public int getTotalProcessingTickTime() {
         return tickTime;
     }

@@ -1,9 +1,11 @@
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
@@ -17,18 +19,23 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-public class AdapterICCompressor extends RecipeAdapter {
+public class AdapterIC2Compressor extends RecipeAdapter {
     public static final int workTime = 300;
     private int incId = 0;
 
-    public AdapterICCompressor() {
+    public AdapterIC2Compressor() {
         super(new ResourceLocation("ic2", "te_compressor"));
     }
 
     @Nonnull
     @Override
-    public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName, List<RecipeModifier> modifiers, List<ComponentRequirement<?, ?>> additionalRequirements) {
+    public Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName,
+                                                      List<RecipeModifier> modifiers,
+                                                      List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                      Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                      List<String> recipeTooltips) {
         Iterable<? extends ic2.api.recipe.MachineRecipe<IRecipeInput, Collection<ItemStack>>> machineRecipes = Recipes.compressor.getRecipes();
 
         List<MachineRecipe> recipes = new ArrayList<>(40);
@@ -38,9 +45,7 @@ public class AdapterICCompressor extends RecipeAdapter {
                     owningMachineName,
                     workTime, incId, false);
 
-            for (ComponentRequirement<?, ?> additionalRequirement : additionalRequirements) {
-                recipe.addRequirement(additionalRequirement.deepCopy());
-            }
+            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, machineRecipe.getInput().getAmount(), false));
 

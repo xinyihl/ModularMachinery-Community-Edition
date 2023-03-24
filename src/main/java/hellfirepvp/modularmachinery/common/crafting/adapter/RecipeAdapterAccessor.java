@@ -10,17 +10,17 @@ package hellfirepvp.modularmachinery.common.crafting.adapter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.ResourceLocation;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -32,14 +32,29 @@ import java.util.List;
 public class RecipeAdapterAccessor {
 
     private final ResourceLocation owningMachine, adapterKey;
-    private final List<RecipeModifier> modifiers = new ArrayList<>();
-    private final List<ComponentRequirement<?, ?>> additionalRecipeRequirements = new ArrayList<>();
+    private final List<RecipeModifier> modifiers;
+    private final List<ComponentRequirement<?, ?>> additionalRecipeRequirements;
+    private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
+    private final List<String> tooltipList;
 
     private final List<MachineRecipe> cacheLoaded = new LinkedList<>();
 
-    private RecipeAdapterAccessor(ResourceLocation owningMachine, ResourceLocation adapterKey) {
+    public RecipeAdapterAccessor(ResourceLocation owningMachine, ResourceLocation adapterKey) {
         this.owningMachine = owningMachine;
         this.adapterKey = adapterKey;
+        this.modifiers = new LinkedList<>();
+        this.additionalRecipeRequirements = new ArrayList<>();
+        this.recipeEventHandlers = new HashMap<>();
+        this.tooltipList = new ArrayList<>();
+    }
+
+    public RecipeAdapterAccessor(RecipeAdapterBuilder builder) {
+        this.owningMachine = builder.getAssociatedMachineName();
+        this.adapterKey = builder.getParentMachineName();
+        this.modifiers = builder.getModifiers();
+        this.additionalRecipeRequirements = builder.getComponents();
+        this.tooltipList = builder.getTooltipList();
+        this.recipeEventHandlers = builder.getRecipeEventHandlers();
     }
 
     public ResourceLocation getOwningMachine() {
@@ -58,9 +73,26 @@ public class RecipeAdapterAccessor {
         this.additionalRecipeRequirements.add(requirement);
     }
 
+    @SuppressWarnings("unchecked")
+    public <H extends RecipeEvent> void addRecipeEventHandler(Class<?> hClass, IEventHandler<H> handler) {
+        recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
+        recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
+    }
+
+    public void addTooltip(String tooltip) {
+        tooltipList.add(tooltip);
+    }
+
     public List<MachineRecipe> loadRecipesForAdapter() {
         cacheLoaded.clear();
-        Collection<MachineRecipe> recipes = RecipeAdapterRegistry.createRecipesFor(owningMachine, adapterKey, modifiers, additionalRecipeRequirements);
+        Collection<MachineRecipe> recipes = RecipeAdapterRegistry.createRecipesFor(
+                owningMachine,
+                adapterKey,
+                modifiers,
+                additionalRecipeRequirements,
+                recipeEventHandlers,
+                tooltipList);
+
         if (recipes != null) {
             cacheLoaded.addAll(recipes);
         }

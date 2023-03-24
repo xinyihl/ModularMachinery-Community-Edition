@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TileSmartInterface extends TileEntityRestrictedTick implements MachineComponentTile {
-    //LEFT = MachinePos, MIDDLE = DataType, RIGHT = InputValue
     private final List<SmartInterfaceData> boundData = new ArrayList<>();
     private final SmartInterfaceProvider provider = new SmartInterfaceProvider(this);
 

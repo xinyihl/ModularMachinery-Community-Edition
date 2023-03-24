@@ -8,8 +8,10 @@
 
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
@@ -19,6 +21,7 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -33,12 +36,14 @@ public class RecipeAdapterRegistry {
     public static Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachine,
                                                              ResourceLocation adapterKey,
                                                              List<RecipeModifier> modifiers,
-                                                             List<ComponentRequirement<?, ?>> additionalRequirements) {
+                                                             List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                             Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                             List<String> recipeTooltips) {
         RecipeAdapter adapter = RegistriesMM.ADAPTER_REGISTRY.getValue(adapterKey);
         if (adapter == null) {
             return null;
         }
-        return adapter.createRecipesFor(owningMachine, modifiers, additionalRequirements);
+        return adapter.createRecipesFor(owningMachine, modifiers, additionalRequirements, eventHandlers, recipeTooltips);
     }
 
     public static void registerDynamicMachineAdapters() {

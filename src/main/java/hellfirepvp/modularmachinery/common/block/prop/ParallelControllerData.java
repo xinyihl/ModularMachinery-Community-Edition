@@ -21,9 +21,9 @@ public enum ParallelControllerData implements IStringSerializable {
 
     public static void loadFromConfig(Configuration cfg) {
         for (ParallelControllerData data : values()) {
-            data.maxParallelism = cfg.getInt("controller-" + data.getName() + "-max-parallelism", "parallel-controller",
+            data.maxParallelism = cfg.getInt("max-parallelism", "parallel-controller." + data.getName(),
                     data.defaultMaxParallelism, 1, Integer.MAX_VALUE,
-                    "Defines the max parallelism for the data-type of parallel controller.");
+                    "Defines the max parallelism for the parallel controller.");
         }
     }
 

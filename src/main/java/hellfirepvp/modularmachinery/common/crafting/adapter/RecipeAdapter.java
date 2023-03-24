@@ -8,9 +8,11 @@
 
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.IForgeRegistryEntry;
@@ -18,6 +20,7 @@ import net.minecraftforge.registries.IForgeRegistryEntry;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -53,12 +56,23 @@ public abstract class RecipeAdapter implements IForgeRegistryEntry<RecipeAdapter
     @Nonnull
     public abstract Collection<MachineRecipe> createRecipesFor(ResourceLocation owningMachineName,
                                                                List<RecipeModifier> modifiers,
-                                                               List<ComponentRequirement<?, ?>> additionalRequirements);
+                                                               List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                               Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                               List<String> recipeTooltips);
 
     @Nonnull
     public MachineRecipe createRecipeShell(ResourceLocation uniqueRecipeName, ResourceLocation owningMachineName, int tickTime, int priority, boolean voidPerTickFailure) {
         return new MachineRecipe("internal/adapter/" + registryName.getNamespace() + "/" + registryName.getPath(),
                 uniqueRecipeName, owningMachineName, tickTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
+    }
+
+    public static void addAdditionalRequirements(MachineRecipe recipe,
+                                                 List<ComponentRequirement<?, ?>> additionalRequirements,
+                                                 Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
+                                                 List<String> recipeTooltips) {
+        additionalRequirements.stream().map(ComponentRequirement::deepCopy).forEach(recipe::addRequirement);
+        eventHandlers.forEach((clazz, handlers) -> handlers.forEach(handler -> recipe.addRecipeEventHandler(clazz, handler)));
+        recipeTooltips.forEach(recipe::addTooltip);
     }
 
 }
