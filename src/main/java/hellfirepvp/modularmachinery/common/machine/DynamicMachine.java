@@ -33,7 +33,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -110,10 +109,13 @@ public class DynamicMachine extends AbstractMachine {
     public ModifierReplacementMap getModifiersAsMatchingReplacements() {
         ModifierReplacementMap infoMap = new ModifierReplacementMap();
         for (BlockPos pos : modifiers.keySet()) {
-            infoMap.put(pos, modifiers.get(pos)
-                    .stream()
-                    .map(ModifierReplacement::getBlockInformation)
-                    .collect(Collectors.toList()));
+            List<ModifierReplacement> replacements = modifiers.get(pos);
+            List<BlockArray.BlockInformation> informationList = new ArrayList<>();
+            for (ModifierReplacement replacement : replacements) {
+                informationList.add(replacement.getBlockInformation());
+            }
+
+            infoMap.put(pos, informationList);
         }
         return infoMap;
     }

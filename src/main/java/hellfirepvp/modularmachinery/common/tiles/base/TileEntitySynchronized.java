@@ -84,6 +84,10 @@ public class TileEntitySynchronized extends TileEntity {
         markDirty();
     }
 
+    /**
+     * <p>markForUpdate 的同步实现，防止意料之外的 CME。</p>
+     * <p>*** 只能保证 MMCE 自身对世界的线程安全 ***</p>
+     */
     public void markForUpdateSync() {
         if (ModularMachinery.pluginServerCompatibleMode) {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::markForUpdate);

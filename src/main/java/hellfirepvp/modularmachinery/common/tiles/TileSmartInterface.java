@@ -41,7 +41,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
             return;
         }
 
-        //Check Parent Controller Exists
+        // Check Parent Controller Exists
         int prevDataSize = boundData.size();
         for (int i = 0; i < boundData.size(); i++) {
             BlockPos pos = boundData.get(i).getPos();
@@ -133,7 +133,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
                 }
             }
             this.boundData.add(new SmartInterfaceData(pos, parent, type, defaultValue));
-            this.parent.markForUpdate();
+            this.parent.markForUpdateSync();
         }
 
         public void removeMachineData(BlockPos pos) {
@@ -141,7 +141,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
                 SmartInterfaceData data = this.boundData.get(i);
                 if (data.getPos().equals(pos)) {
                     this.boundData.remove(i);
-                    this.parent.markForUpdate();
+                    this.parent.markForUpdateSync();
                     return;
                 }
             }

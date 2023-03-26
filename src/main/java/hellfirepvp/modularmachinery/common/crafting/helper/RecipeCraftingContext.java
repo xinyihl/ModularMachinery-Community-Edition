@@ -134,30 +134,6 @@ public class RecipeCraftingContext {
             }
         }
 
-        //Output tick
-//        for (ComponentRequirement<?, ?> requirement : requirements) {
-//            if (!(requirement instanceof ComponentRequirement.PerTick) ||
-//                    requirement.actionType == IOType.INPUT) continue;
-//            ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
-//
-//            perTickRequirement.resetIOTick(this);
-//            perTickRequirement.startIOTick(this, durMultiplier);
-//
-//            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
-//                CraftCheck result = perTickRequirement.doIOTick(component, this);
-//                if (result.isSuccess()) {
-//                    break;
-//                }
-//            }
-//
-//            CraftCheck result = perTickRequirement.resetIOTick(this);
-//            if (!result.isSuccess()) {
-//                CraftingCheckResult res = new CraftingCheckResult();
-//                res.addError(result.getUnlocalizedMessage());
-//                return res;
-//            }
-//        }
-
         this.getParentRecipe().getCommandContainer().runTickCommands(this.commandSender, currentTick);
 
         return CraftingCheckResult.SUCCESS;

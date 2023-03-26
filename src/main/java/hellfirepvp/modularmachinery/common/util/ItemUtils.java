@@ -200,6 +200,10 @@ public class ItemUtils {
                     inserted += space;
                 }
             }
+
+            if (inserted / stack.getCount() >= maxParallelism) {
+                break;
+            }
         }
         if (stack.getCount() <= 0 || inserted < stack.getCount()) {
             return 0;

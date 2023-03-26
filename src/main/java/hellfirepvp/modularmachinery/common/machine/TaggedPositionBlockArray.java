@@ -10,9 +10,7 @@ package hellfirepvp.modularmachinery.common.machine;
 
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
-import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
@@ -29,8 +27,8 @@ import java.util.Map;
 public class TaggedPositionBlockArray extends BlockArray {
     public TaggedPositionBlockArray() {
     }
-    public TaggedPositionBlockArray(long traitNum, EnumFacing facing) {
-        super(traitNum, facing);
+    public TaggedPositionBlockArray(long traitNum) {
+        super(traitNum);
     }
 
     private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
@@ -45,26 +43,8 @@ public class TaggedPositionBlockArray extends BlockArray {
     }
 
     @Override
-    public TaggedPositionBlockArray rotateYCCW(EnumFacing facing) {
-        if (this.facing == facing) {
-            return this;
-        }
-        TaggedPositionBlockArray rotated = BlockArrayCache.getTaggedPositionBlockArrayCache(traitNum, facing);
-        if (rotated != null) {
-            return rotated;
-        }
-
-        rotated = this;
-        while (rotated.facing != facing) {
-            rotated = rotated.rotateYCCWInternal();
-        }
-
-        BlockArrayCache.addTaggedPositionBlockArrayCache(traitNum, rotated);
-        return rotated;
-    }
-
-    private TaggedPositionBlockArray rotateYCCWInternal() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum, facing.rotateYCCW());
+    public TaggedPositionBlockArray rotateYCCW() {
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
 
         Map<BlockPos, BlockInformation> outPattern = out.pattern;
         for (BlockPos pos : pattern.keySet()) {

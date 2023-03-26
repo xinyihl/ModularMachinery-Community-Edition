@@ -61,7 +61,7 @@ public class MiscUtils {
         BlockArray rot = array;
         while (currentFacing != dir) {
             currentFacing = currentFacing.rotateYCCW();
-            rot = rot.rotateYCCW(currentFacing);
+            rot = rot.rotateYCCW();
         }
         return rot;
     }

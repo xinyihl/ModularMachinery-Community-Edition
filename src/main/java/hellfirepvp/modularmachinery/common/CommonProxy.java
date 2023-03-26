@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common;
 
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;
@@ -16,7 +17,6 @@ import hellfirepvp.modularmachinery.common.crafting.IntegrationTypeHelper;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistry;
 import hellfirepvp.modularmachinery.common.data.ModDataHolder;
-import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
@@ -32,6 +32,7 @@ import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
+import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
 import ink.ikx.mmce.core.AssemblyEventHandler;
 import net.minecraft.block.Block;
@@ -49,6 +50,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -72,6 +74,19 @@ public class CommonProxy implements IGuiHandler {
         dataHolder.setup(configDir);
         if (dataHolder.requiresDefaultMachinery()) {
             dataHolder.copyDefaultMachinery();
+        }
+    }
+
+    private static void checkThirdPartyServer() {
+        try {
+            Class.forName("catserver.server.CatServer");
+            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
+            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
+            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
+            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
+            ModularMachinery.pluginServerCompatibleMode = true;
+        } catch (Exception e) {
+            ModularMachinery.pluginServerCompatibleMode = false;
         }
     }
 
@@ -106,11 +121,15 @@ public class CommonProxy implements IGuiHandler {
 
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
         MachineRegistry.registerMachines(MachineBuilder.WAIT_FOR_LOAD);
+        CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
+                BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
+
         MachineModifier.loadAll();
         MMEvents.registryAll();
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
+        future.join();
 
         if (Mods.TOP.isPresent()) {
             ModIntegrationTOP.registerProvider();
@@ -179,19 +198,6 @@ public class CommonProxy implements IGuiHandler {
 
         GuiType(@Nullable Class<? extends TileEntity> requiredTileEntity) {
             this.requiredTileEntity = requiredTileEntity;
-        }
-    }
-
-    private static void checkThirdPartyServer() {
-        try {
-            Class.forName("catserver.server.CatServer");
-            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
-            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
-            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
-            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
-            ModularMachinery.pluginServerCompatibleMode = true;
-        } catch (Exception e) {
-            ModularMachinery.pluginServerCompatibleMode = false;
         }
     }
 }

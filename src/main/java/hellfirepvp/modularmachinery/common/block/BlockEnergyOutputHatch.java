@@ -12,6 +12,7 @@ import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.tiles.TileEnergyOutputHatch;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -38,12 +39,12 @@ public class BlockEnergyOutputHatch extends BlockEnergyHatch {
     @Optional.Method(modid = "gregtech")
     protected void addGTTooltip(List<String> tooltip, EnergyHatchData size) {
         tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.gregtech.voltage.out",
-                String.valueOf(size.getGTEnergyTransferVoltage()),
+                MiscUtils.formatDecimal(size.getGTEnergyTransferVoltage()),
                 size.getUnlocalizedGTEnergyTier()));
         tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.gregtech.amperage",
                 String.valueOf(size.getGtAmperage())));
         tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.gregtech.storage",
-                String.valueOf(EnergyDisplayUtil.EnergyType.GT_EU.formatEnergyForDisplay(size.maxEnergy))));
+                MiscUtils.formatDecimal(EnergyDisplayUtil.EnergyType.GT_EU.formatEnergyForDisplay(size.maxEnergy))));
     }
 
     @Override
@@ -51,15 +52,15 @@ public class BlockEnergyOutputHatch extends BlockEnergyHatch {
     public void addInformation(ItemStack stack, @Nullable World player, List<String> tooltip, ITooltipFlag advanced) {
         EnergyHatchData size = EnergyHatchData.values()[MathHelper.clamp(stack.getMetadata(), 0, EnergyHatchData.values().length - 1)];
         if (EnergyDisplayUtil.displayFETooltip) {
-            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.storage", size.maxEnergy));
-            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.out.transfer", size.transferLimit));
+            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.storage", MiscUtils.formatDecimal(size.maxEnergy)));
+            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.out.transfer", MiscUtils.formatDecimal(size.transferLimit)));
             tooltip.add("");
         }
         if (Mods.IC2.isPresent() && EnergyDisplayUtil.displayIC2EUTooltip) {
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.ic2.out.voltage",
                     TextFormatting.BLUE + I18n.format(size.getUnlocalizedEnergyDescriptor())));
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.energyhatch.ic2.out.transfer",
-                    TextFormatting.BLUE + String.valueOf(size.getIC2EnergyTransmission()),
+                    TextFormatting.BLUE + MiscUtils.formatDecimal(size.getIC2EnergyTransmission()),
                     TextFormatting.BLUE + I18n.format("tooltip.energyhatch.ic2.powerrate")));
             tooltip.add("");
         }

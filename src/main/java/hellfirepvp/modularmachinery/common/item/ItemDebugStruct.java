@@ -23,6 +23,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
+
 /**
  * This class is part of the Modular Machinery Mod
  * The complete source code for this mod can be found on github.
@@ -32,13 +34,19 @@ import net.minecraft.world.World;
  */
 public class ItemDebugStruct extends Item {
 
+    // TODO: Realize it.
     public ItemDebugStruct() {
         setMaxStackSize(1);
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
+    @Nonnull
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public EnumActionResult onItemUse(
+            @Nonnull EntityPlayer player, World worldIn, @Nonnull BlockPos pos,
+            @Nonnull EnumHand hand, @Nonnull EnumFacing facing,
+            float hitX, float hitY, float hitZ)
+    {
         if (worldIn.isRemote) return EnumActionResult.SUCCESS;
         TileEntity te = worldIn.getTileEntity(pos);
         if (te instanceof TileMachineController) {
@@ -59,7 +67,7 @@ public class ItemDebugStruct extends Item {
                             }
                         }
                         face = face.rotateYCCW();
-                        pattern = pattern.rotateYCCW(face);
+                        pattern = pattern.rotateYCCW();
                         replacements = replacements.rotateYCCW();
                     } while (face != EnumFacing.NORTH);
                 }

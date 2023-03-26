@@ -1,46 +1,48 @@
 package hellfirepvp.modularmachinery.common.util;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.EnumFacing;
 
+import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Random;
-import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockArrayCache {
-    private static final WeakHashMap<Long, EnumMap<EnumFacing, BlockArray>> CACHE = new WeakHashMap<>();
-    private static final WeakHashMap<Long, EnumMap<EnumFacing, TaggedPositionBlockArray>> TAGGED_POSITION_CACHE = new WeakHashMap<>();
-    protected static final Random TRAIT_NUM_GENERATOR = new Random();
+    private static final Long2ObjectOpenHashMap<EnumMap<EnumFacing, TaggedPositionBlockArray>>
+            BLOCK_ARRAY_CACHE_MAP = new Long2ObjectOpenHashMap<>();
+    private static final AtomicLong TRAIT_NUM_COUNTER = new AtomicLong(0);
 
-    public static BlockArray getBlockArrayCache(long traitNum, EnumFacing facing) {
-        EnumMap<EnumFacing, BlockArray> blockArrayEnums = CACHE.get(traitNum);
-        if (blockArrayEnums == null) {
-            return null;
-        }
-        return blockArrayEnums.get(facing);
+    public static TaggedPositionBlockArray getBlockArrayCache(long traitNum, EnumFacing facing) {
+        return BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(traitNum, e -> new EnumMap<>(EnumFacing.class))
+                .get(facing);
     }
 
-    public static void addBlockArrayCache(long traitNum, BlockArray blockArray) {
-        CACHE.putIfAbsent(traitNum, new EnumMap<>(EnumFacing.class));
-        EnumMap<EnumFacing, BlockArray> blockArrayEnums = CACHE.get(traitNum);
-        if (blockArrayEnums != null) {
-            blockArrayEnums.put(blockArray.facing, blockArray);
-        }
+    public static synchronized void addBlockArrayCache(TaggedPositionBlockArray blockArray, EnumFacing facing) {
+        BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class))
+                .put(facing, blockArray);
     }
 
-    public static TaggedPositionBlockArray getTaggedPositionBlockArrayCache(long traitNum, EnumFacing facing) {
-        EnumMap<EnumFacing, TaggedPositionBlockArray> blockArrayEnums = TAGGED_POSITION_CACHE.get(traitNum);
-        if (blockArrayEnums == null) {
-            return null;
-        }
-        return blockArrayEnums.get(facing);
+    public static long nextTraitNum() {
+        return TRAIT_NUM_COUNTER.getAndIncrement();
     }
 
-    public static void addTaggedPositionBlockArrayCache(long traitNum, TaggedPositionBlockArray blockArray) {
-        TAGGED_POSITION_CACHE.putIfAbsent(traitNum, new EnumMap<>(EnumFacing.class));
-        EnumMap<EnumFacing, TaggedPositionBlockArray> blockArrayEnums = TAGGED_POSITION_CACHE.get(traitNum);
-        if (blockArrayEnums != null) {
-            blockArrayEnums.put(blockArray.facing, blockArray);
-        }
+    public static void buildCache(Collection<DynamicMachine> machines) {
+        long start = System.currentTimeMillis();
+        ModularMachinery.log.info("Building Machine Structure Cache...");
+        machines.parallelStream().forEach((machine -> {
+            TaggedPositionBlockArray blockArray = machine.getPattern();
+
+            EnumFacing facing = EnumFacing.NORTH;
+            addBlockArrayCache(blockArray, facing);
+            do {
+                facing = facing.rotateYCCW();
+                blockArray = blockArray.rotateYCCW();
+                addBlockArrayCache(blockArray, facing);
+            } while (facing != EnumFacing.NORTH);
+        }));
+        ModularMachinery.log.info("Build Completed, Used " + (System.currentTimeMillis() - start) + "ms.");
     }
 }

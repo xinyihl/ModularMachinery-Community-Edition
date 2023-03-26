@@ -25,7 +25,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.Tuple;
@@ -53,26 +52,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Date: 27.06.2017 / 10:50
  */
 public class BlockArray {
-
     private static final ResourceLocation IC_2_TILE_BLOCK = new ResourceLocation("ic2", "te");
-    protected final long traitNum;
-    protected EnumFacing facing;
+
+    public final long traitNum;
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
     public BlockArray() {
-        this.facing = EnumFacing.NORTH;
-        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
+        this.traitNum = BlockArrayCache.nextTraitNum();
     }
 
-    public BlockArray(EnumFacing facing) {
-        this.facing = facing;
-        this.traitNum = BlockArrayCache.TRAIT_NUM_GENERATOR.nextLong();
-    }
-
-    public BlockArray(long traitNum, EnumFacing facing) {
+    public BlockArray(long traitNum) {
         this.traitNum = traitNum;
-        this.facing = facing;
     }
 
     public BlockArray(BlockArray other) {
@@ -81,7 +72,6 @@ public class BlockArray {
         this.max = new Vec3i(other.max.getX(), other.max.getY(), other.max.getZ());
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
 
-        this.facing = other.facing;
         this.traitNum = other.traitNum;
     }
 
@@ -93,7 +83,6 @@ public class BlockArray {
         this.max = new Vec3i(offset.getX() + other.max.getX(), offset.getY() + other.max.getY(), offset.getZ() + other.max.getZ());
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
 
-        this.facing = other.facing;
         this.traitNum = other.traitNum;
     }
 
@@ -193,62 +182,56 @@ public class BlockArray {
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
-        lblPattern:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
-            if (!entry.getValue().matches(world, at, oldState)) {
-                if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
-                    for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
-                        if (info.matches(world, at, oldState)) {
-                            continue lblPattern;
-                        }
-                    }
-                }
+            // Block is matched, continue.
+            if (entry.getValue().matches(world, at, oldState)) {
+                continue;
+            }
+
+            // Block is not match and there are no replaceable blocks in the configuration, end check.
+            if (modifierReplacementPattern == null || !modifierReplacementPattern.containsKey(entry.getKey())) {
                 return false;
             }
+
+            // Check if the replacement block match.
+            for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
+                if (info.matches(world, at, oldState)) {
+                    break;
+                }
+            }
+
+            // All the above conditions are not valid, and the check fails.
+            return false;
         }
         return true;
     }
 
     public BlockPos getRelativeMismatchPosition(World world, BlockPos center, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
+        pattern:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
             if (entry.getValue().matches(world, at, false)) {
                 continue;
             }
 
-            if (modifierReplacementPattern != null && modifierReplacementPattern.containsKey(entry.getKey())) {
-                for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
-                    if (info.matches(world, at, false)) {
-                        continue;
-                    }
+            if (modifierReplacementPattern == null || !modifierReplacementPattern.containsKey(entry.getKey())) {
+                return entry.getKey();
+            }
+
+            for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
+                if (info.matches(world, at, false)) {
+                    continue pattern;
                 }
             }
+
             return entry.getKey();
         }
         return null;
     }
 
-    public BlockArray rotateYCCW(EnumFacing facing) {
-        if (this.facing == facing) {
-            return this;
-        }
-        BlockArray rotated = BlockArrayCache.getBlockArrayCache(traitNum, facing);
-        if (rotated != null) {
-            return rotated;
-        }
-
-        rotated = this;
-        while (rotated.facing != facing) {
-            rotated = rotated.rotateYCCWInternal();
-        }
-
-        BlockArrayCache.addBlockArrayCache(traitNum, rotated);
-        return rotated;
-    }
-
-    private BlockArray rotateYCCWInternal() {
-        BlockArray out = new BlockArray(traitNum, facing.rotateYCCW());
+    public BlockArray rotateYCCW() {
+        BlockArray out = new BlockArray(traitNum);
         Map<BlockPos, BlockInformation> outPattern = out.pattern;
 
         for (BlockPos pos : pattern.keySet()) {

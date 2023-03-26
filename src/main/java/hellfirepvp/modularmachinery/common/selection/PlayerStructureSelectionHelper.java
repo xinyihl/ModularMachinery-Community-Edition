@@ -75,15 +75,15 @@ public class PlayerStructureSelectionHelper {
             return;
         }
         player.sendMessage(new TextComponentTranslation("message.structurebuild.confirmrotation", controllerFacing.getName()));
-        BlockArray out = sel.compressAsArray(world, pos, controllerFacing);
+        BlockArray out = sel.compressAsArray(world, pos);
         if (controllerFacing != EnumFacing.NORTH) {
             int rotation = 0;
             EnumFacing face = controllerFacing;
             while (face != EnumFacing.NORTH) {
+                out = out.rotateYCCW();
                 face = face.rotateYCCW();
                 rotation += 90;
             }
-            out = out.rotateYCCW(EnumFacing.NORTH);
             player.sendMessage(new TextComponentTranslation("message.structurebuild.confirmrotation.rotating", String.valueOf(rotation)));
         }
 
@@ -150,8 +150,8 @@ public class PlayerStructureSelectionHelper {
             }
         }
 
-        private BlockArray compressAsArray(World world, BlockPos center, EnumFacing facing) {
-            BlockArray out = new BlockArray(facing);
+        private BlockArray compressAsArray(World world, BlockPos center) {
+            BlockArray out = new BlockArray();
             for (BlockPos pos : this.selectedPositions) {
                 IBlockState state = world.getBlockState(pos);
                 IBlockStateDescriptor descr = new IBlockStateDescriptor(state);

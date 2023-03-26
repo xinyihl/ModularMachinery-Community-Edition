@@ -208,13 +208,13 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileMachineController(this);
+        return new TileMachineController(state);
     }
 
     @Nullable
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
-        return new TileMachineController(this);
+        return new TileMachineController(getStateFromMeta(meta));
     }
 
     @Nonnull
