@@ -182,7 +182,7 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
 
             try {
                 int newParallelism = Integer.parseInt(textField.getText());
-                if (newParallelism < provider.getMaxParallelism() && newParallelism > 0) {
+                if (newParallelism > 0 && newParallelism <= provider.getMaxParallelism()) {
                     ModularMachinery.NET_CHANNEL.sendToServer(new PktParallelControllerUpdate(newParallelism));
                 }
                 textField.setText("");
