@@ -38,6 +38,12 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
     public static int maxWorkDelay = 60;
 
     public TileItemOutputBus() {
+        inventory.setRedirectOutput(true);
+    }
+
+    public TileItemOutputBus(ItemBusSize type) {
+        super(type);
+        inventory.setRedirectOutput(true);
     }
 
     @Override
@@ -81,7 +87,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
                 if (externalStack == ItemStack.EMPTY) {
                     ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
-                    inventory.setStackInSlot(internalSlotId, notInserted);
+                    inventory.setStackInSlotStrict(internalSlotId, notInserted);
                     successAtLeastOnce = true;
                     if (notInserted == ItemStack.EMPTY) {
                         break;
@@ -95,7 +101,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
                 // Extract internal item to external.
                 ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
-                inventory.setStackInSlot(internalSlotId, notInserted);
+                inventory.setStackInSlotStrict(internalSlotId, notInserted);
                 successAtLeastOnce = true;
                 if (notInserted == ItemStack.EMPTY) {
                     break;
@@ -105,13 +111,9 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
         if (successAtLeastOnce) {
             successCounter++;
-        } else {
-            successCounter = 0;
+        } else if (successCounter > 0) {
+            successCounter--;
         }
-    }
-
-    public TileItemOutputBus(ItemBusSize type) {
-        super(type);
     }
 
     @Override
@@ -125,7 +127,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponent<IOInventory> provideComponent() {
         return new MachineComponent.ItemBus(IOType.OUTPUT) {
             @Override
             public IOInventory getContainerProvider() {

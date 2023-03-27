@@ -10,12 +10,17 @@ package hellfirepvp.modularmachinery.common.util;
 
 import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
+import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
@@ -35,6 +40,12 @@ public class IOInventory implements IItemHandlerModifiable {
     private final Map<Integer, Integer> slotLimits = new HashMap<>(); // Value not present means default, aka 64.
     private final Map<Integer, SlotStackHolder> inventory = new HashMap<>();
     public boolean allowAnySlots = false;
+
+    /**
+     * <p>当启用时，调用 setStackInSlot() 将会重定向输出到附近的容器。</p>
+     * <p>When enabled, calling setStackInSlot() will output directly to the nearby container.</p>
+     */
+    private boolean redirectOutput = false;
     public List<EnumFacing> accessibleSides = new ArrayList<>();
     private int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
     private InventoryUpdateListener listener = null;
@@ -100,6 +111,14 @@ public class IOInventory implements IItemHandlerModifiable {
         return merged;
     }
 
+    public boolean isRedirectOutput() {
+        return redirectOutput;
+    }
+
+    public void setRedirectOutput(boolean redirectOutput) {
+        this.redirectOutput = redirectOutput;
+    }
+
     public IOInventory setMiscSlots(int... miscSlots) {
         this.miscSlots = miscSlots;
         for (Integer slot : miscSlots) {
@@ -128,17 +147,80 @@ public class IOInventory implements IItemHandlerModifiable {
         return new GuiAccess(this);
     }
 
+    private void redirectItemStackToNearContainers(int internalSlotId, ItemStack willBeInserted) {
+        ItemStack beInserted = willBeInserted;
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            BlockPos offset = owner.getPos().offset(facing);
+            TileEntity te = owner.getWorld().getTileEntity(offset);
+            if (te == null || te instanceof TileItemBus) {
+                continue;
+            }
+
+            EnumFacing accessingSide = facing.getOpposite();
+
+            IItemHandler itemHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, accessingSide);
+            if (itemHandler == null) {
+                continue;
+            }
+
+            ItemStack notInserted = insertItemStackToContainer(itemHandler, beInserted);
+            if (notInserted == ItemStack.EMPTY) {
+                return;
+            } else {
+                beInserted = notInserted;
+            }
+        }
+
+        setStackInSlotStrict(internalSlotId, beInserted);
+    }
+
+    private static ItemStack insertItemStackToContainer(IItemHandler external, ItemStack willBeInserted) {
+        ItemStack beInserted = willBeInserted;
+        for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
+            ItemStack stackInSlot = external.getStackInSlot(externalSlotId);
+
+            if (stackInSlot == ItemStack.EMPTY) {
+                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
+                if (notInserted == ItemStack.EMPTY) {
+                    return ItemStack.EMPTY;
+                } else {
+                    beInserted = notInserted;
+                    continue;
+                }
+            }
+
+            if (ItemUtils.matchStacks(stackInSlot, willBeInserted)) {
+                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
+                if (notInserted == ItemStack.EMPTY) {
+                    return ItemStack.EMPTY;
+                } else {
+                    beInserted = notInserted;
+                }
+            }
+        }
+
+        return beInserted;
+    }
+
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
         Sync.doSyncAction(() -> {
-            if (this.inventory.containsKey(slot)) {
-                this.inventory.get(slot).itemStack = stack;
-                owner.markForUpdateSync();
-                if (listener != null) {
-                    listener.onChange();
-                }
+            if (redirectOutput) {
+                redirectItemStackToNearContainers(slot, stack);
+            } else {
+                setStackInSlotStrict(slot, stack);
             }
         });
+    }
+
+    public void setStackInSlotStrict(int slot, @Nonnull ItemStack stack) {
+        if (this.inventory.containsKey(slot)) {
+            this.inventory.get(slot).itemStack = stack;
+            owner.markForUpdateSync();
+            if (listener != null) {
+                listener.onChange();
+            }
+        }
     }
 
     @Override
