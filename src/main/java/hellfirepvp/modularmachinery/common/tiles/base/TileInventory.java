@@ -35,11 +35,6 @@ public abstract class TileInventory extends TileEntityRestrictedTick {
         this.inventory = buildInventory(this, size);
     }
 
-    @Override
-    public void doRestrictedTick() {
-
-    }
-
     public abstract IOInventory buildInventory(TileInventory tile, int size);
 
     public IOInventory getInventory() {

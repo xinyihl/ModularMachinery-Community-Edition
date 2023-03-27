@@ -33,6 +33,11 @@ public abstract class TileItemBus extends TileInventory implements SelectiveUpda
         this.size = size;
     }
 
+    @Override
+    public void doRestrictedTick() {
+
+    }
+
     public ItemBusSize getSize() {
         return size;
     }

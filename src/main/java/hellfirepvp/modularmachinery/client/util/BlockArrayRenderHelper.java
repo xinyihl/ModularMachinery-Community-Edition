@@ -142,7 +142,7 @@ public class BlockArrayRenderHelper {
             maxLength -= 5;
 
             if (maxLength > 0) {
-                size = (size - minSize) * (1D - (maxLength / 50D));
+                size = (size - minSize) * (1D - (maxLength / 75D));
             }
         }
 
