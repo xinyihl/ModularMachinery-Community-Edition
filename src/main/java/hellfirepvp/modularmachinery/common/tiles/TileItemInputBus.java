@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
+import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -15,6 +16,13 @@ import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileInventory;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 
@@ -26,12 +34,90 @@ import javax.annotation.Nullable;
  * Date: 07.07.2017 / 17:54
  */
 public class TileItemInputBus extends TileItemBus implements MachineComponentTile {
+    public static int minWorkDelay = 5;
+    public static int maxWorkDelay = 40;
 
     public TileItemInputBus() {
     }
 
     public TileItemInputBus(ItemBusSize type) {
         super(type);
+    }
+
+    @Override
+    public void doRestrictedTick() {
+        if (getWorld().isRemote || !canWork(minWorkDelay, maxWorkDelay)) {
+            return;
+        }
+
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            BlockPos offset = getPos().offset(facing);
+            TileEntity te = getWorld().getTileEntity(offset);
+            if (te == null || te instanceof TileItemBus) {
+                continue;
+            }
+
+            EnumFacing accessingSide = facing.getOpposite();
+
+            IItemHandler itemHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, accessingSide);
+            if (itemHandler == null) {
+                continue;
+            }
+
+            Sync.doSyncAction(() -> inputFromExternal(itemHandler));
+        }
+    }
+
+    private void inputFromExternal(IItemHandler external) {
+        boolean successAtLeastOnce = false;
+
+        external:
+        for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
+            ItemStack externalStack = external.getStackInSlot(externalSlotId);
+            if (externalStack == ItemStack.EMPTY) {
+                continue;
+            }
+
+            for (int internalSlotId = 0; internalSlotId < inventory.getSlots(); internalSlotId++) {
+                ItemStack internalStack = inventory.getStackInSlot(internalSlotId);
+                if (internalStack == ItemStack.EMPTY) {
+                    // Extract external item and insert to internal.
+                    ItemStack extracted = external.extractItem(externalSlotId, externalStack.getCount(), false);
+                    inventory.setStackInSlot(internalSlotId, extracted);
+                    successAtLeastOnce = true;
+                    // If there are no more items in the current slot, check the next external slot.
+                    if (external.getStackInSlot(externalSlotId) == ItemStack.EMPTY) {
+                        continue external;
+                    }
+                    continue;
+                }
+
+                if (internalStack.getCount() >= internalStack.getMaxStackSize() || !ItemUtils.matchStacks(internalStack, externalStack)) {
+                    continue;
+                }
+
+                int extractAmt = Math.min(
+                        internalStack.getMaxStackSize() - internalStack.getCount(),
+                        externalStack.getCount());
+
+                // Extract external item and insert to internal.
+                ItemStack extracted = external.extractItem(externalSlotId, extractAmt, false);
+                inventory.setStackInSlot(internalSlotId,
+                        ItemUtils.copyStackWithSize(
+                                extracted, internalStack.getCount() + extracted.getCount()));
+                successAtLeastOnce = true;
+                // If there are no more items in the current slot, check the next external slot.
+                if (external.getStackInSlot(externalSlotId) == ItemStack.EMPTY) {
+                    continue external;
+                }
+            }
+        }
+
+        if (successAtLeastOnce) {
+            successCounter++;
+        } else {
+            successCounter = 0;
+        }
     }
 
     @Override

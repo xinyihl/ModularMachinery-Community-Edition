@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class IOInventory implements IItemHandlerModifiable {
 
     private final TileEntitySynchronized owner;
-    private final Map<Integer, Integer> slotLimits = new HashMap<>(); //Value not present means default, aka 64.
+    private final Map<Integer, Integer> slotLimits = new HashMap<>(); // Value not present means default, aka 64.
     private final Map<Integer, SlotStackHolder> inventory = new HashMap<>();
     public boolean allowAnySlots = false;
     public List<EnumFacing> accessibleSides = new ArrayList<>();
@@ -348,14 +348,13 @@ public class IOInventory implements IItemHandlerModifiable {
         }
         f = f / (float) getSlots();
         return MathHelper.floor(f * 14.0F) + (i > 0 ? 1 : 0);
-
     }
 
     private static class SlotStackHolder {
 
         private final int slotId;
         @Nonnull
-        private ItemStack itemStack = ItemStack.EMPTY;
+        private volatile ItemStack itemStack = ItemStack.EMPTY;
 
         private SlotStackHolder(int slotId) {
             this.slotId = slotId;

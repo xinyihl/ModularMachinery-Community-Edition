@@ -28,7 +28,7 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
 
-import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.enableDEIntegration;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -62,7 +62,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
             return;
         }
 
-        long maxCanReceive = Math.min(this.size.transferLimit, this.size.maxEnergy - this.energy);
+        long maxCanReceive = Math.min(this.size.transferLimit, this.size.maxEnergy - this.energy.get());
         if (maxCanReceive <= 0) {
             return;
         }
@@ -70,7 +70,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
         if (Mods.DRACONICEVOLUTION.isPresent() && enableDEIntegration) {
             long received = attemptDECoreTransfer(maxCanReceive);
             if (received != 0) {
-                this.energy += received;
+                this.energy.addAndGet(received);
                 markForUpdateSync();
             }
         }
@@ -110,7 +110,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     @Override
     @Optional.Method(modid = "ic2")
     public double getDemandedEnergy() {
-        return Math.min((this.size.maxEnergy - this.energy) / 4, this.size.getIC2EnergyTransmission());
+        return Math.min((this.size.maxEnergy - this.energy.get()) / 4, this.size.getIC2EnergyTransmission());
     }
 
     @Override
@@ -122,9 +122,9 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     @Override
     @Optional.Method(modid = "ic2")
     public double injectEnergy(EnumFacing directionFrom, double amount, double voltage) {
-        long addable = Math.min((this.size.maxEnergy - this.energy) / 4L, MathHelper.lfloor(amount));
+        long addable = Math.min((this.size.maxEnergy - this.energy.get()) / 4L, MathHelper.lfloor(amount));
         amount -= addable;
-        this.energy = MiscUtils.clamp(this.energy + MathHelper.lfloor(addable * 4), 0, this.size.maxEnergy);
+        this.energy.set(MiscUtils.clamp(this.energy.get() + MathHelper.lfloor(addable * 4), 0, this.size.maxEnergy));
         markForUpdateSync();
         return amount;
     }

@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
+import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -33,20 +34,22 @@ import javax.annotation.Nullable;
  * Date: 07.07.2017 / 18:41
  */
 public class TileItemOutputBus extends TileItemBus implements MachineComponentTile {
+    public static int minWorkDelay = 5;
+    public static int maxWorkDelay = 60;
 
     public TileItemOutputBus() {
     }
 
     @Override
     public void doRestrictedTick() {
-        if (world.isRemote || ticksExisted % 20 != 0) {
+        if (getWorld().isRemote || !canWork(minWorkDelay, maxWorkDelay)) {
             return;
         }
 
         for (EnumFacing facing : EnumFacing.VALUES) {
             BlockPos offset = getPos().offset(facing);
             TileEntity te = getWorld().getTileEntity(offset);
-            if (te instanceof TileItemBus || !(te instanceof IItemHandler)) {
+            if (te == null || te instanceof TileItemBus) {
                 continue;
             }
 
@@ -57,14 +60,16 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                 continue;
             }
 
-            outputInternalItemStack(itemHandler);
+            Sync.doSyncAction(() -> outputToExternal(itemHandler));
         }
     }
 
-    private void outputInternalItemStack(IItemHandler itemHandler) {
-        for (int itemHandlerSlotId = 0; itemHandlerSlotId < itemHandler.getSlots(); itemHandlerSlotId++) {
-            ItemStack handlerStack = itemHandler.getStackInSlot(itemHandlerSlotId);
-            if (handlerStack != ItemStack.EMPTY && handlerStack.getCount() == handlerStack.getMaxStackSize()) {
+    private void outputToExternal(IItemHandler external) {
+        boolean successAtLeastOnce = false;
+
+        for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
+            ItemStack externalStack = external.getStackInSlot(externalSlotId);
+            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= externalStack.getMaxStackSize()) {
                 continue;
             }
 
@@ -74,23 +79,34 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                     continue;
                 }
 
-                if (handlerStack == ItemStack.EMPTY) {
-                    ItemStack notInserted = itemHandler.insertItem(itemHandlerSlotId, internalStack, false);
+                if (externalStack == ItemStack.EMPTY) {
+                    ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
                     inventory.setStackInSlot(internalSlotId, notInserted);
+                    successAtLeastOnce = true;
                     if (notInserted == ItemStack.EMPTY) {
                         break;
                     }
                     continue;
                 }
 
-                if (ItemUtils.matchStacks(internalStack, handlerStack) && ItemUtils.matchTags(internalStack, handlerStack)) {
-                    ItemStack notInserted = itemHandler.insertItem(itemHandlerSlotId, internalStack, false);
-                    inventory.setStackInSlot(internalSlotId, notInserted);
-                    if (notInserted == ItemStack.EMPTY) {
-                        break;
-                    }
+                if (!ItemUtils.matchStacks(internalStack, externalStack)) {
+                    continue;
+                }
+
+                // Extract internal item to external.
+                ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
+                inventory.setStackInSlot(internalSlotId, notInserted);
+                successAtLeastOnce = true;
+                if (notInserted == ItemStack.EMPTY) {
+                    break;
                 }
             }
+        }
+
+        if (successAtLeastOnce) {
+            successCounter++;
+        } else {
+            successCounter = 0;
         }
     }
 

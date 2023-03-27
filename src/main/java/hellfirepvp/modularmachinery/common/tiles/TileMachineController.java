@@ -735,6 +735,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 onStructureFormed();
                 return true;
             }
+            // This controller is dedicated to parentMachine, it cannot become other, end check.
+            return true;
         }
 
         // Finally, check all registered machinery.

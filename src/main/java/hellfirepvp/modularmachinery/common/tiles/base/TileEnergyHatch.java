@@ -31,9 +31,10 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fml.common.Optional;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
 
@@ -47,7 +48,7 @@ import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
 @Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyStorage", modid = "redstoneflux")
 public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandlerAsync, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage, SelectiveUpdateTileEntity {
 
-    protected long energy = 0;
+    protected final AtomicLong energy = new AtomicLong();
     protected EnergyHatchData size;
     protected BlockPos foundCore = null;
     protected int energyCoreSearchFailedCount = 0;
@@ -113,10 +114,10 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         if (!canReceive()) {
             return 0;
         }
-        int insertable = this.energy + maxReceive > this.size.maxEnergy ? convertDownEnergy(this.size.maxEnergy - this.energy) : maxReceive;
+        int insertable = this.energy.get() + maxReceive > this.size.maxEnergy ? convertDownEnergy(this.size.maxEnergy - this.energy.get()) : maxReceive;
         insertable = Math.min(insertable, convertDownEnergy(size.transferLimit));
         if (!simulate) {
-            this.energy = MiscUtils.clamp(this.energy + insertable, 0, this.size.maxEnergy);
+            this.energy.set(MiscUtils.clamp(this.energy.get() + insertable, 0, this.size.maxEnergy));
             markForUpdate();
         }
         return insertable;
@@ -127,10 +128,10 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         if (!canExtract()) {
             return 0;
         }
-        int extractable = this.energy - maxExtract < 0 ? convertDownEnergy(this.energy) : maxExtract;
+        int extractable = this.energy.get() - maxExtract < 0 ? convertDownEnergy(this.energy.get()) : maxExtract;
         extractable = Math.min(extractable, convertDownEnergy(size.transferLimit));
         if (!simulate) {
-            this.energy = MiscUtils.clamp(this.energy - extractable, 0, this.size.maxEnergy);
+            this.energy.set(MiscUtils.clamp(this.energy.get() - extractable, 0, this.size.maxEnergy));
             markForUpdate();
         }
         return extractable;
@@ -138,7 +139,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public int getEnergyStored() {
-        return convertDownEnergy(this.energy);
+        return convertDownEnergy(this.energy.get());
     }
 
     @Override
@@ -153,7 +154,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     public abstract boolean canReceive();
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityEnergy.ENERGY) {
             return true;
         }
@@ -164,7 +165,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityEnergy.ENERGY) {
             return (T) this;
         }
@@ -191,7 +192,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
         NBTBase energyTag = compound.getTag("energy");
         if (energyTag instanceof NBTPrimitive) {
-            this.energy = ((NBTPrimitive) energyTag).getLong();
+            this.energy.set(((NBTPrimitive) energyTag).getLong());
         }
         this.size = EnergyHatchData.values()[compound.getInteger("hatchSize")];
     }
@@ -200,7 +201,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
 
-        compound.setLong("energy", this.energy);
+        compound.setLong("energy", this.energy.get());
         compound.setInteger("hatchSize", this.size.ordinal());
     }
 
@@ -212,12 +213,12 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public long getCurrentEnergy() {
-        return this.energy;
+        return this.energy.get();
     }
 
     @Override
     public void setCurrentEnergy(long energy) {
-        this.energy = MiscUtils.clamp(energy, 0, getMaxEnergy());
+        this.energy.set(MiscUtils.clamp(energy, 0, getMaxEnergy()));
         markForUpdateSync();
     }
 
@@ -225,8 +226,8 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     public boolean extractEnergy(long extract) {
         AtomicBoolean success = new AtomicBoolean(false);
         Sync.doSyncAction(() -> {
-            if (this.energy >= extract) {
-                this.energy -= extract;
+            if (this.energy.get() >= extract) {
+                this.energy.addAndGet(-extract);
                 success.set(true);
             }
         });
@@ -241,7 +242,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         AtomicBoolean success = new AtomicBoolean(false);
         Sync.doSyncAction(() -> {
             if (getRemainingCapacity() >= receive) {
-                this.energy += receive;
+                this.energy.addAndGet(receive);
                 success.set(true);
             }
         });

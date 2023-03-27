@@ -35,7 +35,7 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
 
-import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.enableDEIntegration;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -70,8 +70,8 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
             return;
         }
 
-        long prevEnergy = this.energy;
-        long maxCanExtract = Math.min(this.size.transferLimit, this.energy);
+        long prevEnergy = this.energy.get();
+        long maxCanExtract = Math.min(this.size.transferLimit, this.energy.get());
         if (maxCanExtract <= 0) {
             return;
         }
@@ -79,7 +79,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         if (Mods.DRACONICEVOLUTION.isPresent() && enableDEIntegration) {
             long transferred = attemptDECoreTransfer(maxCanExtract);
             maxCanExtract -= transferred;
-            this.energy -= transferred;
+            this.energy.addAndGet(-transferred);
         }
         long usableAmps = Math.min(this.size.getGtAmperage(), maxCanExtract / 4L / this.size.getGTEnergyTransferVoltage());
         for (EnumFacing face : EnumFacing.VALUES) {
@@ -87,7 +87,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
                 long totalTransferred = attemptGTTransfer(face, maxCanExtract / 4L, usableAmps) * 4L;
                 usableAmps -= totalTransferred / 4L / this.size.getGTEnergyTransferVoltage();
                 maxCanExtract -= totalTransferred;
-                this.energy -= totalTransferred;
+                this.energy.addAndGet(-totalTransferred);
             }
             if (maxCanExtract > 0) {
                 int transferred;
@@ -98,14 +98,14 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
                     transferred = attemptFETransfer(face, convertDownEnergy(maxCanExtract));
                 }
                 maxCanExtract -= transferred;
-                this.energy -= transferred;
+                this.energy.addAndGet(-transferred);
             }
             if (maxCanExtract <= 0) {
                 break;
             }
         }
 
-        if (prevEnergy != this.energy) {
+        if (prevEnergy != this.energy.get()) {
             markForUpdateSync();
         }
     }
@@ -227,7 +227,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     @Override
     @Optional.Method(modid = "ic2")
     public void drawEnergy(double amount) {
-        this.energy = MiscUtils.clamp(this.energy - (MathHelper.lfloor(amount) * 4L), 0, this.size.maxEnergy);
+        this.energy.set(MiscUtils.clamp(this.energy.get() - (MathHelper.lfloor(amount) * 4L), 0, this.size.maxEnergy));
         markForUpdateSync();
     }
 
