@@ -18,6 +18,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -38,12 +39,10 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
     public static int maxWorkDelay = 60;
 
     public TileItemOutputBus() {
-        inventory.setRedirectOutput(true);
     }
 
     public TileItemOutputBus(ItemBusSize type) {
         super(type);
-        inventory.setRedirectOutput(true);
     }
 
     @Override
@@ -114,6 +113,12 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
         } else if (successCounter > 0) {
             successCounter--;
         }
+    }
+
+    @Override
+    public void readCustomNBT(NBTTagCompound compound) {
+        super.readCustomNBT(compound);
+        inventory.setRedirectOutput(true);
     }
 
     @Override
