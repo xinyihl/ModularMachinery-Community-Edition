@@ -152,7 +152,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                 onMachineTick();
                 if (doStructureCheck() && isStructureFormed()) {
-                    if (isWorking() || searchAndStartRecipe()) {
+                    if (activeRecipe != null || searchAndStartRecipe()) {
                         doRecipeTick();
                     }
                 }
@@ -168,14 +168,14 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (hasMachineTickEventHandlers()) {
             ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                 onMachineTick();
-                if (isWorking() || searchAndStartRecipe()) {
+                if (activeRecipe != null || searchAndStartRecipe()) {
                     doRecipeTick();
                 }
             });
             return;
         }
 
-        if (isWorking() || searchAndStartRecipe()) {
+        if (activeRecipe != null || searchAndStartRecipe()) {
             ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doRecipeTick);
         }
     }
@@ -240,7 +240,9 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (!onPreTick()) {
             if (this.activeRecipe != null) {
                 this.activeRecipe.tick(this, this.context);
-                this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+                if (this.craftingStatus.isCrafting()) {
+                    this.activeRecipe.setTick(Math.max(this.activeRecipe.getTick() - 1, 0));
+                }
             }
             markForUpdateSync();
             return;
@@ -248,17 +250,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         //当脚本修改了运行状态时，内部不再覆盖运行状态。
         //When scripts changed craftingStatus, it is no longer modified internally.
-        if (prevStatus != this.craftingStatus) {
-            this.activeRecipe.tick(this, this.context);
-        } else {
+        if (prevStatus.equals(this.craftingStatus)) {
             this.craftingStatus = this.activeRecipe.tick(this, this.context);
+        } else {
+            this.activeRecipe.tick(this, this.context);
         }
         if (this.craftingStatus.isCrafting()) {
             onTick();
-            if (this.activeRecipe != null) {
-                if (this.activeRecipe.isCompleted()) {
-                    onFinished();
-                }
+            if (this.activeRecipe.isCompleted()) {
+                onFinished();
             }
         } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
             this.activeRecipe = null;
@@ -798,9 +798,8 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
             parallelism += provider.getParallelism();
 
-            if (parallelism > maxParallelism) {
-                parallelism = maxParallelism;
-                break;
+            if (parallelism >= maxParallelism) {
+                return maxParallelism;
             }
         }
         return Math.max(1, parallelism);
@@ -1166,6 +1165,14 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             tag.setInteger("type", this.status.ordinal());
             tag.setString("message", this.unlocalizedMessage);
             return tag;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof CraftingStatus)) return false;
+            CraftingStatus another = (CraftingStatus) obj;
+            if (status != another.status) return false;
+            return unlocalizedMessage.equals(another.unlocalizedMessage);
         }
     }
 }

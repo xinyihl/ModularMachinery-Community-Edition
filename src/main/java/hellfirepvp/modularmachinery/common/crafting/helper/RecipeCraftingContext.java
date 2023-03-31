@@ -236,6 +236,7 @@ public class RecipeCraftingContext {
 
     public CraftingCheckResult canStartCrafting(Predicate<ComponentRequirement<?, ?>> requirementFilter) {
         currentRestrictions.clear();
+        permanentModifierList.clear();
         CraftingCheckResult result = new CraftingCheckResult();
         float successfulRequirements = 0;
         List<ComponentRequirement<?, ?>> requirements = this.requirements.stream()

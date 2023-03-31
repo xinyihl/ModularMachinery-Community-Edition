@@ -218,13 +218,14 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         IOInventory handler = (IOInventory) component.providedComponent;
 
         if (actionType == IOType.INPUT) {
+            boolean isSuccess;
             switch (this.requirementType) {
                 case ITEMSTACKS:
                     ItemStack inReq = this.required.copy();
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false) * parallelism);
                     inReq.setCount(amt);
 
-                    boolean isSuccess = (this.nbtChecker != null)
+                    isSuccess = (this.nbtChecker != null)
                             ? ItemUtils.consumeFromInventory(handler, inReq, true, this.nbtChecker, context.getMachineController())
                             : ItemUtils.consumeFromInventory(handler, inReq, true, this.tag);
                     if (isSuccess) {

@@ -137,20 +137,20 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * durationMultiplier * parallelism * parallelMultiplier);
+        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * durationMultiplier * parallelism * parallelMultiplier));
     }
 
     @Nonnull
     @Override
     public CraftCheck resetIOTick(RecipeCraftingContext context) {
         boolean enough = this.activeIO <= 0;
-        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false)) * parallelism * parallelMultiplier);
+        this.activeIO = this.requirementPerTick;
 
         switch (actionType) {
             case INPUT:
                 return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
-                return remaining < this.activeIO ? CraftCheck.failure("craftcheck.failure.energy.output.space") : CraftCheck.success();
+                return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.output.space");
         }
         return CraftCheck.skipComponent();
     }

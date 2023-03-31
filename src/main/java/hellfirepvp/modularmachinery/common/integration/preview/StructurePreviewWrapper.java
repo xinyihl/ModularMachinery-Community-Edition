@@ -64,8 +64,8 @@ import javax.annotation.Nonnull;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.lang.reflect.Field;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -261,8 +261,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 10, 127, 0xFFFFFF);
             GlStateManager.enableDepth();
 
-            if (mouseX >= 5 && mouseX <= 105 &&
-                    mouseY >= 124 && mouseY <= 139) {
+            if (mouseX >= 5 && mouseX <= 105 && mouseY >= 124 && mouseY <= 139) {
                 List<Tuple<ItemStack, String>> descriptionList = new LinkedList<>();
                 boolean first = true;
                 for (List<ModifierReplacement> modifiers : machine.getModifiers().values()) {
@@ -286,7 +285,6 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
                         }
                     }
                 }
-
 
                 RenderingUtils.renderBlueStackTooltip(mouseX, mouseY, descriptionList, minecraft.fontRenderer, Minecraft.getMinecraft().getRenderItem());
             }
