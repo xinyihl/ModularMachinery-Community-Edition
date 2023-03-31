@@ -101,22 +101,30 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
 
             int tipLength = 0;
             //Custom TooltipList
-            tipLength += RequirementTip.LINE_HEIGHT * recipe.getTooltipList().size();
             for (RequirementTip tip : RegistriesMM.REQUIREMENT_TIPS_REGISTRY) {
                 Collection<ComponentRequirement<?, ?>> requirements = tip.filterRequirements(recipe, recipe.getCraftingRequirements());
-                if (!requirements.isEmpty()) {
-                    List<String> tooltip = tip.buildTooltip(recipe, requirements);
-                    if (!tooltip.isEmpty()) {
-                        for (String tipString : tooltip) {
-                            int length = fr.getStringWidth(tipString);
-                            if (length > widestTooltip) {
-                                widestTooltip = length;
-                            }
-                        }
-                        tipLength += RequirementTip.LINE_HEIGHT * tooltip.size();
-                        tipLength += RequirementTip.SPLIT_HEIGHT;
+                if (requirements.isEmpty()) {
+                    continue;
+                }
+                List<String> tooltip = tip.buildTooltip(recipe, requirements);
+                if (tooltip.isEmpty()) {
+                    continue;
+                }
+                for (String tipString : tooltip) {
+                    int length = fr.getStringWidth(tipString);
+                    if (length > widestTooltip) {
+                        widestTooltip = length;
                     }
                 }
+                tipLength += RequirementTip.LINE_HEIGHT * tooltip.size();
+                tipLength += RequirementTip.SPLIT_HEIGHT;
+            }
+            for (String tipString : recipe.getTooltipList()) {
+                int length = fr.getStringWidth(tipString);
+                if (length > widestTooltip) {
+                    widestTooltip = length;
+                }
+                tipLength += RequirementTip.LINE_HEIGHT;
             }
             if (tipLength > longestTooltip) {
                 longestTooltip = tipLength;

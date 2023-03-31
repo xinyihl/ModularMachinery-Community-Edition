@@ -182,6 +182,7 @@ public class BlockArray {
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
+        patternCheck:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
             // Block is matched, continue.
@@ -197,7 +198,7 @@ public class BlockArray {
             // Check if the replacement block match.
             for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
                 if (info.matches(world, at, oldState)) {
-                    break;
+                    continue patternCheck;
                 }
             }
 
