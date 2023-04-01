@@ -74,7 +74,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
         for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
             ItemStack externalStack = external.getStackInSlot(externalSlotId);
-            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= externalStack.getMaxStackSize()) {
+            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= external.getSlotLimit(externalSlotId)) {
                 continue;
             }
 
