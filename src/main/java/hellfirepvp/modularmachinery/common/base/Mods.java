@@ -28,6 +28,7 @@ public enum Mods {
     TOP("theoneprobe"),
     NUCLEARCRAFT_OVERHAULED("nuclearcraft"),
     RESOURCELOADER("resourceloader"),
+    FLUX_NETWORKS("fluxnetworks"),
     ;
 
     public final String modid;

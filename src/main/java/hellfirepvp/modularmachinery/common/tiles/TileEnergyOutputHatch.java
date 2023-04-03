@@ -16,6 +16,7 @@ import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -32,6 +33,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fml.common.Optional;
+import sonar.fluxnetworks.common.tileentity.TileFluxPlug;
 
 import javax.annotation.Nullable;
 
@@ -76,19 +78,29 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
             return;
         }
 
+        // DE Transfer
         if (Mods.DRACONICEVOLUTION.isPresent() && enableDEIntegration) {
             long transferred = attemptDECoreTransfer(maxCanExtract);
             maxCanExtract -= transferred;
             this.energy.addAndGet(-transferred);
         }
+
         long usableAmps = Math.min(this.size.getGtAmperage(), maxCanExtract / 4L / this.size.getGTEnergyTransferVoltage());
         for (EnumFacing face : EnumFacing.VALUES) {
+            // FluxNetworks Transfer
+            if (maxCanExtract > 0 && Mods.FLUX_NETWORKS.isPresent() && Config.enableFluxNetworksIntegration) {
+                long transferred = attemptFluxNetworksTransfer(face, maxCanExtract);
+                this.energy.addAndGet(-transferred);
+                maxCanExtract -= transferred;
+            }
+            // GT Transfer
             if (maxCanExtract > 0 && Mods.GREGTECH.isPresent() && usableAmps > 0) {
                 long totalTransferred = attemptGTTransfer(face, maxCanExtract / 4L, usableAmps) * 4L;
                 usableAmps -= totalTransferred / 4L / this.size.getGTEnergyTransferVoltage();
                 maxCanExtract -= totalTransferred;
                 this.energy.addAndGet(-totalTransferred);
             }
+            // FE / RF Transfer
             if (maxCanExtract > 0) {
                 int transferred;
 
@@ -108,6 +120,21 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         if (prevEnergy != this.energy.get()) {
             markForUpdateSync();
         }
+    }
+
+    @Optional.Method(modid = "fluxnetworks")
+    protected long attemptFluxNetworksTransfer(EnumFacing face, long maxCanExtract) {
+        BlockPos at = this.getPos().offset(face);
+        EnumFacing oppositeSide = face.getOpposite();
+
+        TileEntity te = world.getTileEntity(at);
+        if (te instanceof TileFluxPlug) {
+            TileFluxPlug plug = (TileFluxPlug) te;
+            long maxCanReceive = Math.min(plug.getMaxTransferLimit() - plug.getStoredPower(), maxCanExtract);
+            return plug.getTransferHandler().receiveFromSupplier(maxCanReceive, oppositeSide, false);
+        }
+
+        return 0;
     }
 
     @Optional.Method(modid = "draconicevolution")

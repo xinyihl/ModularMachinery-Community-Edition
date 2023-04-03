@@ -114,9 +114,9 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
         }
 
         if (successAtLeastOnce) {
-            successCounter++;
-        } else if (successCounter > 0){
-            successCounter--;
+            incrementSuccessCounter(minWorkDelay, maxWorkDelay);
+        } else {
+            decrementSuccessCounter();
         }
     }
 

@@ -18,6 +18,7 @@ import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import mcjty.lib.api.power.IBigPower;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
@@ -46,7 +47,15 @@ import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
  * Date: 08.07.2017 / 10:14
  */
 @Optional.Interface(iface = "cofh.redstoneflux.api.IEnergyStorage", modid = "redstoneflux")
-public abstract class TileEnergyHatch extends TileColorableMachineComponent implements ITickable, IEnergyStorage, IEnergyHandlerAsync, MachineComponentTile, cofh.redstoneflux.api.IEnergyStorage, SelectiveUpdateTileEntity {
+@Optional.Interface(iface = "mcjty.lib.api.power.IBigPower", modid = "theoneprobe")
+public abstract class TileEnergyHatch extends TileColorableMachineComponent implements
+        ITickable,
+        IEnergyStorage,
+        IEnergyHandlerAsync,
+        MachineComponentTile,
+        cofh.redstoneflux.api.IEnergyStorage,
+        SelectiveUpdateTileEntity,
+        IBigPower {
 
     protected final AtomicLong energy = new AtomicLong();
     protected EnergyHatchData size;
@@ -60,6 +69,16 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     public TileEnergyHatch(EnergyHatchData size, IOType ioType) {
         this.size = size;
         this.energyContainer = new GTEnergyContainer(this, ioType);
+    }
+
+    @Override
+    public long getStoredPower() {
+        return energy.get();
+    }
+
+    @Override
+    public long getCapacity() {
+        return size.maxEnergy;
     }
 
     @Optional.Method(modid = "draconicevolution")

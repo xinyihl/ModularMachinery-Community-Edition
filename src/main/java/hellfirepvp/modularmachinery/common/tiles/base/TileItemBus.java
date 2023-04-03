@@ -45,6 +45,19 @@ public abstract class TileItemBus extends TileInventory implements SelectiveUpda
         return ticksExisted % workDelay == 0;
     }
 
+    protected void incrementSuccessCounter(int maxWorkDelay, int minWorkDelay) {
+        int max = (maxWorkDelay - minWorkDelay) / 5;
+        if (successCounter < max) {
+            successCounter++;
+        }
+    }
+
+    protected void decrementSuccessCounter() {
+        if (successCounter > 0) {
+            successCounter--;
+        }
+    }
+
     public ItemBusSize getSize() {
         return size;
     }

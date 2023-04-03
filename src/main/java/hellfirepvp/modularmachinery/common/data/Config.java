@@ -37,6 +37,7 @@ public class Config {
     public static boolean selectiveUpdateTileEntity = false;
     public static boolean machineParallelizeEnabledByDefault = true;
     public static boolean recipeParallelizeEnabledByDefault = true;
+    public static boolean enableFluxNetworksIntegration = true;
     public static int maxMachineParallelism = 2048;
 
     private static File lastReadFile;
@@ -73,17 +74,29 @@ public class Config {
             ModularMachinery.log.error("Machine-Casing color defined in the config is not a hex color: " + strColor);
             ModularMachinery.log.error("Using default color instead...");
         }
+
+        // General
         machineColor = col;
+        onlyOneMachineController = lastReadConfig.getBoolean("only-one-machine-controller", "general", false,
+                "When enabled, Modules no longer register a separate controller for each machine, and the modular-controller-compatible-mode option is turned off.");
+
+        // Modular Controller Merge Support
         mocCompatibleMode = lastReadConfig.getBoolean(
                 "modular-controller-compatible-mode", "general", false,
                 "When enabled, the mod registers a controller block under the name modularcontroller to prevent incompatibility with older saves.");
-        onlyOneMachineController = lastReadConfig.getBoolean("only-one-machine-controller", "general", false,
-                "When enabled, Modules no longer register a separate controller for each machine, and the modular-controller-compatible-mode option is turned off.");
         disableMocDeprecatedTip = lastReadConfig.getBoolean(
                 "disable-moc-deprecated-tip", "general", false,
                 "Disable the ModularController is deprecated tooltip.");
+
+        // Performance
         selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
                 "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
+
+        // FluxNetworks Integration
+        enableFluxNetworksIntegration = lastReadConfig.getBoolean("enable-fluxnetworks-integration", "general", true,
+                "When enabled, allows you to use the flux network to transfer larger amounts of energy than 2147483647.");
+
+        // Parallelize Feature
         machineParallelizeEnabledByDefault = lastReadConfig.getBoolean("machine-parallelize-enabled-bydefault",
                 "parallel-controller", true, "Whether the machine parallel recipe processing is enabled by default.");
         recipeParallelizeEnabledByDefault = lastReadConfig.getBoolean("recipe-parallelize-enabled-bydefault",

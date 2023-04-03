@@ -43,49 +43,62 @@ public class MMInfoProvider implements IProbeInfoProvider {
     }
 
     private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
-        //是否在工作
-        if (machine.getActiveRecipe() != null && machine.getFoundMachine() != null) {
-            probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
-
-            ActiveMachineRecipe activeRecipe = machine.getActiveRecipe();
-            int tick = activeRecipe.getTick();
-            int totalTick = activeRecipe.getTotalTick();
-            float progress = (float) (tick * 100) / totalTick;
-
-            if (activeRecipe.getParallelism() > 1) {
-                probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" + TextFormatting.GREEN + activeRecipe.getParallelism());
-                probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" + TextFormatting.YELLOW + activeRecipe.getMaxParallelism());
-            }
-
-            String progressStr;
-            if (player.isSneaking()) {
-                //如：20.5 秒 / 40.0 秒
-                //Example: 20.5 Sec / 40.0 Sec
-                progressStr = String.format("%.1f s / %.1f s", (float) tick / 20, (float) totalTick / 20);
-            } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1000) {
-                //只有当启用了显示小数点且配方耗时超过 1000 tick 才会显示小数点
-                progressStr = String.format("%.2f", progress) + "%";
-            } else {
-                progressStr = String.format("%.0f", progress) + "%";
-            }
-
-            IProbeInfo progressLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
-            progressLine.text("{*top.recipe.progress*}:  ");
-            progressLine.progress((int) progress, 100, probeInfo.defaultProgressStyle()
-                    .prefix(progressStr)
-                    .filledColor(ModIntegrationTOP.recipeProgressBarFilledColor)
-                    .alternateFilledColor(ModIntegrationTOP.recipeProgressBarAlternateFilledColor)
-                    .borderColor(ModIntegrationTOP.recipeProgressBarBorderColor)
-                    .backgroundColor(ModIntegrationTOP.recipeProgressBarBackgroundColor)
-                    .numberFormat(NumberFormat.NONE)
-            );
-        } else {
-            //是否形成结构
-            if (machine.getFoundMachine() != null) {
-                probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
-            }
-            probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");
+        //是否形成结构
+        if (machine.isStructureFormed()) {
+            probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
         }
+
+        //是否在工作
+        if (machine.getActiveRecipe() == null || machine.getFoundMachine() == null) {
+            probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");
+            return;
+        }
+
+        int progressBarFilledColor = ModIntegrationTOP.recipeProgressBarFilledColor;
+        int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
+        int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
+
+        if (machine.getCraftingStatus().isCrafting()) {
+            probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
+        } else {
+            probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");
+            progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
+            progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
+            progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
+        }
+
+        ActiveMachineRecipe activeRecipe = machine.getActiveRecipe();
+        int tick = activeRecipe.getTick();
+        int totalTick = activeRecipe.getTotalTick();
+        float progress = (float) (tick * 100) / totalTick;
+
+        if (activeRecipe.getParallelism() > 1) {
+            probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" + TextFormatting.GREEN + activeRecipe.getParallelism());
+            probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" + TextFormatting.YELLOW + activeRecipe.getMaxParallelism());
+        }
+
+        String progressStr;
+        if (player.isSneaking()) {
+            //如：20.5 秒 / 40.0 秒
+            //Example: 20.5 Sec / 40.0 Sec
+            progressStr = String.format("%.1f s / %.1f s", (float) tick / 20, (float) totalTick / 20);
+        } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1000) {
+            //只有当启用了显示小数点且配方耗时超过 1000 tick 才会显示小数点
+            progressStr = String.format("%.2f", progress) + "%";
+        } else {
+            progressStr = String.format("%.0f", progress) + "%";
+        }
+
+        IProbeInfo progressLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
+        progressLine.text("{*top.recipe.progress*}:  ");
+        progressLine.progress((int) progress, 100, probeInfo.defaultProgressStyle()
+                .prefix(progressStr)
+                .filledColor(progressBarFilledColor)
+                .alternateFilledColor(progressBarAlternateFilledColor)
+                .borderColor(progressBarBorderColor)
+                .backgroundColor(ModIntegrationTOP.recipeProgressBarBackgroundColor)
+                .numberFormat(NumberFormat.NONE)
+        );
     }
 
 }

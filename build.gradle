@@ -2,7 +2,7 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.+'
 }
 
-version = "1.12.2-1.11.1-r25-dev"
+version = "1.12.2-1.11.1-r26-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -88,6 +88,7 @@ dependencies {
     compileOnly "curse.maven:Mekanism-268560:2835175"
     compileOnly "curse.maven:industrialcraft-2-242638:3078604"
     compileOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
+    compileOnly "curse.maven:flux-networks-248020:3178199"
 
 }
 

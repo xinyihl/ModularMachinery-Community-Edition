@@ -16,12 +16,14 @@ import hellfirepvp.modularmachinery.common.container.*;
 import hellfirepvp.modularmachinery.common.crafting.IntegrationTypeHelper;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterRegistry;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.data.ModDataHolder;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationCrafttweaker;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEvents;
+import hellfirepvp.modularmachinery.common.integration.fluxnetworks.ModIntegrationFluxNetworks;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
@@ -78,15 +80,23 @@ public class CommonProxy implements IGuiHandler {
     }
 
     private static void checkThirdPartyServer() {
-        try {
-            Class.forName("catserver.server.CatServer");
+        if (isClassExist("catserver.server.CatServer") || isClassExist("com.mohistmc.MohistMC")) {
             ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
             ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
             ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
             ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
             ModularMachinery.pluginServerCompatibleMode = true;
-        } catch (Exception e) {
+        } else {
             ModularMachinery.pluginServerCompatibleMode = false;
+        }
+    }
+
+    private static boolean isClassExist(String className) {
+        try {
+            Class.forName(className);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -103,15 +113,20 @@ public class CommonProxy implements IGuiHandler {
         if (Mods.CRAFTTWEAKER.isPresent()) {
             MinecraftForge.EVENT_BUS.register(new ModIntegrationCrafttweaker());
         }
+        if (Mods.FLUX_NETWORKS.isPresent() && Config.enableFluxNetworksIntegration) {
+            ModIntegrationFluxNetworks.preInit();
+            ModularMachinery.log.info("[ModularMachinery-CE] Flux Networks integration is enabled! Lets your network to transmit more power!");
+        }
 
         MachineRegistry.preloadMachines();
 
         MinecraftForge.EVENT_BUS.register(AssemblyEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
+
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         ModularMachinery.EXECUTE_MANAGER.init();
         checkThirdPartyServer();
-        ModularMachinery.log.info(String.format("[ModularMachinery] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.FORK_JOIN_POOL.getParallelism()));
+        ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.FORK_JOIN_POOL.getParallelism()));
     }
 
     public void init() {
@@ -133,6 +148,7 @@ public class CommonProxy implements IGuiHandler {
 
         if (Mods.TOP.isPresent()) {
             ModIntegrationTOP.registerProvider();
+            ModularMachinery.log.info("[ModularMachinery-CE] TheOneProbe integration is enabled! Stop looking at the dark controller gui!");
         }
     }
 
