@@ -51,7 +51,7 @@ public class MMEnergyHandler implements ITileEnergyHandler {
         TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
         long remainingCapacity = energyHatch.getRemainingCapacity();
         if (simulate) {
-            return amount - remainingCapacity;
+            return Math.min(remainingCapacity, amount);
         }
 
         if (remainingCapacity < amount) {
