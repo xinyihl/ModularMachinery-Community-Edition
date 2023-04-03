@@ -151,6 +151,9 @@ public class IOInventory implements IItemHandlerModifiable {
         ItemStack beInserted = willBeInserted;
         for (EnumFacing facing : EnumFacing.VALUES) {
             BlockPos offset = owner.getPos().offset(facing);
+            if (owner.getWorld().isBlockLoaded(offset)) {
+                continue;
+            }
             TileEntity te = owner.getWorld().getTileEntity(offset);
             if (te == null || te instanceof TileItemBus) {
                 continue;

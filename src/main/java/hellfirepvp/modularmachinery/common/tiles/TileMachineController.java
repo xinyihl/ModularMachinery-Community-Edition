@@ -258,7 +258,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (this.craftingStatus.isCrafting()) {
             onTick();
             if (this.activeRecipe.isCompleted()) {
-                onFinished();
+                if (ModularMachinery.pluginServerCompatibleMode) {
+                    ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::onFinished);
+                } else {
+                    onFinished();
+                }
             }
         } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
             this.activeRecipe = null;
