@@ -8,6 +8,7 @@ command.modularmachinery.get_blueprint.player_only=§cThis command can only be e
 command.modularmachinery.get_blueprint.not_found=The machine with the registered name %s was not found!
 command.modularmachinery.get_blueprint.success=Blueprints have been given.
 command.modularmachinery.reload=/mm-reload
+command.modularmachinery.reload_client=/mm-reload_client
 command.modularmachinery.performance_report=/mm-performance_report [reset]
 command.modularmachinery.performance_report.title=Modular Machinery - Concurrent Performance Reporting (%s Executions Counted)
 command.modularmachinery.performance_report.reset=Performance report has been reset.

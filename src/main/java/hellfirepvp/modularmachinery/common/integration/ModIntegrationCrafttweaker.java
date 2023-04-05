@@ -62,11 +62,13 @@ public class ModIntegrationCrafttweaker {
         // Reset RecipeAdapterIncId
         RegistriesMM.ADAPTER_REGISTRY.getValuesCollection().forEach(RecipeAdapter::resetIncId);
 
-        // Reload JSON Machine
         for (DynamicMachine loadedMachine : MachineRegistry.getLoadedMachines()) {
             loadedMachine.getMachineEventHandlers().clear();
             loadedMachine.getSmartInterfaceTypes().clear();
         }
+        // Reload JSON Machine
+        MachineRegistry.preloadMachines();
+        // Reload All Machine
         MachineRegistry.reloadMachine(MachineRegistry.loadMachines(null));
         sender.sendMessage(new TextComponentTranslation(
                 "message.reloaded.machines", MachineRegistry.getLoadedMachines().size()));

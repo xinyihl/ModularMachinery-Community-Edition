@@ -408,8 +408,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         this.context.finishCrafting();
 
-        this.activeRecipe.reset();
-        this.activeRecipe.setMaxParallelism(getMaxParallelism());
+        this.activeRecipe = new ActiveMachineRecipe(this.activeRecipe.getRecipe(), getMaxParallelism());
         this.context = createContext(this.activeRecipe);
         tryStartRecipe(context);
     }
