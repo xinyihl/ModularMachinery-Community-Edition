@@ -13,7 +13,6 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
 
@@ -43,13 +42,12 @@ public class CommandSyntax extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        EntityPlayerMP player = getCommandSenderAsPlayer(sender);
-        player.sendMessage(new TextComponentString("Testing Machines:"));
+        sender.sendMessage(new TextComponentString("Testing Machines:"));
         MachineRegistry.preloadMachines();
-        MachineRegistry.loadMachines(player);
-        player.sendMessage(new TextComponentString(""));
-        player.sendMessage(new TextComponentString("Testing Recipes:"));
-        RecipeRegistry.getRegistry().loadRecipeRegistry(player, false);
+        MachineRegistry.loadMachines(sender);
+        sender.sendMessage(new TextComponentString(""));
+        sender.sendMessage(new TextComponentString("Testing Recipes:"));
+        RecipeRegistry.getRegistry().loadRecipeRegistry(sender, false);
     }
 
 }

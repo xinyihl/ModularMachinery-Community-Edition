@@ -86,6 +86,13 @@ public class BlockArray {
         this.traitNum = other.traitNum;
     }
 
+    public void overwrite(BlockArray other) {
+        this.pattern = new HashMap<>(other.pattern);
+        this.min = new Vec3i(other.min.getX(), other.min.getY(), other.min.getZ());
+        this.max = new Vec3i(other.max.getX(), other.max.getY(), other.max.getZ());
+        this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+    }
+
     public void addBlock(int x, int y, int z, @Nonnull BlockInformation info) {
         addBlock(new BlockPos(x, y, z), info);
     }

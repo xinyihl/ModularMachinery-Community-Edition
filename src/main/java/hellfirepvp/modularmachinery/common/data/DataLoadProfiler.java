@@ -9,7 +9,7 @@
 package hellfirepvp.modularmachinery.common.data;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.util.text.TextComponentString;
 
 import javax.annotation.Nullable;
@@ -34,7 +34,7 @@ public class DataLoadProfiler {
         return sl;
     }
 
-    public void printLines(@Nullable EntityPlayer additionalReceiver) {
+    public void printLines(@Nullable ICommandSender additionalReceiver) {
         for (StatusLine sl : statusLines) {
             String out = sl.toString();
             ModularMachinery.log.info(out);

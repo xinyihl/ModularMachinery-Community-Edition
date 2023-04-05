@@ -44,7 +44,7 @@ import java.util.*;
 public class DynamicMachine extends AbstractMachine {
     private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
-    private final HashMap<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
+    private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
 
     public DynamicMachine(String registryName) {
@@ -53,6 +53,10 @@ public class DynamicMachine extends AbstractMachine {
 
     public boolean hasSmartInterfaceType(String type) {
         return smartInterfaces.containsKey(type);
+    }
+
+    public Map<String, SmartInterfaceType> getSmartInterfaceTypes() {
+        return smartInterfaces;
     }
 
     public SmartInterfaceType getSmartInterfaceType(String type) {
@@ -143,9 +147,15 @@ public class DynamicMachine extends AbstractMachine {
     }
 
     public void mergeFrom(DynamicMachine another) {
+        smartInterfaces.clear();
         smartInterfaces.putAll(another.smartInterfaces);
+
+        modifiers.clear();
         modifiers.putAll(another.modifiers);
-        pattern = another.pattern;
+
+        pattern.overwrite(another.pattern);
+
+        machineEventHandlers.clear();
         machineEventHandlers.putAll(another.machineEventHandlers);
     }
 

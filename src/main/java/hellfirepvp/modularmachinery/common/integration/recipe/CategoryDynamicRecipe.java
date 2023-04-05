@@ -41,20 +41,29 @@ import java.util.stream.Collectors;
  */
 public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapper> {
 
-    final int realHeight;
     final LinkedList<RecipeLayoutPart<?>> inputComponents = Lists.newLinkedList();
     final LinkedList<RecipeLayoutPart<?>> outputComponents = Lists.newLinkedList();
     private final DynamicMachine machine;
     private final String category;
     private final String title;
-    private final IDrawable sizeEmptyDrawable;
+    int realHeight;
     Rectangle rectangleProcessArrow;
+    private IDrawable sizeEmptyDrawable;
     private Point offsetProcessArrow;
 
     public CategoryDynamicRecipe(DynamicMachine machine) {
         this.machine = machine;
         this.category = ModIntegrationJEI.getCategoryStringFor(machine);
         this.title = machine.getLocalizedName();
+
+        Point maxPoint = buildRecipeComponents();
+        this.realHeight = maxPoint.y;
+        this.sizeEmptyDrawable = ModIntegrationJEI.jeiHelpers.getGuiHelper().createBlankDrawable(maxPoint.x, this.realHeight);
+    }
+
+    public void reloadCategory() {
+        inputComponents.clear();
+        outputComponents.clear();
 
         Point maxPoint = buildRecipeComponents();
         this.realHeight = maxPoint.y;

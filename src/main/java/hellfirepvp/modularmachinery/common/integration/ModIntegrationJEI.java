@@ -34,10 +34,11 @@ import mezz.jei.api.ingredients.IModIngredientRegistration;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
 import mezz.jei.api.recipe.IStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Optional;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +53,9 @@ import java.util.Map;
 public class ModIntegrationJEI implements IModPlugin {
 
     public static final String CATEGORY_PREVIEW = "modularmachinery.preview";
-    private static final Map<DynamicMachine, CategoryDynamicRecipe> recipeCategories = new HashMap<>();
+    public static final List<StructurePreviewWrapper> PREVIEW_WRAPPERS = Lists.newArrayList();
+    private static final Map<DynamicMachine, CategoryDynamicRecipe> RECIPE_CATEGORIES = new HashMap<>();
+    private static final Map<DynamicMachine, Map<ResourceLocation, DynamicRecipeWrapper>> MACHINE_RECIPE_WRAPPERS = new HashMap<>();
     public static IStackHelper stackHelper;
     public static IJeiHelpers jeiHelpers;
     public static IIngredientRegistry ingredientRegistry;
@@ -63,7 +66,26 @@ public class ModIntegrationJEI implements IModPlugin {
     }
 
     public static CategoryDynamicRecipe getCategory(DynamicMachine machine) {
-        return recipeCategories.get(machine);
+        return RECIPE_CATEGORIES.get(machine);
+    }
+
+    public static void reloadRecipeWrappers() {
+        RECIPE_CATEGORIES.values().forEach(CategoryDynamicRecipe::reloadCategory);
+
+        for (DynamicMachine machine : MachineRegistry.getRegistry()) {
+            Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(machine);
+            Map<ResourceLocation, DynamicRecipeWrapper> wrappers = MACHINE_RECIPE_WRAPPERS.computeIfAbsent(machine, v -> new LinkedHashMap<>());
+            for (MachineRecipe recipe : recipes) {
+                DynamicRecipeWrapper wrapper = wrappers.get(recipe.getRegistryName());
+                if (wrapper != null) {
+                    wrapper.reloadWrapper(recipe);
+                }
+            }
+        }
+    }
+
+    public static void reloadPreviewWrappers() {
+        PREVIEW_WRAPPERS.forEach(StructurePreviewWrapper::flushContext);
     }
 
     @Override
@@ -105,7 +127,7 @@ public class ModIntegrationJEI implements IModPlugin {
 
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             CategoryDynamicRecipe recipe = new CategoryDynamicRecipe(machine);
-            recipeCategories.put(machine, recipe);
+            RECIPE_CATEGORIES.put(machine, recipe);
             registry.addRecipeCategories(recipe);
         }
     }
@@ -124,19 +146,19 @@ public class ModIntegrationJEI implements IModPlugin {
             registry.addRecipeCatalyst(stack, machineCategory);
         }
 
-        List<StructurePreviewWrapper> previews = Lists.newArrayList();
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-            previews.add(new StructurePreviewWrapper(machine));
+            PREVIEW_WRAPPERS.add(new StructurePreviewWrapper(machine));
         }
-        registry.addRecipes(previews, CATEGORY_PREVIEW);
+
+        registry.addRecipes(PREVIEW_WRAPPERS, CATEGORY_PREVIEW);
 
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(machine);
-            List<DynamicRecipeWrapper> recipeWrappers = new ArrayList<>();
+            Map<ResourceLocation, DynamicRecipeWrapper> wrappers = MACHINE_RECIPE_WRAPPERS.computeIfAbsent(machine, v -> new LinkedHashMap<>());
             for (MachineRecipe recipe : recipes) {
-                recipeWrappers.add(new DynamicRecipeWrapper(recipe));
+                wrappers.put(recipe.getRegistryName(), new DynamicRecipeWrapper(recipe));
             }
-            registry.addRecipes(recipeWrappers, getCategoryStringFor(machine));
+            registry.addRecipes(wrappers.values(), getCategoryStringFor(machine));
         }
 
         BlockController.MACHINE_CONTROLLERS.values().forEach(controller ->

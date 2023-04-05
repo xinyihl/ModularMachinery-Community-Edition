@@ -33,7 +33,6 @@ import java.util.Map;
  */
 public class DynamicMachineRecipeAdapter extends RecipeAdapter {
     private final DynamicMachine originalMachine;
-    private int incId = 0;
 
     public DynamicMachineRecipeAdapter(@Nonnull ResourceLocation registryName, DynamicMachine originalMachine) {
         super(registryName);

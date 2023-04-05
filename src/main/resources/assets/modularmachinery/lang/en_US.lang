@@ -2,17 +2,25 @@ itemGroup.modularmachinery=Modular Machinery Community Edition
 
 command.modularmachinery.syntax=/mm-syntax
 command.modularmachinery.hand=/mm-hand
-command.modularmachinery.performance_report=/mm-performance_report [reset]
 command.modularmachinery.hand.empty=Please hold an item to get the data from.
+command.modularmachinery.get_blueprint=/mm-get_blueprint <machineName>
+command.modularmachinery.get_blueprint.player_only=§cThis command can only be executed by the player.
+command.modularmachinery.get_blueprint.not_found=The machine with the registered name %s was not found!
+command.modularmachinery.get_blueprint.success=Blueprints have been given.
+command.modularmachinery.reload=/mm-reload
+command.modularmachinery.performance_report=/mm-performance_report [reset]
 command.modularmachinery.performance_report.title=Modular Machinery - Concurrent Performance Reporting (%s Executions Counted)
 command.modularmachinery.performance_report.reset=Performance report has been reset.
 command.modularmachinery.performance_report.total_executed=Total executed: %s
+command.modularmachinery.performance_report.tasks_avg_per_execution=Avg of tasks per execution: %s
+
 command.modularmachinery.performance_report.total_used_time=Total used time: %s ms
+command.modularmachinery.performance_report.used_time_avg_per_execution=Avg spent per execution: %.2f ms
+
 command.modularmachinery.performance_report.task_used_time=Parallel operation used time: %s ms
+
 command.modularmachinery.performance_report.task_used_time_avg=Parallel operation used time avg: %s ms
 command.modularmachinery.performance_report.used_time_avg=Single task used time average: %s µs
-command.modularmachinery.performance_report.used_time_avg_per_execution=Avg spent per execution: %.2f ms
-command.modularmachinery.performance_report.tasks_avg_per_execution=Avg of tasks per execution: %s
 
 gui.controller.blueprint=Blueprint Found: %s
 gui.controller.blueprint.none=None
@@ -82,6 +90,12 @@ message.assembly.tip.2=Modular Assembly: The machine is in the assembly queue!
 message.assembly.tip.3=Modular Assembly: Not enough blocks in inventory or blocked by blocks on the ground or no corresponding fluid bucket was found！
 message.assembly.tip.4=Modular Assembly: Not enough blocks for assembly.
 message.assembly.tip.5=Modular Assembly: Assembled successfully!
+
+message.reloading=Modular Machinery: Reloading!
+message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client!
+message.cleared.recipes=Modular Machinery: Cleared %s recipes.
+message.reloaded.recipes=Modular Machinery: Reloaded %s recipes.
+message.reloaded.machines=Modular Machinery: Reloaded %s machines.
 
 tooltip.machinery.empty=Empty
 

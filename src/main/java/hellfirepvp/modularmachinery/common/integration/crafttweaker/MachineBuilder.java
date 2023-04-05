@@ -71,7 +71,6 @@ public class MachineBuilder {
     @ZenMethod
     public static void registerMachine(String registryName, String localizedName) {
         if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
-            CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
             return;
         }
         MachineBuilder builder = new MachineBuilder(registryName, localizedName);
@@ -91,7 +90,6 @@ public class MachineBuilder {
     @ZenMethod
     public static void registerMachine(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
         if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
-            CraftTweakerAPI.logError("[ModularMachinery] " + registryName + " is already exists!");
             return;
         }
         MachineBuilder builder = new MachineBuilder(registryName, localizedName, requiresBlueprint, failureAction, color);

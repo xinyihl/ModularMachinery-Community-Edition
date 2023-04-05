@@ -11,7 +11,7 @@ package hellfirepvp.modularmachinery.common.machine;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.data.DataLoadProfiler;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.ProgressManager;
@@ -71,7 +71,7 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
         }
     }
 
-    public static Collection<DynamicMachine> loadMachines(@Nullable EntityPlayer player) {
+    public static Collection<DynamicMachine> loadMachines(@Nullable ICommandSender sender) {
         ProgressManager.ProgressBar barMachinery = ProgressManager.push("MachineRegistry", 3);
         barMachinery.step("Discovering Files");
         DataLoadProfiler profiler = new DataLoadProfiler();
@@ -116,13 +116,24 @@ public class MachineRegistry implements Iterable<DynamicMachine> {
             }
         }
         ProgressManager.pop(barMachinery);
-        profiler.printLines(player);
+        profiler.printLines(sender);
         return Collections.unmodifiableList(found);
     }
 
     public static void registerMachines(Collection<DynamicMachine> machines) {
         for (DynamicMachine machine : machines) {
             LOADED_MACHINERY.put(machine.getRegistryName(), machine);
+        }
+    }
+
+    public static void reloadMachine(Collection<DynamicMachine> machines) {
+        for (DynamicMachine machine : machines) {
+            DynamicMachine loaded = LOADED_MACHINERY.get(machine.getRegistryName());
+            if (loaded != null) {
+                loaded.mergeFrom(machine);
+            } else {
+                LOADED_MACHINERY.put(machine.getRegistryName(), machine);
+            }
         }
     }
 

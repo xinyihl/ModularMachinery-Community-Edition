@@ -37,8 +37,6 @@ import java.util.Map;
  */
 public class AdapterMinecraftFurnace extends RecipeAdapter {
 
-    private int incId = 0;
-
     public AdapterMinecraftFurnace() {
         super(new ResourceLocation("minecraft", "furnace"));
     }

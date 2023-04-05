@@ -16,7 +16,7 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapterAccesso
 import hellfirepvp.modularmachinery.common.data.DataLoadProfiler;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.ProgressManager;
@@ -63,7 +63,7 @@ public class RecipeRegistry {
         return RECIPE_REGISTRY.get(key);
     }
 
-    private static Map<DynamicMachine, List<MachineRecipe>> loadAdapters(@Nullable EntityPlayer player,
+    private static Map<DynamicMachine, List<MachineRecipe>> loadAdapters(@Nullable ICommandSender sender,
                                                                          Map<ResourceLocation, MachineRecipe> sharedLoadRegistry,
                                                                          List<RecipeAdapterBuilder> earlyRecipeAdapters) {
         ProgressManager.ProgressBar barRecipes = ProgressManager.push("RecipeRegistry - Adapters", 3);
@@ -94,7 +94,7 @@ public class RecipeRegistry {
 
         Map<DynamicMachine, List<MachineRecipe>> validRecipes = loadAndValidateRecipes(recipes, profiler, sharedLoadRegistry);
 
-        profiler.printLines(player);
+        profiler.printLines(sender);
         ProgressManager.pop(barRecipes);
         return validRecipes;
     }
@@ -178,20 +178,24 @@ public class RecipeRegistry {
         }
     }
 
-    public void loadRecipeRegistry(@Nullable EntityPlayer player, boolean doRegister) {
+    public static int registeredRecipeCount() {
+        return RECIPE_REGISTRY.size();
+    }
+
+    public void loadRecipeRegistry(@Nullable ICommandSender sender, boolean doRegister) {
         Map<ResourceLocation, MachineRecipe> sharedLoadRegistry = new HashMap<>();
 
-        Map<DynamicMachine, List<MachineRecipe>> recipes = loadRecipes(player, sharedLoadRegistry);
+        Map<DynamicMachine, List<MachineRecipe>> recipes = loadRecipes(sender, sharedLoadRegistry);
         if (doRegister) {
             registerRecipes(recipes);
         }
-        recipes = loadAdapters(player, sharedLoadRegistry, earlyRecipeAdapters);
+        recipes = loadAdapters(sender, sharedLoadRegistry, earlyRecipeAdapters);
         if (doRegister) {
             registerRecipes(recipes);
         }
     }
 
-    private Map<DynamicMachine, List<MachineRecipe>> loadRecipes(@Nullable EntityPlayer player, Map<ResourceLocation, MachineRecipe> sharedLoadRegistry) {
+    private Map<DynamicMachine, List<MachineRecipe>> loadRecipes(@Nullable ICommandSender player, Map<ResourceLocation, MachineRecipe> sharedLoadRegistry) {
         ProgressManager.ProgressBar barRecipes = ProgressManager.push("RecipeRegistry - Recipes", 3);
         barRecipes.step("Discovering Files");
         DataLoadProfiler profiler = new DataLoadProfiler();
@@ -238,4 +242,10 @@ public class RecipeRegistry {
         this.earlyRecipeAdapters.clear();
     }
 
+    public void clearAllRecipes() {
+        RECIPE_REGISTRY.clear();
+        REGISTRY_RECIPE_BY_MACHINE.clear();
+        this.earlyRecipes.clear();
+        this.earlyRecipeAdapters.clear();
+    }
 }

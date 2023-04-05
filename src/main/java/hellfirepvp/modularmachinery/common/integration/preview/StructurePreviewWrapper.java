@@ -193,6 +193,10 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         return false;
     }
 
+    public void flushContext() {
+        this.dynamnicContext = DynamicMachineRenderContext.createContext(machine);
+    }
+
     @Override
     public void drawInfo(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         GuiScreen current = Minecraft.getMinecraft().currentScreen;

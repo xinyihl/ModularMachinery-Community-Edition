@@ -32,6 +32,7 @@ import java.util.Map;
 public abstract class RecipeAdapter implements IForgeRegistryEntry<RecipeAdapter> {
 
     private final ResourceLocation registryName;
+    protected int incId = 0;
 
     public RecipeAdapter(@Nonnull ResourceLocation registryName) {
         this.registryName = registryName;
@@ -64,6 +65,10 @@ public abstract class RecipeAdapter implements IForgeRegistryEntry<RecipeAdapter
     public MachineRecipe createRecipeShell(ResourceLocation uniqueRecipeName, ResourceLocation owningMachineName, int tickTime, int priority, boolean voidPerTickFailure) {
         return new MachineRecipe("internal/adapter/" + registryName.getNamespace() + "/" + registryName.getPath(),
                 uniqueRecipeName, owningMachineName, tickTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
+    }
+
+    public void resetIncId() {
+        incId = 0;
     }
 
     public static void addAdditionalRequirements(MachineRecipe recipe,

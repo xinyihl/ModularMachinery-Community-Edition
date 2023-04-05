@@ -28,7 +28,6 @@ import java.util.Map;
 public class AdapterNCOChemicalReactor extends RecipeAdapter {
     public static final int WORK_TIME = 400;
     public static final int BASE_ENERGY_USAGE = 5;
-    private int incId = 0;
 
     public AdapterNCOChemicalReactor() {
         super(new ResourceLocation("nuclearcraft", "chemical_reactor"));

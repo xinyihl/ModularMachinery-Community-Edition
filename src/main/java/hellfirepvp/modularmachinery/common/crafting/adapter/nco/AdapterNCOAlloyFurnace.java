@@ -6,8 +6,8 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -30,7 +30,6 @@ import java.util.Map;
 public class AdapterNCOAlloyFurnace extends RecipeAdapter {
     public static final int WORK_TIME = 400;
     public static final int BASE_ENERGY_USAGE = 10;
-    private int incId = 0;
 
     public AdapterNCOAlloyFurnace() {
         super(new ResourceLocation("nuclearcraft", "alloy_furnace"));

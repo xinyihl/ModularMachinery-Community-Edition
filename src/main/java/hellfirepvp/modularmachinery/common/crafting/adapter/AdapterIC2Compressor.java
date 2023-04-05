@@ -23,7 +23,6 @@ import java.util.Map;
 
 public class AdapterIC2Compressor extends RecipeAdapter {
     public static final int workTime = 300;
-    private int incId = 0;
 
     public AdapterIC2Compressor() {
         super(new ResourceLocation("ic2", "te_compressor"));

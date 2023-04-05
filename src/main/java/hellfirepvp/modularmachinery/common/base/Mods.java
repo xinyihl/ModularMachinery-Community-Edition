@@ -29,6 +29,7 @@ public enum Mods {
     NUCLEARCRAFT_OVERHAULED("nuclearcraft"),
     RESOURCELOADER("resourceloader"),
     FLUX_NETWORKS("fluxnetworks"),
+    ZEN_UTILS("zenutils"),
     ;
 
     public final String modid;

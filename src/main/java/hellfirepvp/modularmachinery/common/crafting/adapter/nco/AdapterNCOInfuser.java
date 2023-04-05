@@ -34,7 +34,6 @@ import java.util.Map;
 public class AdapterNCOInfuser extends RecipeAdapter {
     public static final int WORK_TIME = 600;
     public static final int BASE_ENERGY_USAGE = 10;
-    private int incId = 0;
 
     public AdapterNCOInfuser() {
         super(new ResourceLocation("nuclearcraft", "infuser"));

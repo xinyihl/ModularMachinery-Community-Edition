@@ -30,6 +30,7 @@ public class BlockArrayCache {
     }
 
     public static void buildCache(Collection<DynamicMachine> machines) {
+        BLOCK_ARRAY_CACHE_MAP.clear();
         long start = System.currentTimeMillis();
         ModularMachinery.log.info("Building Machine Structure Cache...");
         machines.parallelStream().forEach((machine -> {

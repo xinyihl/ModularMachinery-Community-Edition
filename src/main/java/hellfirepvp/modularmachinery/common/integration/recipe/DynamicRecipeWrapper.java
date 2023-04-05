@@ -40,10 +40,26 @@ import java.util.stream.Collectors;
  */
 public class DynamicRecipeWrapper implements IRecipeWrapper {
 
-    public final Map<IOType, Map<Class<?>, List<ComponentRequirement<?, ?>>>> finalOrderedComponents = new HashMap<>();
-    private final MachineRecipe recipe;
+    public Map<IOType, Map<Class<?>, List<ComponentRequirement<?, ?>>>> finalOrderedComponents = new HashMap<>();
+    private MachineRecipe recipe;
 
     public DynamicRecipeWrapper(MachineRecipe recipe) {
+        this.recipe = recipe;
+
+        for (IOType type : IOType.values()) {
+            finalOrderedComponents.put(type, new HashMap<>());
+        }
+        for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
+            ComponentRequirement.JEIComponent<?> comp = req.provideJEIComponent();
+            if (comp == null) {
+                continue;
+            }
+            finalOrderedComponents.get(req.getActionType())
+                    .computeIfAbsent(comp.getJEIRequirementClass(), clazz -> new LinkedList<>()).add(req);
+        }
+    }
+
+    public void reloadWrapper(MachineRecipe recipe) {
         this.recipe = recipe;
 
         for (IOType type : IOType.values()) {

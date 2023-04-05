@@ -10,9 +10,12 @@ package hellfirepvp.modularmachinery;
 
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.command.CommandGetBluePrint;
 import hellfirepvp.modularmachinery.common.command.CommandHand;
 import hellfirepvp.modularmachinery.common.command.CommandPerformanceReport;
 import hellfirepvp.modularmachinery.common.command.CommandSyntax;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.command.CommandCTReload;
 import hellfirepvp.modularmachinery.common.network.*;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -96,7 +99,12 @@ public class ModularMachinery {
         //Cmd registration
         event.registerServerCommand(new CommandSyntax());
         event.registerServerCommand(new CommandHand());
+        event.registerServerCommand(new CommandGetBluePrint());
         event.registerServerCommand(new CommandPerformanceReport());
+
+        if (Mods.ZEN_UTILS.isPresent()) {
+            event.registerServerCommand(new CommandCTReload());
+        }
     }
 
 }
