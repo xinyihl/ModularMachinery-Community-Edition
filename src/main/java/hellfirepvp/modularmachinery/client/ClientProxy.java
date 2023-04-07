@@ -172,7 +172,9 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void postInit() {
         super.postInit();
-        ClientCommandHandler.instance.registerCommand(new CommandCTReloadClient());
+        if (Mods.ZEN_UTILS.isPresent()) {
+            ClientCommandHandler.instance.registerCommand(new CommandCTReloadClient());
+        }
     }
 
     @Override
