@@ -20,6 +20,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import youyihj.zenutils.api.reload.ScriptReloadEvent;
@@ -78,10 +79,13 @@ public class ModIntegrationCrafttweaker {
     @Optional.Method(modid = "zenutils")
     public void onScriptsReloaded(ScriptReloadEvent.Post event) {
         ICommandSender sender = event.getRequester();
+        boolean isServer = FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer();
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
         // Flush the context to preview the changed structure.
-        ModIntegrationJEI.reloadPreviewWrappers();
+        if (!isServer) {
+            ModIntegrationJEI.reloadPreviewWrappers();
+        }
 
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
                 BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
@@ -90,7 +94,9 @@ public class ModIntegrationCrafttweaker {
         MMEvents.registryAll();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
-        ModIntegrationJEI.reloadRecipeWrappers();
+        if (!isServer) {
+            ModIntegrationJEI.reloadRecipeWrappers();
+        }
         future.join();
 
         sender.sendMessage(new TextComponentTranslation(
