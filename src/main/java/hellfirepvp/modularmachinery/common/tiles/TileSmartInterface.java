@@ -1,6 +1,9 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
+import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -88,6 +91,26 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
         }
     }
 
+    public static void onDataUpdate(TileSmartInterface owner, SmartInterfaceData newData) {
+        TileEntity te = owner.getWorld().getTileEntity(newData.getPos());
+        if (!(te instanceof TileMachineController)) {
+            return;
+        }
+        TileMachineController ctrl = (TileMachineController) te;
+
+        if (ctrl.getFoundMachine() == null) {
+            return;
+        }
+
+        List<IEventHandler<MachineEvent>> handlerList = ctrl.getFoundMachine().getMachineEventHandlers(SmartInterfaceUpdateEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return;
+
+        for (IEventHandler<MachineEvent> handler : handlerList) {
+            SmartInterfaceUpdateEvent event = new SmartInterfaceUpdateEvent(ctrl, owner.getPos(), newData);
+            handler.handle(event);
+        }
+    }
+
     public static class SmartInterfaceProvider extends MachineComponent<SmartInterfaceProvider> {
         private final TileSmartInterface parent;
         private final List<SmartInterfaceData> boundData;
@@ -132,7 +155,11 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
                     return;
                 }
             }
-            this.boundData.add(new SmartInterfaceData(pos, parent, type, defaultValue));
+
+            SmartInterfaceData newData = new SmartInterfaceData(pos, parent, type, defaultValue);
+            this.boundData.add(newData);
+            onDataUpdate(this.parent, newData);
+
             this.parent.markForUpdateSync();
         }
 

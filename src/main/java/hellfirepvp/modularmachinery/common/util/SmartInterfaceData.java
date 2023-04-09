@@ -35,30 +35,46 @@ public class SmartInterfaceData {
         return pos;
     }
 
+    /**
+     * 返回此数据对应控制器所在的位置。
+     */
     @ZenGetter("pos")
     public IBlockPos getIPos() {
         return CraftTweakerMC.getIBlockPos(pos);
     }
 
+
     public ResourceLocation getParent() {
         return parent;
     }
 
+    /**
+     * 获取此数据的机械注册名。
+     */
     @ZenGetter("parentMachineName")
     public String getParentMachineName() {
         return parent.getNamespace();
     }
 
+    /**
+     * 获取此数据的类型。
+     */
     @ZenGetter("interfaceType")
     public String getType() {
         return type;
     }
 
+    /**
+     * 获取数据值。
+     */
     @ZenGetter("value")
     public float getValue() {
         return value;
     }
 
+    /**
+     * 设置数据值。
+     */
     @ZenSetter("value")
     public void setValue(float value) {
         this.value = value;

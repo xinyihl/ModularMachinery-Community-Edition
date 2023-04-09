@@ -458,25 +458,11 @@ public class BlockArray {
                 for (IBlockState applicable : descriptor.applicable) {
                     Block type = applicable.getBlock();
                     int meta = type.getMetaFromState(applicable);
-                    if (!type.equals(state.getBlock()) || meta != atMeta) {
+                    if (!type.equals(atBlock) || meta != atMeta) {
                         continue;
                     }
 
-                    if (nbtChecker != null) {
-                        TileEntity te = world.getTileEntity(at);
-                        if (te != null) {
-                            NBTTagCompound cmp = new NBTTagCompound();
-                            te.writeToNBT(cmp);
-                            if (!nbtChecker.isMatch(
-                                    CraftTweakerMC.getIWorld(world),
-                                    CraftTweakerMC.getIBlockPos(at),
-                                    CraftTweakerMC.getBlockState(applicable),
-                                    CraftTweakerMC.getIData(cmp)))
-                            {
-                                return false;
-                            }
-                        }
-                    }
+                    if (!isNBTCheckerMatch(world, at, applicable)) return false;
 
                     if (matchingTag != null) {
                         TileEntity te = world.getTileEntity(at);
@@ -492,6 +478,24 @@ public class BlockArray {
             return false;
         }
 
+        private boolean isNBTCheckerMatch(World world, BlockPos at, IBlockState applicable) {
+            if (nbtChecker == null) {
+                return true;
+            }
+
+            TileEntity te = world.getTileEntity(at);
+            if (te == null) {
+                return false;
+            }
+
+            NBTTagCompound cmp = new NBTTagCompound();
+            te.writeToNBT(cmp);
+            return nbtChecker.isMatch(
+                    CraftTweakerMC.getIWorld(world),
+                    CraftTweakerMC.getIBlockPos(at),
+                    CraftTweakerMC.getBlockState(applicable),
+                    CraftTweakerMC.getIData(cmp));
+        }
     }
 
     public static class TileInstantiateContext {

@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
@@ -233,6 +234,15 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder addGUIRenderHandler(IEventHandler<ControllerGUIRenderEvent> function) {
         machine.addMachineEventHandler(ControllerGUIRenderEvent.class, function);
+        return this;
+    }
+
+    /**
+     * 添加智能数据接口更新事件监听器
+     */
+    @ZenMethod
+    public MachineBuilder addSmartInterfaceUpdateHandler(IEventHandler<SmartInterfaceUpdateEvent> function) {
+        machine.addMachineEventHandler(SmartInterfaceUpdateEvent.class, function);
         return this;
     }
 

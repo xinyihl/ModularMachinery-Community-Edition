@@ -826,6 +826,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.foundParallelControllers.clear();
         for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
             BlockPos realPos = getPos().add(potentialPosition);
+            IBlockState blockState = getWorld().getBlockState(realPos);
+            if (!blockState.getBlock().hasTileEntity(blockState)) {
+                continue;
+            }
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {
                 continue;

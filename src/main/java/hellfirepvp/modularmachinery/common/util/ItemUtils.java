@@ -12,7 +12,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import io.netty.util.collection.IntObjectHashMap;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -380,7 +380,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryFuel(IItemHandlerModifiable handler, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (TileEntityFurnace.getItemBurnTime(s) > 0 && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -391,7 +391,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -406,7 +406,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
-        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -421,7 +421,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -432,7 +432,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
-        Map<Integer, ItemStack> stacksOut = new Int2ObjectArrayMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(controller, CraftTweakerMC.getIItemStack(s))) {

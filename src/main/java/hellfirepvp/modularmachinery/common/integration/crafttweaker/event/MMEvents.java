@@ -8,6 +8,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import net.minecraft.util.ResourceLocation;
@@ -52,6 +53,18 @@ public class MMEvents {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
                 machine.addMachineEventHandler(ControllerGUIRenderEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onSmartInterfaceUpdate(String machineRegistryName, IEventHandler<SmartInterfaceUpdateEvent> function) {
+        WAIT_FOR_REGISTER_LIST.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(SmartInterfaceUpdateEvent.class, function);
             } else {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }

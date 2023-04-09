@@ -1,6 +1,5 @@
 package hellfirepvp.modularmachinery.common.command;
 
-import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -44,10 +43,10 @@ public class CommandPerformanceReport extends CommandBase {
         long taskUsedTimeAvg = totalExecuted == 0 ? 0 : (taskUsedTime / totalExecuted) / 1000;
         long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
 
-        sender.sendMessage(new TextComponentTranslation(langKey + ".title", executedCount));
+        sender.sendMessage(new TextComponentTranslation(langKey + ".title", MiscUtils.formatDecimal(executedCount)));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(langKey + ".total_executed", MiscUtils.formatDecimal(TaskExecutor.totalExecuted)));
+        sender.sendMessage(new TextComponentTranslation(langKey + ".total_executed", MiscUtils.formatDecimal(totalExecuted)));
         sender.sendMessage(new TextComponentTranslation(langKey + ".tasks_avg_per_execution", executedAvgPerExecution));
         sender.sendMessage(new TextComponentString(""));
 
