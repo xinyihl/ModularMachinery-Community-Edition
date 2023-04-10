@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import hellfirepvp.modularmachinery.ModularMachinery;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockInformationVariable;
@@ -39,7 +39,7 @@ public class MachineLoader {
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(DynamicMachine.class, new DynamicMachine.MachineDeserializer())
             .registerTypeHierarchyAdapter(BlockInformationVariable.class, new BlockInformationVariable.Deserializer())
-            .registerTypeHierarchyAdapter(ModifierReplacement.class, new ModifierReplacement.Deserializer())
+            .registerTypeHierarchyAdapter(SingleBlockModifierReplacement.class, new SingleBlockModifierReplacement.Deserializer())
             .registerTypeHierarchyAdapter(RecipeModifier.class, new RecipeModifier.Deserializer())
             .create();
     private static final Gson PRELOAD_GSON = new GsonBuilder()

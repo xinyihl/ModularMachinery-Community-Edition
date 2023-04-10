@@ -9,6 +9,8 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -129,10 +131,25 @@ public interface IMachineController {
 
     /**
      * 获取控制器绑定的所有智能数据接口数据
-     * @return 一组智能数据接口的内部数据，如果没有则为空数组
+     * @return 一组智能数据接口的内部数据，如果没有则为空数组，但不会为 null
      */
     @ZenGetter("smartInterfaceDataList")
     SmartInterfaceData[] getSmartInterfaceDataList();
 
+    /**
+     * 获取控制器检测到的配方修改器升级
+     * @return 返回找到的所有升级，如果没有则为空数组，但不会为 null
+     */
+    @ZenGetter("foundModifiers")
+    String[] getFoundModifierReplacements();
+
+    /**
+     * 获取机械中的某个 modifierReplacement 是否存在
+     */
+    @ZenMethod
+    boolean hasModifierReplacement(String modifierName);
+
     TileMachineController getController();
+    World getWorld();
+    BlockPos getPos();
 }

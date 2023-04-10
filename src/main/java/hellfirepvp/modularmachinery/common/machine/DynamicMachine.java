@@ -17,7 +17,9 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
@@ -42,10 +44,11 @@ import java.util.*;
  * Date: 27.06.2017 / 13:57
  */
 public class DynamicMachine extends AbstractMachine {
-    private final Map<BlockPos, List<ModifierReplacement>> modifiers = new HashMap<>();
+    private final Map<BlockPos, List<SingleBlockModifierReplacement>> modifiers = new HashMap<>();
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
     private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
-    private TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
+    private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
+    private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
 
     public DynamicMachine(String registryName) {
         super(registryName);
@@ -105,17 +108,21 @@ public class DynamicMachine extends AbstractMachine {
         return pattern;
     }
 
-    public Map<BlockPos, List<ModifierReplacement>> getModifiers() {
+    public Map<BlockPos, List<SingleBlockModifierReplacement>> getModifiers() {
         return modifiers;
+    }
+
+    public List<MultiBlockModifierReplacement> getMultiBlockModifiers() {
+        return multiBlockModifiers;
     }
 
     @Nonnull
     public ModifierReplacementMap getModifiersAsMatchingReplacements() {
         ModifierReplacementMap infoMap = new ModifierReplacementMap();
         for (BlockPos pos : modifiers.keySet()) {
-            List<ModifierReplacement> replacements = modifiers.get(pos);
+            List<SingleBlockModifierReplacement> replacements = modifiers.get(pos);
             List<BlockArray.BlockInformation> informationList = new ArrayList<>();
-            for (ModifierReplacement replacement : replacements) {
+            for (SingleBlockModifierReplacement replacement : replacements) {
                 informationList.add(replacement.getBlockInformation());
             }
 
@@ -132,7 +139,7 @@ public class DynamicMachine extends AbstractMachine {
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe,
                                                TileMachineController controller,
                                                Collection<Tuple<MachineComponent<?>, ComponentSelectorTag>> taggedComponents,
-                                               Collection<ModifierReplacement> modifiers) {
+                                               Collection<RecipeModifier> modifiers) {
         if (!activeRecipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {
             throw new IllegalArgumentException("Tried to create context for a recipe that doesn't belong to the referenced machine!");
         }
@@ -140,7 +147,7 @@ public class DynamicMachine extends AbstractMachine {
         for (Tuple<MachineComponent<?>, ComponentSelectorTag> tpl : taggedComponents) {
             context.addComponent(tpl.getFirst(), tpl.getSecond());
         }
-        for (ModifierReplacement modifier : modifiers) {
+        for (RecipeModifier modifier : modifiers) {
             context.addModifier(modifier);
         }
         return context;
@@ -192,7 +199,7 @@ public class DynamicMachine extends AbstractMachine {
             return out;
         }
 
-        private static void addModifierWithPattern(DynamicMachine machine, ModifierReplacement mod, JsonObject part) throws JsonParseException {
+        private static void addModifierWithPattern(DynamicMachine machine, SingleBlockModifierReplacement mod, JsonObject part) throws JsonParseException {
             List<Integer> avX = new ArrayList<>();
             List<Integer> avY = new ArrayList<>();
             List<Integer> avZ = new ArrayList<>();
@@ -410,7 +417,7 @@ public class DynamicMachine extends AbstractMachine {
                     if (!modifier.isJsonObject()) {
                         throw new JsonParseException("Elements of 'modifiers' have to be objects!");
                     }
-                    addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), ModifierReplacement.class), modifier.getAsJsonObject());
+                    addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), SingleBlockModifierReplacement.class), modifier.getAsJsonObject());
                 }
             }
             return machine;

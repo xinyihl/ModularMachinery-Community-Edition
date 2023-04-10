@@ -8,10 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.machine;
 
+import crafttweaker.annotations.ZenRegister;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.util.math.BlockPos;
+import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -24,6 +26,8 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 04.03.2019 / 21:33
  */
+@ZenRegister
+@ZenClass("mods.modularmachinery.TaggedPositionBlockArray")
 public class TaggedPositionBlockArray extends BlockArray {
     public TaggedPositionBlockArray() {
     }

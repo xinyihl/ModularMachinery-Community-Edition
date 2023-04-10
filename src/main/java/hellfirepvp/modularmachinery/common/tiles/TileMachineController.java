@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import com.google.common.collect.Lists;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
@@ -35,12 +34,10 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
-import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
-import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
-import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
+import hellfirepvp.modularmachinery.common.tiles.base.*;
 import hellfirepvp.modularmachinery.common.util.*;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.block.state.IBlockState;
@@ -70,12 +67,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>Completely refactored community edition mechanical controller with powerful asynchronous logic and extremely low performance consumption.</p>
  * TODO: This class is too large, consider improving readability.
  */
-public class TileMachineController extends TileEntityRestrictedTick implements IMachineController, SelectiveUpdateTileEntity {
+public class TileMachineController extends hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController implements IMachineController, SelectiveUpdateTileEntity {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
-    private final Map<BlockPos, List<ModifierReplacement>> foundModifiers = new HashMap<>();
+    private final Map<String, List<RecipeModifier>> foundModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> customModifiers = new HashMap<>();
     private final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
     private final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
@@ -151,10 +148,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (isStructureFormed() && !ModularMachinery.pluginServerCompatibleMode && this.foundPattern.getPattern().size() >= 1000) {
             ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                 onMachineTick();
-                if (doStructureCheck() && isStructureFormed()) {
-                    if (activeRecipe != null || searchAndStartRecipe()) {
-                        doRecipeTick();
-                    }
+                if (!doStructureCheck() || !isStructureFormed()) {
+                    return;
+                }
+                if (activeRecipe != null || searchAndStartRecipe()) {
+                    doRecipeTick();
                 }
             });
             return;
@@ -408,7 +406,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
 
         this.context.finishCrafting();
 
-        this.activeRecipe = new ActiveMachineRecipe(this.activeRecipe.getRecipe(), getMaxParallelism());
+        this.activeRecipe = new ActiveMachineRecipe(this.activeRecipe.getRecipe(), isParallelized() ? 1 : getMaxParallelism());
         this.context = createContext(this.activeRecipe);
         tryStartRecipe(context);
     }
@@ -533,6 +531,16 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             }
         });
         return dataList.toArray(new SmartInterfaceData[0]);
+    }
+
+    @Override
+    public String[] getFoundModifierReplacements() {
+        return foundModifiers.keySet().toArray(new String[0]);
+    }
+
+    @Override
+    public boolean hasModifierReplacement(String modifierName) {
+        return foundModifiers.containsKey(modifierName);
     }
 
     @Override
@@ -722,7 +730,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         // First, check blueprint machine.
         DynamicMachine blueprint = getBlueprintMachine();
         if (blueprint != null) {
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(blueprint.getPattern().traitNum, controllerRotation), blueprint)) {
+            if (matchesRotation(BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation), blueprint)) {
                 onStructureFormed();
                 return true;
             }
@@ -734,7 +742,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
                 // ParentMachine needs blueprint, but controller not has that, end check.
                 return true;
             }
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(parentMachine.getPattern().traitNum, controllerRotation), parentMachine)) {
+            if (matchesRotation(BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation), parentMachine)) {
                 onStructureFormed();
                 return true;
             }
@@ -746,7 +754,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         // TODO It needs to be optimized, it takes up too much performance.
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             if (machine.isRequiresBlueprint()) continue;
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern().traitNum, controllerRotation), machine)) {
+            if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation), machine)) {
                 onStructureFormed();
                 break;
             }
@@ -824,12 +832,14 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
-        for (BlockPos potentialPosition : this.foundPattern.getPattern().keySet()) {
-            BlockPos realPos = getPos().add(potentialPosition);
-            IBlockState blockState = getWorld().getBlockState(realPos);
-            if (!blockState.getBlock().hasTileEntity(blockState)) {
+        for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry : this.foundPattern.getPattern().entrySet()) {
+            BlockArray.BlockInformation info = entry.getValue();
+            if (!info.hasTileEntity()) {
                 continue;
             }
+
+            BlockPos potentialPosition = entry.getKey();
+            BlockPos realPos = getPos().add(potentialPosition);
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {
                 continue;
@@ -852,6 +862,16 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
 
         updateModifiers();
+        updateMultiBlockModifiers();
+    }
+
+    private void updateMultiBlockModifiers() {
+        for (MultiBlockModifierReplacement mod : this.foundMachine.getMultiBlockModifiers()) {
+            if (!mod.matches(this)) {
+                return;
+            }
+            this.foundModifiers.put(mod.getModifierName(), mod.getModifiers());
+        }
     }
 
     private void updateModifiers() {
@@ -863,16 +883,15 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         }
 
         this.foundModifiers.clear();
-        for (Map.Entry<BlockPos, List<ModifierReplacement>> offsetModifiers : this.foundMachine.getModifiers().entrySet()) {
+        for (Map.Entry<BlockPos, List<SingleBlockModifierReplacement>> offsetModifiers : this.foundMachine.getModifiers().entrySet()) {
             BlockPos at = offsetModifiers.getKey();
             for (int i = 0; i < rotations; i++) {
                 at = new BlockPos(at.getZ(), at.getY(), -at.getX());
             }
             BlockPos realAt = this.getPos().add(at);
-            for (ModifierReplacement mod : offsetModifiers.getValue()) {
+            for (SingleBlockModifierReplacement mod : offsetModifiers.getValue()) {
                 if (mod.getBlockInformation().matches(this.world, realAt, true)) {
-                    this.foundModifiers.putIfAbsent(offsetModifiers.getKey(), Lists.newArrayList());
-                    this.foundModifiers.get(offsetModifiers.getKey()).add(mod);
+                    this.foundModifiers.put(mod.getModifierName(), mod.getModifiers());
                 }
             }
         }
@@ -1040,7 +1059,7 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         this.foundMachine = machine;
         this.controllerRotation = EnumFacing.byHorizontalIndex(compound.getInteger("rotation"));
 
-        TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern().traitNum, this.controllerRotation);
+        TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {
             ModularMachinery.log.info(rl + " has a empty pattern cache! Please report this to the mod author.");
             resetMachine(false);
@@ -1106,6 +1125,10 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
         if (this.activeRecipe != null) {
             compound.setTag("activeRecipe", this.activeRecipe.serialize());
         }
+    }
+
+    public EnumFacing getControllerRotation() {
+        return controllerRotation;
     }
 
     public enum Type {
@@ -1180,6 +1203,11 @@ public class TileMachineController extends TileEntityRestrictedTick implements I
             CraftingStatus another = (CraftingStatus) obj;
             if (status != another.status) return false;
             return unlocalizedMessage.equals(another.unlocalizedMessage);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(status, unlocalizedMessage);
         }
     }
 }

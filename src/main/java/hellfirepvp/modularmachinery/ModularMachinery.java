@@ -38,7 +38,7 @@ import org.apache.logging.log4j.Logger;
  * Date: 26.06.2017 / 20:26
  */
 @Mod(modid = ModularMachinery.MODID, name = ModularMachinery.NAME, version = ModularMachinery.VERSION,
-        dependencies = "required-after:forge@[14.21.0.2371,);after:crafttweaker@[4.0.4,);after:jei@[4.13.1.222,);after:fluxnetworks@[4.1.0,)",
+        dependencies = "required-after:forge@[14.21.0.2371,);required-after:crafttweaker@[4.0.4,);after:zenutils@[1.12.8,);after:jei@[4.13.1.222,);after:fluxnetworks@[4.1.0,)",
         acceptedMinecraftVersions = "[1.12, 1.13)"
 )
 public class ModularMachinery {

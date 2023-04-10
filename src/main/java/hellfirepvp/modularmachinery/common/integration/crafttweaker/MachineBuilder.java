@@ -18,7 +18,8 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.Advan
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
@@ -109,6 +110,22 @@ public class MachineBuilder {
     }
 
     /**
+     * 获取机械结构组成。
+     */
+    @ZenMethod
+    public TaggedPositionBlockArray getBlockArray() {
+        return pattern;
+    }
+
+    /**
+     * 获取机械结构组成构建器。
+     */
+    @ZenMethod
+    public BlockArrayBuilder getBlockArrayBuilder() {
+        return BlockArrayBuilder.newBuilder(pattern);
+    }
+
+    /**
      * 设置此机械是否受并行控制器影响。
      */
     @ZenMethod
@@ -128,7 +145,7 @@ public class MachineBuilder {
     }
 
     /**
-     * 添加配方修改器。
+     * 添加单方块配方修改器。
      *
      * @param x            X
      * @param y            Y
@@ -138,16 +155,16 @@ public class MachineBuilder {
      * @param modifiers    修改器列表
      */
     @ZenMethod
-    public MachineBuilder addModifier(int x, int y, int z, IBlockState ctBlockState, String description, RecipeModifier... modifiers) {
+    public MachineBuilder addSingleBlockModifier(int x, int y, int z, IBlockState ctBlockState, String description, RecipeModifier... modifiers) {
         List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
         stateDescriptorList.add(new IBlockStateDescriptor(CraftTweakerMC.getBlockState(ctBlockState)));
-        addModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
+        addSingleBlockModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
 
         return this;
     }
 
     /**
-     * 添加配方修改器，判断方块为传入的物品所属的方块。
+     * 添加单方块配方修改器，判断方块为传入的物品所属的方块。
      *
      * @param x           X
      * @param y           Y
@@ -157,13 +174,13 @@ public class MachineBuilder {
      * @param modifiers   修改器列表
      */
     @ZenMethod
-    public MachineBuilder addModifier(int x, int y, int z, IItemStack ctItemStack, String description, RecipeModifier... modifiers) {
+    public MachineBuilder addSingleBlockModifier(int x, int y, int z, IItemStack ctItemStack, String description, RecipeModifier... modifiers) {
         ItemStack item = CraftTweakerMC.getItemStack(ctItemStack);
         Block block = Block.getBlockFromItem(item.getItem());
         if (block != Blocks.AIR) {
             List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
             stateDescriptorList.add(new IBlockStateDescriptor(block));
-            addModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
+            addSingleBlockModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
         } else {
             CraftTweakerAPI.logError("[ModularMachinery] " + item.getDisplayName() + " cannot convert to Block!");
         }
@@ -172,7 +189,7 @@ public class MachineBuilder {
     }
 
     /**
-     * 添加配方修改器，判断方块为传入的方块名称。方块名称写法等同于 JSON 格式的方块名。
+     * 添加单方块配方修改器，判断方块为传入的方块名称。方块名称写法等同于 JSON 格式的方块名。
      *
      * @param x           X
      * @param y           Y
@@ -182,16 +199,27 @@ public class MachineBuilder {
      * @param modifiers   修改器列表
      */
     @ZenMethod
-    public MachineBuilder addModifier(int x, int y, int z, String blockName, String description, RecipeModifier... modifiers) {
+    public MachineBuilder addSingleBlockModifier(int x, int y, int z, String blockName, String description, RecipeModifier... modifiers) {
         List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
 
         try {
             stateDescriptorList.add(BlockArray.BlockInformation.getDescriptor(blockName));
-            addModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
+            addSingleBlockModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
         } catch (JsonParseException e) {
             CraftTweakerAPI.logError("[ModularMachinery] " + blockName + " is invalid block!", e);
         }
 
+        return this;
+    }
+
+    /**
+     * 添加多方块升级配方修改器。
+     */
+    @ZenMethod
+    public MachineBuilder addMultiBlockModifier(MultiBlockModifierReplacement multiBlockModifier) {
+        if (multiBlockModifier != null) {
+            machine.getMultiBlockModifiers().add(multiBlockModifier);
+        }
         return this;
     }
 
@@ -243,213 +271,6 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder addSmartInterfaceUpdateHandler(IEventHandler<SmartInterfaceUpdateEvent> function) {
         machine.addMachineEventHandler(SmartInterfaceUpdateEvent.class, function);
-        return this;
-    }
-
-    /**
-     * 添加方块至结构。
-     *
-     * @param x             X
-     * @param y             Y
-     * @param z             Z
-     * @param ctBlockStates BlockState，写法请参照 <a href="https://docs.blamejared.com/1.12/en/Vanilla/Blocks/IBlockState">CT Wiki 页面</a>
-     */
-    @ZenMethod
-    public MachineBuilder addBlock(int x, int y, int z, IBlockState... ctBlockStates) {
-        List<net.minecraft.block.state.IBlockState> stateList = new ArrayList<>();
-
-        for (IBlockState ctBlockState : ctBlockStates) {
-            stateList.add(CraftTweakerMC.getBlockState(ctBlockState));
-        }
-        List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
-        for (net.minecraft.block.state.IBlockState blockState : stateList) {
-            stateDescriptorList.add(new IBlockStateDescriptor(blockState));
-        }
-
-        addBlock(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList));
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
-                                   IBlockState... ctBlockStates) {
-        for (int x : xList) {
-            for (int y : yList) {
-                for (int z : zList) {
-                    addBlock(x, y, z, ctBlockStates);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
-                }
-            }
-        }
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   IData nbt, IData previewNBT,
-                                   IBlockState... ctBlockStates) {
-        addBlock(xList, yList, zList, nbt, previewNBT, null, ctBlockStates);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   AdvancedBlockChecker checker,
-                                   IBlockState... ctBlockStates) {
-        addBlock(xList, yList, zList, null, null, checker, ctBlockStates);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList, IBlockState... ctBlockStates) {
-        return addBlock(xList, yList, zList, null, null, null, ctBlockStates);
-    }
-
-    /**
-     * 添加一个物品所属的方块至结构。
-     *
-     * @param x            X
-     * @param y            Y
-     * @param z            Z
-     * @param ctItemStacks 物品
-     */
-    @ZenMethod
-    public MachineBuilder addBlock(int x, int y, int z, IItemStack... ctItemStacks) {
-        List<ItemStack> stackList = new ArrayList<>();
-        for (IItemStack ctItemStack : ctItemStacks) {
-            stackList.add(CraftTweakerMC.getItemStack(ctItemStack));
-        }
-        List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
-        for (ItemStack stack : stackList) {
-            Block block = Block.getBlockFromItem(stack.getItem());
-            if (block != Blocks.AIR) {
-                stateDescriptorList.add(new IBlockStateDescriptor(block));
-            } else {
-                CraftTweakerAPI.logError("[ModularMachinery] " + stack.getDisplayName() + " cannot convert to Block!");
-            }
-        }
-
-        if (!stateDescriptorList.isEmpty()) {
-            addBlock(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList));
-        }
-
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
-                                   IItemStack... ctItemStacks) {
-        for (int x : xList) {
-            for (int y : yList) {
-                for (int z : zList) {
-                    addBlock(x, y, z, ctItemStacks);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
-                }
-            }
-        }
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   IData nbt, IData previewNBT,
-                                   IItemStack... ctItemStacks) {
-        addBlock(xList, yList, zList, nbt, previewNBT, null, ctItemStacks);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   AdvancedBlockChecker checker,
-                                   IItemStack... ctItemStacks) {
-        addBlock(xList, yList, zList, null, null, checker, ctItemStacks);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList, IItemStack... ctItemStacks) {
-        return addBlock(xList, yList, zList, null, null, null, ctItemStacks);
-    }
-
-    /**
-     * 添加方块至结构，方块名称写法等同于 JSON 格式的方块名。
-     *
-     * @param x          X
-     * @param y          Y
-     * @param z          Z
-     * @param blockNames 名称，例如：modularmachinery:blockinputbus@1
-     */
-    @ZenMethod
-    public MachineBuilder addBlock(int x, int y, int z, String... blockNames) {
-        List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
-        for (String blockName : blockNames) {
-            try {
-                stateDescriptorList.add(BlockArray.BlockInformation.getDescriptor(blockName));
-            } catch (JsonParseException e) {
-                CraftTweakerAPI.logError("[ModularMachinery] " + blockName + " is invalid block!", e);
-            }
-        }
-
-        if (!stateDescriptorList.isEmpty()) {
-            addBlock(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList));
-        }
-
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
-                                   String... blockNames) {
-        for (int x : xList) {
-            for (int y : yList) {
-                for (int z : zList) {
-                    addBlock(x, y, z, blockNames);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
-                }
-            }
-        }
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   IData nbt, IData previewNBT,
-                                   String... blockNames) {
-        addBlock(xList, yList, zList, nbt, previewNBT, null, blockNames);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                   AdvancedBlockChecker checker,
-                                   String... blockNames) {
-        addBlock(xList, yList, zList, null, null, checker, blockNames);
-        return this;
-    }
-
-    @ZenMethod
-    public MachineBuilder addBlock(int[] xList, int[] yList, int[] zList, String... blockNames) {
-        return addBlock(xList, yList, zList, null, null, null, blockNames);
-    }
-
-    /**
-     * 设置 ComponentSelectorTag，用于配方寻找组件时的额外条件。
-     * @param tag Tag 名称
-     */
-    @ZenMethod
-    public MachineBuilder setTag(String tag) {
-        if (lastInformation != null && lastPos != null) {
-            pattern.setTag(lastPos, new ComponentSelectorTag(tag));
-        }
         return this;
     }
 
@@ -535,15 +356,10 @@ public class MachineBuilder {
         WAIT_FOR_LOAD.add(machine);
     }
 
-    private void addBlock(BlockPos pos, BlockArray.BlockInformation information) {
-        pattern.addBlock(pos, information);
-        lastInformation = information;
-        lastPos = pos;
-    }
-
-    private void addModifier(BlockPos pos, BlockArray.BlockInformation information, String description, RecipeModifier... modifiers) {
-        this.machine.getModifiers().putIfAbsent(pos, new ArrayList<>());
-        this.machine.getModifiers().get(pos).add(new ModifierReplacement(information, Arrays.asList(modifiers), description));
+    private void addSingleBlockModifier(BlockPos pos, BlockArray.BlockInformation information, String description, RecipeModifier... modifiers) {
+        Map<BlockPos, List<SingleBlockModifierReplacement>> modifierReplacements = this.machine.getModifiers();
+        modifierReplacements.putIfAbsent(pos, new ArrayList<>());
+        modifierReplacements.get(pos).add(new SingleBlockModifierReplacement(information, Arrays.asList(modifiers), description));
         lastInformation = information;
         lastPos = pos;
     }

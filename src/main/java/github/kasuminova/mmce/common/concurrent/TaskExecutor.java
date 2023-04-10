@@ -47,7 +47,7 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public int executeActions() {
-        if (executors.isEmpty()) {
+        if (executors.isEmpty() && collectedActions.isEmpty()) {
             return 0;
         }
 

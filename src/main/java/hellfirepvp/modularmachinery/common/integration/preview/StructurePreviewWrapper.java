@@ -21,7 +21,7 @@ import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
@@ -268,8 +268,8 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             if (mouseX >= 5 && mouseX <= 105 && mouseY >= 124 && mouseY <= 139) {
                 List<Tuple<ItemStack, String>> descriptionList = new LinkedList<>();
                 boolean first = true;
-                for (List<ModifierReplacement> modifiers : machine.getModifiers().values()) {
-                    for (ModifierReplacement mod : modifiers) {
+                for (List<SingleBlockModifierReplacement> modifiers : machine.getModifiers().values()) {
+                    for (SingleBlockModifierReplacement mod : modifiers) {
                         List<String> description = mod.getDescriptionLines();
                         if (description.isEmpty()) {
                             continue;

@@ -26,6 +26,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -56,13 +57,40 @@ public class DynamicMachineRenderContext {
                 (min.getX() + (max.getX() - min.getX()) / 2) * -1,
                 -min.getY(),
                 (min.getZ() + (max.getZ() - min.getZ()) / 2) * -1);
+
         BlockArray copy = new BlockArray(pattern, this.moveOffset);
+
+        addControllerToBlockArray(machine, copy, this.moveOffset);
+        addReplacementToBlockArray(machine.getModifiersAsMatchingReplacements(), copy, this.moveOffset);
+
+        this.render = new BlockArrayRenderHelper(copy);
+    }
+
+    private void addControllerToBlockArray(DynamicMachine machine, BlockArray copy, Vec3i moveOffset) {
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
-        copy.addBlock(new BlockPos(this.moveOffset),
-                new BlockArray.BlockInformation(
-                        Collections.singletonList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
-        this.render = new BlockArrayRenderHelper(copy);
+
+        copy.addBlock(new BlockPos(moveOffset), new BlockArray.BlockInformation(
+                Collections.singletonList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
+    }
+
+    public static void addReplacementToBlockArray(
+            DynamicMachine.ModifierReplacementMap replacementMap,
+            BlockArray blockArray,
+            Vec3i moveOffset) {
+        for (Map.Entry<BlockPos, List<BlockArray.BlockInformation>> entry : replacementMap.entrySet()) {
+            BlockPos pos = entry.getKey().add(moveOffset);
+
+            List<BlockArray.BlockInformation> informationList = entry.getValue();
+            for (BlockArray.BlockInformation info : informationList) {
+                Map<BlockPos, BlockArray.BlockInformation> pattern = blockArray.getPattern();
+                if (pattern.containsKey(pos)) {
+                    pattern.get(pos).addMatchingStates(info.matchingStates);
+                } else {
+                    pattern.put(pos, info);
+                }
+            }
+        }
     }
 
     public static DynamicMachineRenderContext createContext(DynamicMachine machine) {

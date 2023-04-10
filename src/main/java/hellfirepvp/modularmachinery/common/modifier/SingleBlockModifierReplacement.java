@@ -13,13 +13,11 @@ import com.google.gson.*;
 import hellfirepvp.modularmachinery.common.machine.MachineLoader;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
-import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 
 import java.lang.reflect.Type;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,34 +27,23 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 30.03.2018 / 16:35
  */
-public class ModifierReplacement {
+public class SingleBlockModifierReplacement extends AbstractModifierReplacement {
 
     private final BlockArray.BlockInformation info;
-    private final List<RecipeModifier> modifier;
-    private final List<String> description;
 
-    public ModifierReplacement(BlockArray.BlockInformation info, List<RecipeModifier> modifier, String description) {
+    public SingleBlockModifierReplacement(BlockArray.BlockInformation info, List<RecipeModifier> modifier, String description) {
+        super(modifier, description);
         this.info = info;
-        this.modifier = modifier;
-        this.description = description.isEmpty() ? Lists.newArrayList() : MiscUtils.splitStringBy(description, "\n");
     }
 
     public BlockArray.BlockInformation getBlockInformation() {
         return info;
     }
 
-    public List<RecipeModifier> getModifiers() {
-        return Collections.unmodifiableList(modifier);
-    }
-
-    public List<String> getDescriptionLines() {
-        return description;
-    }
-
-    public static class Deserializer implements JsonDeserializer<ModifierReplacement> {
+    public static class Deserializer implements JsonDeserializer<SingleBlockModifierReplacement> {
 
         @Override
-        public ModifierReplacement deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        public SingleBlockModifierReplacement deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             NBTTagCompound match = null;
             JsonObject part = json.getAsJsonObject();
             if (part.has("nbt")) {
@@ -136,7 +123,7 @@ public class ModifierReplacement {
 
 
             String description = part.has("description") ? part.getAsJsonPrimitive("description").getAsString() : "";
-            return new ModifierReplacement(blockInfo, modifiers, description);
+            return new SingleBlockModifierReplacement(blockInfo, modifiers, description);
         }
 
     }

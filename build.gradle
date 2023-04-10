@@ -89,7 +89,6 @@ dependencies {
     compileOnly "curse.maven:industrialcraft-2-242638:3078604"
     compileOnly "curse.maven:nuclearcraft-overhauled-336895:3862197"
     compileOnly "curse.maven:flux-networks-248020:3178199"
-
 }
 
 jar {

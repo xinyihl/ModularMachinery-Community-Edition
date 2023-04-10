@@ -17,7 +17,7 @@ import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSen
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.modifier.ModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
@@ -243,7 +243,7 @@ public class RecipeCraftingContext {
                 .filter(requirementFilter)
                 .collect(Collectors.toList());
 
-        if (getParentRecipe().isParallelized() && machineController.isParallelized() && activeRecipe.getMaxParallelism() > 1) {
+        if (getParentRecipe().isParallelized() && activeRecipe.getMaxParallelism() > 1) {
             int parallelism = Math.max(1, getMaxParallelism());
             setParallelism(parallelism);
         }
@@ -287,7 +287,7 @@ public class RecipeCraftingContext {
         this.typeComponents.add(new ProcessingComponent<>(component, component.getContainerProvider(), tag));
     }
 
-    public void addModifier(ModifierReplacement modifier) {
+    public void addModifier(SingleBlockModifierReplacement modifier) {
         List<RecipeModifier> modifiers = modifier.getModifiers();
         for (RecipeModifier mod : modifiers) {
             RequirementType<?, ?> target = mod.getTarget();
@@ -311,9 +311,9 @@ public class RecipeCraftingContext {
         }
     }
 
-    public void overrideModifier(Collection<ModifierReplacement> modifiers) {
+    public void overrideModifier(Collection<RecipeModifier> modifiers) {
         this.modifiers.clear();
-        for (ModifierReplacement modifier : modifiers) {
+        for (RecipeModifier modifier : modifiers) {
             addModifier(modifier);
         }
         for (RecipeModifier modifier : permanentModifierList) {

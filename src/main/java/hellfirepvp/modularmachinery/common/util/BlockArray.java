@@ -8,8 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonParseException;
+import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
@@ -38,6 +38,7 @@ import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,6 +52,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by HellFirePvP
  * Date: 27.06.2017 / 10:50
  */
+@ZenRegister
+@ZenClass("mods.modularmachinery.BlockArray")
 public class BlockArray {
     private static final ResourceLocation IC_2_TILE_BLOCK = new ResourceLocation("ic2", "te");
 
@@ -197,7 +200,7 @@ public class BlockArray {
                 continue;
             }
 
-            // Block is not match and there are no replaceable blocks in the configuration, end check.
+            // Block is not match, and there are no replaceable blocks in the configuration, end check.
             if (modifierReplacementPattern == null || !modifierReplacementPattern.containsKey(entry.getKey())) {
                 return false;
             }
@@ -303,17 +306,46 @@ public class BlockArray {
     public static class BlockInformation {
 
         public static final int CYCLE_TICK_SPEED = 30;
-        public final List<IBlockStateDescriptor> matchingStates;
-        private final List<IBlockState> samples = new LinkedList<>();
+        public final List<IBlockStateDescriptor> matchingStates = new ArrayList<>();
+        private final List<IBlockState> samples = new ArrayList<>();
+        private boolean hasTileEntity;
         public NBTTagCompound matchingTag = null;
         public NBTTagCompound previewTag = null;
         public AdvancedBlockChecker nbtChecker = null;
 
         public BlockInformation(List<IBlockStateDescriptor> matching) {
-            this.matchingStates = Lists.newLinkedList(matching);
+            this.matchingStates.addAll(matching);
             for (IBlockStateDescriptor desc : matchingStates) {
                 samples.addAll(desc.applicable);
             }
+            hasTileEntity = hasTileEntity(samples);
+        }
+
+        public void addMatchingStates(List<IBlockStateDescriptor> matching) {
+            for (IBlockStateDescriptor desc : matching) {
+                if (!matchingStates.contains(desc)) {
+                    matching.add(desc);
+                }
+                for (IBlockState state : desc.applicable) {
+                    if (!samples.contains(state)) {
+                        samples.add(state);
+                    }
+                }
+            }
+            hasTileEntity = hasTileEntity(samples);
+        }
+
+        public boolean hasTileEntity() {
+            return hasTileEntity;
+        }
+
+        private static boolean hasTileEntity(List<IBlockState> matching) {
+            for (IBlockState state : matching) {
+                if (state.getBlock().hasTileEntity(state)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static IBlockStateDescriptor getDescriptor(String strElement) throws JsonParseException {
