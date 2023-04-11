@@ -324,9 +324,11 @@ public class BlockArray {
         }
 
         public void addMatchingStates(List<IBlockStateDescriptor> matching) {
-            matching.forEach(desc -> {
+            for (int i = 0; i < matching.size(); i++) {
+                IBlockStateDescriptor desc = matching.get(i);
                 if (!matchingStates.contains(desc)) {
                     matching.add(desc);
+                    i++;
                 }
                 for (IBlockState state : desc.applicable) {
                     if (!samples.contains(state)) {
@@ -336,7 +338,7 @@ public class BlockArray {
                 if (!hasTileEntity) {
                     hasTileEntity = hasTileEntity(desc.applicable);
                 }
-            });
+            }
         }
 
         public boolean hasTileEntity() {
