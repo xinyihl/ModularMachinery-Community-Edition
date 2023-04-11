@@ -20,6 +20,7 @@ import hellfirepvp.modularmachinery.common.block.*;
 public class BlocksMM {
 
     public static BlockController blockController;
+    public static BlockFactoryController blockFactoryController;
 
     public static BlockCasing blockCasing;
 

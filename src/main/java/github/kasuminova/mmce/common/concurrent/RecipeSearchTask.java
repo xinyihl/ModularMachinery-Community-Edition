@@ -6,12 +6,14 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 
 import java.util.concurrent.RecursiveTask;
 
 public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
     private final TileMachineController controller;
     private final DynamicMachine currentMachine;
+    private TileMultiblockMachineController.CraftingStatus status = null;
 
     public RecipeSearchTask(TileMachineController controller, DynamicMachine currentMachine) {
         this.controller = controller;
@@ -55,17 +57,19 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
             return null;
 
         if (highestValidity != null) {
-            controller.setCraftingStatus(TileMachineController.CraftingStatus.failure(highestValidityResult.getFirstErrorMessage("")));
+            status = TileMultiblockMachineController.CraftingStatus.failure(
+                    highestValidityResult.getFirstErrorMessage(""));
         } else {
-            controller.setCraftingStatus(TileMachineController.CraftingStatus.failure(TileMachineController.Type.NO_RECIPE.getUnlocalizedDescription()));
+            status = TileMultiblockMachineController.CraftingStatus.failure(
+                    TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
         }
         controller.incrementRecipeSearchRetryCount();
 
         return null;
     }
 
-    public TileMachineController getController() {
-        return controller;
+    public TileMultiblockMachineController.CraftingStatus getStatus() {
+        return status;
     }
 
     public DynamicMachine getCurrentMachine() {

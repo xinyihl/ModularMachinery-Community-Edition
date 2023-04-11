@@ -28,6 +28,7 @@ import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
+import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
@@ -178,6 +179,8 @@ public class CommonProxy implements IGuiHandler {
         switch (type) {
             case CONTROLLER:
                 return new ContainerController((TileMachineController) present, player);
+            case FACTORY:
+                return new ContainerFactoryController((TileFactoryController) present, player);
             case BUS_INVENTORY:
                 return new ContainerItemBus((TileItemBus) present, player);
             case TANK_INVENTORY:
@@ -203,6 +206,7 @@ public class CommonProxy implements IGuiHandler {
     public enum GuiType {
 
         CONTROLLER(TileMachineController.class),
+        FACTORY(TileFactoryController.class),
         BUS_INVENTORY(TileItemBus.class),
         TANK_INVENTORY(TileFluidTank.class),
         ENERGY_INVENTORY(TileEnergyHatch.class),

@@ -3,7 +3,7 @@ package hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machi
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import net.minecraft.util.math.BlockPos;
 import stanhebben.zenscript.annotations.ZenClass;

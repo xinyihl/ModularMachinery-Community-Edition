@@ -32,6 +32,7 @@ gui.controller.status.redstone_stopped=Machine stopped by incoming redstone sign
 gui.controller.status.missing_structure=Missing structure
 gui.controller.status.no_recipe=No matching recipe found
 gui.controller.status.chunk_unloaded=A block in the multiblock structure was unloaded and stopped working
+gui.controller.status.idle=Idle
 gui.controller.status.crafting=Processing...
 gui.controller.status.crafting.progress=Progress: %s
 gui.controller.parallelism=Parallelism：%s
@@ -191,6 +192,9 @@ tile.modularmachinery.blockcontroller.name=Machine Controller
 tile.modularmachinery.machinecontroller.name=%s Controller
 tile.modularmachinery.machinecontroller.deprecated.tip.0=Modular controller compatibility will be removed in a future release.
 tile.modularmachinery.machinecontroller.deprecated.tip.1=Please contact the modpack author to transfer the controller to MMCE's controller.
+
+tile.modularmachinery.blockfactorycontroller.name=Factory Controller
+tile.modularmachinery.machinefactorycontroller.name=%s Factory Controller
 
 tile.modularmachinery.blockcasing.plain.name=Machine Casing
 tile.modularmachinery.blockcasing.vent.name=Machine Vent

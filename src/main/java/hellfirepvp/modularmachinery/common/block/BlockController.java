@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.item.ItemDynamicColor;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -105,7 +106,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     public void breakBlock(World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
         TileEntity te = worldIn.getTileEntity(pos);
         if (te instanceof TileMachineController) {
-            IOInventory inv = ((TileMachineController) te).getInventory();
+            IOInventory inv = ((TileMultiblockMachineController) te).getInventory();
             for (int i = 0; i < inv.getSlots(); i++) {
                 ItemStack stack = inv.getStackInSlot(i);
                 if (!stack.isEmpty()) {
@@ -193,16 +194,6 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @SuppressWarnings("deprecation")
     public IBlockState withRotation(IBlockState state, Rotation rot) {
         return state.withProperty(FACING, rot.rotate(state.getValue(FACING)));
-    }
-
-    @Override
-    public boolean hasTileEntity(IBlockState state) {
-        return true;
-    }
-
-    @Override
-    public boolean hasTileEntity() {
-        return true;
     }
 
     @Nullable

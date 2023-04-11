@@ -6,7 +6,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
 public class GuiScrollbar {
-    public static final ResourceLocation TEXTURES_TABS = new ResourceLocation("minecraft", "gui/container/creative_inventory/tabs.png");
+    public static final ResourceLocation TEXTURES_TABS = new ResourceLocation("minecraft", "textures/gui/container/creative_inventory/tabs.png");
 
     private int displayX = 0;
     private int displayY = 0;

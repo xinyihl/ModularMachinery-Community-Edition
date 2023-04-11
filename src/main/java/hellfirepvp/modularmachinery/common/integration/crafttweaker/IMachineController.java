@@ -1,4 +1,4 @@
-package hellfirepvp.modularmachinery.common.integration.crafttweaker.event;
+package hellfirepvp.modularmachinery.common.integration.crafttweaker;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.block.IBlockState;
@@ -7,7 +7,7 @@ import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -149,7 +149,7 @@ public interface IMachineController {
     @ZenMethod
     boolean hasModifierReplacement(String modifierName);
 
-    TileMachineController getController();
+    TileMultiblockMachineController getController();
     World getWorld();
     BlockPos getPos();
 }

@@ -40,7 +40,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 import static hellfirepvp.modularmachinery.common.lib.BlocksMM.*;
 
@@ -62,7 +65,7 @@ public class RegistryBlocks {
             try {
                 RegistryBlocks.writeAllCustomControllerModels();
             } catch (IOException e) {
-                ModularMachinery.log.error("failed to write controller models", e);
+                ModularMachinery.log.error("Failed to write controller models", e);
             }
         }
 
@@ -73,6 +76,9 @@ public class RegistryBlocks {
     private static void registerBlocks() {
         blockController = prepareRegister(new BlockController());
         prepareItemBlockRegister(blockController);
+        blockFactoryController = prepareRegister(new BlockFactoryController());
+        prepareItemBlockRegister(blockFactoryController);
+
         registerCustomControllers();
 
         blockCasing = prepareRegister(new BlockCasing());
@@ -100,6 +106,7 @@ public class RegistryBlocks {
         registerTile(TileColorableMachineComponent.class);
 
         registerTile(TileMachineController.class);
+        registerTile(TileFactoryController.class);
 
         registerTile(TileFluidInputHatch.class);
         registerTile(TileFluidOutputHatch.class);
@@ -116,6 +123,7 @@ public class RegistryBlocks {
         if (Config.onlyOneMachineController) {
             return;
         }
+
         List<DynamicMachine> waitForLoadMachines = MachineRegistry.getWaitForLoadMachines();
         for (MachineBuilder builder : MachineBuilder.PRE_LOAD_MACHINES.values()) {
             waitForLoadMachines.add(builder.getMachine());
@@ -140,6 +148,26 @@ public class RegistryBlocks {
         }
 
         for (DynamicMachine machine : waitForLoadMachines) {
+            if (machine.isHasFactory()) {
+                BlockFactoryController factoryBlock = prepareRegisterWithCustomName(new BlockFactoryController(machine));
+                BlockFactoryController.FACOTRY_CONTROLLERS.put(machine, factoryBlock);
+
+                ItemBlockMachineComponent factoryBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(factoryBlock) {
+                    @Nonnull
+                    @Override
+                    @SideOnly(Side.CLIENT)
+                    public String getItemStackDisplayName(ItemStack stack) {
+                        return factoryBlock.getLocalizedName();
+                    }
+                }.setRegistryName(Objects.requireNonNull(factoryBlock.getRegistryName()));
+
+                prepareItemBlockRegisterWithCustomName(factoryBlockItem);
+            }
+
+            if (machine.isFactoryOnly()) {
+                continue;
+            }
+
             BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController(machine));
             BlockController.MACHINE_CONTROLLERS.put(machine, ctrlBlock);
 
@@ -217,21 +245,40 @@ public class RegistryBlocks {
     public static void writeAllCustomControllerModels() throws IOException {
         IResourceManager resourceManager = Minecraft.getMinecraft().getResourceManager();
         for (BlockController controller : BlockController.MACHINE_CONTROLLERS.values()) {
-            writeModelInternal(resourceManager, controller);
+            writeMachineControllerModelInternal(resourceManager, controller);
+        }
+        for (BlockFactoryController controller : BlockFactoryController.FACOTRY_CONTROLLERS.values()) {
+            writeFactoryControllerModelInternal(resourceManager, controller);
         }
     }
 
-    private static void writeModelInternal(IResourceManager resourceManager, BlockController controller) throws IOException {
+    private static void writeMachineControllerModelInternal(IResourceManager resourceManager, BlockController controller) throws IOException {
         IResource blockStateResource = resourceManager.getResource(
                 new ResourceLocation(ModularMachinery.MODID, "blockstates/block_machine_controller.json"));
 
         File blockStateFile = new File("resources/modularmachinery/blockstates/" + controller.getRegistryName().getPath() + ".json");
-        if (!blockStateFile.exists()) {
-            final InputStream inputStream = blockStateResource.getInputStream();
-            final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
-            IOUtils.copy(inputStream, fileOutputStream);
-            inputStream.close();
-            fileOutputStream.close();
+        if (blockStateFile.exists()) {
+            return;
         }
+        final InputStream inputStream = blockStateResource.getInputStream();
+        final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
+        IOUtils.copy(inputStream, fileOutputStream);
+        inputStream.close();
+        fileOutputStream.close();
+    }
+
+    private static void writeFactoryControllerModelInternal(IResourceManager resourceManager, BlockFactoryController controller) throws IOException {
+        IResource blockStateResource = resourceManager.getResource(
+                new ResourceLocation(ModularMachinery.MODID, "blockstates/block_factory_controller.json"));
+
+        File blockStateFile = new File("resources/modularmachinery/blockstates/" + controller.getRegistryName().getPath() + ".json");
+        if (blockStateFile.exists()) {
+            return;
+        }
+        final InputStream inputStream = blockStateResource.getInputStream();
+        final FileOutputStream fileOutputStream = FileUtils.openOutputStream(blockStateFile);
+        IOUtils.copy(inputStream, fileOutputStream);
+        inputStream.close();
+        fileOutputStream.close();
     }
 }

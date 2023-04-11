@@ -1,8 +1,7 @@
 package hellfirepvp.modularmachinery.common.modifier;
 
 import crafttweaker.annotations.ZenRegister;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.IMachineController;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -27,8 +26,7 @@ public class MultiBlockModifierReplacement extends AbstractModifierReplacement {
     }
 
     @ZenMethod
-    public boolean matches(IMachineController machineController) {
-        TileMachineController ctrl = machineController.getController();
+    public boolean matches(TileMultiblockMachineController ctrl) {
         BlockArray blockArray = BlockArrayCache.getBlockArrayCache(this.blockArray, ctrl.getControllerRotation());
         return blockArray.matches(ctrl.getWorld(), ctrl.getPos(), false, null);
     }

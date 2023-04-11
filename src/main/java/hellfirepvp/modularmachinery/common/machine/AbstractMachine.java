@@ -17,7 +17,11 @@ public abstract class AbstractMachine {
     protected String localizedName = "";
     protected int definedColor = Config.machineColor;
     protected int maxParallelism = Config.maxMachineParallelism;
-    protected boolean requiresBlueprint = false, parallelizable = Config.machineParallelizeEnabledByDefault;
+    protected int maxThreads = 1;
+    protected boolean requiresBlueprint = false;
+    protected boolean parallelizable = Config.machineParallelizeEnabledByDefault;
+    protected boolean hasFactory = false;
+    protected boolean factoryOnly = false;
     protected RecipeFailureActions failureAction = RecipeFailureActions.getFailureAction("still");
 
     public AbstractMachine(String registryName) {
@@ -78,6 +82,22 @@ public abstract class AbstractMachine {
 
     public void setMaxParallelism(int maxParallelism) {
         this.maxParallelism = maxParallelism;
+    }
+
+    public boolean isHasFactory() {
+        return hasFactory;
+    }
+
+    public void setHasFactory(boolean hasFactory) {
+        this.hasFactory = hasFactory;
+    }
+
+    public boolean isFactoryOnly() {
+        return factoryOnly;
+    }
+
+    public void setFactoryOnly(boolean factoryOnly) {
+        this.factoryOnly = factoryOnly;
     }
 
     @Override

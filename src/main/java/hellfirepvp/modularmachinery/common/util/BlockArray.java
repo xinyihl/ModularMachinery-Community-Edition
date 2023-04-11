@@ -317,12 +317,14 @@ public class BlockArray {
             this.matchingStates.addAll(matching);
             for (IBlockStateDescriptor desc : matchingStates) {
                 samples.addAll(desc.applicable);
+                if (!hasTileEntity) {
+                    hasTileEntity = hasTileEntity(desc.applicable);
+                }
             }
-            hasTileEntity = hasTileEntity(samples);
         }
 
         public void addMatchingStates(List<IBlockStateDescriptor> matching) {
-            for (IBlockStateDescriptor desc : matching) {
+            matching.forEach(desc -> {
                 if (!matchingStates.contains(desc)) {
                     matching.add(desc);
                 }
@@ -331,8 +333,10 @@ public class BlockArray {
                         samples.add(state);
                     }
                 }
-            }
-            hasTileEntity = hasTileEntity(samples);
+                if (!hasTileEntity) {
+                    hasTileEntity = hasTileEntity(desc.applicable);
+                }
+            });
         }
 
         public boolean hasTileEntity() {

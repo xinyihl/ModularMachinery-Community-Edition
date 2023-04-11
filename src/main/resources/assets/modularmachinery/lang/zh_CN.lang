@@ -32,6 +32,7 @@ gui.controller.status.redstone_stopped=机器因红石信号停止工作
 gui.controller.status.missing_structure=结构不完整
 gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.chunk_unloaded=多方块结构中有方块被卸载，停止工作
+gui.controller.status.idle=闲置中
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 gui.controller.parallelism=并行数：%s
@@ -191,6 +192,9 @@ tile.modularmachinery.blockcontroller.name=机械控制器
 tile.modularmachinery.machinecontroller.name=%s控制器
 tile.modularmachinery.machinecontroller.deprecated.tip.0=模块化控制器兼容将会在未来的版本被移除。
 tile.modularmachinery.machinecontroller.deprecated.tip.1=请联系整合包作者将控制器转移至 MMCE 的控制器中。
+
+tile.modularmachinery.blockfactorycontroller.name=工厂控制器
+tile.modularmachinery.machinefactorycontroller.name=%s工厂控制器
 
 tile.modularmachinery.blockcasing.plain.name=机械外壳
 tile.modularmachinery.blockcasing.vent.name=机械通风口

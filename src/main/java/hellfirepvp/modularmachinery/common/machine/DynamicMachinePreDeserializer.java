@@ -16,19 +16,29 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         DynamicMachine machine = new DynamicMachine(registryName);
         machine.setLocalizedName(localized);
 
-        //Failure Action
+        // Failure Action
         if (root.has("failure-action")) {
             machine.setFailureAction(getFailureActions(root));
         }
 
-        //Requires Blueprint
+        // Requires Blueprint
         if (root.has("requires-blueprint")) {
             machine.setRequiresBlueprint(getRequireBlueprint(root));
         }
 
-        //Color
+        // Color
         if (root.has("color")) {
             machine.setDefinedColor(getColor(root));
+        }
+
+        // Has Factory
+        if (root.has("has-factory")) {
+            machine.setHasFactory(getHasFactory(root));
+        }
+
+        // Factory Only
+        if (root.has("factory-only")) {
+            machine.setFactoryOnly(getFactoryOnly(root));
         }
 
         return machine;
@@ -85,5 +95,21 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
             throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!", parseExc);
         }
         return hexColor;
+    }
+
+    private static boolean getHasFactory(JsonObject root) throws JsonParseException {
+        JsonElement elementHasFactory = root.get("has-factory");
+        if (!elementHasFactory.isJsonPrimitive() || !elementHasFactory.getAsJsonPrimitive().isBoolean()) {
+            throw new JsonParseException("'has-factory' has to be either 'true' or 'false'!");
+        }
+        return elementHasFactory.getAsJsonPrimitive().getAsBoolean();
+    }
+
+    private static boolean getFactoryOnly(JsonObject root) throws JsonParseException {
+        JsonElement elementFactoryOnly = root.get("factory-only");
+        if (!elementFactoryOnly.isJsonPrimitive() || !elementFactoryOnly.getAsJsonPrimitive().isBoolean()) {
+            throw new JsonParseException("'factory-only' has to be either 'true' or 'false'!");
+        }
+        return elementFactoryOnly.getAsJsonPrimitive().getAsBoolean();
     }
 }

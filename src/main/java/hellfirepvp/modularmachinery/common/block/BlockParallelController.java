@@ -105,7 +105,12 @@ public class BlockParallelController extends BlockMachineComponent implements Bl
 
     @Override
     public boolean hasTileEntity() {
-        return true;
+        return super.hasTileEntity();
+    }
+
+    @Override
+    public boolean hasTileEntity(IBlockState state) {
+        return super.hasTileEntity(state);
     }
 
     @Nullable

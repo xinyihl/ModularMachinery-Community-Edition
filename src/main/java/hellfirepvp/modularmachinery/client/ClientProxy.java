@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockDynamicColor;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.block.BlockVariants;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.command.CommandCTReloadClient;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
@@ -24,6 +25,7 @@ import hellfirepvp.modularmachinery.common.item.ItemDynamicColor;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.registry.RegistryBlocks;
 import hellfirepvp.modularmachinery.common.registry.RegistryItems;
+import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
@@ -92,6 +94,9 @@ public class ClientProxy extends CommonProxy {
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
             colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
+        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
+            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+        );
     }
 
     private static void registerPendingIItemColorItems() {
@@ -104,6 +109,9 @@ public class ClientProxy extends CommonProxy {
         );
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
             colors.registerItemColorHandler(block::getColorFromItemstack, block)
+        );
+        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
+                colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
     }
 
@@ -204,6 +212,8 @@ public class ClientProxy extends CommonProxy {
         switch (type) {
             case CONTROLLER:
                 return new GuiMachineController((TileMachineController) present, player);
+            case FACTORY:
+                return new GuiFactoryController((TileFactoryController) present, player);
             case BUS_INVENTORY:
                 return new GuiContainerItemBus((TileItemBus) present, player);
             case TANK_INVENTORY:

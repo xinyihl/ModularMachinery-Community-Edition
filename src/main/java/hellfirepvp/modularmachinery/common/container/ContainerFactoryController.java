@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.container;
 
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
+import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
@@ -25,14 +26,16 @@ import javax.annotation.Nonnull;
  * Created by HellFirePvP
  * Date: 12.07.2017 / 23:30
  */
-public class ContainerFactoryController extends ContainerBase<TileMachineController> {
+public class ContainerFactoryController extends ContainerBase<TileFactoryController> {
 
     private final Slot slotBlueprint;
 
-    public ContainerFactoryController(TileMachineController owner, EntityPlayer opening) {
+    public ContainerFactoryController(TileFactoryController owner, EntityPlayer opening) {
         super(owner, opening);
 
-        this.slotBlueprint = addSlotToContainer(new SlotBlueprint(owner.getInventory().asGUIAccess(), TileMachineController.BLUEPRINT_SLOT, 151, 8));
+        this.slotBlueprint = addSlotToContainer(new SlotBlueprint(
+                owner.getInventory().asGUIAccess(),
+                TileMachineController.BLUEPRINT_SLOT, 255, 8));
     }
 
     @Override
@@ -87,11 +90,11 @@ public class ContainerFactoryController extends ContainerBase<TileMachineControl
     protected void addPlayerSlots(EntityPlayer opening) {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
-                addSlotToContainer(new Slot(opening.inventory, j + i * 9 + 9, 8 + j * 18, 131 + i * 18));
+                addSlotToContainer(new Slot(opening.inventory, j + i * 9 + 9, 112 + j * 18, 131 + i * 18));
             }
         }
         for (int i = 0; i < 9; i++) {
-            addSlotToContainer(new Slot(opening.inventory, i, 8 + i * 18, 189));
+            addSlotToContainer(new Slot(opening.inventory, i, 112 + i * 18, 189));
         }
     }
 

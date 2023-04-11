@@ -300,10 +300,6 @@ public class BlockArrayBuilder {
         return this;
     }
 
-    public BlockArray build() {
-        return blockArray;
-    }
-
     private void addBlock(BlockPos pos, BlockArray.BlockInformation information) {
         blockArray.addBlock(pos, information);
         lastInformation = information;

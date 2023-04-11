@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
@@ -80,7 +81,7 @@ public class ActiveMachineRecipe {
 
         //Skip per-tick logic until controller can finish the recipe
         if (this.isCompleted()) {
-            return TileMachineController.CraftingStatus.working();
+            return TileMultiblockMachineController.CraftingStatus.working();
         }
 
         RecipeCraftingContext.CraftingCheckResult check;
@@ -94,11 +95,11 @@ public class ActiveMachineRecipe {
             } else {
                 doFailureAction(RecipeFailureActions.getDefaultAction());
             }
-            return TileMachineController.CraftingStatus.failure(check.getFirstErrorMessage(""));
+            return TileMultiblockMachineController.CraftingStatus.failure(check.getFirstErrorMessage(""));
         } else {
             //Success
             this.tick++;
-            return TileMachineController.CraftingStatus.working();
+            return TileMultiblockMachineController.CraftingStatus.working();
         }
     }
 
