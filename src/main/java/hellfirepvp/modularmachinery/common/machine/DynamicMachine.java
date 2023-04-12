@@ -17,10 +17,10 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
-import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
@@ -137,7 +137,7 @@ public class DynamicMachine extends AbstractMachine {
     }
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe,
-                                               TileMachineController controller,
+                                               TileMultiblockMachineController controller,
                                                Collection<Tuple<MachineComponent<?>, ComponentSelectorTag>> taggedComponents,
                                                Collection<RecipeModifier> modifiers) {
         if (!activeRecipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {

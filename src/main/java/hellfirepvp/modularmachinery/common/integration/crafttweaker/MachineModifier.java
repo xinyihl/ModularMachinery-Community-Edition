@@ -50,6 +50,21 @@ public class MachineModifier {
         });
     }
 
+    @ZenMethod
+    public static void setMaxThreads(String machineName, int maxThreads) {
+        if (maxThreads < 1) {
+            CraftTweakerAPI.logError("Max Threads must larger than 1!");
+        }
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+            if (machine == null) {
+                CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
+                return;
+            }
+            machine.setMaxThreads(maxThreads);
+        });
+    }
+
     public static void loadAll() {
         for (Action waitForRegister : WAIT_FOR_MODIFY) {
             waitForRegister.doAction();

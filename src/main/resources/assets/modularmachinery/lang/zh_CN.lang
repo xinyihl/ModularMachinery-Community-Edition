@@ -38,6 +38,8 @@ gui.controller.status.crafting.progress=进度：%s
 gui.controller.parallelism=并行数：%s
 gui.controller.max_parallelism=最大并行数：%s
 
+gui.factory.threads=%s 线程运行中 / %s 总线程数
+
 gui.smartinterface.title=智能数据接口（已绑定：%s，当前：%s）
 gui.smartinterface.notfound=未找到绑定机械。
 gui.smartinterface.value=当前值：%.0f

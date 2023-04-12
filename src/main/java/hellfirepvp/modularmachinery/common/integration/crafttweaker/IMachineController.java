@@ -9,8 +9,6 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -51,8 +49,18 @@ public interface IMachineController {
      * @return 配方
      */
     @Nullable
+    @Deprecated
     @ZenGetter("activeRecipe")
     ActiveMachineRecipe getActiveRecipe();
+
+    /**
+     * 获取机器当前正在执行的配方列表
+     *
+     * @return 配方
+     */
+    @Nullable
+    @ZenGetter("activeRecipeList")
+    ActiveMachineRecipe[] getActiveRecipeList();
 
     /**
      * 机器是否在工作
@@ -117,6 +125,7 @@ public interface IMachineController {
      *
      * @param newInfo 新消息
      */
+    @Deprecated
     @ZenSetter("statusMessage")
     void overrideStatusInfo(String newInfo);
 
@@ -137,8 +146,8 @@ public interface IMachineController {
     SmartInterfaceData[] getSmartInterfaceDataList();
 
     /**
-     * 获取控制器检测到的配方修改器升级
-     * @return 返回找到的所有升级，如果没有则为空数组，但不会为 null
+     * 获取控制器检测到的配方修改器升级名称
+     * @return 返回找到的所有升级名称，如果没有则为空数组，但不会为 null
      */
     @ZenGetter("foundModifiers")
     String[] getFoundModifierReplacements();
@@ -150,6 +159,4 @@ public interface IMachineController {
     boolean hasModifierReplacement(String modifierName);
 
     TileMultiblockMachineController getController();
-    World getWorld();
-    BlockPos getPos();
 }

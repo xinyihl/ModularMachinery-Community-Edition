@@ -8,7 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.crafting.command;
 
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -26,9 +26,9 @@ import javax.annotation.Nullable;
  */
 public class ControllerCommandSender implements ICommandSender {
 
-    private final TileMachineController controller;
+    private final TileMultiblockMachineController controller;
 
-    public ControllerCommandSender(TileMachineController controller) {
+    public ControllerCommandSender(TileMultiblockMachineController controller) {
         this.controller = controller;
     }
 

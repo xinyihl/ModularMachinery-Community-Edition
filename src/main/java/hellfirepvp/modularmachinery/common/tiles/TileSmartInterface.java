@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -52,7 +53,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
                 continue;
             }
             TileEntity tileEntity = getWorld().getTileEntity(pos);
-            if (!(tileEntity instanceof TileMachineController)) {
+            if (!(tileEntity instanceof TileMultiblockMachineController)) {
                 boundData.remove(i);
                 i--;
             }
@@ -93,10 +94,10 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
     public static void onDataUpdate(TileSmartInterface owner, SmartInterfaceData newData) {
         TileEntity te = owner.getWorld().getTileEntity(newData.getPos());
-        if (!(te instanceof TileMachineController)) {
+        if (!(te instanceof TileMultiblockMachineController)) {
             return;
         }
-        TileMachineController ctrl = (TileMachineController) te;
+        TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
 
         if (ctrl.getFoundMachine() == null) {
             return;

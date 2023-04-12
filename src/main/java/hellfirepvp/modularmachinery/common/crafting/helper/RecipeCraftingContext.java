@@ -16,10 +16,11 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSender;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
+import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.PriorityProvider;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
@@ -43,7 +44,7 @@ public class RecipeCraftingContext {
     private static final Random RAND = new Random();
 
     private final ActiveMachineRecipe activeRecipe;
-    private final TileMachineController machineController;
+    private final TileMultiblockMachineController controller;
     private final ControllerCommandSender commandSender;
     private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
     private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
@@ -51,10 +52,10 @@ public class RecipeCraftingContext {
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements;
 
-    public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMachineController controller) {
+    public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMultiblockMachineController controller) {
         this.activeRecipe = activeRecipe;
-        this.machineController = controller;
-        this.commandSender = new ControllerCommandSender(machineController);
+        this.controller = controller;
+        this.commandSender = new ControllerCommandSender(this.controller);
         this.requirements = new ArrayList<>((int) (getParentRecipe().getCraftingRequirements().size() * 1.5));
 
         for (ComponentRequirement<?, ?> craftingRequirement : getParentRecipe().getCraftingRequirements()) {
@@ -62,8 +63,8 @@ public class RecipeCraftingContext {
         }
     }
 
-    public TileMachineController getMachineController() {
-        return machineController;
+    public TileMultiblockMachineController getMachineController() {
+        return controller;
     }
 
     public MachineRecipe getParentRecipe() {
@@ -232,6 +233,10 @@ public class RecipeCraftingContext {
 
     public CraftingCheckResult canStartCrafting() {
         return this.canStartCrafting(req -> true);
+    }
+
+    public CraftingCheckResult canFinishCrafting() {
+        return this.canStartCrafting(req -> req.actionType == IOType.OUTPUT);
     }
 
     public CraftingCheckResult canStartCrafting(Predicate<ComponentRequirement<?, ?>> requirementFilter) {

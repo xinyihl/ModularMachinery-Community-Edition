@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.tiles.base;
 
-import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -89,11 +88,6 @@ public class TileEntitySynchronized extends TileEntity {
      * <p>*** 只能保证 MMCE 自身对世界的线程安全 ***</p>
      */
     public void markForUpdateSync() {
-        if (ModularMachinery.pluginServerCompatibleMode) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::markForUpdate);
-        } else {
-            Sync.doSyncAction(this::markForUpdate);
-        }
+        ModularMachinery.EXECUTE_MANAGER.addTEUpdateTask(this);
     }
-
 }

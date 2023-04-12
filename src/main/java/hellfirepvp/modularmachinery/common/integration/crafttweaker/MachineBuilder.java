@@ -51,7 +51,27 @@ public class MachineBuilder {
         this.machine.setLocalizedName(localizedName);
     }
 
-    private MachineBuilder(String registryName, String localizedName, boolean requiresBlueprint, RecipeFailureActions failureAction, int color) {
+    private MachineBuilder(
+            String registryName,
+            String localizedName,
+            boolean hasFactory,
+            boolean factoryOnly)
+    {
+        this.machine = new DynamicMachine(registryName);
+        this.pattern = this.machine.getPattern();
+
+        this.machine.setLocalizedName(localizedName);
+        this.machine.setHasFactory(hasFactory);
+        this.machine.setFactoryOnly(factoryOnly);
+    }
+
+    private MachineBuilder(
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color)
+    {
         this.machine = new DynamicMachine(registryName);
         this.pattern = this.machine.getPattern();
 
@@ -59,6 +79,44 @@ public class MachineBuilder {
         this.machine.setFailureAction(failureAction);
         this.machine.setDefinedColor(color);
         this.machine.setRequiresBlueprint(requiresBlueprint);
+    }
+
+    private MachineBuilder(
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color,
+            boolean hasFactory,
+            boolean factoryOnly)
+    {
+        this.machine = new DynamicMachine(registryName);
+        this.pattern = this.machine.getPattern();
+
+        this.machine.setLocalizedName(localizedName);
+        this.machine.setFailureAction(failureAction);
+        this.machine.setDefinedColor(color);
+        this.machine.setRequiresBlueprint(requiresBlueprint);
+        this.machine.setHasFactory(hasFactory);
+        this.machine.setFactoryOnly(factoryOnly);
+    }
+
+    /**
+     * 注册一个新的机械构建器。
+     * 此方法应在 preInit 阶段调用！
+     *
+     * @param registryName  注册名
+     * @param localizedName 译名
+     * @param hasFactory 是否注册工厂
+     * @param factoryOnly 是否仅注册工厂
+     */
+    @ZenMethod
+    public static void registerMachine(String registryName, String localizedName, boolean hasFactory, boolean factoryOnly) {
+        if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+            return;
+        }
+        MachineBuilder builder = new MachineBuilder(registryName, localizedName, hasFactory, factoryOnly);
+        PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
     /**
@@ -74,6 +132,36 @@ public class MachineBuilder {
             return;
         }
         MachineBuilder builder = new MachineBuilder(registryName, localizedName);
+        PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
+    }
+
+    /**
+     * 注册一个新的机械构建器。
+     * 此方法应在 preInit 阶段调用！
+     *
+     * @param registryName      注册名
+     * @param localizedName     译名
+     * @param requiresBlueprint 是否需要蓝图
+     * @param failureAction     失败操作
+     * @param color             颜色
+     * @param hasFactory 是否注册工厂
+     * @param factoryOnly 是否仅注册工厂
+     */
+    @ZenMethod
+    public static void registerMachine(
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color,
+            boolean hasFactory,
+            boolean factoryOnly)
+    {
+        if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
+            return;
+        }
+        MachineBuilder builder = new MachineBuilder(
+                registryName, localizedName, requiresBlueprint, failureAction, color, hasFactory, factoryOnly);
         PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
@@ -343,6 +431,38 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder setColor(int color) {
         this.machine.setDefinedColor(color);
+        return this;
+    }
+
+    /**
+     * 设置此机械是否有工厂形式的控制器。
+     *
+     * @param hasFactory true 即为注册，false 即为不注册
+     */
+    @ZenMethod
+    public MachineBuilder setHasFactory(boolean hasFactory) {
+        this.machine.setHasFactory(hasFactory);
+        return this;
+    }
+
+    /**
+     * 设置此机械是否仅有工厂形式的控制器。
+     *
+     * @param factoryOnly true 即为仅工厂，false 即为普通机械和工厂
+     */
+    @ZenMethod
+    public MachineBuilder setFactoryOnly(boolean factoryOnly) {
+        this.machine.setFactoryOnly(factoryOnly);
+        return this;
+    }
+
+    /**
+     * 设置此机械的工厂最大线程数。
+     *
+     * @param maxThreads 最大线程数
+     */
+    public MachineBuilder setMaxThreads(int maxThreads) {
+        this.machine.setMaxThreads(maxThreads);
         return this;
     }
 

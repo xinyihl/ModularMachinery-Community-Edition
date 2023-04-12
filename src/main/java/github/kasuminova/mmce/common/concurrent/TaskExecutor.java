@@ -1,9 +1,12 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 
@@ -22,6 +25,7 @@ public class TaskExecutor {
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> collectedActions = new ConcurrentLinkedQueue<>();
+    private final Set<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
     private volatile int maximumTaskMerge = 1;
 
     public void init() {
@@ -62,6 +66,11 @@ public class TaskExecutor {
             action.doAction();
             executed++;
         }
+
+        for (TileEntitySynchronized te : requireUpdateTEList) {
+            te.markForUpdate();
+        }
+        requireUpdateTEList.clear();
 
         //Empty Check
         if (!executors.isEmpty()) {
@@ -116,5 +125,9 @@ public class TaskExecutor {
      */
     public void addSyncTask(final Action action) {
         mainThreadActions.offer(action);
+    }
+
+    public synchronized void addTEUpdateTask(final TileEntitySynchronized te) {
+        requireUpdateTEList.add(te);
     }
 }

@@ -37,7 +37,6 @@ import javax.annotation.Nonnull;
 @ZenRegister
 @ZenClass("mods.modularmachinery.ActiveMachineRecipe")
 public class ActiveMachineRecipe {
-
     private final MachineRecipe recipe;
     private NBTTagCompound data = new NBTTagCompound();
     private int tick = 0, totalTick;
@@ -74,7 +73,7 @@ public class ActiveMachineRecipe {
     }
 
     @Nonnull
-    public TileMachineController.CraftingStatus tick(TileMachineController ctrl, RecipeCraftingContext context) {
+    public TileMachineController.CraftingStatus tick(TileMultiblockMachineController ctrl, RecipeCraftingContext context) {
         totalTick = Math.round(RecipeModifier.applyModifiers(
                 context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
                 RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));

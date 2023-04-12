@@ -17,9 +17,7 @@ import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
@@ -35,7 +33,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -43,13 +41,11 @@ import java.util.List;
  * <p>Completely refactored community edition mechanical controller with powerful asynchronous logic and extremely low performance consumption.</p>
  * TODO: This class is too large, consider improving readability.
  */
-public class TileMachineController extends TileMultiblockMachineController implements IMachineController {
+public class TileMachineController extends TileMultiblockMachineController {
     private BlockController parentController = null;
     private ActiveMachineRecipe activeRecipe = null;
     private RecipeCraftingContext context = null;
     private RecipeSearchTask searchTask = null;
-    private int recipeResearchRetryCounter = 0;
-    private int structureCheckCounter = 0;
 
     public TileMachineController() {
     }
@@ -185,43 +181,18 @@ public class TileMachineController extends TileMultiblockMachineController imple
     /**
      * <p>机器开始执行逻辑。</p>
      */
-    public boolean onMachineTick() {
-        List<IEventHandler<MachineEvent>> handlerList = this.getFoundMachine().getMachineEventHandlers(MachineTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return false;
+    public void onMachineTick() {
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return;
         for (IEventHandler<MachineEvent> handler : handlerList) {
             MachineTickEvent event = new MachineTickEvent(this);
             handler.handle(event);
         }
-        return true;
     }
 
     public boolean hasMachineTickEventHandlers() {
-        List<IEventHandler<MachineEvent>> handlerList = this.getFoundMachine().getMachineEventHandlers(MachineTickEvent.class);
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
         return handlerList != null && !handlerList.isEmpty();
-    }
-
-    /**
-     * <p>机器开始检查配方能否工作。</p>
-     *
-     * @param context RecipeCraftingContext
-     * @return CraftingCheckResult
-     */
-    public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
-        RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
-        if (result.isSuccess()) {
-            List<IEventHandler<RecipeEvent>> handlerList = context.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
-            if (handlerList == null || handlerList.isEmpty()) return result;
-            for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeCheckEvent event = new RecipeCheckEvent(this);
-                handler.handle(event);
-                if (event.isFailure()) {
-                    result.overrideError(event.getFailureReason());
-                    return result;
-                }
-            }
-        }
-
-        return result;
     }
 
     /**
@@ -339,6 +310,12 @@ public class TileMachineController extends TileMultiblockMachineController imple
         return activeRecipe;
     }
 
+    @Nullable
+    @Override
+    public ActiveMachineRecipe[] getActiveRecipeList() {
+        return new ActiveMachineRecipe[]{activeRecipe};
+    }
+
     @Override
     public boolean isWorking() {
         return getCraftingStatus().isCrafting();
@@ -348,22 +325,6 @@ public class TileMachineController extends TileMultiblockMachineController imple
         this.activeRecipe = null;
         this.context = null;
         this.craftingStatus = CraftingStatus.failure(reason);
-    }
-
-    @Override
-    public void addModifier(String key, RecipeModifier newModifier) {
-        if (newModifier != null) {
-            customModifiers.put(key, newModifier);
-            flushContextModifier();
-        }
-    }
-
-    @Override
-    public void removeModifier(String key) {
-        if (hasModifier(key)) {
-            customModifiers.remove(key);
-            flushContextModifier();
-        }
     }
 
     @Override
@@ -380,14 +341,6 @@ public class TileMachineController extends TileMultiblockMachineController imple
         }
     }
 
-    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        RecipeCraftingContext context = this.getFoundMachine().createContext(activeRecipe, this, Collections.unmodifiableList(this.foundComponents), MiscUtils.flatten(this.foundModifiers.values()));
-        for (RecipeModifier modifier : customModifiers.values()) {
-            context.addModifier(modifier);
-        }
-        return context;
-    }
-
     @Override
     protected void onStructureFormed() {
         Sync.doSyncAction(() -> {
@@ -397,14 +350,6 @@ public class TileMachineController extends TileMultiblockMachineController imple
                 this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
             }
         });
-
-        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineStructureFormedEvent.class);
-        if (handlerList != null && !handlerList.isEmpty()) {
-            for (IEventHandler<MachineEvent> handler : handlerList) {
-                MachineStructureFormedEvent event = new MachineStructureFormedEvent(this);
-                handler.handle(event);
-            }
-        }
 
         super.onStructureFormed();
     }
@@ -454,11 +399,6 @@ public class TileMachineController extends TileMultiblockMachineController imple
     private void createRecipeSearchTask() {
         searchTask = new RecipeSearchTask(this, getFoundMachine());
         TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
-    }
-
-    public int incrementRecipeSearchRetryCount() {
-        recipeResearchRetryCounter++;
-        return recipeResearchRetryCounter;
     }
 
     @Override

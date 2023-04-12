@@ -1,9 +1,10 @@
 package ink.ikx.mmce.core;
 
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import ink.ikx.mmce.common.assembly.MachineAssembly;
 import ink.ikx.mmce.common.assembly.MachineAssemblyManager;
@@ -42,21 +43,31 @@ public class AssemblyEventHandler {
         Item item = Item.getByNameOrId(AssemblyConfig.itemName);
         if (item == null) item = Items.STICK;
 
-        if (tileEntity instanceof TileMachineController && !player.isSneaking()) {
-            TileMachineController controller = (TileMachineController) tileEntity;
+        if (player.isSneaking()) {
+            return;
+        }
+
+        if (tileEntity instanceof TileMultiblockMachineController) {
+            TileMultiblockMachineController controller = (TileMultiblockMachineController) tileEntity;
             if (stack.getItem().equals(ItemsMM.blueprint)) {
                 if (getBlueprint(controller).isEmpty()) {
                     ItemStack copy = stack.copy();
                     copy.setCount(1);
                     if (isPlayerNotCreative(player)) stack.setCount(stack.getCount() - 1);
-                    controller.getInventory().setStackInSlot(TileMachineController.BLUEPRINT_SLOT, copy);
+                    controller.getInventory().setStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT, copy);
                 }
                 event.setCanceled(true);
             } else if (stack.isItemEqual(new ItemStack(item, 1, AssemblyConfig.itemMeta))) {
                 DynamicMachine machine = controller.getBlueprintMachine();
-                if (machine == null && block instanceof BlockController) {
-                    machine = ((BlockController) block).getParentMachine();
+                if (machine == null) {
+                    if (block instanceof BlockController) {
+                        machine = ((BlockController) block).getParentMachine();
+                    }
+                    if (block instanceof BlockFactoryController) {
+                        machine = ((BlockFactoryController) block).getParentMachine();
+                    }
                 }
+
                 assemblyBefore(machine, player, blockPos);
                 event.setCanceled(true);
             }
@@ -104,8 +115,8 @@ public class AssemblyEventHandler {
         return true;
     }
 
-    private static ItemStack getBlueprint(TileMachineController controller) {
-        return controller.getInventory().getStackInSlot(TileMachineController.BLUEPRINT_SLOT);
+    private static ItemStack getBlueprint(TileMultiblockMachineController controller) {
+        return controller.getInventory().getStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT);
     }
 
     private static boolean isPlayerNotCreative(EntityPlayer player) {

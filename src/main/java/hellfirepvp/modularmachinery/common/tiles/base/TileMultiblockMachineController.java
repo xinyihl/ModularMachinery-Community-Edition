@@ -4,10 +4,18 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
+import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeCheckEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -41,7 +49,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity {
+public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
@@ -268,7 +276,23 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return true;
     }
 
+    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
+        RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, Collections.unmodifiableList(this.foundComponents), MiscUtils.flatten(this.foundModifiers.values()));
+        for (RecipeModifier modifier : customModifiers.values()) {
+            context.addModifier(modifier);
+        }
+        return context;
+    }
+
     protected void onStructureFormed() {
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineStructureFormedEvent.class);
+        if (handlerList != null && !handlerList.isEmpty()) {
+            for (IEventHandler<MachineEvent> handler : handlerList) {
+                MachineStructureFormedEvent event = new MachineStructureFormedEvent(this);
+                handler.handle(event);
+            }
+        }
+
         if (this.foundMachine.getMachineColor() != Config.machineColor) {
             Sync.doSyncAction(this::distributeCasingColor);
         }
@@ -474,7 +498,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public String getFormedMachineName() {
-        return isStructureFormed() ? getFoundMachine().getRegistryName().toString() : null;
+        return isStructureFormed() ? foundMachine.getRegistryName().toString() : null;
     }
 
     public IData getCustomData() {
@@ -487,6 +511,55 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public boolean hasModifier(String key) {
         return customModifiers.containsKey(key);
+    }
+
+    /**
+     * <p>机器开始检查配方能否工作。</p>
+     *
+     * @param context RecipeCraftingContext
+     * @return CraftingCheckResult
+     */
+    public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
+        RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+        if (result.isSuccess()) {
+            List<IEventHandler<RecipeEvent>> handlerList = context.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
+            if (handlerList == null || handlerList.isEmpty()) return result;
+            for (IEventHandler<RecipeEvent> handler : handlerList) {
+                RecipeCheckEvent event = new RecipeCheckEvent(this);
+                handler.handle(event);
+                if (event.isFailure()) {
+                    result.overrideError(event.getFailureReason());
+                    return result;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    @Nullable
+    @Override
+    public ActiveMachineRecipe getActiveRecipe() {
+        return null;
+    }
+
+    @Override
+    public void addModifier(String key, RecipeModifier newModifier) {
+        if (newModifier != null) {
+            customModifiers.put(key, newModifier);
+            flushContextModifier();
+        }
+    }
+
+    @Override
+    public void removeModifier(String key) {
+        if (hasModifier(key)) {
+            customModifiers.remove(key);
+            flushContextModifier();
+        }
+    }
+
+    public void flushContextModifier() {
     }
 
     @Nullable
@@ -529,6 +602,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return this;
     }
 
+    public void incrementRecipeSearchRetryCount() {
+        recipeResearchRetryCounter++;
+    }
+
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
@@ -551,7 +628,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         super.writeCustomNBT(compound);
 
         compound.setTag("items", this.inventory.writeNBT());
-        compound.setTag("statusTag", this.getCraftingStatus().serialize());
+        compound.setTag("statusTag", this.craftingStatus.serialize());
 
         if (this.parentMachine != null) {
             compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());

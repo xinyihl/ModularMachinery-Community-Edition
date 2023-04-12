@@ -10,7 +10,7 @@ package hellfirepvp.modularmachinery.common.container;
 
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -35,7 +35,7 @@ public class ContainerFactoryController extends ContainerBase<TileFactoryControl
 
         this.slotBlueprint = addSlotToContainer(new SlotBlueprint(
                 owner.getInventory().asGUIAccess(),
-                TileMachineController.BLUEPRINT_SLOT, 255, 8));
+                TileMultiblockMachineController.BLUEPRINT_SLOT, 255, 8));
     }
 
     @Override

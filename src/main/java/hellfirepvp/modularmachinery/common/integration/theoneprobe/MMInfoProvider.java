@@ -2,8 +2,10 @@ package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
+import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import mcjty.theoneprobe.api.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,8 +27,8 @@ public class MMInfoProvider implements IProbeInfoProvider {
         TileEntity tileEntity = world.getTileEntity(data.getPos());
         if (tileEntity == null) return;
         //判断是否为机械控制器
-        if (tileEntity instanceof TileMachineController) {
-            processMachineControllerTOP((TileMachineController) tileEntity, probeInfo, player);
+        if (tileEntity instanceof TileMultiblockMachineController) {
+            processMultiblockMachineTOP((TileMultiblockMachineController) tileEntity, probeInfo, player);
         }
         if (tileEntity instanceof TileParallelController) {
             processParallelControllerTOP((TileParallelController) tileEntity, probeInfo);
@@ -42,12 +44,25 @@ public class MMInfoProvider implements IProbeInfoProvider {
         probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" + TextFormatting.YELLOW + provider.getMaxParallelism());
     }
 
-    private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
+    private static void processMultiblockMachineTOP(TileMultiblockMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
         //是否形成结构
         if (machine.isStructureFormed()) {
             probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
         }
 
+        if (machine instanceof TileMachineController) {
+            processMachineControllerTOP((TileMachineController) machine, probeInfo, player);
+        }
+        if (machine instanceof TileFactoryController) {
+            processFactoryControllerTOP((TileFactoryController) machine, probeInfo, player);
+        }
+    }
+
+    private static void processFactoryControllerTOP(TileFactoryController factory, IProbeInfo probeInfo, EntityPlayer player) {
+
+    }
+
+    private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
         //是否在工作
         if (machine.getActiveRecipe() == null || machine.getFoundMachine() == null) {
             probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");

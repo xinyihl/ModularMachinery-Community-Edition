@@ -52,6 +52,10 @@ public class BlockFactoryController extends BlockMachineComponent implements Ite
         );
     }
 
+    public DynamicMachine getParentMachine() {
+        return parentMachine;
+    }
+
     @Override
     public int getColorFromItemstack(ItemStack stack, int tintIndex) {
         if (parentMachine == null) return Config.machineColor;
@@ -138,13 +142,13 @@ public class BlockFactoryController extends BlockMachineComponent implements Ite
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileFactoryController();
+        return new TileFactoryController(state);
     }
 
     @Nullable
     @Override
     public TileEntity createNewTileEntity(World worldIn, int meta) {
-        return new TileFactoryController();
+        return new TileFactoryController(getStateFromMeta(meta));
     }
 
 }

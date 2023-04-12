@@ -5,17 +5,16 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 
 import java.util.concurrent.RecursiveTask;
 
 public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
-    private final TileMachineController controller;
+    private final TileMultiblockMachineController controller;
     private final DynamicMachine currentMachine;
     private TileMultiblockMachineController.CraftingStatus status = null;
 
-    public RecipeSearchTask(TileMachineController controller, DynamicMachine currentMachine) {
+    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine) {
         this.controller = controller;
         this.currentMachine = currentMachine;
     }

@@ -38,6 +38,8 @@ gui.controller.status.crafting.progress=Progress: %s
 gui.controller.parallelism=Parallelism：%s
 gui.controller.max_parallelism=Max Parallelism：%s
 
+gui.factory.threads=%s Threads Running / %s Threads Total
+
 gui.smartinterface.title=Smart Data Interface (TotalBound: %s, Current: %s)
 gui.smartinterface.notfound=Not Found Bound Machine.
 gui.smartinterface.value=Current Value: %.0f
