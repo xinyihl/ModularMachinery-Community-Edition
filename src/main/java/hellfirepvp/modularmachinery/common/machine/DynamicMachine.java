@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
@@ -49,9 +50,18 @@ public class DynamicMachine extends AbstractMachine {
     private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
+    private final Map<String, RecipeThread> daemonThreads = new LinkedHashMap<>();
 
     public DynamicMachine(String registryName) {
         super(registryName);
+    }
+
+    public void addDaemonRecipeThread(RecipeThread thread) {
+        daemonThreads.put(thread.getThreadName(), thread);
+    }
+
+    public Map<String, RecipeThread> getDaemonThreads() {
+        return daemonThreads;
     }
 
     public boolean hasSmartInterfaceType(String type) {

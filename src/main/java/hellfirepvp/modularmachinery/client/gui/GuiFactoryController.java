@@ -8,6 +8,7 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.gui.FontRenderer;
@@ -41,12 +42,12 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
     private final GuiScrollbar scrollbar = new GuiScrollbar();
     private final TileFactoryController factory;
-    private final List<TileFactoryController.RecipeQueueThread> recipeQueue;
+    private final List<RecipeThread> recipeQueue;
 
     public GuiFactoryController(TileFactoryController factory, EntityPlayer player) {
         super(new ContainerFactoryController(factory, player));
         this.factory = factory;
-        this.recipeQueue = factory.getRecipeQueue();
+        this.recipeQueue = factory.getRecipeThreadList();
         this.xSize = 280;
         this.ySize = 213;
     }
@@ -74,7 +75,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         int currentScroll = scrollbar.getCurrentScroll();
         for (int i = 0; i < Math.min(MAX_PAGE_ELEMENTS, recipeQueue.size()); i++) {
-            TileFactoryController.RecipeQueueThread thread = recipeQueue.get(i + currentScroll);
+            RecipeThread thread = recipeQueue.get(i + currentScroll);
             TileMultiblockMachineController.CraftingStatus status = thread.getStatus();
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
 
@@ -95,7 +96,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
     }
 
-    private void drawRecipeStatus(TileFactoryController.RecipeQueueThread thread, int id, int x, int y) {
+    private void drawRecipeStatus(RecipeThread thread, int id, int x, int y) {
         GlStateManager.pushMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.scale(FONT_SCALE, FONT_SCALE, FONT_SCALE);
@@ -172,8 +173,10 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             GlStateManager.popMatrix();
             return;
         }
+        offsetY += 15;
 
-        offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
+        drawFactoryThreadsInfo(offsetX, offsetY, fr);
+
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -182,9 +185,9 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
     private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
         fr.drawStringWithShadow(I18n.format("gui.factory.threads",
-                factory.getRecipeQueue().size(), factory.getFoundMachine().getMaxThreads()),
+                factory.getRecipeThreadList().size(), factory.getFoundMachine().getMaxThreads()),
                 offsetX, offsetY, 0xFFFFFF);
-        return offsetY + 10;
+        return offsetY;
     }
 
     private int drawParallelismInfo(int offsetX, int y, FontRenderer fr) {
@@ -192,12 +195,12 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         int parallelism = 1;
         int maxParallelism = factory.getTotalParallelism();
-        for (TileFactoryController.RecipeQueueThread queueThread : factory.getRecipeQueue()) {
+        for (RecipeThread queueThread : factory.getRecipeThreadList()) {
             parallelism += (queueThread.getActiveRecipe().getParallelism() - 1);
         }
 
         if (maxParallelism > 1) {
-            offsetY += 15;
+            offsetY += 10;
             String parallelismStr = I18n.format("gui.controller.parallelism", parallelism);
             fr.drawStringWithShadow(parallelismStr, offsetX, offsetY, 0xFFFFFF);
             offsetY += 10;
@@ -205,7 +208,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             fr.drawStringWithShadow(maxParallelismStr, offsetX, offsetY, 0xFFFFFF);
         }
 
-        return offsetY + 10;
+        return offsetY;
     }
 
     private int drawStructureInfo(int offsetX, int y, FontRenderer fr, DynamicMachine found) {
@@ -225,6 +228,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            offsetY += 15;
         }
 
         return offsetY;
@@ -267,12 +271,11 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             List<String> out = fr.listFormattedStringToWidth(machine.getLocalizedName(), MathHelper.floor(135 * (1 / GuiFactoryController.FONT_SCALE)));
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
             for (String draw : out) {
-                fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
                 offsetY += 10;
+                fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
         } else {
             drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
-            offsetY += 10;
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;

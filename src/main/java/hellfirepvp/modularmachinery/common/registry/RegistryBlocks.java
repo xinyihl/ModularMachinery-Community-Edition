@@ -131,7 +131,7 @@ public class RegistryBlocks {
 
         if (Config.mocCompatibleMode) {
             for (DynamicMachine machine : waitForLoadMachines) {
-                BlockController ctrlBlock =  prepareRegisterWithCustomName(new BlockController("modularcontroller", machine));
+                BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController("modularcontroller", machine));
                 BlockController.MOC_MACHINE_CONTROLLERS.put(machine, ctrlBlock);
 
                 ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
@@ -174,6 +174,7 @@ public class RegistryBlocks {
             ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
                 @Nonnull
                 @Override
+                @SideOnly(Side.CLIENT)
                 public String getItemStackDisplayName(ItemStack stack) {
                     return ctrlBlock.getLocalizedName();
                 }

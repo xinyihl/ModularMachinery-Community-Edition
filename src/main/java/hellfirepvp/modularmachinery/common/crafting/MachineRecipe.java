@@ -44,19 +44,19 @@ import java.util.function.Function;
  */
 public class MachineRecipe implements Comparable<MachineRecipe> {
 
-    private static int counter = 0;
+    protected static int counter = 0;
 
-    private final int sortId;
-    private final String recipeFilePath;
-    private final ResourceLocation owningMachine, registryName;
-    private final int tickTime;
-    private final List<ComponentRequirement<?, ?>> recipeRequirements = Lists.newArrayList();
-    private final RecipeCommandContainer commandContainer = new RecipeCommandContainer();
-    private final int configuredPriority;
-    private final boolean voidPerTickFailure;
-    private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
-    private final List<String> tooltipList;
-    private final boolean isParallelized;
+    protected final int sortId;
+    protected final String recipeFilePath;
+    protected final ResourceLocation owningMachine, registryName;
+    protected final int tickTime;
+    protected final List<ComponentRequirement<?, ?>> recipeRequirements = Lists.newArrayList();
+    protected final RecipeCommandContainer commandContainer = new RecipeCommandContainer();
+    protected final int configuredPriority;
+    protected final boolean voidPerTickFailure;
+    protected final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
+    protected final List<String> tooltipList;
+    protected final boolean isParallelized;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
                          int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized) {

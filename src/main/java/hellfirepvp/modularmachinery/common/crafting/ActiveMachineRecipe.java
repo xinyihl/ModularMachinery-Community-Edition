@@ -65,6 +65,8 @@ public class ActiveMachineRecipe {
 
     public void reset() {
         this.tick = 0;
+        this.parallelism = 1;
+        this.maxParallelism = 1;
         this.data = new NBTTagCompound();
     }
 

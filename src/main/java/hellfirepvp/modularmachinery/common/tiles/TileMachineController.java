@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
@@ -268,7 +269,8 @@ public class TileMachineController extends TileMultiblockMachineController {
 
         this.context.finishCrafting();
 
-        this.activeRecipe = new ActiveMachineRecipe(this.activeRecipe.getRecipe(), isParallelized() ? getMaxParallelism() : 1);
+        this.activeRecipe.reset();
+        this.activeRecipe.setMaxParallelism(isParallelized() ? getMaxParallelism() : 1);
         this.context = createContext(this.activeRecipe);
         tryStartRecipe(context);
     }
@@ -385,7 +387,7 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     private void createRecipeSearchTask() {
-        searchTask = new RecipeSearchTask(this, getFoundMachine(), getMaxParallelism());
+        searchTask = new RecipeSearchTask(this, getFoundMachine(), getMaxParallelism(), RecipeRegistry.getRecipesFor(foundMachine));
         TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
     }
 

@@ -39,6 +39,7 @@ gui.controller.parallelism=并行数：%s
 gui.controller.max_parallelism=最大并行数：%s
 
 gui.factory.threads=%s 线程运行中 / %s 总线程数
+gui.factory.thread=线程 #%s
 
 gui.smartinterface.title=智能数据接口（已绑定：%s，当前：%s）
 gui.smartinterface.notfound=未找到绑定机械。
@@ -268,4 +269,4 @@ tile.modularmachinery.blockparallelcontroller.reinforced.name=§6强化并行控
 tile.modularmachinery.blockparallelcontroller.elite.name=§b精英并行控制器
 tile.modularmachinery.blockparallelcontroller.super.name=§5超级并行控制器
 tile.modularmachinery.blockparallelcontroller.ultimate.name=§c终极并行控制器
-tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。
+tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。gui.factory.thread

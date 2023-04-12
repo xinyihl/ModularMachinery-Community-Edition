@@ -2,6 +2,7 @@ package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
+import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
@@ -72,7 +73,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             return;
         }
 
-        List<TileFactoryController.RecipeQueueThread> recipeQueue = factory.getRecipeQueue();
+        List<RecipeThread> recipeQueue = factory.getRecipeThreadList();
 
         probeInfo.text(
                 TextFormatting.GREEN + String.valueOf(recipeQueue.size()) +

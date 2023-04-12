@@ -2,7 +2,6 @@ package github.kasuminova.mmce.common.concurrent;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
-import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -13,25 +12,26 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
     private final TileMultiblockMachineController controller;
     private final DynamicMachine currentMachine;
     private final int maxParallelism;
+    private final Iterable<MachineRecipe> recipeList;
     private TileMultiblockMachineController.CraftingStatus status = null;
 
-    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism) {
+    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList) {
         this.controller = controller;
         this.currentMachine = currentMachine;
         this.maxParallelism = maxParallelism;
+        this.recipeList = recipeList;
     }
 
     @Override
     protected RecipeCraftingContext compute() {
         DynamicMachine foundMachine = controller.getFoundMachine();
         if (foundMachine == null) return null;
-        Iterable<MachineRecipe> availableRecipes = RecipeRegistry.getRecipesFor(foundMachine);
 
         MachineRecipe highestValidity = null;
         RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
         float validity = 0F;
 
-        for (MachineRecipe recipe : availableRecipes) {
+        for (MachineRecipe recipe : recipeList) {
             ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, maxParallelism);
             RecipeCraftingContext context = controller.createContext(activeRecipe);
             RecipeCraftingContext.CraftingCheckResult result = controller.onCheck(context);
