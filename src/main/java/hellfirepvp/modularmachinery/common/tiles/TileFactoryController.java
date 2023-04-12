@@ -62,7 +62,9 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         if (recipeResearchRetryCounter > 1) {
-            if (recipeQueue.size() <= foundMachine.getMaxThreads()) {
+            onMachineTick();
+
+            if (recipeQueue.size() < foundMachine.getMaxThreads()) {
                 searchAndStartRecipe();
             }
 
@@ -74,6 +76,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            onMachineTick();
+
             if (recipeQueue.size() < foundMachine.getMaxThreads()) {
                 searchAndStartRecipe();
             }
@@ -285,11 +289,11 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     /**
-     * 获取工厂剩余可用并行数。
+     * 获取工厂最大并行数。
+     * 服务端调用。
      */
-    @Override
-    public int getMaxParallelism() {
-        int maxParallelism = super.getMaxParallelism();
+    public int getAvailableParallelism() {
+        int maxParallelism = getMaxParallelism();
         for (RecipeQueueThread thread : recipeQueue) {
             maxParallelism -= (thread.activeRecipe.getParallelism() - 1);
         }
@@ -299,6 +303,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     /**
      * 获取工厂最大并行数。
+     * 仅限客户端。
      */
     public int getTotalParallelism() {
         return totalParallelism;
@@ -309,10 +314,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
      *
      * @param context RecipeCraftingContext
      */
-    protected boolean tryStartRecipe(@Nonnull RecipeCraftingContext context, boolean addToQueue) {
+    protected boolean tryStartRecipe(@Nonnull RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult tryResult = onCheck(context);
 
-        return tryResult.isSuccess() && offerRecipe(context, addToQueue);
+        return tryResult.isSuccess() && offerRecipe(context, false);
     }
 
     public boolean offerRecipe(RecipeCraftingContext context, boolean addToQueue) {
@@ -343,7 +348,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     protected void createRecipeSearchTask() {
-        searchTask = new RecipeSearchTask(this, getFoundMachine());
+        searchTask = new RecipeSearchTask(this, getFoundMachine(), getAvailableParallelism());
         TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
     }
 
@@ -373,13 +378,17 @@ public class TileFactoryController extends TileMultiblockMachineController {
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
 
+        if (!isStructureFormed()) {
+            return;
+        }
+
         if (!recipeQueue.isEmpty()) {
             NBTTagList queueList = new NBTTagList();
             recipeQueue.forEach(queue -> queueList.appendTag(queue.serialize()));
             compound.setTag("queueList", queueList);
         }
 
-        compound.setInteger("totalParallelism", super.getMaxParallelism());
+        compound.setInteger("totalParallelism", getMaxParallelism());
     }
 
     @Nullable
@@ -390,7 +399,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     public boolean isWorking() {
-        return false;
+        return !recipeQueue.isEmpty();
     }
 
     @Override
@@ -439,7 +448,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             activeRecipe.setMaxParallelism(factory.getMaxParallelism());
             context = factory.createContext(activeRecipe);
 
-            return factory.tryStartRecipe(context, false)
+            return factory.tryStartRecipe(context)
                     ? CraftingStatus.SUCCESS
                     : CraftingStatus.IDLE;
         }

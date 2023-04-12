@@ -67,10 +67,12 @@ public class TaskExecutor {
             executed++;
         }
 
-        for (TileEntitySynchronized te : requireUpdateTEList) {
-            te.markForUpdate();
+        synchronized (requireUpdateTEList) {
+            for (TileEntitySynchronized te : requireUpdateTEList) {
+                te.markForUpdate();
+            }
+            requireUpdateTEList.clear();
         }
-        requireUpdateTEList.clear();
 
         //Empty Check
         if (!executors.isEmpty()) {
@@ -127,7 +129,9 @@ public class TaskExecutor {
         mainThreadActions.offer(action);
     }
 
-    public synchronized void addTEUpdateTask(final TileEntitySynchronized te) {
-        requireUpdateTEList.add(te);
+    public void addTEUpdateTask(final TileEntitySynchronized te) {
+        synchronized (requireUpdateTEList) {
+            requireUpdateTEList.add(te);
+        }
     }
 }

@@ -90,7 +90,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
             float progress = (float) activeRecipe.getTick() / activeRecipe.getTotalTick();
             drawTexturedModalRect(RECIPE_QUEUE_OFFSET_X, offsetY, 0, 0, (int) (FACTORY_ELEMENT_WIDTH * progress), FACTORY_ELEMENT_HEIGHT);
-            drawRecipeStatus(thread, i + currentScroll, RECIPE_QUEUE_OFFSET_X + 3, offsetY + 3);
+            drawRecipeStatus(thread, i + currentScroll, RECIPE_QUEUE_OFFSET_X + 2, offsetY + 2);
             offsetY += FACTORY_ELEMENT_HEIGHT + 1;
         }
     }
@@ -108,14 +108,15 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int parallelism = activeRecipe.getParallelism();
 
         if (parallelism > 1) {
-            // Example: #0 (Parallelism: 9)
-            fr.drawString(
-                    "#" + id + " (" + I18n.format("gui.controller.parallelism", parallelism) + ')',
+            // Example: Thread #0 (Parallelism: 9)
+            fr.drawString(I18n.format("gui.factory.thread", id) +
+                            " (" + I18n.format("gui.controller.parallelism", parallelism) + ')',
                     offsetX, offsetY, 0x222222);
         } else {
-            fr.drawString("#" + id, offsetX, offsetY, 0x222222);
+            fr.drawString(I18n.format("gui.factory.thread", id),
+                    offsetX, offsetY, 0x222222);
         }
-        offsetY += 10;
+        offsetY += 12;
 
         TileMultiblockMachineController.CraftingStatus status = thread.getStatus();
         if (status.isCrafting()) {
@@ -172,8 +173,8 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             return;
         }
 
-        offsetY = drawParallelismInfo(offsetX, offsetY, fr);
         offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
+        offsetY = drawParallelismInfo(offsetX, offsetY, fr);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
@@ -189,7 +190,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     private int drawParallelismInfo(int offsetX, int y, FontRenderer fr) {
         int offsetY = y;
 
-        int parallelism = 0;
+        int parallelism = 1;
         int maxParallelism = factory.getTotalParallelism();
         for (TileFactoryController.RecipeQueueThread queueThread : factory.getRecipeQueue()) {
             parallelism += (queueThread.getActiveRecipe().getParallelism() - 1);
@@ -271,6 +272,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             }
         } else {
             drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
+            offsetY += 10;
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
         }
         offsetY += 15;

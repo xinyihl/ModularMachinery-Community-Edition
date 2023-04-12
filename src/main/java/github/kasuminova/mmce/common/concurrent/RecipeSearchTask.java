@@ -12,11 +12,13 @@ import java.util.concurrent.RecursiveTask;
 public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
     private final TileMultiblockMachineController controller;
     private final DynamicMachine currentMachine;
+    private final int maxParallelism;
     private TileMultiblockMachineController.CraftingStatus status = null;
 
-    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine) {
+    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism) {
         this.controller = controller;
         this.currentMachine = currentMachine;
+        this.maxParallelism = maxParallelism;
     }
 
     @Override
@@ -30,7 +32,7 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
         float validity = 0F;
 
         for (MachineRecipe recipe : availableRecipes) {
-            ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, controller.getMaxParallelism());
+            ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, maxParallelism);
             RecipeCraftingContext context = controller.createContext(activeRecipe);
             RecipeCraftingContext.CraftingCheckResult result = controller.onCheck(context);
             if (result.isSuccess()) {
@@ -43,7 +45,7 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
 
                 return context;
             } else if (highestValidity == null ||
-                       (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
+                    (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
                 highestValidity = recipe;
                 highestValidityResult = result;
                 validity = result.getValidity();

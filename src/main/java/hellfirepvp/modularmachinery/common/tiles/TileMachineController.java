@@ -178,18 +178,6 @@ public class TileMachineController extends TileMultiblockMachineController {
         return parentMachine;
     }
 
-    /**
-     * <p>机器开始执行逻辑。</p>
-     */
-    public void onMachineTick() {
-        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return;
-        for (IEventHandler<MachineEvent> handler : handlerList) {
-            MachineTickEvent event = new MachineTickEvent(this);
-            handler.handle(event);
-        }
-    }
-
     public boolean hasMachineTickEventHandlers() {
         List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
         return handlerList != null && !handlerList.isEmpty();
@@ -397,7 +385,7 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     private void createRecipeSearchTask() {
-        searchTask = new RecipeSearchTask(this, getFoundMachine());
+        searchTask = new RecipeSearchTask(this, getFoundMachine(), getMaxParallelism());
         TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
     }
 

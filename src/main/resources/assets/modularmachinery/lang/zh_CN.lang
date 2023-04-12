@@ -56,6 +56,9 @@ top.machine.structure.found=结构已形成
 top.machine.structure.none=结构不完整
 top.max_parallelism=最大并行数：
 top.parallelism=并行数：
+top.factory.thread=线程 #
+top.factory.thread.running=线程运行中
+top.factory.thread.total=总线程数
 
 craftcheck.failure.item.input=缺少物品输入！
 craftcheck.failure.item.output.space=没有足够的库存空间用于物品输出！

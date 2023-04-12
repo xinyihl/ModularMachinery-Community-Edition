@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeCheckEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
@@ -535,6 +536,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         return result;
+    }
+
+    /**
+     * <p>机器开始执行逻辑。</p>
+     */
+    public void onMachineTick() {
+        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return;
+        for (IEventHandler<MachineEvent> handler : handlerList) {
+            MachineTickEvent event = new MachineTickEvent(this);
+            handler.handle(event);
+        }
     }
 
     @Nullable

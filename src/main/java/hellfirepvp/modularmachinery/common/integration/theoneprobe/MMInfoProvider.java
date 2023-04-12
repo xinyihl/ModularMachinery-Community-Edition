@@ -13,6 +13,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class MMInfoProvider implements IProbeInfoProvider {
     @Override
     public String getID() {
@@ -48,6 +51,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
         //是否形成结构
         if (machine.isStructureFormed()) {
             probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
+        } else {
+            probeInfo.text(TextFormatting.RED + "{*top.machine.structure.none*}");
+            return;
         }
 
         if (machine instanceof TileMachineController) {
@@ -58,10 +64,79 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
     }
 
+    // TODO: Really long...
     private static void processFactoryControllerTOP(TileFactoryController factory, IProbeInfo probeInfo, EntityPlayer player) {
+        if (factory.isWorking()) {
+            probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
+        } else {
+            return;
+        }
 
+        List<TileFactoryController.RecipeQueueThread> recipeQueue = factory.getRecipeQueue();
+
+        probeInfo.text(
+                TextFormatting.GREEN + String.valueOf(recipeQueue.size()) +
+                TextFormatting.AQUA + " {*top.factory.thread.running*}" +
+                TextFormatting.RESET + " / " +
+                TextFormatting.YELLOW + factory.getFoundMachine().getMaxThreads() +
+                TextFormatting.GOLD + " {*top.factory.thread.total*}"
+        );
+
+        int trueMaxParallelism = factory.getMaxParallelism();
+        if (factory.getMaxParallelism() != trueMaxParallelism) {
+            probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" +
+                    TextFormatting.GREEN + ((trueMaxParallelism - factory.getAvailableParallelism()) + 1));
+            probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" +
+                    TextFormatting.YELLOW + trueMaxParallelism);
+        }
+
+        AtomicInteger i = new AtomicInteger();
+        recipeQueue.stream().limit(6).forEach(thread -> {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            TileMultiblockMachineController.CraftingStatus status = thread.getStatus();
+
+            int progressBarFilledColor = ModIntegrationTOP.recipeProgressBarFilledColor;
+            int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
+            int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
+
+            if (status.isCrafting()) {
+                probeInfo.text(TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement() + ": " + TextFormatting.GREEN + "{*top.machine.working*}");
+            } else {
+                probeInfo.text(TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement() + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
+                progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
+                progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
+                progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
+            }
+
+            int tick = activeRecipe.getTick();
+            int totalTick = activeRecipe.getTotalTick();
+            float progress = (float) (tick * 100) / totalTick;
+
+            String progressStr;
+            if (player.isSneaking()) {
+                //如：20.5 秒 / 40.0 秒
+                //Example: 20.5 Sec / 40.0 Sec
+                progressStr = String.format("%.1f s / %.1f s", (float) tick / 20, (float) totalTick / 20);
+            } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1000) {
+                //只有当启用了显示小数点且配方耗时超过 1000 tick 才会显示小数点
+                progressStr = String.format("%.2f", progress) + "%";
+            } else {
+                progressStr = String.format("%.0f", progress) + "%";
+            }
+
+            IProbeInfo progressLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
+            progressLine.text(TextFormatting.AQUA + "{*top.recipe.progress*}:  ");
+            progressLine.progress((int) progress, 100, probeInfo.defaultProgressStyle()
+                    .prefix(progressStr)
+                    .filledColor(progressBarFilledColor)
+                    .alternateFilledColor(progressBarAlternateFilledColor)
+                    .borderColor(progressBarBorderColor)
+                    .backgroundColor(ModIntegrationTOP.recipeProgressBarBackgroundColor)
+                    .numberFormat(NumberFormat.NONE));
+        });
     }
 
+    // TODO: Really long...
     private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
         //是否在工作
         if (machine.getActiveRecipe() == null || machine.getFoundMachine() == null) {
