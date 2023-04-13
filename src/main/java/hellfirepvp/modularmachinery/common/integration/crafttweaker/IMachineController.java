@@ -44,6 +44,12 @@ public interface IMachineController {
     IBlockPos getIPos();
 
     /**
+     * 获取机械在当前世界运行的时间（非世界时间，进入退出世界会被重置）
+     */
+    @ZenGetter("ticksExisted")
+    int getTicksExisted();
+
+    /**
      * 获取机器当前正在执行的配方
      *
      * @return 配方

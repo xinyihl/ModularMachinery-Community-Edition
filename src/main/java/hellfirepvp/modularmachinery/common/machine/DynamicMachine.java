@@ -157,9 +157,7 @@ public class DynamicMachine extends AbstractMachine {
         for (Tuple<MachineComponent<?>, ComponentSelectorTag> tpl : taggedComponents) {
             context.addComponent(tpl.getFirst(), tpl.getSecond());
         }
-        for (RecipeModifier modifier : modifiers) {
-            context.addModifier(modifier);
-        }
+        modifiers.forEach(context::addModifier);
         return context;
     }
 

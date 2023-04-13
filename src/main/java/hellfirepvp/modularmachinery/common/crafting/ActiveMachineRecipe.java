@@ -11,12 +11,12 @@ package hellfirepvp.modularmachinery.common.crafting;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -75,14 +75,14 @@ public class ActiveMachineRecipe {
     }
 
     @Nonnull
-    public TileMachineController.CraftingStatus tick(TileMultiblockMachineController ctrl, RecipeCraftingContext context) {
+    public CraftingStatus tick(TileMultiblockMachineController ctrl, RecipeCraftingContext context) {
         totalTick = Math.round(RecipeModifier.applyModifiers(
                 context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
                 RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
 
-        //Skip per-tick logic until controller can finish the recipe
+        //Skip per-tick logic until the controller can finish the recipe
         if (this.isCompleted()) {
-            return TileMultiblockMachineController.CraftingStatus.working();
+            return CraftingStatus.working();
         }
 
         RecipeCraftingContext.CraftingCheckResult check;
@@ -96,11 +96,11 @@ public class ActiveMachineRecipe {
             } else {
                 doFailureAction(RecipeFailureActions.getDefaultAction());
             }
-            return TileMultiblockMachineController.CraftingStatus.failure(check.getFirstErrorMessage(""));
+            return CraftingStatus.failure(check.getFirstErrorMessage(""));
         } else {
             //Success
             this.tick++;
-            return TileMultiblockMachineController.CraftingStatus.working();
+            return CraftingStatus.working();
         }
     }
 

@@ -6,7 +6,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 
@@ -16,7 +15,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class TaskExecutor {
     public static final int MAX_THREAD_SCHEDULE_PER_TICK = 4;
-    public static final int THREAD_COUNT = 4;
+    public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 2, 8), 4);
     public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(THREAD_COUNT);
     public static long totalExecuted = 0;
     public static long taskUsedTime = 0;
@@ -25,7 +24,7 @@ public class TaskExecutor {
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> collectedActions = new ConcurrentLinkedQueue<>();
-    private final Set<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
+    private final HashSet<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
     private volatile int maximumTaskMerge = 1;
 
     public void init() {

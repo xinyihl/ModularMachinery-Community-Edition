@@ -131,6 +131,10 @@ public class RegistryBlocks {
 
         if (Config.mocCompatibleMode) {
             for (DynamicMachine machine : waitForLoadMachines) {
+                if (machine.isFactoryOnly()) {
+                    continue;
+                }
+
                 BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController("modularcontroller", machine));
                 BlockController.MOC_MACHINE_CONTROLLERS.put(machine, ctrlBlock);
 
@@ -148,7 +152,7 @@ public class RegistryBlocks {
         }
 
         for (DynamicMachine machine : waitForLoadMachines) {
-            if (machine.isHasFactory()) {
+            if (machine.isHasFactory() || Config.enableFactoryControllerByDefault) {
                 BlockFactoryController factoryBlock = prepareRegisterWithCustomName(new BlockFactoryController(machine));
                 BlockFactoryController.FACOTRY_CONTROLLERS.put(machine, factoryBlock);
 

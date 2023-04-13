@@ -110,6 +110,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
         if (successAtLeastOnce) {
             incrementSuccessCounter(maxWorkDelay, minWorkDelay);
+            markForUpdate();
         } else {
             decrementSuccessCounter();
         }

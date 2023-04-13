@@ -32,13 +32,13 @@ gui.controller.status.redstone_stopped=机器因红石信号停止工作
 gui.controller.status.missing_structure=结构不完整
 gui.controller.status.no_recipe=没有相匹配的配方
 gui.controller.status.chunk_unloaded=多方块结构中有方块被卸载，停止工作
-gui.controller.status.idle=闲置中
+gui.controller.status.idle=闲置
 gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 gui.controller.parallelism=并行数：%s
 gui.controller.max_parallelism=最大并行数：%s
 
-gui.factory.threads=%s 线程运行中 / %s 总线程数
+gui.factory.threads=%s 线程运行中 / %s 最大线程数
 gui.factory.thread=线程 #%s
 
 gui.smartinterface.title=智能数据接口（已绑定：%s，当前：%s）
@@ -59,7 +59,7 @@ top.max_parallelism=最大并行数：
 top.parallelism=并行数：
 top.factory.thread=线程 #
 top.factory.thread.running=线程运行中
-top.factory.thread.total=总线程数
+top.factory.thread.max=最大线程数
 
 craftcheck.failure.item.input=缺少物品输入！
 craftcheck.failure.item.output.space=没有足够的库存空间用于物品输出！
@@ -200,7 +200,10 @@ tile.modularmachinery.machinecontroller.deprecated.tip.0=模块化控制器兼�
 tile.modularmachinery.machinecontroller.deprecated.tip.1=请联系整合包作者将控制器转移至 MMCE 的控制器中。
 
 tile.modularmachinery.blockfactorycontroller.name=工厂控制器
-tile.modularmachinery.machinefactorycontroller.name=%s工厂控制器
+
+# 工厂系统的扩展性太强了，直接叫工厂控制器可能显得不够科幻。
+# 你也可以自行修改名称。
+tile.modularmachinery.machinefactorycontroller.name=%s系统控制器
 
 tile.modularmachinery.blockcasing.plain.name=机械外壳
 tile.modularmachinery.blockcasing.vent.name=机械通风口
@@ -269,4 +272,4 @@ tile.modularmachinery.blockparallelcontroller.reinforced.name=§6强化并行控
 tile.modularmachinery.blockparallelcontroller.elite.name=§b精英并行控制器
 tile.modularmachinery.blockparallelcontroller.super.name=§5超级并行控制器
 tile.modularmachinery.blockparallelcontroller.ultimate.name=§c终极并行控制器
-tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。gui.factory.thread
+tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。

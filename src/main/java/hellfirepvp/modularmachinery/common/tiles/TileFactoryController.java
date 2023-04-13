@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
@@ -8,22 +9,22 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
-import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
-import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.Tuple;
 import net.minecraftforge.common.util.Constants;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
@@ -32,7 +33,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     private final List<RecipeThread> recipeThreadList = new LinkedList<>();
     private int totalParallelism = 1;
     private BlockFactoryController parentController = null;
-    private Tuple<String, RecipeSearchTask> searchTask = null;
+    private FactoryRecipeSearchTask searchTask = null;
 
     public TileFactoryController() {
 
@@ -58,7 +59,6 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (getWorld().getStrongPower(getPos()) > 0) {
             return;
         }
-
         if (!doStructureCheck() || !isStructureFormed()) {
             return;
         }
@@ -66,13 +66,15 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (recipeResearchRetryCounter > 1) {
             onMachineTick();
 
-            if (recipeThreadList.size() < foundMachine.getMaxThreads()) {
+            if (hasIdleThread()) {
                 searchAndStartRecipe();
             }
 
-            if (!recipeThreadList.isEmpty()) {
-                ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doRecipeTick);
-                markForUpdateSync();
+            if (!daemonRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
+                ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+                    doRecipeTick();
+                    markForUpdateSync();
+                });
             }
             return;
         }
@@ -80,11 +82,11 @@ public class TileFactoryController extends TileMultiblockMachineController {
         ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
             onMachineTick();
 
-            if (recipeThreadList.size() < foundMachine.getMaxThreads()) {
+            if (hasIdleThread()) {
                 searchAndStartRecipe();
             }
 
-            if (!recipeThreadList.isEmpty()) {
+            if (!daemonRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
                 doRecipeTick();
                 markForUpdateSync();
             }
@@ -95,43 +97,56 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * 工厂开始运行队列中的配方。
      */
     protected void doRecipeTick() {
-        for (int i = 0; i < recipeThreadList.size(); i++) {
-            // 如果配方已经完成运行，或中途运行失败，则从队列中移除配方。
-            if (doThreadRecipeTick(recipeThreadList.get(i))) {
-                recipeThreadList.remove(i);
-                i--;
+        updateDaemonThread();
+
+        daemonRecipeThreads.values().forEach(thread -> {
+            if (thread.getActiveRecipe() == null) {
+                thread.searchAndStartRecipe();
             }
-        }
+            doThreadRecipeTick(thread);
+        });
+
+        recipeThreadList.forEach(this::doThreadRecipeTick);
     }
 
     /**
-     * 工厂守护线程开始执行配方 Tick
+     * 工厂线程开始执行配方 Tick
      */
-    protected void doDaemonThreadRecipeTick(RecipeThread thread) {
-        if (!thread.isWorking()) {
+    protected void doThreadRecipeTick(RecipeThread thread) {
+        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+        if (activeRecipe == null) {
             return;
         }
 
-        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        boolean waitForFinish = thread.isWaitForFinish();
+        // If this thread previously failed in completing the recipe,
+        // it retries to complete the recipe.
+        if (thread.isWaitForFinish()) {
+            finishRecipe(thread);
+            return;
+        }
 
         // PreTickEvent
-        if (!waitForFinish && onThreadRecipePreTick(thread)) {
+        if (!onThreadRecipePreTick(thread)) {
             return;
         }
         // RecipeTick
         CraftingStatus status = thread.onTick();
         if (!status.isCrafting() && activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure()) {
-            thread.setActiveRecipe(null).setContext(null);
+            thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
             return;
-            // PostTickEvent
-        } else if (!waitForFinish && onThreadRecipePostTick(thread)) {
+                   // PostTickEvent
+        } else if (!onThreadRecipePostTick(thread)) {
             return;
         }
         if (!activeRecipe.isCompleted()) {
             return;
         }
 
+        // FinishedEvent
+        finishRecipe(thread);
+    }
+
+    private static void finishRecipe(RecipeThread thread) {
         // FinishedEvent
         if (ModularMachinery.pluginServerCompatibleMode) {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(thread::onFinished);
@@ -141,57 +156,14 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     /**
-     * 工厂线程开始执行配方 Tick
-     * @return 如果返回 {@code true}，则从控制器配方线程队列中移除当前配方线程。
-     */
-    protected boolean doThreadRecipeTick(RecipeThread thread) {
-        if (!thread.isWorking()) {
-            return true;
-        }
-
-        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        boolean waitForFinish = thread.isWaitForFinish();
-
-        // PreTickEvent
-        if (!waitForFinish && onThreadRecipePreTick(thread)) {
-            return true;
-        }
-        // RecipeTick
-        CraftingStatus status = thread.onTick();
-        if (!status.isCrafting() && activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure()) {
-            return true;
-                                     // PostTickEvent
-        } else if (!waitForFinish && onThreadRecipePostTick(thread)) {
-            return true;
-        }
-        if (!activeRecipe.isCompleted()) {
-            return false;
-        }
-
-        // FinishedEvent
-        if (ModularMachinery.pluginServerCompatibleMode) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-                CraftingStatus result = thread.onFinished();
-                if (result == CraftingStatus.IDLE) {
-                    recipeThreadList.remove(thread);
-                }
-            });
-        } else {
-            CraftingStatus result = thread.onFinished();
-            return result == CraftingStatus.IDLE;
-        }
-        return false;
-    }
-
-    /**
      * <p>工厂线程开始执行一个配方。</p>
      */
     public void onThreadRecipeStart(RecipeThread thread) {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(RecipeStartEvent.class);
+        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeStartEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeStartEvent event = new RecipeStartEvent(this);
+                FactoryRecipeStartEvent event = new FactoryRecipeStartEvent(thread, this);
                 handler.handle(event);
             }
         }
@@ -199,67 +171,77 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     /**
-     * <p>工厂线程在完成配方 Tick 后执行</p>
+     * <p>工厂线程在开始配方 Tick 前执行</p>
      *
      * @return 如果为 false，则进度停止增加，并在控制器状态栏输出原因
      */
     public boolean onThreadRecipePreTick(RecipeThread thread) {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(RecipePreTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return false;
+        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipePreTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return true;
 
         for (IEventHandler<RecipeEvent> handler : handlerList) {
-            RecipePreTickEvent event = new RecipePreTickEvent(this);
+            FactoryRecipePreTickEvent event = new FactoryRecipePreTickEvent(thread, this);
             handler.handle(event);
 
             if (event.isPreventProgressing()) {
                 activeRecipe.setTick(activeRecipe.getTick() - 1);
                 thread.setStatus(CraftingStatus.working(event.getReason()));
-                return false;
+                return true;
             }
             if (event.isFailure()) {
                 if (event.isDestructRecipe()) {
-                    return true;
+                    thread.setActiveRecipe(null)
+                            .setContext(null)
+                            .setStatus(CraftingStatus.failure(event.getReason()))
+                            .getSemiPermanentModifiers().clear();
+                    return false;
                 }
-                thread.setStatus(CraftingStatus.working(event.getReason()));
+                thread.setStatus(CraftingStatus.failure(event.getReason()));
                 return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     /**
      * <p>与 {@code onPreTick()} 相似，但是可以销毁配方。</p>
      *
-     * @return 如果返回 {@code true}，则从控制器配方线程队列中移除当前配方线程。
+     * @return 如果返回 {@code false}，即代表运行失败。
      */
     public boolean onThreadRecipePostTick(RecipeThread thread) {
-        List<IEventHandler<RecipeEvent>> handlerList = thread.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return false;
+        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeTickEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) return true;
 
         for (IEventHandler<RecipeEvent> handler : handlerList) {
-            RecipeTickEvent event = new RecipeTickEvent(this);
+            FactoryRecipeTickEvent event = new FactoryRecipeTickEvent(thread, this);
             handler.handle(event);
             if (event.isFailure()) {
                 if (event.isDestructRecipe()) {
-                    return true;
+                    thread.setActiveRecipe(null)
+                            .setContext(null)
+                            .setStatus(CraftingStatus.failure(event.getFailureReason()))
+                            .getSemiPermanentModifiers().clear();
+                    return false;
                 }
                 thread.setStatus(CraftingStatus.failure(event.getFailureReason()));
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
     /**
      * <p>工厂线程完成一个配方。</p>
      */
     public void onThreadRecipeFinished(RecipeThread thread) {
-        List<IEventHandler<RecipeEvent>> handlerList = thread.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeFinishEvent.class);
+        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeFinishEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeFinishEvent event = new RecipeFinishEvent(this);
+                FactoryRecipeFinishEvent event = new FactoryRecipeFinishEvent(thread, this);
                 handler.handle(event);
             }
         }
@@ -280,42 +262,52 @@ public class TileFactoryController extends TileMultiblockMachineController {
         super.onStructureFormed();
 
         daemonRecipeThreads.clear();
-        foundMachine.getDaemonThreads().forEach((threadName, thread) -> daemonRecipeThreads.put(threadName, thread.copy(this)));
+        foundMachine.getDaemonThreads().forEach((threadName, thread) ->
+                daemonRecipeThreads.put(threadName, thread.copyDaemonThread(this)));
     }
 
     protected void searchAndStartRecipe() {
         if (searchTask != null) {
-            RecipeSearchTask task = searchTask.getSecond();
+            RecipeSearchTask task = searchTask;
             if (!task.isDone()) {
                 return;
             }
-
             //并发检查
-            if (task.getCurrentMachine() == getFoundMachine()) {
-                try {
-                    RecipeCraftingContext context = task.get();
-                    if (context != null) {
-                        offerRecipe(context, true);
-                        searchTask = null;
+            if (task.getCurrentMachine() != getFoundMachine()) {
+                searchTask = null;
+                return;
+            }
 
-                        if (recipeThreadList.size() < foundMachine.getMaxThreads()) {
-                            createRecipeSearchTask("");
-                        }
-                        return;
-                    } else {
-                        CraftingStatus status = task.getStatus();
-                        if (status != null) {
-                            this.craftingStatus = status;
-                        }
-                    }
-                } catch (Exception e) {
-                    ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+            RecipeCraftingContext context = null;
+            try {
+                context = task.get();
+            } catch (Exception e) {
+                ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+            }
+
+            if (context != null) {
+                offerRecipe(context);
+                searchTask = null;
+
+                if (hasIdleThread()) {
+                    createRecipeSearchTask();
+                }
+                resetRecipeSearchRetryCount();
+                return;
+            } else {
+                incrementRecipeSearchRetryCount();
+                CraftingStatus status = task.getStatus();
+                if (status != null) {
+                    this.craftingStatus = status;
                 }
             }
 
             searchTask = null;
-        } else if (this.ticksExisted % currentRecipeSearchDelay() == 0) {
-            createRecipeSearchTask("");
+            return;
+        }
+
+        if (this.ticksExisted % currentRecipeSearchDelay() == 0) {
+            createRecipeSearchTask();
         }
     }
 
@@ -330,6 +322,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
         return recipeThreadList;
     }
 
+    public Map<String, RecipeThread> getDaemonRecipeThreads() {
+        return daemonRecipeThreads;
+    }
+
     /**
      * 获取工厂最大并行数。
      * 服务端调用。
@@ -337,7 +333,18 @@ public class TileFactoryController extends TileMultiblockMachineController {
     public int getAvailableParallelism() {
         int maxParallelism = getMaxParallelism();
         for (RecipeThread thread : recipeThreadList) {
-            maxParallelism -= (thread.getActiveRecipe().getParallelism() - 1);
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            if (activeRecipe == null) {
+                continue;
+            }
+            maxParallelism -= (activeRecipe.getParallelism() - 1);
+        }
+        for (RecipeThread thread : daemonRecipeThreads.values()) {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            if (activeRecipe == null) {
+                continue;
+            }
+            maxParallelism -= (activeRecipe.getParallelism() - 1);
         }
 
         return maxParallelism;
@@ -351,7 +358,17 @@ public class TileFactoryController extends TileMultiblockMachineController {
         return totalParallelism;
     }
 
-    public void offerRecipe(RecipeCraftingContext context, boolean addToQueue) {
+    public void offerRecipe(RecipeCraftingContext context) {
+        for (RecipeThread thread : recipeThreadList) {
+            if (thread.getActiveRecipe() == null) {
+                thread.setContext(context)
+                        .setActiveRecipe(context.getActiveRecipe())
+                        .setStatus(CraftingStatus.SUCCESS);
+                onThreadRecipeStart(thread);
+                return;
+            }
+        }
+
         if (recipeThreadList.size() > foundMachine.getMaxThreads()) {
             return;
         }
@@ -360,40 +377,109 @@ public class TileFactoryController extends TileMultiblockMachineController {
         thread.setContext(context)
                   .setActiveRecipe(context.getActiveRecipe())
                   .setStatus(CraftingStatus.SUCCESS);
-        if (addToQueue) {
-            recipeThreadList.add(thread);
-        }
+        recipeThreadList.add(thread);
         onThreadRecipeStart(thread);
     }
 
     @Override
     public void flushContextModifier() {
-        recipeThreadList.stream().map(RecipeThread::getContext).filter(Objects::nonNull).forEach(context -> {
-            context.overrideModifier(MiscUtils.flatten(this.foundModifiers.values()));
-            for (RecipeModifier modifier : customModifiers.values()) {
-                context.addModifier(modifier);
-            }
-        });
+        recipeThreadList.forEach(RecipeThread::flushContextModifier);
     }
 
-    protected void createRecipeSearchTask(String threadName) {
-        searchTask = new Tuple<>(threadName, new RecipeSearchTask(this, getFoundMachine(), getAvailableParallelism(), RecipeRegistry.getRecipesFor(foundMachine)));
-        TaskExecutor.FORK_JOIN_POOL.submit(searchTask.getSecond());
+    protected void createRecipeSearchTask() {
+        searchTask = new FactoryRecipeSearchTask(
+                this,
+                getFoundMachine(),
+                getAvailableParallelism(),
+                RecipeRegistry.getRecipesFor(foundMachine),
+                null, getActiveRecipeList());
+        TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
+    }
+
+    protected void updateDaemonThread() {
+        Map<String, RecipeThread> threads = foundMachine.getDaemonThreads();
+        if (threads.isEmpty()) {
+            daemonRecipeThreads.clear();
+            return;
+        }
+
+        if (ticksExisted % 20 != 0) {
+            return;
+        }
+
+        List<String> invalidThreads = new ArrayList<>();
+
+        for (Map.Entry<String, RecipeThread> threadEntry : threads.entrySet()) {
+            String name = threadEntry.getKey();
+            if (!daemonRecipeThreads.containsKey(name)) {
+                daemonRecipeThreads.put(name, threadEntry.getValue().copyDaemonThread(this));
+            }
+        }
+
+        for (Map.Entry<String, RecipeThread> threadEntry : daemonRecipeThreads.entrySet()) {
+            String name = threadEntry.getKey();
+            RecipeThread thread = threads.get(name);
+            if (thread == null) {
+                invalidThreads.add(name);
+                continue;
+            }
+
+            RecipeThread factoryThread = threadEntry.getValue();
+            Set<MachineRecipe> recipeSet = factoryThread.getRecipeSet();
+            recipeSet.clear();
+            recipeSet.addAll(thread.getRecipeSet());
+        }
+
+        for (String name : invalidThreads) {
+            daemonRecipeThreads.remove(name);
+        }
+    }
+
+    public boolean hasIdleThread() {
+        if (recipeThreadList.size() < foundMachine.getMaxThreads()) {
+            return true;
+        }
+
+        for (RecipeThread thread : recipeThreadList) {
+            if (thread.getActiveRecipe() == null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
+
+        if (!isStructureFormed()) {
+            return;
+        }
+
         parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
 
         recipeThreadList.clear();
-        if (compound.hasKey("queueList", Constants.NBT.TAG_LIST)) {
-            NBTTagList queueList = compound.getTagList("queueList", Constants.NBT.TAG_COMPOUND);
-            for (int i = 0; i < queueList.tagCount(); i++) {
-                NBTTagCompound tagAt = queueList.getCompoundTagAt(i);
-                RecipeThread queueThread = RecipeThread.deserialize(tagAt, this);
-                if (queueThread != null) {
-                    recipeThreadList.add(queueThread);
+        daemonRecipeThreads.clear();
+
+        if (compound.hasKey("threadList", Constants.NBT.TAG_LIST)) {
+            NBTTagList threadList = compound.getTagList("threadList", Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < threadList.tagCount(); i++) {
+                NBTTagCompound tagAt = threadList.getCompoundTagAt(i);
+                RecipeThread thread = RecipeThread.deserialize(tagAt, this);
+                if (thread != null) {
+                    recipeThreadList.add(thread);
+                }
+            }
+        }
+
+        if (compound.hasKey("daemonThreadList", Constants.NBT.TAG_LIST)) {
+            NBTTagList threadList = compound.getTagList("daemonThreadList", Constants.NBT.TAG_COMPOUND);
+            for (int i = 0; i < threadList.tagCount(); i++) {
+                NBTTagCompound tagAt = threadList.getCompoundTagAt(i);
+                RecipeThread thread = RecipeThread.deserialize(tagAt, this);
+                if (thread != null) {
+                    daemonRecipeThreads.put(thread.getThreadName(), thread);
                 }
             }
         }
@@ -412,9 +498,15 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         if (!recipeThreadList.isEmpty()) {
-            NBTTagList queueList = new NBTTagList();
-            recipeThreadList.forEach(queue -> queueList.appendTag(queue.serialize()));
-            compound.setTag("queueList", queueList);
+            NBTTagList threadList = new NBTTagList();
+            recipeThreadList.forEach(thread -> threadList.appendTag(thread.serialize()));
+            compound.setTag("threadList", threadList);
+        }
+
+        if (!daemonRecipeThreads.isEmpty()) {
+            NBTTagList threadList = new NBTTagList();
+            daemonRecipeThreads.values().forEach(thread -> threadList.appendTag(thread.serialize()));
+            compound.setTag("daemonThreadList", threadList);
         }
 
         compound.setInteger("totalParallelism", getMaxParallelism());
@@ -422,16 +514,50 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Nullable
     @Override
+    public ActiveMachineRecipe getActiveRecipe() {
+        ActiveMachineRecipe[] activeRecipes = getActiveRecipeList();
+        return activeRecipes.length == 0 ? null : activeRecipes[0];
+    }
+
+    @Nonnull
+    @Override
     public ActiveMachineRecipe[] getActiveRecipeList() {
-        return recipeThreadList.stream().map(RecipeThread::getActiveRecipe).toArray(type -> new ActiveMachineRecipe[0]);
+        List<ActiveMachineRecipe> list = new ArrayList<>();
+        for (RecipeThread thread : daemonRecipeThreads.values()) {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            if (activeRecipe != null) {
+                list.add(activeRecipe);
+            }
+        }
+        for (RecipeThread thread : recipeThreadList) {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            if (activeRecipe != null) {
+                list.add(activeRecipe);
+            }
+        }
+        return list.toArray(new ActiveMachineRecipe[0]);
     }
 
     @Override
     public boolean isWorking() {
-        return !recipeThreadList.isEmpty();
+        if (daemonRecipeThreads.isEmpty() && recipeThreadList.isEmpty()) {
+            return false;
+        }
+        for (RecipeThread thread : daemonRecipeThreads.values()) {
+            if (thread.getActiveRecipe() != null) {
+                return true;
+            }
+        }
+        for (RecipeThread thread : recipeThreadList) {
+            if (thread.getActiveRecipe() != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
+    @Deprecated
     public void overrideStatusInfo(String newInfo) {
 
     }

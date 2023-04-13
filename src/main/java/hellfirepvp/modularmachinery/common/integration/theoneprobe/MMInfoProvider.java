@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
@@ -14,6 +15,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -73,18 +76,18 @@ public class MMInfoProvider implements IProbeInfoProvider {
             return;
         }
 
-        List<RecipeThread> recipeQueue = factory.getRecipeThreadList();
+        List<RecipeThread> recipeThreads = factory.getRecipeThreadList();
 
         probeInfo.text(
-                TextFormatting.GREEN + String.valueOf(recipeQueue.size()) +
+                TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
                 TextFormatting.AQUA + " {*top.factory.thread.running*}" +
                 TextFormatting.RESET + " / " +
                 TextFormatting.YELLOW + factory.getFoundMachine().getMaxThreads() +
-                TextFormatting.GOLD + " {*top.factory.thread.total*}"
+                TextFormatting.GOLD + " {*top.factory.thread.max*}"
         );
 
         int trueMaxParallelism = factory.getMaxParallelism();
-        if (factory.getMaxParallelism() != trueMaxParallelism) {
+        if (factory.getAvailableParallelism() != trueMaxParallelism) {
             probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" +
                     TextFormatting.GREEN + ((trueMaxParallelism - factory.getAvailableParallelism()) + 1));
             probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" +
@@ -92,21 +95,38 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         AtomicInteger i = new AtomicInteger();
-        recipeQueue.stream().limit(6).forEach(thread -> {
+        Collection<RecipeThread> daemonThreads = factory.getDaemonRecipeThreads().values();
+        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((daemonThreads.size() + recipeThreads.size()) * 1.5));
+        recipeThreadList.addAll(daemonThreads);
+        recipeThreadList.addAll(recipeThreads);
+
+        recipeThreadList.stream().limit(6).forEach(thread -> {
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-            TileMultiblockMachineController.CraftingStatus status = thread.getStatus();
+            CraftingStatus status = thread.getStatus();
 
             int progressBarFilledColor = ModIntegrationTOP.recipeProgressBarFilledColor;
             int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
             int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
 
-            if (status.isCrafting()) {
-                probeInfo.text(TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement() + ": " + TextFormatting.GREEN + "{*top.machine.working*}");
+            String threadName;
+            if (thread.isDaemon()) {
+                threadName = TextFormatting.BLUE + "{*" + thread.getThreadName() + "*}";
+                i.getAndIncrement();
             } else {
-                probeInfo.text(TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement() + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
+                threadName = TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement();
+            }
+
+            if (status.isCrafting()) {
+                probeInfo.text(threadName + ": " + TextFormatting.GREEN + "{*top.machine.working*}");
+            } else {
+                probeInfo.text(threadName + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
                 progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
                 progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
                 progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
+            }
+
+            if (activeRecipe == null) {
+                return;
             }
 
             int tick = activeRecipe.getTick();

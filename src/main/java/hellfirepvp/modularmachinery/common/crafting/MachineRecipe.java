@@ -57,6 +57,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     protected final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
     protected final List<String> tooltipList;
     protected final boolean isParallelized;
+    protected final String threadName;
+    protected final boolean singleThread;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
                          int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized) {
@@ -71,11 +73,14 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.isParallelized = isParallelized;
         this.recipeEventHandlers = new HashMap<>();
         this.tooltipList = new ArrayList<>();
+        this.threadName = "";
+        this.singleThread = false;
     }
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
                          int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized,
-                         Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList) {
+                         Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList,
+                         String threadName, boolean singleThread) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -87,6 +92,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.isParallelized = isParallelized;
         this.recipeEventHandlers = recipeEventHandlers;
         this.tooltipList = tooltipList;
+        this.threadName = threadName;
+        this.singleThread = singleThread;
     }
 
     public MachineRecipe(PreparedRecipe preparedRecipe) {
@@ -101,6 +108,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.isParallelized = preparedRecipe.isParallelized();
         this.recipeEventHandlers = preparedRecipe.getRecipeEventHandlers();
         this.tooltipList = preparedRecipe.getTooltipList();
+        this.threadName = preparedRecipe.getThreadName();
+        this.singleThread = preparedRecipe.isSingleThread();
     }
 
     public void addTooltip(String tooltip) {
@@ -178,6 +187,14 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         return MachineRegistry.getRegistry().getMachine(owningMachine);
     }
 
+    public String getThreadName() {
+        return threadName;
+    }
+
+    public boolean isSingleThread() {
+        return singleThread;
+    }
+
     public MachineRecipe copy(Function<ResourceLocation, ResourceLocation> registryNameChange,
                               ResourceLocation newOwningMachineIdentifier,
                               List<RecipeModifier> modifiers) {
@@ -187,7 +204,11 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, this.tickTime, false)),
                 this.configuredPriority,
                 this.doesCancelRecipeOnPerTickFailure(),
-                this.isParallelized);
+                this.isParallelized,
+                this.recipeEventHandlers,
+                this.tooltipList,
+                this.threadName,
+                this.singleThread);
 
         for (ComponentRequirement<?, ?> requirement : this.getCraftingRequirements()) {
             copy.addRequirement(requirement.deepCopyModified(modifiers));

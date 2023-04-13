@@ -38,7 +38,7 @@ gui.controller.status.crafting.progress=Progress: %s
 gui.controller.parallelism=Parallelism：%s
 gui.controller.max_parallelism=Max Parallelism：%s
 
-gui.factory.threads=%s Threads Running / %s Threads Total
+gui.factory.threads=%s Threads Running / %s Threads Max
 gui.factory.thread=Thread #%s
 
 gui.smartinterface.title=Smart Data Interface (TotalBound: %s, Current: %s)
@@ -59,7 +59,7 @@ top.max_parallelism=Max Parallelism：
 top.parallelism=Parallelism：
 top.factory.thread=Thread #
 top.factory.thread.running=Threads Running
-top.factory.thread.total=Threads Total
+top.factory.thread.max=Threads max
 
 craftcheck.failure.item.input=Missing input item!
 craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!
@@ -200,7 +200,11 @@ tile.modularmachinery.machinecontroller.deprecated.tip.0=Modular controller comp
 tile.modularmachinery.machinecontroller.deprecated.tip.1=Please contact the modpack author to transfer the controller to MMCE's controller.
 
 tile.modularmachinery.blockfactorycontroller.name=Factory Controller
-tile.modularmachinery.machinefactorycontroller.name=%s Factory Controller
+
+# To be honest, the factory system is so scalable that I think calling
+# it a factory controller makes it seem like it's not sci-fi enough.
+# You can also change the name yourself.
+tile.modularmachinery.machinefactorycontroller.name=%s System Controller
 
 tile.modularmachinery.blockcasing.plain.name=Machine Casing
 tile.modularmachinery.blockcasing.vent.name=Machine Vent

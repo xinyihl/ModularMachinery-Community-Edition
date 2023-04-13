@@ -9,6 +9,7 @@ import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
@@ -25,7 +26,6 @@ import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.*;
@@ -44,10 +44,13 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.CapabilityItemHandler;
+import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
@@ -55,16 +58,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
-    protected final Map<String, List<RecipeModifier>> foundModifiers = new HashMap<>();
-    protected final Map<String, RecipeModifier> customModifiers = new HashMap<>();
-    protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new HashMap<>();
-    protected final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
-    protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
+    protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
+    protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
+    protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
+    protected final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new CopyOnWriteArrayList<>();
+    protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new CopyOnWriteArrayList<>();
     protected EnumFacing controllerRotation = null;
     protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
     protected IOInventory inventory;
     protected NBTTagCompound customData = new NBTTagCompound();
-    protected TileMachineController.CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+    protected CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
     protected TaggedPositionBlockArray foundPattern = null;
@@ -279,9 +282,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
         RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, Collections.unmodifiableList(this.foundComponents), MiscUtils.flatten(this.foundModifiers.values()));
-        for (RecipeModifier modifier : customModifiers.values()) {
-            context.addModifier(modifier);
-        }
+        customModifiers.values().forEach(context::addModifier);
         return context;
     }
 
@@ -361,7 +362,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         // Finally, check all registered machinery.
-        // TODO It needs to be optimized, it takes up too much performance.
+        checkAllPatterns();
+        return true;
+    }
+
+    protected void checkAllPatterns() {
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             if (machine.isRequiresBlueprint()) continue;
             if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation), machine)) {
@@ -369,8 +374,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 break;
             }
         }
-
-        return true;
     }
 
     protected void updateComponents() {
@@ -389,6 +392,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
+        ArrayList<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
         for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry : this.foundPattern.getPattern().entrySet()) {
             BlockArray.BlockInformation info = entry.getValue();
             if (!info.hasTileEntity()) {
@@ -408,7 +412,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 continue;
             }
 
-            this.foundComponents.add(new Tuple<>(component, tag));
+            foundComponents.add(new Tuple<>(component, tag));
 
             if (component instanceof TileParallelController.ParallelControllerProvider) {
                 this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
@@ -417,6 +421,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
             checkAndAddSmartInterface(component, realPos);
         }
+        this.foundComponents.addAll(foundComponents);
 
         foundModifiers.clear();
         updateModifiers();
@@ -550,12 +555,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
     }
 
-    @Nullable
-    @Override
-    public ActiveMachineRecipe getActiveRecipe() {
-        return null;
-    }
-
     @Override
     public void addModifier(String key, RecipeModifier newModifier) {
         if (newModifier != null) {
@@ -572,7 +571,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
     }
 
-    public void flushContextModifier() {
+    public abstract void flushContextModifier();
+
+    public Map<String, RecipeModifier> getCustomModifiers() {
+        return customModifiers;
+    }
+
+    public Map<String, List<RecipeModifier>> getFoundModifiers() {
+        return foundModifiers;
     }
 
     @Nullable
@@ -750,6 +756,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     }
 
+    @ZenMethod
+    public int getTicksExisted() {
+        return ticksExisted;
+    }
+
     public enum Type {
         MISSING_STRUCTURE,
         CHUNK_UNLOADED,
@@ -761,74 +772,5 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return "gui.controller.status." + this.name().toLowerCase();
         }
 
-    }
-
-    public static class CraftingStatus {
-
-        public static final CraftingStatus SUCCESS = new CraftingStatus(Type.CRAFTING, "");
-        public static final CraftingStatus MISSING_STRUCTURE = new CraftingStatus(Type.MISSING_STRUCTURE, "");
-        public static final CraftingStatus CHUNK_UNLOADED = new CraftingStatus(Type.CHUNK_UNLOADED, "");
-        public static final CraftingStatus IDLE = new CraftingStatus(Type.IDLE, "");
-        private final TileMachineController.Type status;
-        private String unlocalizedMessage;
-
-        public CraftingStatus(TileMachineController.Type status, String unlocalizedMessage) {
-            this.status = status;
-            this.unlocalizedMessage = unlocalizedMessage;
-        }
-
-        public static CraftingStatus working() {
-            return SUCCESS;
-        }
-
-        public static CraftingStatus working(String unlocMessage) {
-            return new CraftingStatus(Type.CRAFTING, unlocMessage);
-        }
-
-        public static CraftingStatus failure(String unlocMessage) {
-            return new CraftingStatus(Type.NO_RECIPE, unlocMessage);
-        }
-
-        public static CraftingStatus deserialize(NBTTagCompound tag) {
-            TileMachineController.Type type = Type.values()[tag.getInteger("type")];
-            String unlocMessage = tag.getString("message");
-            return new CraftingStatus(type, unlocMessage);
-        }
-
-        public TileMachineController.Type getStatus() {
-            return status;
-        }
-
-        public String getUnlocMessage() {
-            return !unlocalizedMessage.isEmpty() ? unlocalizedMessage : this.status.getUnlocalizedDescription();
-        }
-
-        public void overrideStatusMessage(String unlocalizedMessage) {
-            this.unlocalizedMessage = unlocalizedMessage;
-        }
-
-        public boolean isCrafting() {
-            return this.status == Type.CRAFTING;
-        }
-
-        public NBTTagCompound serialize() {
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setInteger("type", this.status.ordinal());
-            tag.setString("message", this.unlocalizedMessage);
-            return tag;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (!(obj instanceof CraftingStatus)) return false;
-            CraftingStatus another = (CraftingStatus) obj;
-            if (status != another.status) return false;
-            return unlocalizedMessage.equals(another.unlocalizedMessage);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(status, unlocalizedMessage);
-        }
     }
 }

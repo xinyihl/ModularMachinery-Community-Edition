@@ -232,6 +232,7 @@ public class RecipeCraftingContext {
     }
 
     public CraftingCheckResult canStartCrafting() {
+        permanentModifierList.clear();
         return this.canStartCrafting(req -> true);
     }
 
@@ -241,7 +242,6 @@ public class RecipeCraftingContext {
 
     public CraftingCheckResult canStartCrafting(Predicate<ComponentRequirement<?, ?>> requirementFilter) {
         currentRestrictions.clear();
-        permanentModifierList.clear();
         CraftingCheckResult result = new CraftingCheckResult();
         float successfulRequirements = 0;
         List<ComponentRequirement<?, ?>> requirements = this.requirements.stream()
@@ -305,6 +305,12 @@ public class RecipeCraftingContext {
 
     public void addModifier(RecipeModifier modifier) {
         if (modifier != null) {
+            this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+        }
+    }
+
+    public void addModifier(Collection<RecipeModifier> modifiers) {
+        for (RecipeModifier modifier : modifiers) {
             this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
         }
     }

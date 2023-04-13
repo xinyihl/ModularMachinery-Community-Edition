@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common;
 
+import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import github.kasuminova.mmce.common.event.EventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -26,6 +27,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEven
 import hellfirepvp.modularmachinery.common.integration.fluxnetworks.ModIntegrationFluxNetworks;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
@@ -145,6 +147,11 @@ public class CommonProxy implements IGuiHandler {
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
+        for (Action action : RecipeThread.WAIT_FOR_ADD) {
+            action.doAction();
+        }
+        RecipeThread.WAIT_FOR_ADD.clear();
+
         future.join();
 
         if (Mods.TOP.isPresent()) {

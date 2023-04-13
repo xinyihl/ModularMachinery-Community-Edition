@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
@@ -26,6 +27,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.block.state.IBlockState;
@@ -296,6 +298,17 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     @Override
+    protected void checkAllPatterns() {
+        for (DynamicMachine machine : MachineRegistry.getRegistry()) {
+            if (machine.isRequiresBlueprint() || machine.isFactoryOnly()) continue;
+            if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation), machine)) {
+                onStructureFormed();
+                break;
+            }
+        }
+    }
+
+    @Override
     public ActiveMachineRecipe getActiveRecipe() {
         return activeRecipe;
     }
@@ -367,8 +380,10 @@ public class TileMachineController extends TileMultiblockMachineController {
                     if (context != null) {
                         tryStartRecipe(context);
                         searchTask = null;
+                        resetRecipeSearchRetryCount();
                         return true;
                     } else {
+                        incrementRecipeSearchRetryCount();
                         CraftingStatus status = searchTask.getStatus();
                         if (status != null) {
                             this.craftingStatus = status;

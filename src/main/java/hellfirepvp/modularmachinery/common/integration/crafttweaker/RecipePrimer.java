@@ -66,6 +66,8 @@ public class RecipePrimer implements PreparedRecipe {
     private final List<String> toolTipList = new ArrayList<>();
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
     private boolean isParallelized = Config.recipeParallelizeEnabledByDefault;
+    private boolean singleThread = false;
+    private String threadName = "";
     private ComponentRequirement<?, ?> lastComponent = null;
 
     public RecipePrimer(ResourceLocation registryName, ResourceLocation owningMachine, int tickTime, int configuredPriority, boolean doesVoidPerTick) {
@@ -183,6 +185,25 @@ public class RecipePrimer implements PreparedRecipe {
         return addSmartInterfaceDataInput(typeStr, value, value);
     }
 
+    /**
+     * 设置此配方在工厂中同时运行的数量是否不超过 1。
+     */
+    @ZenMethod
+    public RecipePrimer setSingleThread(boolean singleThread) {
+        this.singleThread = singleThread;
+        return this;
+    }
+
+    /**
+     * 设置此配方只能被指定的守护线程执行。
+     * @param name 线程名
+     */
+    @ZenMethod
+    public RecipePrimer setThreadName(String name) {
+        this.threadName = name;
+        return this;
+    }
+
     //----------------------------------------------------------------------------------------------
     // EventHandlers
     //----------------------------------------------------------------------------------------------
@@ -213,6 +234,30 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addFinishHandler(IEventHandler<RecipeFinishEvent> event) {
         addRecipeEventHandler(RecipeFinishEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryStartHandler(IEventHandler<FactoryRecipeStartEvent> event) {
+        addRecipeEventHandler(FactoryRecipeStartEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryPreTickHandler(IEventHandler<FactoryRecipePreTickEvent> event) {
+        addRecipeEventHandler(FactoryRecipePreTickEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryTickHandler(IEventHandler<FactoryRecipeTickEvent> event) {
+        addRecipeEventHandler(FactoryRecipeTickEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryFinishHandler(IEventHandler<FactoryRecipeFinishEvent> event) {
+        addRecipeEventHandler(FactoryRecipeFinishEvent.class, event);
         return this;
     }
 
@@ -629,6 +674,16 @@ public class RecipePrimer implements PreparedRecipe {
     @Override
     public boolean isParallelized() {
         return isParallelized;
+    }
+
+    @Override
+    public boolean isSingleThread() {
+        return singleThread;
+    }
+
+    @Override
+    public String getThreadName() {
+        return threadName;
     }
 
     @Override

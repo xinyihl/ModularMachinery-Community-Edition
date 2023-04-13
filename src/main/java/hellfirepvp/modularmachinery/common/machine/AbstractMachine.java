@@ -17,7 +17,7 @@ public abstract class AbstractMachine {
     protected String localizedName = "";
     protected int definedColor = Config.machineColor;
     protected int maxParallelism = Config.maxMachineParallelism;
-    protected int maxThreads = 18;
+    protected int maxThreads = Config.defaultFactoryMaxThread;
     protected boolean requiresBlueprint = false;
     protected boolean parallelizable = Config.machineParallelizeEnabledByDefault;
     protected boolean hasFactory = false;

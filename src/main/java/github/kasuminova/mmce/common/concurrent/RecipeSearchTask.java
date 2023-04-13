@@ -2,6 +2,7 @@ package github.kasuminova.mmce.common.concurrent;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -9,11 +10,11 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import java.util.concurrent.RecursiveTask;
 
 public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
-    private final TileMultiblockMachineController controller;
-    private final DynamicMachine currentMachine;
-    private final int maxParallelism;
-    private final Iterable<MachineRecipe> recipeList;
-    private TileMultiblockMachineController.CraftingStatus status = null;
+    protected final TileMultiblockMachineController controller;
+    protected final DynamicMachine currentMachine;
+    protected final int maxParallelism;
+    protected final Iterable<MachineRecipe> recipeList;
+    protected CraftingStatus status = null;
 
     public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList) {
         this.controller = controller;
@@ -41,8 +42,6 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
                 if (foundMachine == null || !foundMachine.equals(currentMachine))
                     return null;
 
-                controller.resetRecipeSearchRetryCount();
-
                 return context;
             } else if (highestValidity == null ||
                     (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
@@ -58,18 +57,17 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
             return null;
 
         if (highestValidity != null) {
-            status = TileMultiblockMachineController.CraftingStatus.failure(
+            status = CraftingStatus.failure(
                     highestValidityResult.getFirstErrorMessage(""));
         } else {
-            status = TileMultiblockMachineController.CraftingStatus.failure(
+            status = CraftingStatus.failure(
                     TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
         }
-        controller.incrementRecipeSearchRetryCount();
 
         return null;
     }
 
-    public TileMultiblockMachineController.CraftingStatus getStatus() {
+    public CraftingStatus getStatus() {
         return status;
     }
 

@@ -6,6 +6,7 @@ import github.kasuminova.mmce.common.concurrent.Action;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import net.minecraft.util.ResourceLocation;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -62,6 +63,18 @@ public class MachineModifier {
                 return;
             }
             machine.setMaxThreads(maxThreads);
+        });
+    }
+
+    @ZenMethod
+    public static void addDaemonThread(String machineName, RecipeThread thread) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+            if (machine == null) {
+                CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
+                return;
+            }
+            machine.addDaemonRecipeThread(thread);
         });
     }
 

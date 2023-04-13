@@ -33,12 +33,14 @@ public class Config {
     public static boolean mocCompatibleMode = false;
     public static boolean onlyOneMachineController = false;
     public static boolean disableMocDeprecatedTip = false;
-    public static int machineColor;
     public static boolean selectiveUpdateTileEntity = false;
     public static boolean machineParallelizeEnabledByDefault = true;
     public static boolean recipeParallelizeEnabledByDefault = true;
     public static boolean enableFluxNetworksIntegration = true;
+    public static boolean enableFactoryControllerByDefault = false;
+    public static int machineColor;
     public static int maxMachineParallelism = 2048;
+    public static int defaultFactoryMaxThread = 20;
 
     private static File lastReadFile;
     private static Configuration lastReadConfig;
@@ -88,7 +90,7 @@ public class Config {
                 "disable-moc-deprecated-tip", "general", false,
                 "Disable the ModularController is deprecated tooltip.");
 
-        // Performance
+        // Network
         selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
                 "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
 
@@ -103,5 +105,12 @@ public class Config {
                 "parallel-controller", true, "Whether parallel recipe processing is enabled by default.");
         maxMachineParallelism = lastReadConfig.getInt("max-machine-parallelism", "parallel-controller",
                 2048, 1, Integer.MAX_VALUE, "The default max number of parallelism for a machine.");
+
+        // Factory System
+        enableFactoryControllerByDefault = lastReadConfig.getBoolean("enable-factory-controller-bydefault",
+                "factory-system", false, "If enabled, the mod will register the factory system controller for all machines by default.");
+        defaultFactoryMaxThread = lastReadConfig.getInt("default-factory-max-thread", "factory-system",
+                10, 1, 100,
+                "Sets the maximum number of threads in the factory system by default.");
     }
 }
