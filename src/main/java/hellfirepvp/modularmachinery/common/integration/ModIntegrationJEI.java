@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
@@ -139,6 +140,7 @@ public class ModIntegrationJEI implements IModPlugin {
         RecipeLayoutHelper.init();
 
         registry.addRecipeCatalyst(new ItemStack(BlocksMM.blockController), CATEGORY_PREVIEW);
+        registry.addRecipeCatalyst(new ItemStack(BlocksMM.blockFactoryController), CATEGORY_PREVIEW);
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             ItemStack stack = new ItemStack(ItemsMM.blueprint);
             ItemBlueprint.setAssociatedMachine(stack, machine);
@@ -166,6 +168,10 @@ public class ModIntegrationJEI implements IModPlugin {
                         getCategoryStringFor(controller.getParentMachine()))
         );
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(controller ->
+                registry.addRecipeCatalyst(new ItemStack(controller),
+                        getCategoryStringFor(controller.getParentMachine()))
+        );
+        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(controller ->
                 registry.addRecipeCatalyst(new ItemStack(controller),
                         getCategoryStringFor(controller.getParentMachine()))
         );

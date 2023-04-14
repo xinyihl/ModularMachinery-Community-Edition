@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
@@ -537,6 +538,11 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         if (mocCtrl != null) {
             ItemStack ctrlStack = new ItemStack(mocCtrl);
             stackList.add(ctrlStack);
+        }
+        BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(this.machine);
+        if (factory != null) {
+            ItemStack factoryStack = new ItemStack(factory);
+            stackList.add(factoryStack);
         }
         stackList.add(bOut);
 

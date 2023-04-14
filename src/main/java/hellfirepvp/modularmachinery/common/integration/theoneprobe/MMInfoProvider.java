@@ -117,7 +117,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             }
 
             if (status.isCrafting()) {
-                probeInfo.text(threadName + ": " + TextFormatting.GREEN + "{*top.machine.working*}");
+                probeInfo.text(threadName + ": " + TextFormatting.GREEN + "{*" + status.getUnlocMessage() + "*}");
             } else {
                 probeInfo.text(threadName + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
                 progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;

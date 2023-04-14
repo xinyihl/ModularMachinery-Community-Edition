@@ -10,6 +10,8 @@ package hellfirepvp.modularmachinery.client.util;
 
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
@@ -24,10 +26,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -67,11 +66,30 @@ public class DynamicMachineRenderContext {
     }
 
     private void addControllerToBlockArray(DynamicMachine machine, BlockArray copy, Vec3i moveOffset) {
+        // Factory Only
+        if (machine.isHasFactory() && machine.isFactoryOnly()) {
+            BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(machine);
+            if (factory == null) factory = BlocksMM.blockFactoryController;
+            copy.addBlock(new BlockPos(moveOffset), new BlockArray.BlockInformation(
+                    Collections.singletonList(new IBlockStateDescriptor(factory.getDefaultState()))));
+            return;
+        }
+
+        List<IBlockStateDescriptor> descriptors = new ArrayList<>();
+
+        // Controller
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
+        descriptors.add(new IBlockStateDescriptor(ctrl.getDefaultState()));
 
-        copy.addBlock(new BlockPos(moveOffset), new BlockArray.BlockInformation(
-                Collections.singletonList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
+        // Factory
+        if (machine.isHasFactory() || Config.enableFactoryControllerByDefault) {
+            BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(machine);
+            if (factory == null) factory = BlocksMM.blockFactoryController;
+            descriptors.add(new IBlockStateDescriptor(factory.getDefaultState()));
+        }
+
+        copy.addBlock(new BlockPos(moveOffset), new BlockArray.BlockInformation(descriptors));
     }
 
     public static void addReplacementToBlockArray(

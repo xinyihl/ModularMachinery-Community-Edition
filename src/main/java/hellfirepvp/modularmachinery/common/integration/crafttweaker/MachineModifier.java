@@ -53,8 +53,9 @@ public class MachineModifier {
 
     @ZenMethod
     public static void setMaxThreads(String machineName, int maxThreads) {
-        if (maxThreads < 1) {
-            CraftTweakerAPI.logError("Max Threads must larger than 1!");
+        // Maybe the author only wanted to use the daemon thread?
+        if (maxThreads < 0) {
+            CraftTweakerAPI.logError("Max Threads must larger than 0!");
         }
         WAIT_FOR_MODIFY.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));

@@ -91,7 +91,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         // Daemon Thread Color
         if (thread.isDaemon()) {
-            GlStateManager.color(0.5F, 0.8F, 1.0F, 1.0F);
+            GlStateManager.color(0.7F, 0.9F, 1.0F, 1.0F);
         } else {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         }
@@ -101,7 +101,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         if (status.isCrafting()) {
             GlStateManager.color(0.6F, 1.0F, 0.75F, 1.0F);
         } else {
-            GlStateManager.color(1.0F, 0.45F, 0.45F, 1.0F);
+            GlStateManager.color(1.0F, 0.6F, 0.6F, 1.0F);
         }
 
         if (activeRecipe != null) {
@@ -145,15 +145,10 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
         offsetY += 12;
 
-        if (status.isCrafting()) {
-            fr.drawString(I18n.format("gui.controller.status.crafting"), offsetX, offsetY, 0x222222);
+        List<String> out = fr.listFormattedStringToWidth(I18n.format(status.getUnlocMessage()), (int) ((FACTORY_ELEMENT_WIDTH - 6) / FONT_SCALE));
+        for (String draw : out) {
+            fr.drawString(draw, offsetX, offsetY, 0x222222);
             offsetY += 10;
-        } else {
-            List<String> out = fr.listFormattedStringToWidth(I18n.format(status.getUnlocMessage()), (int) ((FACTORY_ELEMENT_WIDTH - 6) / FONT_SCALE));
-            for (String draw : out) {
-                fr.drawString(draw, offsetX, offsetY, 0x222222);
-                offsetY += 10;
-            }
         }
 
         if (activeRecipe != null && activeRecipe.getTotalTick() > 0) {
@@ -231,6 +226,10 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             if (activeRecipe != null) {
                 parallelism += (activeRecipe.getParallelism() - 1);
             }
+        }
+
+        if (parallelism <= 1) {
+            return offsetY;
         }
 
         offsetY += 10;

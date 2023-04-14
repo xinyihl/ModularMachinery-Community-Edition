@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import io.netty.util.internal.ThrowableUtil;
@@ -22,6 +23,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
@@ -98,6 +100,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
      */
     protected void doRecipeTick() {
         updateDaemonThread();
+        cleanIdleTimeoutThread();
 
         daemonRecipeThreads.values().forEach(thread -> {
             if (thread.getActiveRecipe() == null) {
@@ -115,6 +118,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     protected void doThreadRecipeTick(RecipeThread thread) {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         if (activeRecipe == null) {
+            thread.idleTime++;
             return;
         }
 
@@ -396,6 +400,9 @@ public class TileFactoryController extends TileMultiblockMachineController {
         TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
     }
 
+    /**
+     * 更新守护线程列表。
+     */
     protected void updateDaemonThread() {
         Map<String, RecipeThread> threads = foundMachine.getDaemonThreads();
         if (threads.isEmpty()) {
@@ -403,7 +410,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        if (ticksExisted % 20 != 0) {
+        if (!daemonRecipeThreads.isEmpty() && ticksExisted % 20 != 0) {
             return;
         }
 
@@ -432,6 +439,19 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
         for (String name : invalidThreads) {
             daemonRecipeThreads.remove(name);
+        }
+    }
+
+    /**
+     * 清理闲置时间过长的线程。
+     */
+    protected void cleanIdleTimeoutThread() {
+        for (int i = 0; i < recipeThreadList.size(); i++) {
+            RecipeThread thread = recipeThreadList.get(i);
+            if (thread.isIdle() && thread.idleTime >= RecipeThread.IDLE_TIME_OUT) {
+                recipeThreadList.remove(i);
+                i--;
+            }
         }
     }
 
@@ -487,6 +507,20 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (compound.hasKey("totalParallelism")) {
             totalParallelism = compound.getInteger("totalParallelism");
         }
+    }
+
+    @Override
+    protected void readMachineNBT(NBTTagCompound compound) {
+        if (compound.hasKey("parentMachine")) {
+            ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
+            parentMachine = MachineRegistry.getRegistry().getMachine(rl);
+            if (parentMachine != null) {
+                parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
+            } else {
+                ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
+            }
+        }
+        super.readMachineNBT(compound);
     }
 
     @Override

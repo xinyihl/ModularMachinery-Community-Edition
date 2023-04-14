@@ -52,6 +52,10 @@ public class BlockFactoryController extends BlockMachineComponent implements Ite
         );
     }
 
+    public static BlockFactoryController getControllerWithMachine(DynamicMachine machine) {
+        return FACOTRY_CONTROLLERS.get(machine);
+    }
+
     public DynamicMachine getParentMachine() {
         return parentMachine;
     }

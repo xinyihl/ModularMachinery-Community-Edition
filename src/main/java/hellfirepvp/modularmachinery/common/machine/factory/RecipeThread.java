@@ -35,11 +35,13 @@ import java.util.*;
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeThread")
 public class RecipeThread {
+    public static final int RECIPE_SEARCH_DELAY = 20;
+    public static final int IDLE_TIME_OUT = 200;
     public static final List<Action> WAIT_FOR_ADD = new ArrayList<>();
-    private static final int RECIPE_SEARCH_DELAY = 20;
     private final TreeSet<MachineRecipe> recipeSet = new TreeSet<>();
     private final Map<String, RecipeModifier> permanentModifiers = new HashMap<>();
     private final Map<String, RecipeModifier> semiPermanentModifiers = new HashMap<>();
+    public int idleTime = 0;
     private TileFactoryController factory;
     private boolean isDaemon;
     private String threadName;
@@ -78,7 +80,7 @@ public class RecipeThread {
         if (context == null) {
             context = createContext(activeRecipe);
         }
-
+        idleTime = 0;
         return (status = activeRecipe.tick(factory, context));
     }
 
@@ -136,6 +138,7 @@ public class RecipeThread {
             RecipeCraftingContext context = null;
             try {
                 context = searchTask.get();
+                status = searchTask.getStatus();
             } catch (Exception e) {
                 ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
             }
