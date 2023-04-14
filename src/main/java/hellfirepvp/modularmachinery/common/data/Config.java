@@ -33,7 +33,7 @@ public class Config {
     public static boolean mocCompatibleMode = false;
     public static boolean onlyOneMachineController = false;
     public static boolean disableMocDeprecatedTip = false;
-    public static boolean selectiveUpdateTileEntity = false;
+    public static boolean selectiveUpdateTileEntity = true;
     public static boolean machineParallelizeEnabledByDefault = true;
     public static boolean recipeParallelizeEnabledByDefault = true;
     public static boolean enableFluxNetworksIntegration = true;
@@ -91,7 +91,7 @@ public class Config {
                 "Disable the ModularController is deprecated tooltip.");
 
         // Network
-        selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", false,
+        selectiveUpdateTileEntity = lastReadConfig.getBoolean("selective-update-tileentity", "general", true,
                 "Provide selective updates for certain tile entities that tend to consume a lot of bandwidth to relieve network pressure.");
 
         // FluxNetworks Integration

@@ -76,7 +76,7 @@ public class RecipeThread {
             return new CraftingStatus(TileMultiblockMachineController.Type.NO_RECIPE, "");
         }
         if (context == null) {
-            context = factory.createContext(activeRecipe);
+            context = createContext(activeRecipe);
         }
 
         return (status = activeRecipe.tick(factory, context));
@@ -88,7 +88,7 @@ public class RecipeThread {
             return;
         }
         if (context == null) {
-            context = factory.createContext(activeRecipe);
+            context = createContext(activeRecipe);
         }
 
         RecipeCraftingContext.CraftingCheckResult checkResult = context.canFinishCrafting();
@@ -105,7 +105,7 @@ public class RecipeThread {
 
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
-        context = factory.createContext(activeRecipe);
+        context = createContext(activeRecipe);
 
         RecipeCraftingContext.CraftingCheckResult result = factory.onCheck(context);
         if (result.isSuccess()) {
@@ -114,7 +114,17 @@ public class RecipeThread {
             activeRecipe = null;
             context = null;
             status = CraftingStatus.IDLE;
+            if (isDaemon) {
+                createRecipeSearchTask();
+            }
         }
+    }
+
+    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
+        RecipeCraftingContext context = factory.createContext(activeRecipe);
+        context.addModifier(semiPermanentModifiers.values());
+        context.addModifier(permanentModifiers.values());
+        return context;
     }
 
     public void searchAndStartRecipe() {
@@ -143,18 +153,22 @@ public class RecipeThread {
             }
         } else {
             if (factory.getTicksExisted() % RECIPE_SEARCH_DELAY == 0) {
-                TileFactoryController factory = this.factory;
-                Iterable<MachineRecipe> recipeSet = this.recipeSet.isEmpty() ? RecipeRegistry.getRecipesFor(factory.getFoundMachine()) : this.recipeSet;
-                searchTask = new FactoryRecipeSearchTask(
-                        factory,
-                        factory.getFoundMachine(),
-                        factory.getAvailableParallelism(),
-                        recipeSet,
-                        this,
-                        factory.getActiveRecipeList());
-                TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
+                createRecipeSearchTask();
             }
         }
+    }
+
+    private void createRecipeSearchTask() {
+        TileFactoryController factory = this.factory;
+        Iterable<MachineRecipe> recipeSet = this.recipeSet.isEmpty() ? RecipeRegistry.getRecipesFor(factory.getFoundMachine()) : this.recipeSet;
+        searchTask = new FactoryRecipeSearchTask(
+                factory,
+                factory.getFoundMachine(),
+                factory.getAvailableParallelism(),
+                recipeSet,
+                this,
+                factory.getActiveRecipeList());
+        TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
     }
 
     public NBTTagCompound serialize() {

@@ -11,7 +11,6 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
-import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -51,12 +50,8 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        try {
-            drawRecipeQueue();
-            drawFactoryStatus();
-        } catch (Exception e) {
-            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
-        }
+        drawRecipeQueue();
+        drawFactoryStatus();
     }
 
     @Override
@@ -96,7 +91,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         // Daemon Thread Color
         if (thread.isDaemon()) {
-            GlStateManager.color(0.8F, 0.8F, 1.0F, 1.0F);
+            GlStateManager.color(0.5F, 0.8F, 1.0F, 1.0F);
         } else {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         }
@@ -104,9 +99,9 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         // Thread Status Color
         if (status.isCrafting()) {
-            GlStateManager.color(0.5F, 1.0F, 0.75F, 1.0F);
+            GlStateManager.color(0.6F, 1.0F, 0.75F, 1.0F);
         } else {
-            GlStateManager.color(1.0F, 0.6F, 0.6F, 1.0F);
+            GlStateManager.color(1.0F, 0.45F, 0.45F, 1.0F);
         }
 
         if (activeRecipe != null) {

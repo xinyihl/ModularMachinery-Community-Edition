@@ -298,11 +298,12 @@ public class ItemUtils {
     }
 
     public static int tryPlaceItemInInventory(@Nonnull ItemStack stack, IItemHandlerModifiable handler, int start, int end, boolean simulate) {
-        if (!hasInventorySpace(stack, handler, start, end)) {
+        ItemStack toAdd = stack.copy();
+        if (!hasInventorySpace(toAdd, handler, start, end)) {
             return 0;
         }
         int insertedAmt = 0;
-        int max = stack.getMaxStackSize();
+        int max = toAdd.getMaxStackSize();
 
         for (int i = start; i < end; i++) {
             ItemStack in = handler.getStackInSlot(i);
@@ -310,13 +311,13 @@ public class ItemUtils {
                 int added = Math.min(stack.getCount(), max);
                 stack.setCount(stack.getCount() - added);
                 if (!simulate) {
-                    handler.setStackInSlot(i, copyStackWithSize(stack, added));
+                    handler.setStackInSlot(i, copyStackWithSize(toAdd, added));
                 }
                 insertedAmt += added;
                 if (stack.getCount() <= 0)
                     return insertedAmt;
             } else {
-                if (stackEqualsNonNBT(stack, in) && matchTags(stack, in)) {
+                if (stackEqualsNonNBT(toAdd, in) && matchTags(toAdd, in)) {
                     int space = max - in.getCount();
                     int added = Math.min(stack.getCount(), space);
                     insertedAmt += added;
@@ -378,8 +379,43 @@ public class ItemUtils {
         return s;
     }
 
+    /**
+     * 向指定容器插入指定的物品，返回未插入的物品。
+     *
+     * @param external 容器
+     * @param willBeInserted 要插入的物品
+     * @return 未被插入的物品，如果全部插入，返回空物品
+     */
+    public static ItemStack insertItemStackToContainer(IItemHandler external, ItemStack willBeInserted) {
+        ItemStack beInserted = willBeInserted;
+        for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
+            ItemStack stackInSlot = external.getStackInSlot(externalSlotId);
+
+            if (stackInSlot == ItemStack.EMPTY) {
+                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
+                if (notInserted == ItemStack.EMPTY) {
+                    return ItemStack.EMPTY;
+                } else {
+                    beInserted = notInserted;
+                    continue;
+                }
+            }
+
+            if (matchStacks(stackInSlot, willBeInserted)) {
+                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
+                if (notInserted == ItemStack.EMPTY) {
+                    return ItemStack.EMPTY;
+                } else {
+                    beInserted = notInserted;
+                }
+            }
+        }
+
+        return beInserted;
+    }
+
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryFuel(IItemHandlerModifiable handler, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (TileEntityFurnace.getItemBurnTime(s) > 0 && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -390,7 +426,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -405,7 +441,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
-        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
@@ -420,7 +456,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, @Nullable NBTTagCompound matchNBTTag) {
-        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
@@ -431,7 +467,7 @@ public class ItemUtils {
     }
 
     public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
-        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>();
+        Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(controller, CraftTweakerMC.getIItemStack(s))) {

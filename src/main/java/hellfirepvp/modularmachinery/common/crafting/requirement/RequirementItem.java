@@ -32,7 +32,6 @@ import net.minecraftforge.oredict.OreDictionary;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -251,15 +250,15 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
         } else if (actionType == IOType.OUTPUT) {
-            for (ComponentOutputRestrictor restrictor : restrictions) {
-                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
-                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
-
-                    if (inv.exactComponent.equals(component)) {
-                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, true);
-                    }
-                }
-            }
+//            for (ComponentOutputRestrictor restrictor : restrictions) {
+//                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
+//                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
+//
+//                    if (inv.exactComponent.equals(component)) {
+//                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+//                    }
+//                }
+//            }
 
             ItemStack stack = ItemStack.EMPTY;
             if (oreDictName != null) {
@@ -352,7 +351,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             throw new IllegalStateException("Invalid item output!");
         }
         IOInventory handler = (IOInventory) component.providedComponent;
-        if (Objects.requireNonNull(actionType) == IOType.OUTPUT) {
+        if (actionType == IOType.OUTPUT) {
             ItemStack stack;
             if (oreDictName != null) {
                 stack = Iterables.getFirst(OreDictionary.getOres(oreDictName), ItemStack.EMPTY);

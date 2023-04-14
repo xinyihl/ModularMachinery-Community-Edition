@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.util;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
+import io.netty.util.collection.IntObjectHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -24,7 +25,10 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -37,8 +41,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class IOInventory implements IItemHandlerModifiable {
 
     private final TileEntitySynchronized owner;
-    private final Map<Integer, Integer> slotLimits = new HashMap<>(); // Value not present means default, aka 64.
-    private final Map<Integer, SlotStackHolder> inventory = new HashMap<>();
+    private final Map<Integer, Integer> slotLimits = new IntObjectHashMap<>(); // Value not present means default, aka 64.
+    private final Map<Integer, SlotStackHolder> inventory = new IntObjectHashMap<>();
     public boolean allowAnySlots = false;
 
     /**
@@ -69,14 +73,6 @@ public class IOInventory implements IItemHandlerModifiable {
             this.inventory.put(slot, new SlotStackHolder(slot));
         }
         this.accessibleSides = Arrays.asList(accessibleFrom);
-    }
-
-    @Nonnull
-    private static ItemStack copyWithSize(@Nonnull ItemStack stack, int amount) {
-        if (stack.isEmpty() || amount <= 0) return ItemStack.EMPTY;
-        ItemStack copiedStack = stack.copy();
-        copiedStack.setCount(Math.min(amount, stack.getMaxStackSize()));
-        return copiedStack;
     }
 
     private static boolean arrayContains(int[] array, int i) {
@@ -166,7 +162,7 @@ public class IOInventory implements IItemHandlerModifiable {
                 continue;
             }
 
-            ItemStack notInserted = insertItemStackToContainer(itemHandler, beInserted);
+            ItemStack notInserted = ItemUtils.insertItemStackToContainer(itemHandler, beInserted);
             if (notInserted == ItemStack.EMPTY) {
                 return;
             } else {
@@ -175,34 +171,6 @@ public class IOInventory implements IItemHandlerModifiable {
         }
 
         setStackInSlotStrict(internalSlotId, beInserted);
-    }
-
-    private static ItemStack insertItemStackToContainer(IItemHandler external, ItemStack willBeInserted) {
-        ItemStack beInserted = willBeInserted;
-        for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
-            ItemStack stackInSlot = external.getStackInSlot(externalSlotId);
-
-            if (stackInSlot == ItemStack.EMPTY) {
-                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
-                if (notInserted == ItemStack.EMPTY) {
-                    return ItemStack.EMPTY;
-                } else {
-                    beInserted = notInserted;
-                    continue;
-                }
-            }
-
-            if (ItemUtils.matchStacks(stackInSlot, willBeInserted)) {
-                ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
-                if (notInserted == ItemStack.EMPTY) {
-                    return ItemStack.EMPTY;
-                } else {
-                    beInserted = notInserted;
-                }
-            }
-        }
-
-        return beInserted;
     }
 
     @Override
@@ -266,9 +234,9 @@ public class IOInventory implements IItemHandlerModifiable {
         }
 
         SlotStackHolder holder = this.inventory.get(slot);
-        ItemStack toInsert = copyWithSize(stack, stack.getCount());
+        ItemStack toInsert = ItemUtils.copyStackWithSize(stack, stack.getCount());
         if (!holder.itemStack.isEmpty()) {
-            ItemStack existing = copyWithSize(holder.itemStack, holder.itemStack.getCount());
+            ItemStack existing = ItemUtils.copyStackWithSize(holder.itemStack, holder.itemStack.getCount());
             int max = Math.min(existing.getMaxStackSize(), getSlotLimit(slot));
             if (existing.getCount() >= max || !canMergeItemStacks(existing, toInsert)) {
                 return stack;
@@ -276,10 +244,10 @@ public class IOInventory implements IItemHandlerModifiable {
             int movable = Math.min(max - existing.getCount(), stack.getCount());
             if (!simulate) {
                 holder.itemStack.grow(movable);
-                owner.markForUpdateSync();
                 if (listener != null) {
                     listener.onChange();
                 }
+                owner.markForUpdateSync();
             }
             if (movable >= stack.getCount()) {
                 return ItemStack.EMPTY;
@@ -293,10 +261,10 @@ public class IOInventory implements IItemHandlerModifiable {
             if (max >= stack.getCount()) {
                 if (!simulate) {
                     holder.itemStack = stack.copy();
-                    owner.markForUpdateSync();
                     if (listener != null) {
                         listener.onChange();
                     }
+                    owner.markForUpdateSync();
                 }
                 return ItemStack.EMPTY;
             } else {
@@ -304,10 +272,10 @@ public class IOInventory implements IItemHandlerModifiable {
                 copy.setCount(max);
                 if (!simulate) {
                     holder.itemStack = copy;
-                    owner.markForUpdateSync();
                     if (listener != null) {
                         listener.onChange();
                     }
+                    owner.markForUpdateSync();
                 }
                 copy = stack.copy();
                 copy.shrink(max);
@@ -338,12 +306,12 @@ public class IOInventory implements IItemHandlerModifiable {
             return ItemStack.EMPTY;
         }
 
-        ItemStack extract = copyWithSize(holder.itemStack, Math.min(amount, holder.itemStack.getCount()));
+        ItemStack extract = ItemUtils.copyStackWithSize(holder.itemStack, Math.min(amount, holder.itemStack.getCount()));
         if (extract.isEmpty()) {
             return ItemStack.EMPTY;
         }
         if (!simulate) {
-            holder.itemStack = copyWithSize(holder.itemStack, holder.itemStack.getCount() - extract.getCount());
+            holder.itemStack = ItemUtils.copyStackWithSize(holder.itemStack, holder.itemStack.getCount() - extract.getCount());
             if (listener != null) {
                 listener.onChange();
             }
