@@ -13,7 +13,7 @@ public class RecipeTickEvent extends RecipeEvent {
     private boolean destructRecipe = false;
     private String failureReason = null;
     public RecipeTickEvent(IMachineController controller) {
-        super(controller);
+        super(controller, controller.getActiveRecipeList()[0]);
     }
 
     @ZenMethod

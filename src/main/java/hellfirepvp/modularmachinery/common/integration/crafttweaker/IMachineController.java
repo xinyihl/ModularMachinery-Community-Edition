@@ -50,8 +50,9 @@ public interface IMachineController {
     int getTicksExisted();
 
     /**
-     * 获取机器当前正在执行的配方
+     * 获取机器当前正在执行的配方。
      *
+     * @deprecated 已弃用，请使用 {@link ActiveMachineRecipe[] getActiveRecipeList}
      * @return 配方
      */
     @Nullable
@@ -60,16 +61,15 @@ public interface IMachineController {
     ActiveMachineRecipe getActiveRecipe();
 
     /**
-     * 获取机器当前正在执行的配方列表
+     * 获取机器当前正在执行的配方列表。
      *
      * @return 配方
      */
-    @Nullable
     @ZenGetter("activeRecipeList")
     ActiveMachineRecipe[] getActiveRecipeList();
 
     /**
-     * 机器是否在工作
+     * 机器是否在工作。
      *
      * @return true 为工作，反之为闲置或未形成结构
      */
@@ -77,7 +77,7 @@ public interface IMachineController {
     boolean isWorking();
 
     /**
-     * 获取形成的机械结构名称
+     * 获取形成的机械结构名称。
      *
      * @return 机械的注册名，如果未形成结构则返回 null
      */
@@ -86,7 +86,7 @@ public interface IMachineController {
     String getFormedMachineName();
 
     /**
-     * 获取自定义 NBT 信息
+     * 获取自定义 NBT 信息。
      *
      * @return IData
      */
@@ -94,7 +94,7 @@ public interface IMachineController {
     IData getCustomData();
 
     /**
-     * 设置自定义 NBT 信息
+     * 设置自定义 NBT 信息。
      *
      * @param data IData
      */
@@ -102,7 +102,7 @@ public interface IMachineController {
     void setCustomData(IData data);
 
     /**
-     * 添加一个 RecipeModifier
+     * 添加一个 RecipeModifier。
      *
      * @param key      KEY，方便删除使用
      * @param modifier Modifier
@@ -111,7 +111,7 @@ public interface IMachineController {
     void addModifier(String key, RecipeModifier modifier);
 
     /**
-     * 删除一个 RecipeModifier
+     * 删除一个 RecipeModifier。
      *
      * @param key KEY
      */
@@ -119,7 +119,8 @@ public interface IMachineController {
     void removeModifier(String key);
 
     /**
-     * 检查某个 RecipeModifier 是否已存在
+     * 检查某个 RecipeModifier 是否已存在。
+     *
      * @param key KEY
      * @return 存在返回 true，反之 false
      */
@@ -127,7 +128,7 @@ public interface IMachineController {
     boolean hasModifier(String key);
 
     /**
-     * 覆盖控制器的状态消息
+     * 覆盖控制器的状态消息。
      *
      * @param newInfo 新消息
      */
@@ -136,7 +137,8 @@ public interface IMachineController {
     void overrideStatusInfo(String newInfo);
 
     /**
-     * 获取控制器绑定的指定智能数据接口数据
+     * 获取控制器绑定的指定智能数据接口数据。
+     *
      * @param type 类型过滤
      * @return 智能数据接口的内部数据，如果没有则为 null
      */
@@ -145,14 +147,16 @@ public interface IMachineController {
     SmartInterfaceData getSmartInterfaceData(String type);
 
     /**
-     * 获取控制器绑定的所有智能数据接口数据
+     * 获取控制器绑定的所有智能数据接口数据。
+     *
      * @return 一组智能数据接口的内部数据，如果没有则为空数组，但不会为 null
      */
     @ZenGetter("smartInterfaceDataList")
     SmartInterfaceData[] getSmartInterfaceDataList();
 
     /**
-     * 获取控制器检测到的配方修改器升级名称
+     * 获取控制器检测到的配方修改器升级名称。
+     *
      * @return 返回找到的所有升级名称，如果没有则为空数组，但不会为 null
      */
     @ZenGetter("foundModifiers")

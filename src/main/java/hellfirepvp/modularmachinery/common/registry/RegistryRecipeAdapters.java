@@ -10,12 +10,16 @@ package hellfirepvp.modularmachinery.common.registry;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.crafting.adapter.*;
+import hellfirepvp.modularmachinery.common.crafting.adapter.AdapterIC2Compressor;
+import hellfirepvp.modularmachinery.common.crafting.adapter.AdapterMinecraftFurnace;
+import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOAlloyFurnace;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOChemicalReactor;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOInfuser;
+import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOMelter;
+import hellfirepvp.modularmachinery.common.crafting.adapter.tconstruct.AdapterSmelteryAlloyRecipe;
 
-import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.*;
+import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.MINECRAFT_FURNACE;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -38,6 +42,10 @@ public class RegistryRecipeAdapters {
             registerAdapter(new AdapterNCOAlloyFurnace());
             registerAdapter(new AdapterNCOInfuser());
             registerAdapter(new AdapterNCOChemicalReactor());
+            registerAdapter(new AdapterNCOMelter());
+        }
+        if (Mods.TCONSTRUCT.isPresent()) {
+            registerAdapter(new AdapterSmelteryAlloyRecipe());
         }
     }
 

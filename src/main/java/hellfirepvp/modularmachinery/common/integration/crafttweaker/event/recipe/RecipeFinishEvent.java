@@ -8,6 +8,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass("mods.modularmachinery.RecipeFinishEvent")
 public class RecipeFinishEvent extends RecipeEvent {
     public RecipeFinishEvent(IMachineController controller) {
-        super(controller);
+        super(controller, controller.getActiveRecipeList()[0]);
     }
 }

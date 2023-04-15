@@ -13,7 +13,7 @@ public class FactoryRecipeTickEvent extends FactoryRecipeEvent {
     private boolean destructRecipe = false;
     private String failureReason = null;
     public FactoryRecipeTickEvent(RecipeThread recipeThread, IMachineController controller) {
-        super(recipeThread, controller);
+        super(recipeThread, recipeThread.getActiveRecipe(), controller);
     }
 
     @ZenMethod

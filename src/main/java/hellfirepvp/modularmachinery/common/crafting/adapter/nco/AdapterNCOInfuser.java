@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class AdapterNCOInfuser extends RecipeAdapter {
+public class AdapterNCOInfuser extends AdapterNCOMachine {
     public static final int WORK_TIME = 600;
     public static final int BASE_ENERGY_USAGE = 10;
 

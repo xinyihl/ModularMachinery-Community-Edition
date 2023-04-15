@@ -9,6 +9,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass("mods.modularmachinery.FactoryRecipeStartEvent")
 public class FactoryRecipeStartEvent extends FactoryRecipeEvent {
     public FactoryRecipeStartEvent(RecipeThread recipeThread, IMachineController controller) {
-        super(recipeThread, controller);
+        super(recipeThread, recipeThread.getActiveRecipe(), controller);
     }
 }

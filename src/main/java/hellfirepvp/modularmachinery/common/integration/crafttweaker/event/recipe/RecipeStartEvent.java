@@ -8,7 +8,7 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass("mods.modularmachinery.RecipeStartEvent")
 public class RecipeStartEvent extends RecipeEvent {
     public RecipeStartEvent(IMachineController controller) {
-        super(controller);
+        super(controller, controller.getActiveRecipeList()[0]);
     }
 
 }

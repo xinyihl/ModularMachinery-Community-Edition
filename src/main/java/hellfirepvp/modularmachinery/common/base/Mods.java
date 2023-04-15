@@ -30,6 +30,7 @@ public enum Mods {
     RESOURCELOADER("resourceloader"),
     FLUX_NETWORKS("fluxnetworks"),
     ZEN_UTILS("zenutils"),
+    TCONSTRUCT("tconstruct"),
     ;
 
     public final String modid;

@@ -184,7 +184,7 @@ public class ActiveMachineRecipe {
 
     @ZenGetter("registryName")
     public String getRegistryName() {
-        return recipe.getRegistryName().toString();
+        return recipe.getRegistryName().getPath();
     }
 
     @ZenGetter("data")
@@ -195,5 +195,9 @@ public class ActiveMachineRecipe {
     @ZenSetter("data")
     public void setData(IData data) {
         this.data = CraftTweakerMC.getNBTCompound(data);
+    }
+
+    public NBTTagCompound getDataCompound() {
+        return data;
     }
 }

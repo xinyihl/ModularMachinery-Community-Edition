@@ -14,7 +14,7 @@ public class RecipePreTickEvent extends RecipeEvent {
     private String reason = null;
 
     public RecipePreTickEvent(IMachineController controller) {
-        super(controller);
+        super(controller, controller.getActiveRecipeList()[0]);
     }
 
     @ZenMethod

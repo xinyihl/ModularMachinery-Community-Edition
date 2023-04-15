@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class AdapterNCOChemicalReactor extends RecipeAdapter {
+public class AdapterNCOChemicalReactor extends AdapterNCOMachine {
     public static final int WORK_TIME = 400;
     public static final int BASE_ENERGY_USAGE = 5;
 

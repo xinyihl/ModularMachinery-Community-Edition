@@ -14,7 +14,7 @@ public class FactoryRecipePreTickEvent extends FactoryRecipeEvent {
     private boolean destructRecipe = false;
     private String reason = null;
     public FactoryRecipePreTickEvent(RecipeThread recipeThread, IMachineController controller) {
-        super(recipeThread, controller);
+        super(recipeThread, recipeThread.getActiveRecipe(), controller);
     }
 
     @ZenMethod

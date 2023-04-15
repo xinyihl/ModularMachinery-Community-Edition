@@ -4,7 +4,6 @@ import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
-import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -171,7 +170,7 @@ public class RecipeThread {
                 recipeSet,
                 this,
                 factory.getActiveRecipeList());
-        TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
+        factory.getWaitToExecute().add(searchTask);
     }
 
     public NBTTagCompound serialize() {

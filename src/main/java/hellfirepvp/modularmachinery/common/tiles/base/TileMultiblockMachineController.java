@@ -282,7 +282,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
         RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, Collections.unmodifiableList(this.foundComponents), MiscUtils.flatten(this.foundModifiers.values()));
-        customModifiers.values().forEach(context::addModifier);
+        context.addModifier(customModifiers.values());
         return context;
     }
 
@@ -511,6 +511,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return CraftTweakerMC.getIDataModifyable(customData);
     }
 
+    public NBTTagCompound getCustomDataTag() {
+        return customData;
+    }
+
     public void setCustomData(IData data) {
         customData = CraftTweakerMC.getNBTCompound(data);
     }
@@ -527,11 +531,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+        ActiveMachineRecipe activeRecipe = context.getActiveRecipe();
         if (result.isSuccess()) {
-            List<IEventHandler<RecipeEvent>> handlerList = context.getActiveRecipe().getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
+            List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
             if (handlerList == null || handlerList.isEmpty()) return result;
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeCheckEvent event = new RecipeCheckEvent(this);
+                RecipeCheckEvent event = new RecipeCheckEvent(this, activeRecipe);
                 handler.handle(event);
                 if (event.isFailure()) {
                     result.overrideError(event.getFailureReason());
@@ -711,6 +716,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (compound.hasKey("customData")) {
             this.customData = compound.getCompoundTag("customData");
         }
+        this.customModifiers.clear();
         if (compound.hasKey("customModifier")) {
             NBTTagList tagList = compound.getTagList("customModifier", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < tagList.tagCount(); i++) {
