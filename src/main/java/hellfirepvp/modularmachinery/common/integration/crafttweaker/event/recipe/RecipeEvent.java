@@ -16,7 +16,7 @@ public abstract class RecipeEvent extends MachineEvent {
         this.machineRecipe = machineRecipe;
     }
 
-    @ZenGetter
+    @ZenGetter("activeRecipe")
     public ActiveMachineRecipe getRecipe() {
         return machineRecipe;
     }

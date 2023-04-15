@@ -1,12 +1,13 @@
 package hellfirepvp.modularmachinery.common.crafting.adapter.tconstruct;
 
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeCheckEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 public class AdapterSmelteryMeltingRecipe extends RecipeAdapter {
-    public static final int WORK_TIME = 4;
 
     public AdapterSmelteryMeltingRecipe() {
         super(new ResourceLocation("tconstruct", "smeltery_melting"));
@@ -40,8 +40,8 @@ public class AdapterSmelteryMeltingRecipe extends RecipeAdapter {
 
         for (MeltingRecipe meltingRecipe : meltingRecipes) {
             MachineRecipe recipe = createRecipeShell(new ResourceLocation("tconstruct", "smeltery_melting_" + incId),
-                    owningMachineName, Math.round(RecipeModifier.applyModifiers(
-                            modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, WORK_TIME, false)),
+                    owningMachineName, Math.max(Math.round(RecipeModifier.applyModifiers(
+                            modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, (float) meltingRecipe.temperature / 10, false)), 1),
                     incId, false
             );
             recipe.addRecipeEventHandler(RecipeCheckEvent.class, (IEventHandler<RecipeCheckEvent>) event -> {
@@ -52,23 +52,26 @@ public class AdapterSmelteryMeltingRecipe extends RecipeAdapter {
 
             // Item Input
             List<ItemStack> inputs = meltingRecipe.input.getInputs();
+            List<ChancedIngredientStack> ingredientStackList = new ArrayList<>(inputs.size());
             for (ItemStack stack : inputs) {
                 int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, stack.getCount(), false));
                 if (inAmount > 0) {
                     ItemStack input = ItemUtils.copyStackWithSize(stack, inAmount);
-                    recipe.addRequirement(new RequirementItem(IOType.INPUT, input));
+                    ingredientStackList.add(new ChancedIngredientStack(input));
                 }
             }
+            recipe.addRequirement(new RequirementIngredientArray(ingredientStackList));
 
             // Fluid Output
             FluidStack output = meltingRecipe.getResult().copy();
             int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, output.amount, false));
             if (inAmount > 0) {
                 output.amount = inAmount;
-                recipe.addRequirement(new RequirementFluid(IOType.INPUT, output));
+                recipe.addRequirement(new RequirementFluid(IOType.OUTPUT, output));
             }
 
             machineRecipeList.add(recipe);
+            incId++;
         }
 
         return machineRecipeList;

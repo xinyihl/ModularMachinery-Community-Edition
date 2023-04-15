@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  */
 public class DynamicRecipeWrapper implements IRecipeWrapper {
 
-    public Map<IOType, Map<Class<?>, List<ComponentRequirement<?, ?>>>> finalOrderedComponents = new HashMap<>();
+    public Map<IOType, Map<Class<?>, List<ComponentRequirement<?, ?>>>> finalOrderedComponents = new EnumMap<>(IOType.class);
     private MachineRecipe recipe;
 
     public DynamicRecipeWrapper(MachineRecipe recipe) {

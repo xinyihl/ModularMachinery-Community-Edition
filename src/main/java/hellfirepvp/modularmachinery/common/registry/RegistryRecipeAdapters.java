@@ -18,6 +18,7 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOChemic
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOInfuser;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOMelter;
 import hellfirepvp.modularmachinery.common.crafting.adapter.tconstruct.AdapterSmelteryAlloyRecipe;
+import hellfirepvp.modularmachinery.common.crafting.adapter.tconstruct.AdapterSmelteryMeltingRecipe;
 
 import static hellfirepvp.modularmachinery.common.lib.RecipeAdaptersMM.MINECRAFT_FURNACE;
 
@@ -45,6 +46,7 @@ public class RegistryRecipeAdapters {
             registerAdapter(new AdapterNCOMelter());
         }
         if (Mods.TCONSTRUCT.isPresent()) {
+            registerAdapter(new AdapterSmelteryMeltingRecipe());
             registerAdapter(new AdapterSmelteryAlloyRecipe());
         }
     }

@@ -52,15 +52,16 @@ public class AdapterSmelteryAlloyRecipe extends RecipeAdapter {
                 }
             }
 
-            // Output
+            // Fluid Output
             FluidStack output = alloyRecipe.getResult().copy();
             int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, output.amount, false));
             if (inAmount > 0) {
                 output.amount = inAmount;
-                recipe.addRequirement(new RequirementFluid(IOType.INPUT, output));
+                recipe.addRequirement(new RequirementFluid(IOType.OUTPUT, output));
             }
 
             machineRecipeList.add(recipe);
+            incId++;
         }
 
         return machineRecipeList;

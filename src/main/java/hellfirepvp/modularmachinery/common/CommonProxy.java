@@ -137,6 +137,13 @@ public class CommonProxy implements IGuiHandler {
         IntegrationTypeHelper.filterModIdComponents();
         IntegrationTypeHelper.filterModIdRequirementTypes();
 
+        if (Mods.TOP.isPresent()) {
+            ModIntegrationTOP.registerProvider();
+            ModularMachinery.log.info("[ModularMachinery-CE] TheOneProbe integration is enabled! Stop looking at the dark controller gui!");
+        }
+    }
+
+    public void postInit() {
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
         MachineRegistry.registerMachines(MachineBuilder.WAIT_FOR_LOAD);
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
@@ -153,14 +160,6 @@ public class CommonProxy implements IGuiHandler {
         RecipeThread.WAIT_FOR_ADD.clear();
 
         future.join();
-
-        if (Mods.TOP.isPresent()) {
-            ModIntegrationTOP.registerProvider();
-            ModularMachinery.log.info("[ModularMachinery-CE] TheOneProbe integration is enabled! Stop looking at the dark controller gui!");
-        }
-    }
-
-    public void postInit() {
     }
 
     public void registerBlockModel(Block block) {

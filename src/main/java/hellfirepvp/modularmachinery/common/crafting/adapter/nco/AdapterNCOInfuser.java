@@ -119,7 +119,6 @@ public class AdapterNCOInfuser extends AdapterNCOMachine {
 
             machineRecipeList.add(recipe);
             incId++;
-
         }
 
         return machineRecipeList;

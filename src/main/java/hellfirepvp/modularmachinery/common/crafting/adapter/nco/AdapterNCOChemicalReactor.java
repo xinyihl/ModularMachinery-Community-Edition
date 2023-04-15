@@ -70,7 +70,6 @@ public class AdapterNCOChemicalReactor extends AdapterNCOMachine {
 
             machineRecipeList.add(recipe);
             incId++;
-
         }
 
         return machineRecipeList;

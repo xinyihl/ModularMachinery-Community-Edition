@@ -41,7 +41,7 @@ import org.apache.logging.log4j.Logger;
         dependencies = "required-after:forge@[14.21.0.2371,);" +
                 "required-after:crafttweaker@[4.0.4,);" +
                 "after:zenutils@[1.12.8,);" +
-                "after:jei@[4.13.1.222,);" +
+//                "after:jei@[4.13.1.222,);" +
                 "after:fluxnetworks@[4.1.0,);" +
                 "after:tconstruct@[1.12.2-2.13.0.183,)",
         acceptedMinecraftVersions = "[1.12, 1.13)"
