@@ -3,6 +3,8 @@ package youyihj.mmce.common.item;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
@@ -42,8 +44,17 @@ public class MachineProjector extends Item {
         Block block = blockState.getBlock();
         if (block instanceof BlockController && worldIn.isRemote) {
             BlockController controller = (BlockController) block;
-            if (controller.getParentMachine() != null) {
-                StructurePreviewHelper.renderMachinePreview(controller, pos);
+            DynamicMachine machine = controller.getParentMachine();
+            if (machine != null) {
+                StructurePreviewHelper.renderMachinePreview(machine, pos);
+                return EnumActionResult.SUCCESS;
+            }
+        }
+        if (block instanceof BlockFactoryController && worldIn.isRemote) {
+            BlockFactoryController controller = (BlockFactoryController) block;
+            DynamicMachine machine = controller.getParentMachine();
+            if (machine != null) {
+                StructurePreviewHelper.renderMachinePreview(machine, pos);
                 return EnumActionResult.SUCCESS;
             }
         }

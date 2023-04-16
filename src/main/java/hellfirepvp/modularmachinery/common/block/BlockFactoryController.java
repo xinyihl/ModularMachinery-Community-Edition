@@ -8,7 +8,6 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
@@ -28,8 +27,9 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
+import static hellfirepvp.modularmachinery.common.block.BlockController.FACING;
+
 public class BlockFactoryController extends BlockMachineComponent implements ItemDynamicColor {
-    public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
     public static final Map<DynamicMachine, BlockFactoryController> FACOTRY_CONTROLLERS = new HashMap<>();
 
     private DynamicMachine parentMachine = null;

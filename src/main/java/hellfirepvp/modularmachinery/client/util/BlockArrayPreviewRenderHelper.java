@@ -9,9 +9,11 @@
 package hellfirepvp.modularmachinery.client.util;
 
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
@@ -93,7 +95,8 @@ public class BlockArrayPreviewRenderHelper {
                 BlockPos attachPos = lookBlock.getBlockPos();
 
                 IBlockState lookState = Minecraft.getMinecraft().world.getBlockState(attachPos);
-                if (lookState.getBlock() instanceof BlockController) {
+                Block block = lookState.getBlock();
+                if (block instanceof BlockController || block instanceof BlockFactoryController) {
                     EnumFacing rotate = lookState.getValue(BlockController.FACING);
 
                     BlockPos moveDir = MiscUtils.rotateYCCWNorthUntil(new BlockPos(this.renderHelperOffset), rotate);
@@ -212,7 +215,8 @@ public class BlockArrayPreviewRenderHelper {
 
         if (this.attachedPosition == null) {
             IBlockState lookState = Minecraft.getMinecraft().world.getBlockState(move);
-            if (lookState.getBlock() instanceof BlockController) {
+            Block block = lookState.getBlock();
+            if (block instanceof BlockController || block instanceof BlockFactoryController) {
                 EnumFacing rotate = lookState.getValue(BlockController.FACING);
 
                 BlockPos moveDir = MiscUtils.rotateYCCWNorthUntil(new BlockPos(this.renderHelperOffset), rotate);
@@ -240,7 +244,7 @@ public class BlockArrayPreviewRenderHelper {
             }
             if (state.state.getBlock() != Blocks.AIR) {
                 BlockArrayRenderHelper.TileEntityRenderData terd = state.renderData;
-                if (terd != null && terd.tileEntity != null) {
+                if (terd.tileEntity != null) {
                     terd.tileEntity.setWorld(Minecraft.getMinecraft().world);
                     terd.tileEntity.setPos(offset);
                 }
@@ -265,7 +269,8 @@ public class BlockArrayPreviewRenderHelper {
             RayTraceResult res = getLookBlock(Minecraft.getMinecraft().player, false, true, 20);
             if (res != null && res.typeOfHit == RayTraceResult.Type.BLOCK) {
                 IBlockState state = Minecraft.getMinecraft().world.getBlockState(res.getBlockPos());
-                if (state.getBlock() instanceof BlockController) {
+                Block block = state.getBlock();
+                if (block instanceof BlockController || block instanceof BlockFactoryController) {
                     return res.getBlockPos();
                 } else {
                     return res.getBlockPos().offset(res.sideHit);
