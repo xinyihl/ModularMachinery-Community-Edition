@@ -301,7 +301,10 @@ public class TileMachineController extends TileMultiblockMachineController {
     protected void checkAllPatterns() {
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             if (machine.isRequiresBlueprint() || machine.isFactoryOnly()) continue;
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation), machine)) {
+            if (matchesRotation(
+                    BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation),
+                    machine, controllerRotation))
+            {
                 onStructureFormed();
                 break;
             }

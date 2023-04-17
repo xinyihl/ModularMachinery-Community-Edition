@@ -7,7 +7,7 @@ import stanhebben.zenscript.annotations.ZenMethod;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.SmartInterfaceType")
-public class SmartInterfaceType implements Comparable<Integer> {
+public class SmartInterfaceType implements Comparable<SmartInterfaceType> {
     //智能数据接口的类型，在一个机械内应当是独一无二的
     private final String type;
     //智能数据接口的默认数值
@@ -128,7 +128,7 @@ public class SmartInterfaceType implements Comparable<Integer> {
     }
 
     @Override
-    public int compareTo(Integer another) {
-        return priority - another;
+    public int compareTo(SmartInterfaceType another) {
+        return another.priority - priority;
     }
 }

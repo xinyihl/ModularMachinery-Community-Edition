@@ -206,11 +206,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return structureCheckCounter;
     }
 
-    protected boolean matchesRotation(TaggedPositionBlockArray pattern, DynamicMachine machine) {
+    protected boolean matchesRotation(TaggedPositionBlockArray pattern, DynamicMachine machine, EnumFacing ctrlRotation) {
         if (pattern == null) {
             return false;
         }
         DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
+
+        EnumFacing rotation = EnumFacing.NORTH;
+        while (rotation != ctrlRotation) {
+            rotation = rotation.rotateYCCW();
+            replacements = replacements.rotateYCCW();
+        }
+
         if (pattern.matches(getWorld(), getPos(), false, replacements)) {
             this.foundPattern = pattern;
             this.foundMachine = machine;
@@ -341,7 +348,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         // First, check blueprint machine.
         DynamicMachine blueprint = getBlueprintMachine();
         if (blueprint != null) {
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation), blueprint)) {
+            if (matchesRotation(
+                    BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation),
+                    blueprint, controllerRotation))
+            {
                 onStructureFormed();
                 return true;
             }
@@ -353,7 +363,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 // ParentMachine needs blueprint, but controller not has that, end check.
                 return true;
             }
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation), parentMachine)) {
+            if (matchesRotation(
+                    BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation),
+                    parentMachine, controllerRotation))
+            {
                 onStructureFormed();
                 return true;
             }
@@ -369,7 +382,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected void checkAllPatterns() {
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             if (machine.isRequiresBlueprint()) continue;
-            if (matchesRotation(BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation), machine)) {
+            if (matchesRotation(
+                    BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation),
+                    machine, controllerRotation))
+            {
                 onStructureFormed();
                 break;
             }
@@ -452,7 +468,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
             BlockPos realAt = this.getPos().add(at);
             for (SingleBlockModifierReplacement mod : offsetModifiers.getValue()) {
-                if (mod.getBlockInformation().matches(getWorld(), realAt, true)) {
+                BlockArray.BlockInformation info = mod.getBlockInformation();
+                for (int i = 0; i < rotations; i++) {
+                    info = info.copyRotateYCCW();
+                }
+                if (info.matches(getWorld(), realAt, true)) {
                     foundModifiers.put(mod.getModifierName(), mod.getModifiers());
                 }
             }

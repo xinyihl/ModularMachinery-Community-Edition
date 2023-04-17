@@ -233,6 +233,10 @@ public class RecipeCraftingContext {
 
     public CraftingCheckResult canStartCrafting() {
         permanentModifierList.clear();
+        if (getParentRecipe().isParallelized() && activeRecipe.getMaxParallelism() > 1) {
+            int parallelism = Math.max(1, getMaxParallelism());
+            setParallelism(parallelism);
+        }
         return this.canStartCrafting(req -> true);
     }
 
@@ -247,11 +251,6 @@ public class RecipeCraftingContext {
         List<ComponentRequirement<?, ?>> requirements = this.requirements.stream()
                 .filter(requirementFilter)
                 .collect(Collectors.toList());
-
-        if (getParentRecipe().isParallelized() && activeRecipe.getMaxParallelism() > 1) {
-            int parallelism = Math.max(1, getMaxParallelism());
-            setParallelism(parallelism);
-        }
 
         lblRequirements:
         for (ComponentRequirement<?, ?> requirement : requirements) {
