@@ -21,6 +21,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
@@ -81,7 +82,8 @@ public class ModIntegrationCrafttweaker {
     @Optional.Method(modid = "zenutils")
     public void onScriptsReloaded(ScriptReloadEvent.Post event) {
         ICommandSender sender = event.getRequester();
-        boolean isServer = FMLCommonHandler.instance().getMinecraftServerInstance().isDedicatedServer();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        boolean isServer = server != null && server.isDedicatedServer();
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
         // Flush the context to preview the changed structure.
