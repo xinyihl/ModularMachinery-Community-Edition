@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import com.brandon3055.draconicevolution.DEFeatures;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
-import github.kasuminova.mmce.common.concurrent.Sync;
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
@@ -34,7 +33,6 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.*;
@@ -237,38 +235,40 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public void setCurrentEnergy(long energy) {
-        this.energy.set(MiscUtils.clamp(energy, 0, getMaxEnergy()));
+        synchronized (this) {
+            this.energy.set(MiscUtils.clamp(energy, 0, getMaxEnergy()));
+        }
         markForUpdateSync();
     }
 
     @Override
     public boolean extractEnergy(long extract) {
-        AtomicBoolean success = new AtomicBoolean(false);
-        Sync.doSyncAction(() -> {
+        boolean success = false;
+        synchronized (this) {
             if (this.energy.get() >= extract) {
                 this.energy.addAndGet(-extract);
-                success.set(true);
+                success = true;
             }
-        });
-        if (success.get()) {
+        }
+        if (success) {
             markForUpdateSync();
         }
-        return success.get();
+        return success;
     }
 
     @Override
     public boolean receiveEnergy(long receive) {
-        AtomicBoolean success = new AtomicBoolean(false);
-        Sync.doSyncAction(() -> {
+        boolean success = false;
+        synchronized (this) {
             if (getRemainingCapacity() >= receive) {
                 this.energy.addAndGet(receive);
-                success.set(true);
+                success = true;
             }
-        });
-        if (success.get()) {
+        }
+        if (success) {
             markForUpdateSync();
         }
-        return success.get();
+        return success;
     }
 
     @Override

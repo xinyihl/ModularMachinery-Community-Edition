@@ -1,7 +1,10 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import crafttweaker.util.IEventHandler;
-import github.kasuminova.mmce.common.concurrent.*;
+import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
+import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
+import github.kasuminova.mmce.common.concurrent.SequentialTaskExecutor;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
@@ -26,6 +29,7 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
 public class TileFactoryController extends TileMultiblockMachineController {
@@ -54,10 +58,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     @Override
-    public void doRestrictedTick() {
-        if (getWorld().isRemote) {
-            return;
-        }
+    public void doControllerTick() {
         if (getWorld().getStrongPower(getPos()) > 0) {
             return;
         }
@@ -74,15 +75,15 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
 
             if (!daemonRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
-                ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+                tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                     doRecipeTick();
                     markForUpdateSync();
-                });
+                }, usedTimeAvg());
             }
             return;
         }
 
-        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
             onMachineTick();
 
             if (hasIdleThread()) {
@@ -93,7 +94,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
                 doRecipeTick();
                 markForUpdateSync();
             }
-        });
+        }, usedTimeAvg());
     }
 
     /**
@@ -326,7 +327,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
         threadTask = new SequentialTaskExecutor(waitToExecute);
         waitToExecute.clear();
-        TaskExecutor.FORK_JOIN_POOL.submit(threadTask);
+        ForkJoinPool.commonPool().submit(threadTask);
     }
 
     @Override

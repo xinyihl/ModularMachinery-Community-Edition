@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery;
 
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.command.CommandGetBluePrint;
@@ -61,28 +62,29 @@ public class ModularMachinery {
     public static Logger log;
     @SidedProxy(clientSide = CLIENT_PROXY, serverSide = COMMON_PROXY)
     public static CommonProxy proxy;
-    private static boolean devEnvChache = false;
+    private static boolean devEnvCache = false;
 
     static {
         FluidRegistry.enableUniversalBucket();
     }
 
     public static boolean isRunningInDevEnvironment() {
-        return devEnvChache;
+        return devEnvCache;
     }
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         event.getModMetadata().version = VERSION;
         log = event.getModLog();
-        devEnvChache = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
+        devEnvCache = (Boolean) Launch.blackboard.get("fml.deobfuscatedEnvironment");
 
         NET_CHANNEL.registerMessage(PktCopyToClipboard.class, PktCopyToClipboard.class, 0, Side.CLIENT);
         NET_CHANNEL.registerMessage(PktSyncSelection.class, PktSyncSelection.class, 1, Side.CLIENT);
+        NET_CHANNEL.registerMessage(PktPerformanceReport.class, PktPerformanceReport.class, 2, Side.CLIENT);
 
-        NET_CHANNEL.registerMessage(PktInteractFluidTankGui.class, PktInteractFluidTankGui.class, 2, Side.SERVER);
-        NET_CHANNEL.registerMessage(PktSmartInterfaceUpdate.class, PktSmartInterfaceUpdate.class, 3, Side.SERVER);
-        NET_CHANNEL.registerMessage(PktParallelControllerUpdate.class, PktParallelControllerUpdate.class, 4, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktInteractFluidTankGui.class, PktInteractFluidTankGui.class, 100, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktSmartInterfaceUpdate.class, PktSmartInterfaceUpdate.class, 101, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktParallelControllerUpdate.class, PktParallelControllerUpdate.class, 102, Side.SERVER);
 
         proxy.loadModData(event.getModConfigurationDirectory());
 

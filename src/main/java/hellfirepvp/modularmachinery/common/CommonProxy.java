@@ -129,7 +129,7 @@ public class CommonProxy implements IGuiHandler {
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         ModularMachinery.EXECUTE_MANAGER.init();
         checkThirdPartyServer();
-        ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.FORK_JOIN_POOL.getParallelism()));
+        ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_POOL.getMaximumPoolSize()));
     }
 
     public void init() {

@@ -34,7 +34,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     }
 
     @Override
-    public void setFluid(@Nullable FluidStack fluid) {
+    public synchronized void setFluid(@Nullable FluidStack fluid) {
         super.setFluid(fluid);
         if (getFluid() != null) {
             setGas(null);
@@ -42,7 +42,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     }
 
     @Override
-    public int fillInternal(FluidStack resource, boolean doFill) {
+    public synchronized int fillInternal(FluidStack resource, boolean doFill) {
         if (gas != null && gas.amount > 0) {
             return 0;
         }
@@ -51,7 +51,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Nullable
     @Override
-    public FluidStack drainInternal(int maxDrain, boolean doDrain) {
+    public synchronized FluidStack drainInternal(int maxDrain, boolean doDrain) {
         if (gas != null && gas.amount > 0) {
             return null;
         }
@@ -60,7 +60,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Nullable
     @Override
-    public FluidStack drainInternal(FluidStack resource, boolean doDrain) {
+    public synchronized FluidStack drainInternal(FluidStack resource, boolean doDrain) {
         if (gas != null && gas.amount > 0) {
             return null;
         }
@@ -68,11 +68,11 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     }
 
     @Nullable
-    public GasStack getGas() {
+    public synchronized GasStack getGas() {
         return this.gas;
     }
 
-    public void setGas(@Nullable GasStack stack) {
+    public synchronized void setGas(@Nullable GasStack stack) {
         if (stack != null) {
             this.gas = stack.copy();
             setFluid(null);
@@ -82,7 +82,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     }
 
     @Override
-    public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
+    public synchronized int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
         if (stack == null || stack.amount <= 0) {
             return 0;
         }
@@ -128,7 +128,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     }
 
     @Override
-    public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
+    public synchronized GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
         if (gas == null || amount <= 0) {
             return null;
         }

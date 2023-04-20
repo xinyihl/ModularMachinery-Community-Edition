@@ -8,8 +8,11 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
+
+import javax.annotation.Nullable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -25,4 +28,51 @@ public class HybridTank extends FluidTank {
         super(capacity);
     }
 
+    @Nullable
+    @Override
+    public synchronized FluidStack getFluid() {
+        return super.getFluid();
+    }
+
+    @Override
+    public synchronized void setFluid(@Nullable FluidStack fluid) {
+        super.setFluid(fluid);
+    }
+
+    @Override
+    public synchronized int getFluidAmount() {
+        return super.getFluidAmount();
+    }
+
+    @Override
+    public synchronized int fill(FluidStack resource, boolean doFill) {
+        return super.fill(resource, doFill);
+    }
+
+    @Override
+    public synchronized int fillInternal(FluidStack resource, boolean doFill) {
+        return super.fillInternal(resource, doFill);
+    }
+
+    @Override
+    public synchronized FluidStack drain(FluidStack resource, boolean doDrain) {
+        return super.drain(resource, doDrain);
+    }
+
+    @Override
+    public synchronized FluidStack drain(int maxDrain, boolean doDrain) {
+        return super.drain(maxDrain, doDrain);
+    }
+
+    @Nullable
+    @Override
+    public synchronized FluidStack drainInternal(FluidStack resource, boolean doDrain) {
+        return super.drainInternal(resource, doDrain);
+    }
+
+    @Nullable
+    @Override
+    public synchronized FluidStack drainInternal(int maxDrain, boolean doDrain) {
+        return super.drainInternal(maxDrain, doDrain);
+    }
 }

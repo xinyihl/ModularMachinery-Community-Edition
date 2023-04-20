@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import io.netty.util.collection.IntObjectHashMap;
@@ -29,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -175,16 +173,14 @@ public class IOInventory implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        Sync.doSyncAction(() -> {
-            if (redirectOutput) {
-                redirectItemStackToNearContainers(slot, stack);
-            } else {
-                setStackInSlotStrict(slot, stack);
-            }
-        });
+        if (redirectOutput) {
+            redirectItemStackToNearContainers(slot, stack);
+        } else {
+            setStackInSlotStrict(slot, stack);
+        }
     }
 
-    public void setStackInSlotStrict(int slot, @Nonnull ItemStack stack) {
+    public synchronized void setStackInSlotStrict(int slot, @Nonnull ItemStack stack) {
         if (this.inventory.containsKey(slot)) {
             this.inventory.get(slot).itemStack = stack;
             owner.markForUpdateSync();
@@ -217,13 +213,10 @@ public class IOInventory implements IItemHandlerModifiable {
     @Nonnull
     public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
         if (stack.isEmpty()) return stack;
-
-        AtomicReference<ItemStack> stackRef = new AtomicReference<>(stack);
-        Sync.doSyncAction(() -> stackRef.set(insertItemInternal(slot, stack, simulate)));
-        return stackRef.get();
+        return insertItemInternal(slot, stack, simulate);
     }
 
-    private ItemStack insertItemInternal(int slot, @Nonnull ItemStack stack, boolean simulate) {
+    private synchronized ItemStack insertItemInternal(int slot, @Nonnull ItemStack stack, boolean simulate) {
         if (!allowAnySlots) {
             if (!arrayContains(inSlots, slot)) {
                 return stack;
@@ -287,12 +280,10 @@ public class IOInventory implements IItemHandlerModifiable {
     @Override
     @Nonnull
     public ItemStack extractItem(int slot, int amount, boolean simulate) {
-        AtomicReference<ItemStack> stackRef = new AtomicReference<>(ItemStack.EMPTY);
-        Sync.doSyncAction(() -> stackRef.set(extractItemInternal(slot, amount, simulate)));
-        return stackRef.get();
+        return extractItemInternal(slot, amount, simulate);
     }
 
-    private ItemStack extractItemInternal(int slot, int amount, boolean simulate) {
+    private synchronized ItemStack extractItemInternal(int slot, int amount, boolean simulate) {
         if (!allowAnySlots) {
             if (!arrayContains(outSlots, slot)) {
                 return ItemStack.EMPTY;

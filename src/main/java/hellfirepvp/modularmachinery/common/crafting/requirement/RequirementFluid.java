@@ -41,7 +41,8 @@ import java.util.Optional;
  * Date: 24.02.2018 / 12:28
  */
 
-public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
+public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid>
+        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
 
     public final HybridFluid required;
     public float chance = 1F;

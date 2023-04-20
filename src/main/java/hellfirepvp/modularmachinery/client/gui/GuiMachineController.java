@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
@@ -147,19 +148,22 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                 int progress = (activeRecipe.getTick() * 100) / activeRecipe.getTotalTick();
                 String progressStr = I18n.format("gui.controller.status.crafting.progress",  progress + "%");
                 fr.drawStringWithShadow(progressStr, offsetX, offsetY, 0xFFFFFF);
+                offsetY += 15;
             }
 
             int parallelism = activeRecipe.getParallelism();
             int maxParallelism = activeRecipe.getMaxParallelism();
             if (parallelism > 1) {
-                offsetY += 15;
                 String parallelismStr = I18n.format("gui.controller.parallelism", parallelism);
                 fr.drawStringWithShadow(parallelismStr, offsetX, offsetY, 0xFFFFFF);
                 offsetY += 10;
                 String maxParallelismStr = I18n.format("gui.controller.max_parallelism", maxParallelism);
                 fr.drawStringWithShadow(maxParallelismStr, offsetX, offsetY, 0xFFFFFF);
+                offsetY += 15;
             }
         }
+
+        fr.drawStringWithShadow(String.format("%sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();

@@ -1,33 +1,44 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
+import io.netty.util.internal.ThrowableUtil;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * 一个简单的单 Tick 并发执行器
  * 注意：如果提交了一个会修改世界的引用，请使用锁或同步关键字修饰会修改世界的部分代码操作
  */
 public class TaskExecutor {
-    public static final int MAX_THREAD_SCHEDULE_PER_TICK = 4;
-    public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 2, 8), 4);
-    public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(THREAD_COUNT);
+    public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 4, 8), 4);
+    public static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
+            THREAD_COUNT / 2, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
+            new PriorityBlockingQueue<>(),
+            new CustomThreadFactory("MMCE-TaskExecutor-%s"));
     public static long totalExecuted = 0;
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
+    private final ArrayList<ActionExecutor> submitted = new ArrayList<>();
     private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> collectedActions = new ConcurrentLinkedQueue<>();
     private final HashSet<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
-    private volatile int maximumTaskMerge = 1;
+    private final TaskSubmitter submitter = new TaskSubmitter();
+    private volatile boolean inTick = false;
 
     public void init() {
+        THREAD_POOL.prestartAllCoreThreads();
+        submitter.start();
     }
 
     @SubscribeEvent
@@ -35,10 +46,19 @@ public class TaskExecutor {
         if (event.side == Side.CLIENT) {
             return;
         }
+        switch (event.phase) {
+            case START:
+                inTick = true;
+                submitter.unpark();
+                break;
+            case END:
+            default:
+                inTick = false;
+                break;
+        }
 
         int executed = executeActions();
         if (executed > 0) {
-            maximumTaskMerge = Math.max(1, executed / MAX_THREAD_SCHEDULE_PER_TICK);
             totalExecuted += executed;
             executedCount++;
         }
@@ -50,14 +70,14 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public int executeActions() {
-        if (executors.isEmpty() && collectedActions.isEmpty()) {
+        if (submitted.isEmpty()) {
             return 0;
         }
 
         int executed = 0;
         long time = System.nanoTime() / 1000;
 
-        submitActionExecutor();
+        submitTask();
         executed += awaitActionExecutor();
 
         Action action;
@@ -74,7 +94,7 @@ public class TaskExecutor {
         }
 
         //Empty Check
-        if (!executors.isEmpty()) {
+        if (!submitted.isEmpty()) {
             executed += executeActions();
         }
 
@@ -83,44 +103,48 @@ public class TaskExecutor {
     }
 
     private int awaitActionExecutor() {
+        try {
+            if (THREAD_POOL.awaitTermination(50, TimeUnit.MICROSECONDS)) {
+                ModularMachinery.log.warn("[Modular Machinery] Parallel action execute timeout for 50ms.");
+            }
+        } catch (Exception e) {
+            ModularMachinery.log.warn("An error occurred during asynchronous task execution!");
+            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+        }
+
         int executed = 0;
-        ActionExecutor actionExecutor;
-        while ((actionExecutor = executors.poll()) != null) {
-            actionExecutor.join();
-            taskUsedTime += actionExecutor.usedTime;
+        for (ActionExecutor executor : submitted) {
+            taskUsedTime += executor.usedTime;
             executed++;
         }
+        submitted.clear();
         return executed;
     }
 
     /**
      * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
-     * <p>由于每个任务的运行速度极快，导致线程池中的线程被频繁调度消耗性能，因此任务不会被立即执行，它会被收集到一个队列中。</p>
-     * <p>当队列大小达到一定的阈值时，再提交给线程池执行。</p>
-     *
      * @param action 要执行的异步任务
      */
-    public void addParallelAsyncTask(final Action action) {
-        collectedActions.offer(action);
-        if (collectedActions.size() >= maximumTaskMerge) {
-            submitActionExecutor();
-        }
+    public ActionExecutor addParallelAsyncTask(final Action action) {
+        return addParallelAsyncTask(action, 0);
     }
 
     /**
-     * <p>执行合并任务队列中的任务。</p>
+     * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
+     *
+     * @param action 要执行的异步任务
+     * @param priority 优先级
      */
-    private void submitActionExecutor() {
-        if (collectedActions.isEmpty()) {
-            return;
-        }
-        executors.offer((ActionExecutor) FORK_JOIN_POOL.submit(new ActionExecutor(collectedActions)));
-        collectedActions.clear();
+    public ActionExecutor addParallelAsyncTask(final Action action, final int priority) {
+        ActionExecutor actionExecutor = new ActionExecutor(action, priority);
+        executors.offer(actionExecutor);
+
+        return actionExecutor;
     }
 
     /**
-     * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在***主线程***执行。</p>
+     * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在<strong>主线程</strong>执行。</p>
      *
      * @param action 要执行的同步任务
      */
@@ -131,6 +155,48 @@ public class TaskExecutor {
     public void addTEUpdateTask(final TileEntitySynchronized te) {
         synchronized (requireUpdateTEList) {
             requireUpdateTEList.add(te);
+        }
+    }
+
+    public synchronized void submitTask() {
+        ActionExecutor executor;
+        while ((executor = executors.poll()) != null) {
+            THREAD_POOL.execute(executor);
+            submitted.add(executor);
+        }
+    }
+
+    public class TaskSubmitter implements Runnable {
+        public Thread thread = null;
+
+        public void start() {
+            if (thread != null && thread.isAlive()) {
+                thread.interrupt();
+            }
+            thread = new Thread(this);
+            thread.setName("MMCE-TaskSubmitter");
+            thread.start();
+        }
+
+        public void unpark() {
+            if (thread != null && thread.isAlive()) {
+                LockSupport.unpark(thread);
+            }
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (inTick) {
+                    if (!executors.isEmpty()) {
+                        submitTask();
+                    } else {
+                        LockSupport.parkNanos(1000L);
+                    }
+                } else {
+                    LockSupport.park();
+                }
+            }
         }
     }
 }

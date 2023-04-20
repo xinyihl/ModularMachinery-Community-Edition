@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.item.ItemDynamicColor;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockStateContainer;
@@ -99,6 +100,23 @@ public class BlockFactoryController extends BlockMachineComponent implements Ite
             }
         }
         return true;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean hasComparatorInputOverride(@Nonnull IBlockState state) {
+        return true;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public int getComparatorInputOverride(@Nonnull IBlockState blockState, World worldIn, @Nonnull BlockPos pos) {
+        TileEntity te = worldIn.getTileEntity(pos);
+        if (te instanceof TileMultiblockMachineController) {
+            TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
+            return ctrl.isWorking() ? 15 : ctrl.getFoundMachine() != null ? 1 : 0;
+        }
+        return 0;
     }
 
     @Nonnull

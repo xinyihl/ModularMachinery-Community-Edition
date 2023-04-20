@@ -11,6 +11,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machin
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -197,19 +198,22 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
         offsetY += 15;
 
-        drawFactoryThreadsInfo(offsetX, offsetY, fr);
-
+        offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
+
+        offsetY += 5;
+        fr.drawStringWithShadow(String.format("%sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
     }
 
     private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
+        assert factory.getFoundMachine() != null;
         fr.drawStringWithShadow(I18n.format("gui.factory.threads",
                 factory.getRecipeThreadList().size(), factory.getFoundMachine().getMaxThreads()),
                 offsetX, offsetY, 0xFFFFFF);
-        return offsetY;
+        return offsetY + 10;
     }
 
     private int drawParallelismInfo(int offsetX, int y, FontRenderer fr) {
@@ -232,12 +236,12 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             return offsetY;
         }
 
-        offsetY += 10;
         String parallelismStr = I18n.format("gui.controller.parallelism", parallelism);
         fr.drawStringWithShadow(parallelismStr, offsetX, offsetY, 0xFFFFFF);
         offsetY += 10;
         String maxParallelismStr = I18n.format("gui.controller.max_parallelism", maxParallelism);
         fr.drawStringWithShadow(maxParallelismStr, offsetX, offsetY, 0xFFFFFF);
+        offsetY += 10;
 
         return offsetY;
     }

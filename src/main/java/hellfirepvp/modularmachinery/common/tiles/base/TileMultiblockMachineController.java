@@ -5,6 +5,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -51,6 +52,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
@@ -58,6 +60,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
+    public static int performanceCache = 0;
     protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
     protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
     protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
@@ -71,6 +74,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
     protected TaggedPositionBlockArray foundPattern = null;
+    protected ActionExecutor tickExecutor = null;
+    protected LinkedList<Integer> usedTimeList = new LinkedList<>();
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
 
@@ -104,8 +109,42 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 false, "When enabled, the customData will be cleared when multiblock structure check failed.");
     }
 
+    @Override
+    public final void doRestrictedTick() {
+        if (getWorld().isRemote) {
+            return;
+        }
+        updateUsedTime();
+        long tickStart = System.nanoTime();
+
+        doControllerTick();
+
+        addUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
+    }
+
+    public abstract void doControllerTick();
+
     protected IOInventory buildInventory() {
         return new IOInventory(this, new int[0], new int[0]).setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
+    }
+
+    protected void updateUsedTime() {
+        addUsedTime(tickExecutor == null ? 0 : tickExecutor.usedTime);
+    }
+
+    protected void addUsedTime(int time) {
+        usedTimeList.addFirst(time);
+        if (usedTimeList.size() > 100) {
+            usedTimeList.removeLast();
+        }
+    }
+
+    public int usedTimeAvg() {
+        int sum = 0;
+        for (Integer time : usedTimeList) {
+            sum += time;
+        }
+        return sum / usedTimeList.size();
     }
 
     public int getMaxParallelism() {

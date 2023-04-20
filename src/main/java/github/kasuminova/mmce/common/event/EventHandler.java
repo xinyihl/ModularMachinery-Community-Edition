@@ -1,8 +1,11 @@
 package github.kasuminova.mmce.common.event;
 
+import github.kasuminova.mmce.common.network.PktPerformanceReport;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -54,10 +57,20 @@ public class EventHandler {
         if (!(te instanceof SelectiveUpdateTileEntity)) {
             return;
         }
+
         SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
 
         if (event.player instanceof EntityPlayerMP) {
-            ((EntityPlayerMP) event.player).connection.sendPacket(packet);
+            EntityPlayerMP playerMP = (EntityPlayerMP) player;
+            playerMP.connection.sendPacket(packet);
+
+            World world = event.player.getEntityWorld();
+            if (world.getWorldTime() % 15 == 0 && te instanceof TileMultiblockMachineController) {
+                TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
+                int usedTime = ctrl.usedTimeAvg();
+                TileMultiblockMachineController.performanceCache = usedTime;
+                ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime), playerMP);
+            }
         }
     }
 }

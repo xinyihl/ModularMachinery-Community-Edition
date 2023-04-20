@@ -11,7 +11,6 @@ package hellfirepvp.modularmachinery.common.tiles;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.Sync;
-import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -38,6 +37,7 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * <p>完全重构的社区版机械控制器，拥有强大的异步逻辑和极低的性能消耗。</p>
@@ -67,17 +67,14 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     @Override
-    public void doRestrictedTick() {
-        if (getWorld().isRemote) {
-            return;
-        }
+    public void doControllerTick() {
         if (getWorld().getStrongPower(getPos()) > 0) {
             return;
         }
 
         // Use async check for large structure
         if (isStructureFormed() && !ModularMachinery.pluginServerCompatibleMode && this.foundPattern.getPattern().size() >= 1000) {
-            ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                 onMachineTick();
                 if (!doStructureCheck() || !isStructureFormed()) {
                     return;
@@ -85,7 +82,7 @@ public class TileMachineController extends TileMultiblockMachineController {
                 if (activeRecipe != null || searchAndStartRecipe()) {
                     doRecipeTick();
                 }
-            });
+            }, usedTimeAvg());
             return;
         }
 
@@ -95,17 +92,17 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         if (hasMachineTickEventHandlers()) {
-            ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
                 onMachineTick();
                 if (activeRecipe != null || searchAndStartRecipe()) {
                     doRecipeTick();
                 }
-            });
+            }, usedTimeAvg());
             return;
         }
 
         if (activeRecipe != null || searchAndStartRecipe()) {
-            ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doRecipeTick);
+            tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doRecipeTick, usedTimeAvg());
         }
     }
 
@@ -406,7 +403,7 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     private void createRecipeSearchTask() {
         searchTask = new RecipeSearchTask(this, getFoundMachine(), getMaxParallelism(), RecipeRegistry.getRecipesFor(foundMachine));
-        TaskExecutor.FORK_JOIN_POOL.submit(searchTask);
+        ForkJoinPool.commonPool().submit(searchTask);
     }
 
     @Override

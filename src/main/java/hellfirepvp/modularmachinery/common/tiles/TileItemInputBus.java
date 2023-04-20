@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import github.kasuminova.mmce.common.concurrent.Sync;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -64,7 +63,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
                 continue;
             }
 
-            Sync.doSyncAction(() -> inputFromExternal(itemHandler));
+            inputFromExternal(itemHandler);
         }
     }
 

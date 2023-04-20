@@ -38,6 +38,7 @@ public class Config {
     public static boolean recipeParallelizeEnabledByDefault = true;
     public static boolean enableFluxNetworksIntegration = true;
     public static boolean enableFactoryControllerByDefault = false;
+    public static boolean controllerOutputComparatorSignal = true;
     public static int machineColor;
     public static int maxMachineParallelism = 2048;
     public static int defaultFactoryMaxThread = 20;
