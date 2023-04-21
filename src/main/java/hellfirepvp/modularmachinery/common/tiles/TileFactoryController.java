@@ -33,7 +33,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
 public class TileFactoryController extends TileMultiblockMachineController {
-    private final Map<String, RecipeThread> daemonRecipeThreads = new LinkedHashMap<>();
+    private final Map<String, RecipeThread> coreRecipeThreads = new LinkedHashMap<>();
     private final List<RecipeThread> recipeThreadList = new LinkedList<>();
     private final List<ForkJoinTask<?>> waitToExecute = new ArrayList<>();
     private int totalParallelism = 1;
@@ -65,32 +65,16 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (!doStructureCheck() || !isStructureFormed()) {
             return;
         }
-        executeSeqTask();
-
-        if (recipeResearchRetryCounter > 1) {
-            onMachineTick();
-
-            if (hasIdleThread()) {
-                searchAndStartRecipe();
-            }
-
-            if (!daemonRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
-                tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
-                    doRecipeTick();
-                    markForUpdateSync();
-                }, usedTimeAvg());
-            }
-            return;
-        }
 
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            executeSeqTask();
             onMachineTick();
 
             if (hasIdleThread()) {
                 searchAndStartRecipe();
             }
 
-            if (!daemonRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
+            if (!coreRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
                 doRecipeTick();
                 markForUpdateSync();
             }
@@ -101,10 +85,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * 工厂开始运行队列中的配方。
      */
     protected void doRecipeTick() {
-        updateDaemonThread();
+        updateCoreThread();
         cleanIdleTimeoutThread();
 
-        daemonRecipeThreads.values().forEach(thread -> {
+        coreRecipeThreads.values().forEach(thread -> {
             if (thread.getActiveRecipe() == null) {
                 thread.searchAndStartRecipe();
             }
@@ -267,9 +251,9 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
         super.onStructureFormed();
 
-        daemonRecipeThreads.clear();
-        foundMachine.getDaemonThreads().forEach((threadName, thread) ->
-                daemonRecipeThreads.put(threadName, thread.copyDaemonThread(this)));
+        coreRecipeThreads.clear();
+        foundMachine.getCoreThreadPreset().forEach((threadName, thread) ->
+                coreRecipeThreads.put(threadName, thread.copyCoreThread(this)));
     }
 
     protected void searchAndStartRecipe() {
@@ -334,15 +318,15 @@ public class TileFactoryController extends TileMultiblockMachineController {
     protected void resetMachine(boolean clearData) {
         super.resetMachine(clearData);
         recipeThreadList.clear();
-        daemonRecipeThreads.clear();
+        coreRecipeThreads.clear();
     }
 
     public List<RecipeThread> getRecipeThreadList() {
         return recipeThreadList;
     }
 
-    public Map<String, RecipeThread> getDaemonRecipeThreads() {
-        return daemonRecipeThreads;
+    public Map<String, RecipeThread> getCoreRecipeThreads() {
+        return coreRecipeThreads;
     }
 
     /**
@@ -358,7 +342,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
             maxParallelism -= (activeRecipe.getParallelism() - 1);
         }
-        for (RecipeThread thread : daemonRecipeThreads.values()) {
+        for (RecipeThread thread : coreRecipeThreads.values()) {
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
             if (activeRecipe == null) {
                 continue;
@@ -420,16 +404,16 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     /**
-     * 更新守护线程列表。
+     * 更新核心线程列表。
      */
-    protected void updateDaemonThread() {
-        Map<String, RecipeThread> threads = foundMachine.getDaemonThreads();
+    protected void updateCoreThread() {
+        Map<String, RecipeThread> threads = foundMachine.getCoreThreadPreset();
         if (threads.isEmpty()) {
-            daemonRecipeThreads.clear();
+            coreRecipeThreads.clear();
             return;
         }
 
-        if (!daemonRecipeThreads.isEmpty() && ticksExisted % 20 != 0) {
+        if (!coreRecipeThreads.isEmpty() && ticksExisted % 20 != 0) {
             return;
         }
 
@@ -437,12 +421,12 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
         for (Map.Entry<String, RecipeThread> threadEntry : threads.entrySet()) {
             String name = threadEntry.getKey();
-            if (!daemonRecipeThreads.containsKey(name)) {
-                daemonRecipeThreads.put(name, threadEntry.getValue().copyDaemonThread(this));
+            if (!coreRecipeThreads.containsKey(name)) {
+                coreRecipeThreads.put(name, threadEntry.getValue().copyCoreThread(this));
             }
         }
 
-        for (Map.Entry<String, RecipeThread> threadEntry : daemonRecipeThreads.entrySet()) {
+        for (Map.Entry<String, RecipeThread> threadEntry : coreRecipeThreads.entrySet()) {
             String name = threadEntry.getKey();
             RecipeThread thread = threads.get(name);
             if (thread == null) {
@@ -457,7 +441,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         for (String name : invalidThreads) {
-            daemonRecipeThreads.remove(name);
+            coreRecipeThreads.remove(name);
         }
     }
 
@@ -499,7 +483,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
 
         recipeThreadList.clear();
-        daemonRecipeThreads.clear();
+        coreRecipeThreads.clear();
 
         if (compound.hasKey("threadList", Constants.NBT.TAG_LIST)) {
             NBTTagList threadList = compound.getTagList("threadList", Constants.NBT.TAG_COMPOUND);
@@ -512,13 +496,13 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
         }
 
-        if (compound.hasKey("daemonThreadList", Constants.NBT.TAG_LIST)) {
-            NBTTagList threadList = compound.getTagList("daemonThreadList", Constants.NBT.TAG_COMPOUND);
+        if (compound.hasKey("coreThreadList", Constants.NBT.TAG_LIST)) {
+            NBTTagList threadList = compound.getTagList("coreThreadList", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < threadList.tagCount(); i++) {
                 NBTTagCompound tagAt = threadList.getCompoundTagAt(i);
                 RecipeThread thread = RecipeThread.deserialize(tagAt, this);
                 if (thread != null) {
-                    daemonRecipeThreads.put(thread.getThreadName(), thread);
+                    coreRecipeThreads.put(thread.getThreadName(), thread);
                 }
             }
         }
@@ -556,10 +540,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
             compound.setTag("threadList", threadList);
         }
 
-        if (!daemonRecipeThreads.isEmpty()) {
+        if (!coreRecipeThreads.isEmpty()) {
             NBTTagList threadList = new NBTTagList();
-            daemonRecipeThreads.values().forEach(thread -> threadList.appendTag(thread.serialize()));
-            compound.setTag("daemonThreadList", threadList);
+            coreRecipeThreads.values().forEach(thread -> threadList.appendTag(thread.serialize()));
+            compound.setTag("coreThreadList", threadList);
         }
 
         compound.setInteger("totalParallelism", getMaxParallelism());
@@ -576,7 +560,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     @Override
     public ActiveMachineRecipe[] getActiveRecipeList() {
         List<ActiveMachineRecipe> list = new ArrayList<>();
-        for (RecipeThread thread : daemonRecipeThreads.values()) {
+        for (RecipeThread thread : coreRecipeThreads.values()) {
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
             if (activeRecipe != null) {
                 list.add(activeRecipe);
@@ -593,10 +577,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     public boolean isWorking() {
-        if (daemonRecipeThreads.isEmpty() && recipeThreadList.isEmpty()) {
+        if (coreRecipeThreads.isEmpty() && recipeThreadList.isEmpty()) {
             return false;
         }
-        for (RecipeThread thread : daemonRecipeThreads.values()) {
+        for (RecipeThread thread : coreRecipeThreads.values()) {
             if (thread.getActiveRecipe() != null) {
                 return true;
             }

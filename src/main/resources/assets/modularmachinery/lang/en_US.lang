@@ -204,7 +204,7 @@ tile.modularmachinery.blockfactorycontroller.name=Factory Controller
 # To be honest, the factory system is so scalable that I think calling
 # it a factory controller makes it seem like it's not sci-fi enough.
 # You can also change the name yourself.
-tile.modularmachinery.machinefactorycontroller.name=%s System Controller
+tile.modularmachinery.machinefactorycontroller.name=%s Integration Controller
 
 tile.modularmachinery.blockcasing.plain.name=Machine Casing
 tile.modularmachinery.blockcasing.vent.name=Machine Vent

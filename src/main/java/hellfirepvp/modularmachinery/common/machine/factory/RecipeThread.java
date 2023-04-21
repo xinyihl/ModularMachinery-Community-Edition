@@ -42,7 +42,7 @@ public class RecipeThread {
     private final Map<String, RecipeModifier> semiPermanentModifiers = new HashMap<>();
     public int idleTime = 0;
     private TileFactoryController factory;
-    private boolean isDaemon;
+    private boolean isCoreThread;
     private String threadName;
     private FactoryRecipeSearchTask searchTask;
     private ActiveMachineRecipe activeRecipe = null;
@@ -56,19 +56,19 @@ public class RecipeThread {
 
     public RecipeThread(
             TileFactoryController factory,
-            boolean isDaemon,
+            boolean isCoreThread,
             String threadName,
             Set<MachineRecipe> recipeSet,
             Map<String, RecipeModifier> permanentModifiers) {
         this.factory = factory;
-        this.isDaemon = isDaemon;
+        this.isCoreThread = isCoreThread;
         this.threadName = threadName;
         this.recipeSet.addAll(recipeSet);
         this.permanentModifiers.putAll(permanentModifiers);
     }
 
     @ZenMethod
-    public static RecipeThread createDaemonThread(String threadName) {
+    public static RecipeThread createCoreThread(String threadName) {
         return new RecipeThread(null, true, threadName, Collections.emptySet(), Collections.emptyMap());
     }
 
@@ -115,7 +115,7 @@ public class RecipeThread {
             activeRecipe = null;
             context = null;
             status = CraftingStatus.IDLE;
-            if (isDaemon) {
+            if (isCoreThread) {
                 createRecipeSearchTask();
             }
         }
@@ -179,8 +179,8 @@ public class RecipeThread {
         if (activeRecipe != null && activeRecipe.getRecipe() != null) {
             tag.setTag("activeRecipe", activeRecipe.serialize());
         }
-        if (isDaemon) {
-            tag.setString("daemonThreadName", threadName);
+        if (isCoreThread) {
+            tag.setString("coreThreadName", threadName);
         }
         if (!permanentModifiers.isEmpty()) {
             NBTTagList tagList = new NBTTagList();
@@ -239,14 +239,14 @@ public class RecipeThread {
         thread.permanentModifiers.putAll(permanentModifiers);
         thread.semiPermanentModifiers.putAll(semiPermanentModifiers);
 
-        // Daemon Thread
-        if (tag.hasKey("daemonThreadName")) {
-            Map<String, RecipeThread> threads = factory.getFoundMachine().getDaemonThreads();
-            RecipeThread daemonThread = threads.get(tag.getString("daemonThreadName"));
-            if (daemonThread == null) {
+        // Core Thread
+        if (tag.hasKey("coreThreadName")) {
+            Map<String, RecipeThread> threads = factory.getFoundMachine().getCoreThreadPreset();
+            RecipeThread coreThread = threads.get(tag.getString("coreThreadName"));
+            if (coreThread == null) {
                 return thread;
             }
-            return daemonThread.copyDataToAnother(factory, thread);
+            return coreThread.copyDataToAnother(factory, thread);
         }
         // Simple Thread
         return thread;
@@ -328,15 +328,15 @@ public class RecipeThread {
     }
 
     /**
-     * 当前线程是否为守护线程（即始终存在）
+     * 当前线程是否为核心线程（即始终存在）
      */
-    @ZenGetter("isDaemon")
-    public boolean isDaemon() {
-        return isDaemon;
+    @ZenGetter("isCoreThread")
+    public boolean isCoreThread() {
+        return isCoreThread;
     }
 
     /**
-     * 当前线程的名称（仅限守护线程）
+     * 当前线程的名称（仅限核心线程）
      */
     @ZenGetter("threadName")
     public String getThreadName() {
@@ -426,7 +426,7 @@ public class RecipeThread {
     }
 
     /**
-     * 为当前线程添加固定配方（仅守护线程生效）。
+     * 为当前线程添加固定配方（仅核心线程生效）。
      */
     @ZenMethod
     public RecipeThread addRecipe(String recipeName) {
@@ -451,13 +451,13 @@ public class RecipeThread {
         return recipeSet;
     }
 
-    public RecipeThread copyDaemonThread(TileFactoryController factory) {
+    public RecipeThread copyCoreThread(TileFactoryController factory) {
         return new RecipeThread(factory, true, threadName, recipeSet, permanentModifiers);
     }
 
     public RecipeThread copyDataToAnother(TileFactoryController factory, RecipeThread another) {
         another.factory = factory;
-        another.isDaemon = isDaemon;
+        another.isCoreThread = isCoreThread;
         another.threadName = threadName;
         another.recipeSet.addAll(recipeSet);
         another.permanentModifiers.putAll(permanentModifiers);

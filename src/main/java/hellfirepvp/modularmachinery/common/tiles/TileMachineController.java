@@ -18,8 +18,6 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -75,10 +73,10 @@ public class TileMachineController extends TileMultiblockMachineController {
         // Use async check for large structure
         if (isStructureFormed() && !ModularMachinery.pluginServerCompatibleMode && this.foundPattern.getPattern().size() >= 1000) {
             tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
-                onMachineTick();
                 if (!doStructureCheck() || !isStructureFormed()) {
                     return;
                 }
+                onMachineTick();
                 if (activeRecipe != null || searchAndStartRecipe()) {
                     doRecipeTick();
                 }
@@ -91,19 +89,12 @@ public class TileMachineController extends TileMultiblockMachineController {
             return;
         }
 
-        if (hasMachineTickEventHandlers()) {
-            tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
-                onMachineTick();
-                if (activeRecipe != null || searchAndStartRecipe()) {
-                    doRecipeTick();
-                }
-            }, usedTimeAvg());
-            return;
-        }
-
-        if (activeRecipe != null || searchAndStartRecipe()) {
-            tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(this::doRecipeTick, usedTimeAvg());
-        }
+        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            onMachineTick();
+            if (activeRecipe != null || searchAndStartRecipe()) {
+                doRecipeTick();
+            }
+        }, usedTimeAvg());
     }
 
     @Override
@@ -176,11 +167,6 @@ public class TileMachineController extends TileMultiblockMachineController {
     @SuppressWarnings("unused")
     public DynamicMachine getParentMachine() {
         return parentMachine;
-    }
-
-    public boolean hasMachineTickEventHandlers() {
-        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
-        return handlerList != null && !handlerList.isEmpty();
     }
 
     /**

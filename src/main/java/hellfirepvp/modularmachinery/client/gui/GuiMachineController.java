@@ -163,7 +163,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             }
         }
 
-        fr.drawStringWithShadow(String.format("%sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(String.format("Avg: %sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();

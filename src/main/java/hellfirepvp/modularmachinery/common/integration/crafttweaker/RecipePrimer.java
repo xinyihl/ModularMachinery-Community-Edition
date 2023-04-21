@@ -195,7 +195,7 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     /**
-     * 设置此配方只能被指定的守护线程执行。
+     * 设置此配方只能被指定的核心线程执行。
      * @param name 线程名
      */
     @ZenMethod

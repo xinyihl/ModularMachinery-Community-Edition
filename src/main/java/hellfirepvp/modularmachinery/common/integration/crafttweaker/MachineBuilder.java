@@ -469,8 +469,8 @@ public class MachineBuilder {
     }
 
     @ZenMethod
-    public MachineBuilder addDaemonThread(RecipeThread thread) {
-        this.machine.addDaemonRecipeThread(thread);
+    public MachineBuilder addCoreThread(RecipeThread thread) {
+        this.machine.addCoreThread(thread);
         return this;
     }
 

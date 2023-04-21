@@ -95,9 +95,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         AtomicInteger i = new AtomicInteger();
-        Collection<RecipeThread> daemonThreads = factory.getDaemonRecipeThreads().values();
-        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((daemonThreads.size() + recipeThreads.size()) * 1.5));
-        recipeThreadList.addAll(daemonThreads);
+        Collection<RecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
+        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + recipeThreads.size()) * 1.5));
+        recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(recipeThreads);
 
         recipeThreadList.stream().limit(6).forEach(thread -> {
@@ -109,7 +109,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
 
             String threadName;
-            if (thread.isDaemon()) {
+            if (thread.isCoreThread()) {
                 threadName = TextFormatting.BLUE + "{*" + thread.getThreadName() + "*}";
                 i.getAndIncrement();
             } else {

@@ -71,10 +71,10 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int offsetY = RECIPE_QUEUE_OFFSET_Y;
         int currentScroll = scrollbar.getCurrentScroll();
 
-        Collection<RecipeThread> daemonThreads = factory.getDaemonRecipeThreads().values();
+        Collection<RecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
         List<RecipeThread> threads = factory.getRecipeThreadList();
-        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((daemonThreads.size() + threads.size()) * 1.5));
-        recipeThreadList.addAll(daemonThreads);
+        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + threads.size()) * 1.5));
+        recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(threads);
 
         for (int i = 0; i < Math.min(MAX_PAGE_ELEMENTS, recipeThreadList.size()); i++) {
@@ -90,8 +90,8 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
         this.mc.getTextureManager().bindTexture(TEXTURES_FACTORY_ELEMENTS);
 
-        // Daemon Thread Color
-        if (thread.isDaemon()) {
+        // Core Thread Color
+        if (thread.isCoreThread()) {
             GlStateManager.color(0.7F, 0.9F, 1.0F, 1.0F);
         } else {
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -128,7 +128,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int parallelism = activeRecipe == null ? 1 : activeRecipe.getParallelism();
 
         String threadName;
-        if (thread.isDaemon()) {
+        if (thread.isCoreThread()) {
             String name = thread.getThreadName();
             threadName = I18n.hasKey(name) ? I18n.format(name) : name;
         } else {
@@ -202,7 +202,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
 
         offsetY += 5;
-        fr.drawStringWithShadow(String.format("%sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
+        fr.drawStringWithShadow(String.format("Avg: %sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
@@ -330,9 +330,9 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     private void updateScrollbar(int displayX, int displayY) {
         scrollbar.setLeft(SCROLLBAR_LEFT + displayX).setTop(SCROLLBAR_TOP + displayY).setHeight(SCROLLBAR_HEIGHT);
 
-        Map<String, RecipeThread> daemonRecipeThreads = factory.getDaemonRecipeThreads();
-        List<RecipeThread> recipeThreadList = factory.getRecipeThreadList();
-        scrollbar.setRange(0, Math.max(0, daemonRecipeThreads.size() + recipeThreadList.size() - MAX_PAGE_ELEMENTS), 1);
+        Map<String, RecipeThread> coreThreads = factory.getCoreRecipeThreads();
+        List<RecipeThread> threadList = factory.getRecipeThreadList();
+        scrollbar.setRange(0, Math.max(0, coreThreads.size() + threadList.size() - MAX_PAGE_ELEMENTS), 1);
     }
 
     @Override

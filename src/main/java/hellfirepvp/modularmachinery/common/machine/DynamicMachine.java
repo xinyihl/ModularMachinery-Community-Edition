@@ -50,18 +50,18 @@ public class DynamicMachine extends AbstractMachine {
     private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
-    private final Map<String, RecipeThread> daemonThreads = new LinkedHashMap<>();
+    private final Map<String, RecipeThread> coreThreadPreset = new LinkedHashMap<>();
 
     public DynamicMachine(String registryName) {
         super(registryName);
     }
 
-    public void addDaemonRecipeThread(RecipeThread thread) {
-        daemonThreads.put(thread.getThreadName(), thread);
+    public void addCoreThread(RecipeThread thread) {
+        coreThreadPreset.put(thread.getThreadName(), thread);
     }
 
-    public Map<String, RecipeThread> getDaemonThreads() {
-        return daemonThreads;
+    public Map<String, RecipeThread> getCoreThreadPreset() {
+        return coreThreadPreset;
     }
 
     public boolean hasSmartInterfaceType(String type) {

@@ -53,7 +53,7 @@ public class MachineModifier {
 
     @ZenMethod
     public static void setMaxThreads(String machineName, int maxThreads) {
-        // Maybe the author only wanted to use the daemon thread?
+        // Maybe the author only wanted to use the core thread?
         if (maxThreads < 0) {
             CraftTweakerAPI.logError("Max Threads must larger than 0!");
         }
@@ -68,14 +68,14 @@ public class MachineModifier {
     }
 
     @ZenMethod
-    public static void addDaemonThread(String machineName, RecipeThread thread) {
+    public static void addCoreThread(String machineName, RecipeThread thread) {
         WAIT_FOR_MODIFY.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
             if (machine == null) {
                 CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
                 return;
             }
-            machine.addDaemonRecipeThread(thread);
+            machine.addCoreThread(thread);
         });
     }
 

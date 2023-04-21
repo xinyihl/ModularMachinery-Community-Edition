@@ -203,7 +203,7 @@ tile.modularmachinery.blockfactorycontroller.name=工厂控制器
 
 # 工厂系统的扩展性太强了，直接叫工厂控制器可能显得不够科幻。
 # 你也可以自行修改名称。
-tile.modularmachinery.machinefactorycontroller.name=%s系统控制器
+tile.modularmachinery.machinefactorycontroller.name=%s集成控制器
 
 tile.modularmachinery.blockcasing.plain.name=机械外壳
 tile.modularmachinery.blockcasing.vent.name=机械通风口
