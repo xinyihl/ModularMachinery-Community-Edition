@@ -9,7 +9,6 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.CopyHandlerHelper;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
@@ -74,21 +73,9 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
-                handler = CopyHandlerHelper.copyTank(handler);
-
-                for (ComponentOutputRestrictor restrictor : restrictions) {
-                    if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
-                        ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
-
-                        if (tank.exactComponent.equals(component)) {
-                            handler.fillInternal(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
-                        }
-                    }
-                }
-                int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), doFillOrDrain); //True or false doesn't really matter tbh
+                int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), doFillOrDrain);
                 boolean didFill = filled >= this.requirementCheck.getAmount();
                 if (didFill) {
-                    context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.output.space");

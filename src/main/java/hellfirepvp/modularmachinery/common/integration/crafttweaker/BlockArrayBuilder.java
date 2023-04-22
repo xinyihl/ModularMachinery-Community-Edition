@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
@@ -119,6 +120,7 @@ public class BlockArrayBuilder {
      * @param z            Z
      * @param ctItemStacks 物品
      */
+    @SuppressWarnings("deprecation")
     @ZenMethod
     public BlockArrayBuilder addBlock(int x, int y, int z, IItemStack... ctItemStacks) {
         List<ItemStack> stackList = new ArrayList<>();
@@ -127,9 +129,18 @@ public class BlockArrayBuilder {
         }
         List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
         for (ItemStack stack : stackList) {
-            Block block = Block.getBlockFromItem(stack.getItem());
+            Item item = stack.getItem();
+            int meta = stack.getMetadata();
+            Block block = Block.getBlockFromItem(item);
             if (block != Blocks.AIR) {
-                stateDescriptorList.add(new IBlockStateDescriptor(block));
+                try {
+                    net.minecraft.block.state.IBlockState state = block.getStateFromMeta(meta);
+                    stateDescriptorList.add(new IBlockStateDescriptor(state));
+                } catch (Exception e) {
+                    CraftTweakerAPI.logError(String.format("[ModularMachinery] Failed to get BlockState from <%s>!",
+                            stack.getItem().getRegistryName() + ":" + meta
+                    ));
+                }
             } else {
                 CraftTweakerAPI.logError("[ModularMachinery] " + stack.getDisplayName() + " cannot convert to Block!");
             }

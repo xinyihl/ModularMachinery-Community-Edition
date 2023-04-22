@@ -76,6 +76,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected TaggedPositionBlockArray foundPattern = null;
     protected ActionExecutor tickExecutor = null;
     protected LinkedList<Integer> usedTimeList = new LinkedList<>();
+    protected int usedTimeCache = 0;
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
 
@@ -115,11 +116,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
         updateUsedTime();
+
         long tickStart = System.nanoTime();
 
+        // Controller Tick
         doControllerTick();
 
-        addUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
+        incrementUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
     }
 
     public abstract void doControllerTick();
@@ -132,6 +135,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         addUsedTime(tickExecutor == null ? 0 : tickExecutor.usedTime);
     }
 
+    protected void incrementUsedTime(int add) {
+        Integer first = usedTimeList.getFirst();
+        if (first != null) {
+            usedTimeList.set(0, first + add);
+        }
+    }
+
     protected void addUsedTime(int time) {
         usedTimeList.addFirst(time);
         if (usedTimeList.size() > 100) {
@@ -140,11 +150,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public int usedTimeAvg() {
-        int sum = 0;
-        for (Integer time : usedTimeList) {
-            sum += time;
-        }
-        return sum / usedTimeList.size();
+        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() ->
+                usedTimeCache = usedTimeList.stream().mapToInt(time -> time).sum() / usedTimeList.size());
+        return usedTimeCache;
     }
 
     public int getMaxParallelism() {
@@ -824,6 +832,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @ZenMethod
     public int getTicksExisted() {
         return ticksExisted;
+    }
+
+    @Override
+    public void markForUpdate() {
+        IBlockState state = world.getBlockState(pos);
+        world.notifyBlockUpdate(pos, state, state, 3);
+        if (ticksExisted % 10 == 0) {
+            markDirty();
+        }
     }
 
     public enum Type {

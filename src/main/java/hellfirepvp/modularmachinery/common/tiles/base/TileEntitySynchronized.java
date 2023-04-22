@@ -77,13 +77,10 @@ public class TileEntitySynchronized extends TileEntity {
         readNetNBT(packet.getNbtCompound());
     }
 
-    @SuppressWarnings("deprecation")
     public void markForUpdate() {
         IBlockState state = world.getBlockState(pos);
         world.notifyBlockUpdate(pos, state, state, 3);
-        if (state.getBlock().hasComparatorInputOverride(state)) {
-            markDirty();
-        }
+        markDirty();
     }
 
     /**

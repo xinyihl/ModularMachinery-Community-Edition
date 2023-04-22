@@ -2,8 +2,8 @@ package github.kasuminova.mmce.common.concurrent;
 
 public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
     public final Action action;
-    public int usedTime = 0;
     public final int priority;
+    public int usedTime = 0;
 
     public ActionExecutor(Action action) {
         this(action, 0);

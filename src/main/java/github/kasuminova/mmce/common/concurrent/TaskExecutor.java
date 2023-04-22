@@ -3,13 +3,13 @@ package github.kasuminova.mmce.common.concurrent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import io.netty.util.internal.ThrowableUtil;
+import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +22,7 @@ import java.util.concurrent.locks.LockSupport;
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 4, 8), 4);
     public static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
-            THREAD_COUNT / 2, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
+            THREAD_COUNT / 4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
     public static long totalExecuted = 0;
@@ -30,8 +30,8 @@ public class TaskExecutor {
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
     private final ArrayList<ActionExecutor> submitted = new ArrayList<>();
-    private final ConcurrentLinkedQueue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Action> mainThreadActions = new ConcurrentLinkedQueue<>();
+    private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
+    private final MpscLinkedAtomicQueue<Action> mainThreadActions = new MpscLinkedAtomicQueue<>();
     private final HashSet<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
     private final TaskSubmitter submitter = new TaskSubmitter();
     private volatile boolean inTick = false;

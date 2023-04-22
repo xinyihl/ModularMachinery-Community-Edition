@@ -267,7 +267,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         HybridTank handler = (HybridTank) component.providedComponent;
-        if (Objects.requireNonNull(actionType) == IOType.INPUT) {
+        if (actionType == IOType.INPUT) {
             if (Mods.MEKANISM.isPresent()) {
                 return startCraftingWithMekanismHandling(handler, chance);
             }

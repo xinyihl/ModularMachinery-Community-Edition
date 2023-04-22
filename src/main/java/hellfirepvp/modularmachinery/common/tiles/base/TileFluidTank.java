@@ -40,6 +40,7 @@ import javax.annotation.Nullable;
         @Optional.Interface(modid = "mekanism", iface = "mekanism.api.gas.IGasHandler"),
         @Optional.Interface(modid = "mekanism", iface = "mekanism.api.gas.ITubeConnection")
 })
+@SuppressWarnings("deprecation")
 public abstract class TileFluidTank extends TileColorableMachineComponent implements MachineComponentTile, IGasHandler, ITubeConnection, SelectiveUpdateTileEntity {
 
     private HybridTank tank;
@@ -56,14 +57,14 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     }
 
     @Optional.Method(modid = "mekanism")
-    private static boolean checkMekanismGasCapabilitiesPresence(Capability<?> capability, @Nullable EnumFacing facing) {
-        return checkMekanismGasCapabilities(capability, facing);
+    private static boolean checkMekanismGasCapabilitiesPresence(Capability<?> capability) {
+        return checkMekanismGasCapabilities(capability);
     }
 
     @Optional.Method(modid = "mekanism")
-    private static boolean checkMekanismGasCapabilities(Capability<?> capability, @Nullable EnumFacing facing) {
-        String gasType = IGasHandler.class.getName().intern();
-        String tubeConnectionName = ITubeConnection.class.getName().intern();
+    private static boolean checkMekanismGasCapabilities(Capability<?> capability) {
+        String gasType = IGasHandler.class.getName();
+        String tubeConnectionName = ITubeConnection.class.getName();
         return capability != null && (capability.getName().equals(gasType) || capability.getName().equals(tubeConnectionName));
     }
 
@@ -77,7 +78,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
             return true;
         }
         if (Mods.MEKANISM.isPresent()) {
-            if (checkMekanismGasCapabilitiesPresence(capability, facing)) {
+            if (checkMekanismGasCapabilitiesPresence(capability)) {
                 return true;
             }
         }
@@ -86,12 +87,13 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Nullable
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return (T) tank;
         }
         if (Mods.MEKANISM.isPresent()) {
-            if (checkMekanismGasCapabilities(capability, facing)) {
+            if (checkMekanismGasCapabilities(capability)) {
                 return (T) this;
             }
         }
@@ -139,7 +141,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponent<?> provideComponent() {
         return new MachineComponent.FluidHatch(ioType) {
             @Override
             public HybridTank getContainerProvider() {
