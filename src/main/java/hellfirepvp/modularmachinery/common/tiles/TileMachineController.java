@@ -121,7 +121,6 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         CraftingStatus prevStatus = this.getCraftingStatus();
-        MachineRecipe machineRecipe = this.activeRecipe.getRecipe();
 
         //检查预 Tick 事件是否阻止进一步运行。
         //Check if the PreTick event prevents further runs.
@@ -152,9 +151,12 @@ public class TileMachineController extends TileMultiblockMachineController {
                     onFinished();
                 }
             }
-        } else if (machineRecipe.doesCancelRecipeOnPerTickFailure()) {
-            this.activeRecipe = null;
-            this.context = null;
+        } else {
+            boolean destruct = onFailure();
+            if (destruct) {
+                this.activeRecipe = null;
+                this.context = null;
+            }
         }
         markForUpdateSync();
     }
@@ -181,8 +183,8 @@ public class TileMachineController extends TileMultiblockMachineController {
 
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeStartEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
+            RecipeStartEvent event = new RecipeStartEvent(this);
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeStartEvent event = new RecipeStartEvent(this);
                 handler.handle(event);
             }
         }
@@ -241,6 +243,28 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     /**
+     * <p>运行配方失败时（例如跳电）触发，可能会触发多次。</p>
+     * @return true 为销毁配方（即为吞材料），false 则什么都不做。
+     */
+    public boolean onFailure() {
+        MachineRecipe recipe = activeRecipe.getRecipe();
+        boolean destruct = recipe.doesCancelRecipeOnPerTickFailure();
+
+        List<IEventHandler<RecipeEvent>> handlerList = recipe.getRecipeEventHandlers(RecipeFailureEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) {
+            return destruct;
+        }
+
+        RecipeFailureEvent event = new RecipeFailureEvent(
+                this, craftingStatus.getUnlocMessage(), destruct);
+        for (IEventHandler<RecipeEvent> handler : handlerList) {
+            handler.handle(event);
+        }
+
+        return event.isDestructRecipe();
+    }
+
+    /**
      * <p>机械完成一个配方。</p>
      */
     public void onFinished() {
@@ -253,8 +277,8 @@ public class TileMachineController extends TileMultiblockMachineController {
         MachineRecipe recipe = this.activeRecipe.getRecipe();
         List<IEventHandler<RecipeEvent>> handlerList = recipe.getRecipeEventHandlers(RecipeFinishEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
+            RecipeFinishEvent event = new RecipeFinishEvent(this);
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeFinishEvent event = new RecipeFinishEvent(this);
                 handler.handle(event);
             }
         }

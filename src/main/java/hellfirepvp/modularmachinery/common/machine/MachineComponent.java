@@ -29,6 +29,10 @@ public abstract class MachineComponent<T> {
         this.ioType = ioType;
     }
 
+    public IOType getIOType() {
+        return ioType;
+    }
+
     public abstract ComponentType getComponentType();
 
     public abstract T getContainerProvider();

@@ -111,7 +111,11 @@ public class TileFactoryController extends TileMultiblockMachineController {
         // If this thread previously failed in completing the recipe,
         // it retries to complete the recipe.
         if (thread.isWaitForFinish()) {
-            finishRecipe(thread);
+            // To prevent performance drain due to long output blocking,
+            // try to complete the recipe every 10 Tick instead of every Tick.
+            if (ticksExisted % 10 == 0) {
+                thread.finishRecipe();
+            }
             return;
         }
 
@@ -121,11 +125,16 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
         // RecipeTick
         CraftingStatus status = thread.onTick();
-        if (!status.isCrafting() && activeRecipe.getRecipe().doesCancelRecipeOnPerTickFailure()) {
-            thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
+        if (!status.isCrafting()) {
+            boolean destruct = onThreadRecipeFailure(thread);
+            if (destruct) {
+                // Destruction recipe
+                thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
+            }
             return;
-                   // PostTickEvent
-        } else if (!onThreadRecipePostTick(thread)) {
+        }
+        // PostTickEvent
+        if (!onThreadRecipePostTick(thread)) {
             return;
         }
         if (!activeRecipe.isCompleted()) {
@@ -133,16 +142,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         // FinishedEvent
-        finishRecipe(thread);
-    }
-
-    private static void finishRecipe(RecipeThread thread) {
-        // FinishedEvent
-        if (ModularMachinery.pluginServerCompatibleMode) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(thread::onFinished);
-        } else {
-            thread.onFinished();
-        }
+        thread.finishRecipe();
     }
 
     /**
@@ -152,8 +152,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeStartEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
+            FactoryRecipeStartEvent event = new FactoryRecipeStartEvent(thread, this);
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                FactoryRecipeStartEvent event = new FactoryRecipeStartEvent(thread, this);
                 handler.handle(event);
             }
         }
@@ -223,6 +223,26 @@ public class TileFactoryController extends TileMultiblockMachineController {
         return true;
     }
 
+    public boolean onThreadRecipeFailure(RecipeThread thread) {
+        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+        MachineRecipe recipe = activeRecipe.getRecipe();
+        boolean destruct = recipe.doesCancelRecipeOnPerTickFailure();
+
+        List<IEventHandler<RecipeEvent>> handlerList = recipe.getRecipeEventHandlers(FactoryRecipeFailureEvent.class);
+        if (handlerList == null || handlerList.isEmpty()) {
+            return destruct;
+        }
+
+        FactoryRecipeFailureEvent event = new FactoryRecipeFailureEvent(
+                thread, this, thread.getStatus().getUnlocMessage(),
+                destruct);
+        for (IEventHandler<RecipeEvent> handler : handlerList) {
+            handler.handle(event);
+        }
+
+        return event.isDestructRecipe();
+    }
+
     /**
      * <p>工厂线程完成一个配方。</p>
      */
@@ -230,8 +250,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeFinishEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
+            FactoryRecipeFinishEvent event = new FactoryRecipeFinishEvent(thread, this);
             for (IEventHandler<RecipeEvent> handler : handlerList) {
-                FactoryRecipeFinishEvent event = new FactoryRecipeFinishEvent(thread, this);
                 handler.handle(event);
             }
         }

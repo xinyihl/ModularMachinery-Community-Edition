@@ -72,6 +72,15 @@ public class RecipeThread {
         return new RecipeThread(null, true, threadName, Collections.emptySet(), Collections.emptyMap());
     }
 
+    public void finishRecipe() {
+        // FinishedEvent
+        if (ModularMachinery.pluginServerCompatibleMode) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::onFinished);
+        } else {
+            onFinished();
+        }
+    }
+
     public CraftingStatus onTick() {
         if (activeRecipe == null) {
             return new CraftingStatus(TileMultiblockMachineController.Type.NO_RECIPE, "");

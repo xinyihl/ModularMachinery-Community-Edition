@@ -9,10 +9,12 @@
 package hellfirepvp.modularmachinery.common.crafting.adapter;
 
 import crafttweaker.util.IEventHandler;
+import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeCheckEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -48,22 +50,31 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
                                                       List<ComponentRequirement<?, ?>> additionalRequirements,
                                                       Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
                                                       List<String> recipeTooltips) {
-        Map<ItemStack, ItemStack> inputOutputMap = FurnaceRecipes.instance().getSmeltingList();
+        FurnaceRecipes furnaceRecipes = FurnaceRecipes.instance();
+        Map<ItemStack, ItemStack> inputOutputMap = furnaceRecipes.getSmeltingList();
+
         List<MachineRecipe> smeltingRecipes = new ArrayList<>(inputOutputMap.size());
         for (Map.Entry<ItemStack, ItemStack> smelting : inputOutputMap.entrySet()) {
+            ItemStack input = smelting.getKey();
             int tickTime = Math.round(Math.max(1, RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, 120, false)));
+            float experience = furnaceRecipes.getSmeltingExperience(input);
 
             MachineRecipe recipe = createRecipeShell(
                     new ResourceLocation("minecraft", "smelting_recipe_" + incId),
                     owningMachineName,
                     tickTime, 0, false);
 
-            int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, smelting.getKey().getCount(), false));
+            recipe.addRecipeEventHandler(RecipeCheckEvent.class, (IEventHandler<RecipeCheckEvent>) event -> {
+                ActiveMachineRecipe machineRecipe = event.getRecipe();
+                machineRecipe.getDataCompound().setFloat("experience", experience);
+            });
+
+            int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, input.getCount(), false));
             if (inAmount > 0) {
-                recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(smelting.getKey(), inAmount)));
+                recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(input, inAmount)));
             }
 
-            int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, smelting.getKey().getCount(), false));
+            int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, input.getCount(), false));
             if (outAmount > 0) {
                 recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(smelting.getValue(), outAmount)));
             }
