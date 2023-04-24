@@ -232,6 +232,12 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
+    public RecipePrimer addFailureHandler(IEventHandler<RecipeFailureEvent> event) {
+        addRecipeEventHandler(RecipeFailureEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
     public RecipePrimer addFinishHandler(IEventHandler<RecipeFinishEvent> event) {
         addRecipeEventHandler(RecipeFinishEvent.class, event);
         return this;
@@ -252,6 +258,12 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addFactoryTickHandler(IEventHandler<FactoryRecipeTickEvent> event) {
         addRecipeEventHandler(FactoryRecipeTickEvent.class, event);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryFailureHandler(IEventHandler<FactoryRecipeFailureEvent> event) {
+        addRecipeEventHandler(FactoryRecipeFailureEvent.class, event);
         return this;
     }
 
