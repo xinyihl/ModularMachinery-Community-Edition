@@ -84,6 +84,10 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
                 if (externalStack == ItemStack.EMPTY) {
                     ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
+                    // Safeguard against Storage Drawers virtual slot
+                    if (notInserted.getCount() == internalStack.getCount()) {
+                        break;
+                    }
                     inventory.setStackInSlot(internalSlotId, notInserted);
                     successAtLeastOnce = true;
                     if (notInserted == ItemStack.EMPTY) {
@@ -99,9 +103,6 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                 // Extract internal item to external.
                 ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
                 inventory.setStackInSlot(internalSlotId, notInserted);
-                if (notInserted.getCount() == internalStack.getCount()) {
-                    break;
-                }
 
                 successAtLeastOnce = true;
                 if (notInserted == ItemStack.EMPTY) {
