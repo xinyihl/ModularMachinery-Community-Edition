@@ -47,6 +47,7 @@ public class TileMachineController extends TileMultiblockMachineController {
     private ActiveMachineRecipe activeRecipe = null;
     private RecipeCraftingContext context = null;
     private RecipeSearchTask searchTask = null;
+    private boolean waitForFinish = false;
 
     public TileMachineController() {
     }
@@ -120,6 +121,17 @@ public class TileMachineController extends TileMultiblockMachineController {
             context.setParallelism(this.activeRecipe.getParallelism());
         }
 
+        if (this.activeRecipe.isCompleted()) {
+            if (waitForFinish) {
+                if (ticksExisted % 10 == 0) {
+                    onFinished();
+                }
+            } else {
+                onFinished();
+            }
+            return;
+        }
+
         CraftingStatus prevStatus = this.getCraftingStatus();
 
         //检查预 Tick 事件是否阻止进一步运行。
@@ -143,13 +155,10 @@ public class TileMachineController extends TileMultiblockMachineController {
             this.activeRecipe.tick(this, this.context);
         }
         if (this.getCraftingStatus().isCrafting()) {
-            onTick();
+            onPostTick();
+            // Prevent PostTickEvent destruct recipe
             if (activeRecipe != null && activeRecipe.isCompleted()) {
-                if (ModularMachinery.pluginServerCompatibleMode) {
-                    ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::onFinished);
-                } else {
-                    onFinished();
-                }
+                onFinished();
             }
         } else {
             boolean destruct = onFailure();
@@ -224,7 +233,7 @@ public class TileMachineController extends TileMultiblockMachineController {
     /**
      * <p>与 {@code onPreTick()} 相似，但是可以销毁配方。</p>
      */
-    public void onTick() {
+    public void onPostTick() {
         List<IEventHandler<RecipeEvent>> handlerList = this.activeRecipe.getRecipe().getRecipeEventHandlers(RecipeTickEvent.class);
         if (handlerList == null || handlerList.isEmpty()) return;
 
@@ -272,8 +281,17 @@ public class TileMachineController extends TileMultiblockMachineController {
             ModularMachinery.log.warn("Machine " + MiscUtils.posToString(getPos()) + " Try to finish a null recipe! ignored.");
             this.context = null;
             this.activeRecipe = null;
+            this.waitForFinish = false;
             return;
         }
+
+        RecipeCraftingContext.CraftingCheckResult result = this.context.canFinishCrafting();
+        if (!result.isSuccess()) {
+            this.waitForFinish = true;
+            this.craftingStatus = CraftingStatus.failure(result.getFirstErrorMessage(""));
+            return;
+        }
+
         MachineRecipe recipe = this.activeRecipe.getRecipe();
         List<IEventHandler<RecipeEvent>> handlerList = recipe.getRecipeEventHandlers(RecipeFinishEvent.class);
         if (handlerList != null && !handlerList.isEmpty()) {
@@ -283,8 +301,8 @@ public class TileMachineController extends TileMultiblockMachineController {
             }
         }
 
+        this.waitForFinish = false;
         this.context.finishCrafting();
-
         this.activeRecipe.reset();
         this.activeRecipe.setMaxParallelism(isParallelized() ? getMaxParallelism() : 1);
         this.context = createContext(this.activeRecipe);

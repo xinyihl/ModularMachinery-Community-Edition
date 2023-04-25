@@ -88,14 +88,16 @@ public class TileFactoryController extends TileMultiblockMachineController {
         updateCoreThread();
         cleanIdleTimeoutThread();
 
-        coreRecipeThreads.values().forEach(thread -> {
+        for (RecipeThread thread : coreRecipeThreads.values()) {
             if (thread.getActiveRecipe() == null) {
                 thread.searchAndStartRecipe();
             }
             doThreadRecipeTick(thread);
-        });
+        }
 
-        recipeThreadList.forEach(this::doThreadRecipeTick);
+        for (RecipeThread thread : recipeThreadList) {
+            doThreadRecipeTick(thread);
+        }
     }
 
     /**
@@ -114,7 +116,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             // To prevent performance drain due to long output blocking,
             // try to complete the recipe every 10 Tick instead of every Tick.
             if (ticksExisted % 10 == 0) {
-                thread.finishRecipe();
+                thread.onFinished();
             }
             return;
         }
@@ -141,8 +143,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        // FinishedEvent
-        thread.finishRecipe();
+        thread.onFinished();
     }
 
     /**
@@ -490,6 +491,19 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         return false;
+    }
+
+    @Override
+    protected void checkRotation() {
+        IBlockState state = getWorld().getBlockState(getPos());
+        if (state.getBlock() instanceof BlockFactoryController) {
+            this.parentController = (BlockFactoryController) state.getBlock();
+            this.parentMachine = parentController.getParentMachine();
+            this.controllerRotation = state.getValue(BlockController.FACING);
+        } else {
+            ModularMachinery.log.warn("Invalid controller block at " + getPos() + " !");
+            controllerRotation = EnumFacing.NORTH;
+        }
     }
 
     @Override

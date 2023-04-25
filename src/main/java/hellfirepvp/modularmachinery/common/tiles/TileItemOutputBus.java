@@ -17,7 +17,6 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -34,7 +33,7 @@ import javax.annotation.Nullable;
  * Date: 07.07.2017 / 18:41
  */
 public class TileItemOutputBus extends TileItemBus implements MachineComponentTile {
-    public static int minWorkDelay = 5;
+    public static int minWorkDelay = 10;
     public static int maxWorkDelay = 60;
 
     public TileItemOutputBus() {
@@ -85,7 +84,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
                 if (externalStack == ItemStack.EMPTY) {
                     ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
-                    inventory.setStackInSlotStrict(internalSlotId, notInserted);
+                    inventory.setStackInSlot(internalSlotId, notInserted);
                     successAtLeastOnce = true;
                     if (notInserted == ItemStack.EMPTY) {
                         break;
@@ -99,7 +98,11 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
                 // Extract internal item to external.
                 ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
-                inventory.setStackInSlotStrict(internalSlotId, notInserted);
+                inventory.setStackInSlot(internalSlotId, notInserted);
+                if (notInserted.getCount() == internalStack.getCount()) {
+                    break;
+                }
+
                 successAtLeastOnce = true;
                 if (notInserted == ItemStack.EMPTY) {
                     break;
@@ -116,9 +119,9 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
     }
 
     @Override
-    public void readCustomNBT(NBTTagCompound compound) {
-        super.readCustomNBT(compound);
-        inventory.setRedirectOutput(true);
+    public void markForUpdate() {
+        super.markForUpdate();
+        inventoryChanged = true;
     }
 
     @Override

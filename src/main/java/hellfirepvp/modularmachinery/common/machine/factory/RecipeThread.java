@@ -24,6 +24,7 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>TileFactoryController 的一部分，存储单独的配方运行数据。</p>
@@ -38,8 +39,8 @@ public class RecipeThread {
     public static final int IDLE_TIME_OUT = 200;
     public static final List<Action> WAIT_FOR_ADD = new ArrayList<>();
     private final TreeSet<MachineRecipe> recipeSet = new TreeSet<>();
-    private final Map<String, RecipeModifier> permanentModifiers = new HashMap<>();
-    private final Map<String, RecipeModifier> semiPermanentModifiers = new HashMap<>();
+    private final Map<String, RecipeModifier> permanentModifiers = new ConcurrentHashMap<>();
+    private final Map<String, RecipeModifier> semiPermanentModifiers = new ConcurrentHashMap<>();
     public int idleTime = 0;
     private TileFactoryController factory;
     private boolean isCoreThread;
@@ -70,15 +71,6 @@ public class RecipeThread {
     @ZenMethod
     public static RecipeThread createCoreThread(String threadName) {
         return new RecipeThread(null, true, threadName, Collections.emptySet(), Collections.emptyMap());
-    }
-
-    public void finishRecipe() {
-        // FinishedEvent
-        if (ModularMachinery.pluginServerCompatibleMode) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::onFinished);
-        } else {
-            onFinished();
-        }
     }
 
     public CraftingStatus onTick() {
@@ -113,6 +105,10 @@ public class RecipeThread {
         factory.onThreadRecipeFinished(this);
         semiPermanentModifiers.clear();
 
+        tryRestartRecipe();
+    }
+
+    private void tryRestartRecipe() {
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
         context = createContext(activeRecipe);

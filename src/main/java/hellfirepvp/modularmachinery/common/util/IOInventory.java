@@ -9,18 +9,14 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
-import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import io.netty.util.collection.IntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
@@ -39,15 +35,9 @@ import java.util.Map;
 public class IOInventory implements IItemHandlerModifiable {
 
     private final TileEntitySynchronized owner;
-    private final Map<Integer, Integer> slotLimits = new IntObjectHashMap<>(); // Value not present means default, aka 64.
+    private final Map<Integer, Integer> slotLimits = new Int2IntOpenHashMap(); // Value not present means default, aka 64.
     private final Map<Integer, SlotStackHolder> inventory = new IntObjectHashMap<>();
     public boolean allowAnySlots = false;
-
-    /**
-     * <p>当启用时，调用 setStackInSlot() 将会重定向输出到附近的容器。</p>
-     * <p>When enabled, calling setStackInSlot() will output directly to the nearby container.</p>
-     */
-    private boolean redirectOutput = false;
     public List<EnumFacing> accessibleSides = new ArrayList<>();
     private int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
     private InventoryUpdateListener listener = null;
@@ -64,10 +54,10 @@ public class IOInventory implements IItemHandlerModifiable {
         this.owner = owner;
         this.inSlots = inSlots;
         this.outSlots = outSlots;
-        for (Integer slot : inSlots) {
+        for (int slot : inSlots) {
             this.inventory.put(slot, new SlotStackHolder(slot));
         }
-        for (Integer slot : outSlots) {
+        for (int slot : outSlots) {
             this.inventory.put(slot, new SlotStackHolder(slot));
         }
         this.accessibleSides = Arrays.asList(accessibleFrom);
@@ -94,10 +84,10 @@ public class IOInventory implements IItemHandlerModifiable {
         IOInventory merged = new IOInventory(tile);
         int slotOffset = 0;
         for (IOInventory inventory : inventories) {
-            for (Integer key : inventory.inventory.keySet()) {
+            for (int key : inventory.inventory.keySet()) {
                 merged.inventory.put(key + slotOffset, inventory.inventory.get(key));
             }
-            for (Integer key : inventory.slotLimits.keySet()) {
+            for (int key : inventory.slotLimits.keySet()) {
                 merged.slotLimits.put(key + slotOffset, inventory.slotLimits.get(key));
             }
             slotOffset += inventory.inventory.size();
@@ -105,17 +95,9 @@ public class IOInventory implements IItemHandlerModifiable {
         return merged;
     }
 
-    public boolean isRedirectOutput() {
-        return redirectOutput;
-    }
-
-    public void setRedirectOutput(boolean redirectOutput) {
-        this.redirectOutput = redirectOutput;
-    }
-
     public IOInventory setMiscSlots(int... miscSlots) {
         this.miscSlots = miscSlots;
-        for (Integer slot : miscSlots) {
+        for (int slot : miscSlots) {
             this.inventory.put(slot, new SlotStackHolder(slot));
         }
         return this;
@@ -141,46 +123,8 @@ public class IOInventory implements IItemHandlerModifiable {
         return new GuiAccess(this);
     }
 
-    private void redirectItemStackToNearContainers(int internalSlotId, ItemStack willBeInserted) {
-        ItemStack beInserted = willBeInserted;
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            BlockPos offset = owner.getPos().offset(facing);
-            if (!owner.getWorld().isBlockLoaded(offset)) {
-                continue;
-            }
-            TileEntity te = owner.getWorld().getTileEntity(offset);
-            if (te == null || te instanceof TileItemBus) {
-                continue;
-            }
-
-            EnumFacing accessingSide = facing.getOpposite();
-
-            IItemHandler itemHandler = te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, accessingSide);
-            if (itemHandler == null) {
-                continue;
-            }
-
-            ItemStack notInserted = ItemUtils.insertItemStackToContainer(itemHandler, beInserted);
-            if (notInserted == ItemStack.EMPTY) {
-                return;
-            } else {
-                beInserted = notInserted;
-            }
-        }
-
-        setStackInSlotStrict(internalSlotId, beInserted);
-    }
-
     @Override
-    public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        if (redirectOutput) {
-            redirectItemStackToNearContainers(slot, stack);
-        } else {
-            setStackInSlotStrict(slot, stack);
-        }
-    }
-
-    public synchronized void setStackInSlotStrict(int slot, @Nonnull ItemStack stack) {
+    public synchronized void setStackInSlot(int slot, @Nonnull ItemStack stack) {
         if (this.inventory.containsKey(slot)) {
             this.inventory.get(slot).itemStack = stack;
             owner.markForUpdateSync();
@@ -318,7 +262,7 @@ public class IOInventory implements IItemHandlerModifiable {
         tag.setIntArray("miscSlots", this.miscSlots);
 
         NBTTagList inv = new NBTTagList();
-        for (Integer slot : this.inventory.keySet()) {
+        for (int slot : this.inventory.keySet()) {
             SlotStackHolder holder = this.inventory.get(slot);
             NBTTagCompound holderTag = new NBTTagCompound();
             holderTag.setBoolean("holderEmpty", holder.itemStack.isEmpty());

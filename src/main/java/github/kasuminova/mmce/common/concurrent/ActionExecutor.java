@@ -3,7 +3,8 @@ package github.kasuminova.mmce.common.concurrent;
 public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
     public final Action action;
     public final int priority;
-    public int usedTime = 0;
+    public volatile boolean isCompleted = false;
+    public volatile int usedTime = 0;
 
     public ActionExecutor(Action action) {
         this(action, 0);
@@ -20,6 +21,7 @@ public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
         action.doAction();
 
         usedTime = (int) (System.nanoTime() / 1000 - start);
+        isCompleted = true;
     }
 
     @Override

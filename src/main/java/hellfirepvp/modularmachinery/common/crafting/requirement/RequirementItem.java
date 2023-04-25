@@ -20,10 +20,7 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.Asyncable;
-import hellfirepvp.modularmachinery.common.util.IOInventory;
-import hellfirepvp.modularmachinery.common.util.ItemUtils;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
+import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -250,15 +247,16 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
         } else if (actionType == IOType.OUTPUT) {
-//            for (ComponentOutputRestrictor restrictor : restrictions) {
-//                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
-//                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
-//
-//                    if (inv.exactComponent.equals(component)) {
-//                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
-//                    }
-//                }
-//            }
+            handler = CopyHandlerHelper.copyInventory(handler);
+            for (ComponentOutputRestrictor restrictor : restrictions) {
+                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
+                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
+
+                    if (inv.exactComponent.equals(component)) {
+                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+                    }
+                }
+            }
 
             ItemStack stack = ItemStack.EMPTY;
             if (oreDictName != null) {

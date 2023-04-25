@@ -1,15 +1,13 @@
 package github.kasuminova.mmce.common.concurrent;
 
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
-import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -21,10 +19,12 @@ import java.util.concurrent.locks.LockSupport;
  */
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 4, 8), 4);
+
     public static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
             THREAD_COUNT / 4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
+
     public static long totalExecuted = 0;
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
@@ -32,7 +32,7 @@ public class TaskExecutor {
     private final ArrayList<ActionExecutor> submitted = new ArrayList<>();
     private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
     private final MpscLinkedAtomicQueue<Action> mainThreadActions = new MpscLinkedAtomicQueue<>();
-    private final HashSet<TileEntitySynchronized> requireUpdateTEList = new HashSet<>();
+    private final MpscLinkedAtomicQueue<TileEntitySynchronized> requireUpdateTEQueue = new MpscLinkedAtomicQueue<>();
     private final TaskSubmitter submitter = new TaskSubmitter();
     private volatile boolean inTick = false;
 
@@ -41,8 +41,8 @@ public class TaskExecutor {
         submitter.start();
     }
 
-    @SubscribeEvent
-    public void onWorldTick(final TickEvent.WorldTickEvent event) {
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onServerTick(final TickEvent.ServerTickEvent event) {
         if (event.side == Side.CLIENT) {
             return;
         }
@@ -70,28 +70,14 @@ public class TaskExecutor {
      * @return 已执行的数量
      */
     public int executeActions() {
-        if (submitted.isEmpty()) {
-            return 0;
-        }
-
         int executed = 0;
         long time = System.nanoTime() / 1000;
 
         submitTask();
-        executed += awaitActionExecutor();
+        executed += spinAwaitActionExecutor();
+        executed += executeMainThreadActions();
 
-        Action action;
-        while ((action = mainThreadActions.poll()) != null) {
-            action.doAction();
-            executed++;
-        }
-
-        synchronized (requireUpdateTEList) {
-            for (TileEntitySynchronized te : requireUpdateTEList) {
-                te.markForUpdate();
-            }
-            requireUpdateTEList.clear();
-        }
+        updateTileEntity();
 
         //Empty Check
         if (!submitted.isEmpty()) {
@@ -102,23 +88,47 @@ public class TaskExecutor {
         return executed;
     }
 
-    private int awaitActionExecutor() {
-        try {
-            if (THREAD_POOL.awaitTermination(50, TimeUnit.MICROSECONDS)) {
-                ModularMachinery.log.warn("[Modular Machinery] Parallel action execute timeout for 50ms.");
-            }
-        } catch (Exception e) {
-            ModularMachinery.log.warn("An error occurred during asynchronous task execution!");
-            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+    private int executeMainThreadActions() {
+        int executed = 0;
+        if (mainThreadActions.isEmpty()) {
+            return executed;
         }
 
+        Action action;
+        while ((action = mainThreadActions.poll()) != null) {
+            action.doAction();
+            executed++;
+        }
+        return executed;
+    }
+
+    private int spinAwaitActionExecutor() {
         int executed = 0;
+
         for (ActionExecutor executor : submitted) {
+            // Spin up while completing the operation in the queue.
+            while (!executor.isCompleted) {
+                executed += executeMainThreadActions();
+                updateTileEntity();
+                LockSupport.parkNanos(10_000L);
+            }
+
             taskUsedTime += executor.usedTime;
             executed++;
         }
         submitted.clear();
         return executed;
+    }
+
+    private void updateTileEntity() {
+        if (requireUpdateTEQueue.isEmpty()) {
+            return;
+        }
+
+        TileEntitySynchronized te;
+        while ((te = requireUpdateTEQueue.poll()) != null) {
+            te.markForUpdate();
+        }
     }
 
     /**
@@ -153,12 +163,10 @@ public class TaskExecutor {
     }
 
     public void addTEUpdateTask(final TileEntitySynchronized te) {
-        synchronized (requireUpdateTEList) {
-            requireUpdateTEList.add(te);
-        }
+        requireUpdateTEQueue.offer(te);
     }
 
-    public synchronized void submitTask() {
+    private synchronized void submitTask() {
         ActionExecutor executor;
         while ((executor = executors.poll()) != null) {
             THREAD_POOL.execute(executor);
@@ -179,7 +187,7 @@ public class TaskExecutor {
         }
 
         public void unpark() {
-            if (thread != null && thread.isAlive()) {
+            if (thread != null) {
                 LockSupport.unpark(thread);
             }
         }
@@ -191,7 +199,7 @@ public class TaskExecutor {
                     if (!executors.isEmpty()) {
                         submitTask();
                     } else {
-                        LockSupport.parkNanos(1000L);
+                        LockSupport.parkNanos(10000L);
                     }
                 } else {
                     LockSupport.park();

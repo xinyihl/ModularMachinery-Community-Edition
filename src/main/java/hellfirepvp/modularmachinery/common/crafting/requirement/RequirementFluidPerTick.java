@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.CopyHandlerHelper;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
@@ -54,17 +55,15 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return doFluidIO(component, context, restrictions, false);
-    }
-
-    public CraftCheck doFluidIO(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions, boolean doFillOrDrain) {
         HybridTank handler = (HybridTank) component.providedComponent;
-
         switch (actionType) {
             case INPUT:
-                //If it doesn't consume the fluid, we only need to see if it's actually there.
-                FluidStack drained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), doFillOrDrain);
-                if (drained == null || !NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
+                //If it doesn't consume the item, we only need to see if it's actually there.
+                FluidStack drained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
+                if (drained == null) {
+                    return CraftCheck.failure("craftcheck.failure.fluid.input");
+                }
+                if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
                     return CraftCheck.failure("craftcheck.failure.fluid.input");
                 }
                 this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
@@ -73,12 +72,51 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
-                int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), doFillOrDrain);
+                handler = CopyHandlerHelper.copyTank(handler);
+
+                for (ComponentOutputRestrictor restrictor : restrictions) {
+                    if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
+                        ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
+
+                        if (tank.exactComponent.equals(component)) {
+                            handler.fillInternal(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
+                        }
+                    }
+                }
+                int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), false); //True or false doesn't really matter tbh
                 boolean didFill = filled >= this.requirementCheck.getAmount();
+                if (didFill) {
+                    context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
+                }
                 if (didFill) {
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.output.space");
+        }
+        return CraftCheck.skipComponent();
+    }
+
+    public CraftCheck doFluidIO(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions, boolean doFillOrDrain) {
+        HybridTank handler = (HybridTank) component.providedComponent;
+
+        switch (actionType) {
+            case INPUT:
+                //If it doesn't consume the fluid, we only need to see if it's actually there.
+                FluidStack drained = handler.drainInternal(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
+                if (drained == null || !NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
+                    return CraftCheck.failure("craftcheck.failure.fluid.input");
+                }
+                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
+
+                return this.requirementCheck.getAmount() <= 0
+                        ? CraftCheck.success()
+                        : CraftCheck.failure("craftcheck.failure.fluid.input");
+            case OUTPUT:
+                int filled = handler.fillInternal(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
+
+                return filled >= this.requirementCheck.getAmount()
+                        ? CraftCheck.success()
+                        : CraftCheck.failure("craftcheck.failure.fluid.output.space");
         }
         return CraftCheck.skipComponent();
     }

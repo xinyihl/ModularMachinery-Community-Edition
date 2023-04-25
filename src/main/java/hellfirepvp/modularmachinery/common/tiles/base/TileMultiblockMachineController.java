@@ -136,23 +136,25 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected void incrementUsedTime(int add) {
+        usedTimeCache += add;
         Integer first = usedTimeList.getFirst();
         if (first != null) {
             usedTimeList.set(0, first + add);
+        } else {
+            usedTimeList.addFirst(add);
         }
     }
 
     protected void addUsedTime(int time) {
+        usedTimeCache += time;
         usedTimeList.addFirst(time);
         if (usedTimeList.size() > 100) {
-            usedTimeList.removeLast();
+            usedTimeCache -= usedTimeList.pollLast();
         }
     }
 
     public int usedTimeAvg() {
-        ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() ->
-                usedTimeCache = usedTimeList.stream().mapToInt(time -> time).sum() / usedTimeList.size());
-        return usedTimeCache;
+        return usedTimeCache / usedTimeList.size();
     }
 
     public int getMaxParallelism() {
@@ -312,10 +314,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return true;
         }
         checkRotation();
-        //检查多方块结构中的某个方块的区块是否被卸载，以免一些重要的配方运行失败。
-        //可能会提高一些性能开销，但是玩家体验更加重要。
-        //Check if a block of a chunk in a multiblock structure is unloaded, so that some important recipes do not fail to run.
-        //It may raise some performance overhead, but the player experience is more important.
+        // 检查多方块结构中的某个方块的区块是否被卸载，以免一些重要的配方运行失败。
+        // 可能会提高一些性能开销，但是玩家体验更加重要。
+        // Check if a block of a chunk in a multiblock structure is unloaded, so that some important recipes do not fail to run.
+        // It may raise some performance overhead, but the player experience is more important.
         if (!checkStructure()) {
             if (craftingStatus != CraftingStatus.CHUNK_UNLOADED) {
                 craftingStatus = CraftingStatus.CHUNK_UNLOADED;

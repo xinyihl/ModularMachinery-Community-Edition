@@ -21,7 +21,7 @@ public class FluidUtils {
     public static FluidStack getFluidFromHandler(ItemStack stack) {
         if (isFluidHandler(stack)) {
             IFluidTankProperties[] tank = FluidUtil.getFluidHandler(stack).getTankProperties();
-            return tank.length <= 0 ? null : tank[0].getContents();
+            return tank.length == 0 ? null : tank[0].getContents();
         }
         return null;
     }

@@ -23,6 +23,7 @@ import net.minecraft.util.math.MathHelper;
  */
 public abstract class TileItemBus extends TileInventory implements SelectiveUpdateTileEntity {
     protected int successCounter = 0;
+    protected boolean inventoryChanged = false;
     private ItemBusSize size;
 
     public TileItemBus() {
@@ -38,6 +39,11 @@ public abstract class TileItemBus extends TileInventory implements SelectiveUpda
     }
 
     protected boolean canWork(int minWorkDelay, int maxWorkDelay) {
+        if (inventoryChanged) {
+            inventoryChanged = false;
+            return true;
+        }
+
         if (successCounter <= 0) {
             return ticksExisted % maxWorkDelay == 0;
         }
