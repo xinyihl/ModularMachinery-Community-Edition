@@ -8,7 +8,7 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenSetter;
 
 @ZenRegister
-@ZenClass("mods.modularmachinery.FactoryRecipeFailedEvent")
+@ZenClass("mods.modularmachinery.FactoryRecipeFailureEvent")
 public class FactoryRecipeFailureEvent extends FactoryRecipeEvent {
     private final String cause;
     private boolean destructRecipe;
