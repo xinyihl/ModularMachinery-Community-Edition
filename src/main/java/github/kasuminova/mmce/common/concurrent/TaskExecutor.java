@@ -20,7 +20,7 @@ import java.util.concurrent.locks.LockSupport;
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 4, 8), 4);
 
-    public static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
+    private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
             THREAD_COUNT / 4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
@@ -143,7 +143,7 @@ public class TaskExecutor {
     /**
      * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
-     * @param action 要执行的异步任务
+     * @param action   要执行的异步任务
      * @param priority 优先级
      */
     public ActionExecutor addParallelAsyncTask(final Action action, final int priority) {
