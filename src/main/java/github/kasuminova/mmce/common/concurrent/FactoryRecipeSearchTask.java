@@ -5,7 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class FactoryRecipeSearchTask extends RecipeSearchTask {
-    private final RecipeThread thread;
+    private final FactoryRecipeThread thread;
     private final List<MachineRecipe> filtered = new ArrayList<>();
     private final ActiveMachineRecipe[] running;
     private final TileFactoryController factory;
@@ -25,7 +25,7 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
             DynamicMachine currentMachine,
             int maxParallelism,
             Iterable<MachineRecipe> recipeList,
-            RecipeThread thread,
+            FactoryRecipeThread thread,
             ActiveMachineRecipe[] running) {
         super(controller, currentMachine, maxParallelism, recipeList);
         this.factory = controller;

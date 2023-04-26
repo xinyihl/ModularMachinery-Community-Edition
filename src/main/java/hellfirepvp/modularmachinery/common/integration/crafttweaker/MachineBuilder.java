@@ -17,7 +17,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.Advan
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
@@ -469,7 +469,7 @@ public class MachineBuilder {
     }
 
     @ZenMethod
-    public MachineBuilder addCoreThread(RecipeThread thread) {
+    public MachineBuilder addCoreThread(FactoryRecipeThread thread) {
         this.machine.addCoreThread(thread);
         return this;
     }

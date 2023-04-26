@@ -10,10 +10,10 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
-import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -24,7 +24,6 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>TileFactoryController 的一部分，存储单独的配方运行数据。</p>
@@ -33,34 +32,28 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Not a thread in the true sense of the word.</p>
  */
 @ZenRegister
-@ZenClass("mods.modularmachinery.RecipeThread")
-public class RecipeThread {
-    public static final int RECIPE_SEARCH_DELAY = 20;
+@ZenClass("mods.modularmachinery.FactoryRecipeThread")
+public class FactoryRecipeThread extends RecipeThread {
     public static final int IDLE_TIME_OUT = 200;
     public static final List<Action> WAIT_FOR_ADD = new ArrayList<>();
     private final TreeSet<MachineRecipe> recipeSet = new TreeSet<>();
-    private final Map<String, RecipeModifier> permanentModifiers = new ConcurrentHashMap<>();
-    private final Map<String, RecipeModifier> semiPermanentModifiers = new ConcurrentHashMap<>();
     public int idleTime = 0;
     private TileFactoryController factory;
     private boolean isCoreThread;
     private String threadName;
-    private FactoryRecipeSearchTask searchTask;
-    private ActiveMachineRecipe activeRecipe = null;
-    private RecipeCraftingContext context = null;
-    private CraftingStatus status = CraftingStatus.IDLE;
-    private boolean waitForFinish = false;
+    private FactoryRecipeSearchTask searchTask = null;
 
-    public RecipeThread(TileFactoryController factory) {
+    public FactoryRecipeThread(TileFactoryController factory) {
         this(factory, false, "", Collections.emptySet(), Collections.emptyMap());
     }
 
-    public RecipeThread(
+    public FactoryRecipeThread(
             TileFactoryController factory,
             boolean isCoreThread,
             String threadName,
             Set<MachineRecipe> recipeSet,
             Map<String, RecipeModifier> permanentModifiers) {
+        super(factory);
         this.factory = factory;
         this.isCoreThread = isCoreThread;
         this.threadName = threadName;
@@ -69,51 +62,29 @@ public class RecipeThread {
     }
 
     @ZenMethod
-    public static RecipeThread createCoreThread(String threadName) {
-        return new RecipeThread(null, true, threadName, Collections.emptySet(), Collections.emptyMap());
+    public static FactoryRecipeThread createCoreThread(String threadName) {
+        return new FactoryRecipeThread(null, true, threadName, Collections.emptySet(), Collections.emptyMap());
     }
 
     public CraftingStatus onTick() {
-        if (activeRecipe == null) {
-            return new CraftingStatus(TileMultiblockMachineController.Type.NO_RECIPE, "");
+        CraftingStatus status = super.onTick();
+        if (status.isCrafting()) {
+            this.idleTime = 0;
         }
-        if (context == null) {
-            context = createContext(activeRecipe);
-        }
-        idleTime = 0;
-        return (status = activeRecipe.tick(factory, context));
+        return status;
     }
 
-    public void onFinished() {
-        if (activeRecipe == null) {
-            waitForFinish = false;
-            return;
-        }
-        if (context == null) {
-            context = createContext(activeRecipe);
-        }
-
-        RecipeCraftingContext.CraftingCheckResult checkResult = context.canFinishCrafting();
-        if (checkResult.isFailure()) {
-            waitForFinish = true;
-            status = CraftingStatus.failure(checkResult.getFirstErrorMessage(""));
-            return;
-        }
-
-        waitForFinish = false;
-        context.finishCrafting();
+    @Override
+    public void fireFinishedEvent() {
         factory.onThreadRecipeFinished(this);
-        semiPermanentModifiers.clear();
-
-        tryRestartRecipe();
     }
 
-    private void tryRestartRecipe() {
+    public void tryRestartRecipe() {
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
         context = createContext(activeRecipe);
 
-        RecipeCraftingContext.CraftingCheckResult result = factory.onCheck(context);
+        RecipeCraftingContext.CraftingCheckResult result = ctrl.onCheck(context);
         if (result.isSuccess()) {
             factory.onThreadRecipeStart(this);
         } else {
@@ -165,7 +136,7 @@ public class RecipeThread {
         }
     }
 
-    private void createRecipeSearchTask() {
+    protected void createRecipeSearchTask() {
         TileFactoryController factory = this.factory;
         Iterable<MachineRecipe> recipeSet = this.recipeSet.isEmpty() ? RecipeRegistry.getRecipesFor(factory.getFoundMachine()) : this.recipeSet;
         searchTask = new FactoryRecipeSearchTask(
@@ -214,14 +185,14 @@ public class RecipeThread {
         return tag;
     }
 
-    public static RecipeThread deserialize(NBTTagCompound tag, TileFactoryController factory) {
+    public static FactoryRecipeThread deserialize(NBTTagCompound tag, TileFactoryController factory) {
         if (!tag.hasKey("status")) {
             return null;
         }
 
         Map<String, RecipeModifier> permanentModifiers = new HashMap<>();
-        if (tag.hasKey("customModifier")) {
-            NBTTagList tagList = tag.getTagList("customModifier", Constants.NBT.TAG_COMPOUND);
+        if (tag.hasKey("permanentModifiers", Constants.NBT.TAG_LIST)) {
+            NBTTagList tagList = tag.getTagList("permanentModifiers", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < tagList.tagCount(); i++) {
                 NBTTagCompound modifierTag = tagList.getCompoundTagAt(i);
                 permanentModifiers.put(modifierTag.getString("key"), RecipeModifier.deserialize(modifierTag.getCompoundTag("modifier")));
@@ -229,16 +200,16 @@ public class RecipeThread {
         }
 
         Map<String, RecipeModifier> semiPermanentModifiers = new HashMap<>();
-        if (tag.hasKey("customModifier")) {
-            NBTTagList tagList = tag.getTagList("customModifier", Constants.NBT.TAG_COMPOUND);
+        if (tag.hasKey("semiPermanentModifiers", Constants.NBT.TAG_LIST)) {
+            NBTTagList tagList = tag.getTagList("semiPermanentModifiers", Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < tagList.tagCount(); i++) {
                 NBTTagCompound modifierTag = tagList.getCompoundTagAt(i);
                 semiPermanentModifiers.put(modifierTag.getString("key"), RecipeModifier.deserialize(modifierTag.getCompoundTag("modifier")));
             }
         }
 
-        ActiveMachineRecipe activeRecipe = deserializeRecipe(tag, factory);
-        RecipeThread thread = new RecipeThread(factory)
+        ActiveMachineRecipe activeRecipe = deserializeActiveRecipe(tag, factory);
+        FactoryRecipeThread thread = (FactoryRecipeThread) new FactoryRecipeThread(factory)
                 .setActiveRecipe(activeRecipe)
                 .setStatus(CraftingStatus.deserialize(tag.getCompoundTag("status")));
         thread.permanentModifiers.putAll(permanentModifiers);
@@ -246,8 +217,8 @@ public class RecipeThread {
 
         // Core Thread
         if (tag.hasKey("coreThreadName")) {
-            Map<String, RecipeThread> threads = factory.getFoundMachine().getCoreThreadPreset();
-            RecipeThread coreThread = threads.get(tag.getString("coreThreadName"));
+            Map<String, FactoryRecipeThread> threads = factory.getFoundMachine().getCoreThreadPreset();
+            FactoryRecipeThread coreThread = threads.get(tag.getString("coreThreadName"));
             if (coreThread == null) {
                 return thread;
             }
@@ -255,61 +226,6 @@ public class RecipeThread {
         }
         // Simple Thread
         return thread;
-    }
-
-    private static ActiveMachineRecipe deserializeRecipe(NBTTagCompound tag, TileFactoryController factory) {
-        ActiveMachineRecipe activeRecipe = null;
-        NBTTagCompound recipeTag = tag.getCompoundTag("activeRecipe");
-        if (tag.hasKey("activeRecipe")) {
-            activeRecipe = new ActiveMachineRecipe(recipeTag);
-        }
-        if (activeRecipe != null && activeRecipe.getRecipe() == null) {
-            activeRecipe = null;
-            ModularMachinery.log.info("Couldn't find recipe named " + recipeTag.getString("recipeName") + " for controller at " + factory.getPos());
-        }
-        return activeRecipe;
-    }
-
-    public void flushContextModifier() {
-        if (context == null) {
-            return;
-        }
-        context.overrideModifier(MiscUtils.flatten(factory.getFoundModifiers().values()));
-        context.addModifier(factory.getCustomModifiers().values());
-        context.addModifier(semiPermanentModifiers.values());
-        context.addModifier(permanentModifiers.values());
-    }
-
-    @ZenGetter("activeRecipe")
-    public ActiveMachineRecipe getActiveRecipe() {
-        return activeRecipe;
-    }
-
-    public RecipeThread setActiveRecipe(ActiveMachineRecipe activeRecipe) {
-        this.activeRecipe = activeRecipe;
-        return this;
-    }
-
-    public RecipeCraftingContext getContext() {
-        return context;
-    }
-
-    public RecipeThread setContext(RecipeCraftingContext context) {
-        this.context = context;
-        return this;
-    }
-
-    public CraftingStatus getStatus() {
-        return status;
-    }
-
-    public RecipeThread setStatus(CraftingStatus status) {
-        this.status = status;
-        return this;
-    }
-
-    public boolean isWaitForFinish() {
-        return waitForFinish;
     }
 
     public TileFactoryController getFactory() {
@@ -348,93 +264,11 @@ public class RecipeThread {
         return threadName;
     }
 
-    public Map<String, RecipeModifier> getPermanentModifiers() {
-        return permanentModifiers;
-    }
-
-    public Map<String, RecipeModifier> getSemiPermanentModifiers() {
-        return semiPermanentModifiers;
-    }
-
-    /**
-     * 添加一个半永久配方修改器，它会在完成配方后被清空。
-     *
-     * @param name     名称
-     * @param modifier 修改器
-     */
-    @ZenMethod
-    public void addModifier(String name, RecipeModifier modifier) {
-        semiPermanentModifiers.put(name, modifier);
-        flushContextModifier();
-    }
-
-    /**
-     * 删除一个半永久配方修改器。
-     *
-     * @param name 名称
-     */
-    @ZenMethod
-    public void removeModifier(String name) {
-        semiPermanentModifiers.remove(name);
-        flushContextModifier();
-    }
-
-    /**
-     * 线程内是否存在指定名称的半永久配方修改器。
-     *
-     * @param name 名称
-     */
-    @ZenMethod
-    public boolean hasModifier(String name) {
-        return semiPermanentModifiers.containsKey(name);
-    }
-
-    /**
-     * 添加一个永久配方修改器，它将永远存在这个线程中。
-     * @param name     名称
-     * @param modifier 修改器
-     */
-    @ZenMethod
-    public void addPermanentModifier(String name, RecipeModifier modifier) {
-        permanentModifiers.put(name, modifier);
-        flushContextModifier();
-    }
-
-    /**
-     * 线程内是否存在指定名称的永久配方修改器。
-     *
-     * @param name 名称
-     */
-    @ZenMethod
-    public boolean hasPermanentModifier(String name) {
-        return permanentModifiers.containsKey(name);
-    }
-
-    /**
-     * 删除一个永久配方修改器。
-     *
-     * @param name 名称
-     */
-    @ZenMethod
-    public void removePermanentModifier(String name) {
-        permanentModifiers.remove(name);
-        flushContextModifier();
-    }
-
-    /**
-     * 设置当前线程的状态信息。
-     * @param info 信息
-     */
-    @ZenMethod
-    public void setStatusInfo(String info) {
-        status = new CraftingStatus(status.getStatus(), info);
-    }
-
     /**
      * 为当前线程添加固定配方（仅核心线程生效）。
      */
     @ZenMethod
-    public RecipeThread addRecipe(String recipeName) {
+    public FactoryRecipeThread addRecipe(String recipeName) {
         WAIT_FOR_ADD.add(() -> {
             MachineRecipe recipe = RecipeRegistry.getRecipe(new ResourceLocation(ModularMachinery.MODID, recipeName));
             if (recipe != null) {
@@ -447,7 +281,7 @@ public class RecipeThread {
         return this;
     }
 
-    public RecipeThread addRecipe(MachineRecipe recipe) {
+    public FactoryRecipeThread addRecipe(MachineRecipe recipe) {
         recipeSet.add(recipe);
         return this;
     }
@@ -456,11 +290,11 @@ public class RecipeThread {
         return recipeSet;
     }
 
-    public RecipeThread copyCoreThread(TileFactoryController factory) {
-        return new RecipeThread(factory, true, threadName, recipeSet, permanentModifiers);
+    public FactoryRecipeThread copyCoreThread(TileFactoryController factory) {
+        return new FactoryRecipeThread(factory, true, threadName, recipeSet, permanentModifiers);
     }
 
-    public RecipeThread copyDataToAnother(TileFactoryController factory, RecipeThread another) {
+    public FactoryRecipeThread copyDataToAnother(TileFactoryController factory, FactoryRecipeThread another) {
         another.factory = factory;
         another.isCoreThread = isCoreThread;
         another.threadName = threadName;

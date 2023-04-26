@@ -79,7 +79,7 @@ public class TaskExecutor {
 
         updateTileEntity();
 
-        //Empty Check
+        // Empty Check
         if (!submitted.isEmpty()) {
             executed += executeActions();
         }

@@ -133,7 +133,7 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
 
         String status = I18n.format("gui.controller.status");
         fr.drawStringWithShadow(status, offsetX, offsetY, 0xFFFFFF);
-        String statusKey = controller.getCraftingStatus().getUnlocMessage();
+        String statusKey = controller.getControllerStatus().getUnlocMessage();
 
         List<String> out = fr.listFormattedStringToWidth(I18n.format(statusKey), MathHelper.floor(135 * (1 / scale)));
         for (String draw : out) {

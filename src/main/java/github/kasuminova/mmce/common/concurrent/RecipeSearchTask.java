@@ -14,7 +14,7 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
     protected final DynamicMachine currentMachine;
     protected final int maxParallelism;
     protected final Iterable<MachineRecipe> recipeList;
-    protected CraftingStatus status = null;
+    protected CraftingStatus status = CraftingStatus.SUCCESS;
 
     public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList) {
         this.controller = controller;

@@ -2,7 +2,7 @@ package hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recip
 
 import crafttweaker.annotations.ZenRegister;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenSetter;
@@ -13,7 +13,7 @@ public class FactoryRecipeFailureEvent extends FactoryRecipeEvent {
     private final String cause;
     private boolean destructRecipe;
 
-    public FactoryRecipeFailureEvent(RecipeThread recipeThread, IMachineController controller, String cause, boolean destructRecipe) {
+    public FactoryRecipeFailureEvent(FactoryRecipeThread recipeThread, IMachineController controller, String cause, boolean destructRecipe) {
         super(recipeThread, recipeThread.getActiveRecipe(), controller);
         this.cause = cause;
         this.destructRecipe = destructRecipe;

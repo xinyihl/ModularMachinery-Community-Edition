@@ -18,7 +18,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEven
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -98,10 +98,10 @@ public class ModIntegrationCrafttweaker {
         MMEvents.registryAll();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
-        for (Action action : RecipeThread.WAIT_FOR_ADD) {
+        for (Action action : FactoryRecipeThread.WAIT_FOR_ADD) {
             action.doAction();
         }
-        RecipeThread.WAIT_FOR_ADD.clear();
+        FactoryRecipeThread.WAIT_FOR_ADD.clear();
 
         if (!isServer) {
             ModIntegrationJEI.reloadRecipeWrappers();

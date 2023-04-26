@@ -3,7 +3,7 @@ package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
@@ -76,7 +76,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             return;
         }
 
-        List<RecipeThread> recipeThreads = factory.getRecipeThreadList();
+        List<FactoryRecipeThread> recipeThreads = factory.getRecipeThreadList();
 
         probeInfo.text(
                 TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
@@ -95,8 +95,8 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         AtomicInteger i = new AtomicInteger();
-        Collection<RecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
-        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + recipeThreads.size()) * 1.5));
+        Collection<FactoryRecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
+        List<FactoryRecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + recipeThreads.size()) * 1.5));
         recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(recipeThreads);
 
@@ -161,7 +161,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
     private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
         //是否在工作
         if (machine.getActiveRecipe() == null || machine.getFoundMachine() == null) {
-            probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");
+            probeInfo.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
             return;
         }
 
@@ -169,10 +169,10 @@ public class MMInfoProvider implements IProbeInfoProvider {
         int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
         int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
 
-        if (machine.getCraftingStatus().isCrafting()) {
+        if (machine.getControllerStatus().isCrafting()) {
             probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
         } else {
-            probeInfo.text(TextFormatting.RED + "{*" + machine.getCraftingStatus().getUnlocMessage() + "*}");
+            probeInfo.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
             progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
             progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
             progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;

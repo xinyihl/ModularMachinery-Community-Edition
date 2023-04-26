@@ -70,7 +70,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
     protected IOInventory inventory;
     protected NBTTagCompound customData = new NBTTagCompound();
-    protected CraftingStatus craftingStatus = CraftingStatus.MISSING_STRUCTURE;
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
     protected TaggedPositionBlockArray foundPattern = null;
@@ -192,13 +191,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return null;
     }
 
-    public CraftingStatus getCraftingStatus() {
-        return craftingStatus;
-    }
+    public abstract CraftingStatus getControllerStatus();
 
-    public void setCraftingStatus(CraftingStatus status) {
-        this.craftingStatus = status;
-    }
+    public abstract void setControllerStatus(CraftingStatus status);
 
     public IOInventory getInventory() {
         return inventory;
@@ -222,7 +217,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
     }
 
-    protected int currentRecipeSearchDelay() {
+    public int currentRecipeSearchDelay() {
         return Math.min(10 + this.recipeResearchRetryCounter * 5, 80);
     }
 
@@ -232,7 +227,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected void resetMachine(boolean clearData) {
         if (clearData) {
-            craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+            setControllerStatus(CraftingStatus.MISSING_STRUCTURE);
             incrementStructureCheckCounter();
             resetRecipeSearchRetryCount();
 
@@ -319,15 +314,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         // Check if a block of a chunk in a multiblock structure is unloaded, so that some important recipes do not fail to run.
         // It may raise some performance overhead, but the player experience is more important.
         if (!checkStructure()) {
-            if (craftingStatus != CraftingStatus.CHUNK_UNLOADED) {
-                craftingStatus = CraftingStatus.CHUNK_UNLOADED;
+            if (getControllerStatus() != CraftingStatus.CHUNK_UNLOADED) {
+                setControllerStatus(CraftingStatus.CHUNK_UNLOADED);
                 markForUpdateSync();
             }
             return false;
         }
         if (!isStructureFormed()) {
-            if (craftingStatus != CraftingStatus.MISSING_STRUCTURE) {
-                craftingStatus = CraftingStatus.MISSING_STRUCTURE;
+            if (getControllerStatus() != CraftingStatus.MISSING_STRUCTURE) {
+                setControllerStatus(CraftingStatus.MISSING_STRUCTURE);
                 markForUpdateSync();
             }
             return false;
@@ -705,14 +700,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.inventory = IOInventory.deserialize(this, compound.getCompoundTag("items"));
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
 
-        if (compound.hasKey("status")) {
-            // Legacy support
-            // TODO: How old a version is it compatible with?
-            this.craftingStatus = new CraftingStatus(Type.values()[compound.getInteger("status")], "");
-        } else {
-            this.craftingStatus = CraftingStatus.deserialize(compound.getCompoundTag("statusTag"));
-        }
-
         readMachineNBT(compound);
     }
 
@@ -721,7 +708,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         super.writeCustomNBT(compound);
 
         compound.setTag("items", this.inventory.writeNBT());
-        compound.setTag("statusTag", this.craftingStatus.serialize());
 
         if (this.parentMachine != null) {
             compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());

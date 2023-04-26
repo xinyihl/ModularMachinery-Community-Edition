@@ -17,7 +17,7 @@ import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
@@ -50,17 +50,17 @@ public class DynamicMachine extends AbstractMachine {
     private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
-    private final Map<String, RecipeThread> coreThreadPreset = new LinkedHashMap<>();
+    private final Map<String, FactoryRecipeThread> coreThreadPreset = new LinkedHashMap<>();
 
     public DynamicMachine(String registryName) {
         super(registryName);
     }
 
-    public void addCoreThread(RecipeThread thread) {
+    public void addCoreThread(FactoryRecipeThread thread) {
         coreThreadPreset.put(thread.getThreadName(), thread);
     }
 
-    public Map<String, RecipeThread> getCoreThreadPreset() {
+    public Map<String, FactoryRecipeThread> getCoreThreadPreset() {
         return coreThreadPreset;
     }
 

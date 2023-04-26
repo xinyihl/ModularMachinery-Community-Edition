@@ -6,7 +6,7 @@ import github.kasuminova.mmce.common.concurrent.Action;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import net.minecraft.util.ResourceLocation;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -68,7 +68,7 @@ public class MachineModifier {
     }
 
     @ZenMethod
-    public static void addCoreThread(String machineName, RecipeThread thread) {
+    public static void addCoreThread(String machineName, FactoryRecipeThread thread) {
         WAIT_FOR_MODIFY.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
             if (machine == null) {

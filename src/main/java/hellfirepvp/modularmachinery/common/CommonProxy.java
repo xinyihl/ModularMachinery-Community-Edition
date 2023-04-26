@@ -27,7 +27,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.MMEven
 import hellfirepvp.modularmachinery.common.integration.fluxnetworks.ModIntegrationFluxNetworks;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
@@ -154,10 +154,10 @@ public class CommonProxy implements IGuiHandler {
         RecipeAdapterRegistry.registerDynamicMachineAdapters();
 
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
-        for (Action action : RecipeThread.WAIT_FOR_ADD) {
+        for (Action action : FactoryRecipeThread.WAIT_FOR_ADD) {
             action.doAction();
         }
-        RecipeThread.WAIT_FOR_ADD.clear();
+        FactoryRecipeThread.WAIT_FOR_ADD.clear();
 
         future.join();
     }

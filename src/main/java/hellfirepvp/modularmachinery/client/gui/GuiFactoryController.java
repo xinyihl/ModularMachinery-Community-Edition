@@ -9,7 +9,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.factory.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.gui.FontRenderer;
@@ -71,20 +71,20 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int offsetY = RECIPE_QUEUE_OFFSET_Y;
         int currentScroll = scrollbar.getCurrentScroll();
 
-        Collection<RecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
-        List<RecipeThread> threads = factory.getRecipeThreadList();
-        List<RecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + threads.size()) * 1.5));
+        Collection<FactoryRecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
+        List<FactoryRecipeThread> threads = factory.getRecipeThreadList();
+        List<FactoryRecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + threads.size()) * 1.5));
         recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(threads);
 
         for (int i = 0; i < Math.min(MAX_PAGE_ELEMENTS, recipeThreadList.size()); i++) {
-            RecipeThread thread = recipeThreadList.get(i + currentScroll);
+            FactoryRecipeThread thread = recipeThreadList.get(i + currentScroll);
             drawRecipeInfo(thread, i + currentScroll, offsetY);
             offsetY += FACTORY_ELEMENT_HEIGHT + 1;
         }
     }
 
-    private void drawRecipeInfo(RecipeThread thread, int id, int offsetY) {
+    private void drawRecipeInfo(FactoryRecipeThread thread, int id, int offsetY) {
         CraftingStatus status = thread.getStatus();
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
 
@@ -114,7 +114,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         drawRecipeStatus(thread, id, offsetY + 2);
     }
 
-    private void drawRecipeStatus(RecipeThread thread, int id, int y) {
+    private void drawRecipeStatus(FactoryRecipeThread thread, int id, int y) {
         GlStateManager.pushMatrix();
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.scale(FONT_SCALE, FONT_SCALE, FONT_SCALE);
@@ -225,7 +225,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             return offsetY;
         }
 
-        for (RecipeThread queueThread : factory.getRecipeThreadList()) {
+        for (FactoryRecipeThread queueThread : factory.getRecipeThreadList()) {
             ActiveMachineRecipe activeRecipe = queueThread.getActiveRecipe();
             if (activeRecipe != null) {
                 parallelism += (activeRecipe.getParallelism() - 1);
@@ -330,8 +330,8 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     private void updateScrollbar(int displayX, int displayY) {
         scrollbar.setLeft(SCROLLBAR_LEFT + displayX).setTop(SCROLLBAR_TOP + displayY).setHeight(SCROLLBAR_HEIGHT);
 
-        Map<String, RecipeThread> coreThreads = factory.getCoreRecipeThreads();
-        List<RecipeThread> threadList = factory.getRecipeThreadList();
+        Map<String, FactoryRecipeThread> coreThreads = factory.getCoreRecipeThreads();
+        List<FactoryRecipeThread> threadList = factory.getRecipeThreadList();
         scrollbar.setRange(0, Math.max(0, coreThreads.size() + threadList.size() - MAX_PAGE_ELEMENTS), 1);
     }
 
