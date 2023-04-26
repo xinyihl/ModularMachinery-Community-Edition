@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BlockArrayCache {
     private static final LongObjectHashMap<EnumMap<EnumFacing, BlockArray>>
             BLOCK_ARRAY_CACHE_MAP = new LongObjectHashMap<>();
+
     private static final AtomicLong TRAIT_NUM_COUNTER = new AtomicLong(0);
 
     public static TaggedPositionBlockArray getBlockArrayCache(TaggedPositionBlockArray blockArray, EnumFacing facing) {

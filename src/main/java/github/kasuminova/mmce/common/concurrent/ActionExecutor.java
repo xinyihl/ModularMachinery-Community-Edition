@@ -1,5 +1,8 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
+import io.netty.util.internal.ThrowableUtil;
+
 public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
     public final Action action;
     public final int priority;
@@ -18,7 +21,12 @@ public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
     public void run() {
         long start = System.nanoTime() / 1000;
 
-        action.doAction();
+        try {
+            action.doAction();
+        } catch (Exception e) {
+            ModularMachinery.log.warn("An error occurred during asynchronous task execution!");
+            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+        }
 
         usedTime = (int) (System.nanoTime() / 1000 - start);
         isCompleted = true;
