@@ -136,11 +136,9 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
         }
         int maxCanDecrement = Math.max(0, parallelism - 1);
         if (decrement_1.mousePressed(mc, mouseX, mouseY)) {
-            if (maxCanDecrement >= 1) {
-                ModularMachinery.NET_CHANNEL.sendToServer(
-                        new PktParallelControllerUpdate(parallelism - 1)
-                );
-            }
+            ModularMachinery.NET_CHANNEL.sendToServer(
+                    new PktParallelControllerUpdate(parallelism - 1)
+            );
             decrement_1.playPressSound(soundHandler);
             return;
         }
@@ -182,7 +180,7 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
 
             try {
                 int newParallelism = Integer.parseInt(textField.getText());
-                if (newParallelism > 0 && newParallelism <= provider.getMaxParallelism()) {
+                if (newParallelism >= 0 && newParallelism <= provider.getMaxParallelism()) {
                     ModularMachinery.NET_CHANNEL.sendToServer(new PktParallelControllerUpdate(newParallelism));
                 }
                 textField.setText("");

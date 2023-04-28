@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PktParallelControllerUpdate implements IMessage, IMessageHandler<PktParallelControllerUpdate, IMessage> {
-    private int newParallelism = 1;
+    private int newParallelism = 0;
 
     public PktParallelControllerUpdate() {
     }
