@@ -25,7 +25,7 @@ public class EventHandler {
     @SubscribeEvent
     public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         World world = event.getWorld();
-        if (Config.selectiveUpdateTileEntity || world.isRemote) {
+        if (!Config.selectiveUpdateTileEntity || world.isRemote) {
             return;
         }
 
