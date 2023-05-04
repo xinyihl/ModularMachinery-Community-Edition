@@ -9,9 +9,8 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import com.google.gson.JsonParseException;
-import crafttweaker.api.minecraft.CraftTweakerMC;
+import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.block.Block;
@@ -524,11 +523,7 @@ public class BlockArray {
 
             NBTTagCompound cmp = new NBTTagCompound();
             te.writeToNBT(cmp);
-            return nbtChecker.isMatch(
-                    CraftTweakerMC.getIWorld(world),
-                    CraftTweakerMC.getIBlockPos(at),
-                    CraftTweakerMC.getBlockState(applicable),
-                    CraftTweakerMC.getIData(cmp));
+            return nbtChecker.isMatch(world, at, applicable, cmp);
         }
     }
 

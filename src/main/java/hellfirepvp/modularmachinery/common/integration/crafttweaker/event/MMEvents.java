@@ -4,11 +4,12 @@ import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Action;
+import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
+import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
+import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import net.minecraft.util.ResourceLocation;
@@ -36,15 +37,44 @@ public class MMEvents {
     }
 
     @ZenMethod
-    public static void onMachineTick(String machineRegistryName, IEventHandler<MachineTickEvent> function) {
+    public static void onMachinePreTick(String machineRegistryName, IEventHandler<MachineTickEvent> function) {
         WAIT_FOR_REGISTER_LIST.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
-                machine.addMachineEventHandler(MachineTickEvent.class, function);
+                machine.addMachineEventHandler(MachineTickEvent.class, event -> {
+                    if (event.phase != Phase.START) {
+                        return;
+                    }
+                    function.handle(event);
+                });
             } else {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
         });
+    }
+
+    @ZenMethod
+    public static void onMachinePostTick(String machineRegistryName, IEventHandler<MachineTickEvent> function) {
+        WAIT_FOR_REGISTER_LIST.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(MachineTickEvent.class, event -> {
+                    if (event.phase != Phase.START) {
+                        return;
+                    }
+                    function.handle(event);
+                });
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    @Deprecated
+    public static void onMachineTick(String machineRegistryName, IEventHandler<MachineTickEvent> function) {
+        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method onMachineTick()! Consider using onMachinePostTick()");
+        onMachinePostTick(machineRegistryName, function);
     }
 
     @ZenMethod
@@ -75,5 +105,6 @@ public class MMEvents {
         for (Action waitForRegister : WAIT_FOR_REGISTER_LIST) {
             waitForRegister.doAction();
         }
+        WAIT_FOR_REGISTER_LIST.clear();
     }
 }

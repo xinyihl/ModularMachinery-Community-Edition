@@ -8,12 +8,12 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
+import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
+import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockCheckerCT;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
@@ -397,9 +397,13 @@ public class MachineBuilder {
      * @param checker 函数
      */
     @ZenMethod
-    public MachineBuilder setBlockChecker(AdvancedBlockChecker checker) {
+    public MachineBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
-            lastInformation.nbtChecker = checker;
+            lastInformation.nbtChecker = (world, pos, blockState, nbt) -> checker.isMatch(
+                    CraftTweakerMC.getIWorld(world),
+                    CraftTweakerMC.getIBlockPos(pos),
+                    CraftTweakerMC.getBlockState(blockState),
+                    CraftTweakerMC.getIData(nbt));
         }
         return this;
     }

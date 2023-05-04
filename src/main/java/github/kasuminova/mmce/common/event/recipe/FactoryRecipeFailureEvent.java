@@ -1,19 +1,20 @@
-package hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe;
+package github.kasuminova.mmce.common.event.recipe;
 
 import crafttweaker.annotations.ZenRegister;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
+import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenSetter;
 
 @ZenRegister
-@ZenClass("mods.modularmachinery.RecipeFailureEvent")
-public class RecipeFailureEvent extends RecipeEvent {
+@ZenClass("mods.modularmachinery.FactoryRecipeFailureEvent")
+public class FactoryRecipeFailureEvent extends FactoryRecipeEvent {
     private final String cause;
     private boolean destructRecipe;
 
-    public RecipeFailureEvent(IMachineController controller, String cause, boolean destructRecipe) {
-        super(controller, controller.getActiveRecipeList()[0]);
+    public FactoryRecipeFailureEvent(FactoryRecipeThread recipeThread, TileMultiblockMachineController controller, String cause, boolean destructRecipe) {
+        super(recipeThread, recipeThread.getActiveRecipe(), controller);
         this.cause = cause;
         this.destructRecipe = destructRecipe;
     }

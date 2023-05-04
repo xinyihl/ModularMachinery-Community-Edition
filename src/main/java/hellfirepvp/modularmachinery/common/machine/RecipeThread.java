@@ -49,7 +49,7 @@ public abstract class RecipeThread {
 
     public CraftingStatus onTick() {
         if (activeRecipe == null) {
-            return new CraftingStatus(TileMultiblockMachineController.Type.NO_RECIPE, "");
+            return status;
         }
         if (context == null) {
             context = createContext(activeRecipe);
@@ -79,6 +79,10 @@ public abstract class RecipeThread {
         semiPermanentModifiers.clear();
 
         tryRestartRecipe();
+    }
+
+    public boolean isCompleted() {
+        return activeRecipe != null && activeRecipe.isCompleted();
     }
 
     public abstract void fireFinishedEvent();

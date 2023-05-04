@@ -171,7 +171,7 @@ RecipeBuilder.newBuilder("recipe_registryname", "machine_registryname", workTime
     .build(); // At the end, this function must be called.
 
 //========== MMEvents ==========
-// See the source code in hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
+// See the source code in github.kasuminova.mmce.common.event.machine.MachineEvent;
 MMEvents.onStructureFormed("machine_registryname", function(event as MachineStructureFormedEvent) {
     // Triggered when the machine forms a structure.
     // Handle MachineStructureFormedEvent, And do something...

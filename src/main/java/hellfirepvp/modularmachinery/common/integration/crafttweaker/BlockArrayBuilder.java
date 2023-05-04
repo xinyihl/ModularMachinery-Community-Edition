@@ -8,7 +8,7 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockChecker;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedBlockCheckerCT;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
@@ -76,7 +76,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
+                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockCheckerCT checker,
                                       IBlockState... ctBlockStates) {
         for (int x : xList) {
             for (int y : yList) {
@@ -101,7 +101,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      AdvancedBlockChecker checker,
+                                      AdvancedBlockCheckerCT checker,
                                       IBlockState... ctBlockStates) {
         addBlock(xList, yList, zList, null, null, checker, ctBlockStates);
         return this;
@@ -155,7 +155,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
+                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockCheckerCT checker,
                                       IItemStack... ctItemStacks) {
         for (int x : xList) {
             for (int y : yList) {
@@ -180,7 +180,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      AdvancedBlockChecker checker,
+                                      AdvancedBlockCheckerCT checker,
                                       IItemStack... ctItemStacks) {
         addBlock(xList, yList, zList, null, null, checker, ctItemStacks);
         return this;
@@ -219,7 +219,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockChecker checker,
+                                      @Nullable IData nbt, @Nullable IData previewNBT, @Nullable AdvancedBlockCheckerCT checker,
                                       String... blockNames) {
         for (int x : xList) {
             for (int y : yList) {
@@ -244,7 +244,7 @@ public class BlockArrayBuilder {
 
     @ZenMethod
     public BlockArrayBuilder addBlock(int[] xList, int[] yList, int[] zList,
-                                      AdvancedBlockChecker checker,
+                                      AdvancedBlockCheckerCT checker,
                                       String... blockNames) {
         addBlock(xList, yList, zList, null, null, checker, blockNames);
         return this;
@@ -291,9 +291,13 @@ public class BlockArrayBuilder {
      * @param checker 函数
      */
     @ZenMethod
-    public BlockArrayBuilder setBlockChecker(AdvancedBlockChecker checker) {
+    public BlockArrayBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
-            lastInformation.nbtChecker = checker;
+            lastInformation.nbtChecker = (world, pos, blockState, nbt) -> checker.isMatch(
+                    CraftTweakerMC.getIWorld(world),
+                    CraftTweakerMC.getIBlockPos(pos),
+                    CraftTweakerMC.getBlockState(blockState),
+                    CraftTweakerMC.getIData(nbt));
         }
         return this;
     }

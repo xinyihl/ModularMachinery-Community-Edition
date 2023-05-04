@@ -11,11 +11,11 @@ package hellfirepvp.modularmachinery.common.crafting.adapter;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import net.minecraft.util.ResourceLocation;
 

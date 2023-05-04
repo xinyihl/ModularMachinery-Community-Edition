@@ -19,15 +19,16 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.oredict.IOreDictEntry;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Action;
+import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.recipe.*;
 import hellfirepvp.modularmachinery.common.crafting.PreparedRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.*;
 import hellfirepvp.modularmachinery.common.data.Config;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifier;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifierCT;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTCheckerCT;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -129,10 +130,10 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
-    public RecipePrimer setNBTChecker(AdvancedItemNBTChecker checker) {
+    public RecipePrimer setNBTChecker(AdvancedItemNBTCheckerCT checker) {
         if (lastComponent != null) {
             if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).setNbtChecker(checker);
+                ((RequirementItem) lastComponent).setNbtChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
             } else {
                 CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to Item or Catalyst!");
             }
@@ -143,10 +144,10 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
-    public RecipePrimer addItemModifier(AdvancedItemModifier modifier) {
+    public RecipePrimer addItemModifier(AdvancedItemModifierCT modifier) {
         if (lastComponent != null) {
             if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).addItemModifier(modifier);
+                ((RequirementItem) lastComponent).addItemModifier((controller, stack) -> CraftTweakerMC.getItemStack(modifier.apply(controller, CraftTweakerMC.getIItemStackMutable(stack))));
             } else {
                 CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to Item or Catalyst!");
             }
@@ -208,68 +209,99 @@ public class RecipePrimer implements PreparedRecipe {
     // EventHandlers
     //----------------------------------------------------------------------------------------------
     @ZenMethod
-    public RecipePrimer addCheckHandler(IEventHandler<RecipeCheckEvent> event) {
-        addRecipeEventHandler(RecipeCheckEvent.class, event);
+    public RecipePrimer addCheckHandler(IEventHandler<RecipeCheckEvent> handler) {
+        addRecipeEventHandler(RecipeCheckEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addStartHandler(IEventHandler<RecipeStartEvent> event) {
-        addRecipeEventHandler(RecipeStartEvent.class, event);
+    public RecipePrimer addStartHandler(IEventHandler<RecipeStartEvent> handler) {
+        addRecipeEventHandler(RecipeStartEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addPreTickHandler(IEventHandler<RecipePreTickEvent> event) {
-        addRecipeEventHandler(RecipePreTickEvent.class, event);
+    public RecipePrimer addPreTickHandler(IEventHandler<RecipeTickEvent> handler) {
+        addRecipeEventHandler(RecipeTickEvent.class, event -> {
+            if (event.phase != Phase.START) return;
+            handler.handle(event);
+        });
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addTickHandler(IEventHandler<RecipeTickEvent> event) {
-        addRecipeEventHandler(RecipeTickEvent.class, event);
+    public RecipePrimer addPostTickHandler(IEventHandler<RecipeTickEvent> handler) {
+        addRecipeEventHandler(RecipeTickEvent.class, event -> {
+            if (event.phase != Phase.END) return;
+            handler.handle(event);
+        });
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFailureHandler(IEventHandler<RecipeFailureEvent> event) {
-        addRecipeEventHandler(RecipeFailureEvent.class, event);
+    @Deprecated
+    public RecipePrimer addTickHandler(IEventHandler<RecipeTickEvent> handler) {
+        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method addTickHandler()! Consider using addPostTickHandler()");
+        return addPostTickHandler(handler);
+    }
+
+    @ZenMethod
+    public RecipePrimer addFailureHandler(IEventHandler<RecipeFailureEvent> handler) {
+        addRecipeEventHandler(RecipeFailureEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFinishHandler(IEventHandler<RecipeFinishEvent> event) {
-        addRecipeEventHandler(RecipeFinishEvent.class, event);
+    public RecipePrimer addFinishHandler(IEventHandler<RecipeFinishEvent> handler) {
+        addRecipeEventHandler(RecipeFinishEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFactoryStartHandler(IEventHandler<FactoryRecipeStartEvent> event) {
-        addRecipeEventHandler(FactoryRecipeStartEvent.class, event);
+    public RecipePrimer addFactoryStartHandler(IEventHandler<FactoryRecipeStartEvent> handler) {
+        addRecipeEventHandler(FactoryRecipeStartEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFactoryPreTickHandler(IEventHandler<FactoryRecipePreTickEvent> event) {
-        addRecipeEventHandler(FactoryRecipePreTickEvent.class, event);
+    public RecipePrimer addFactoryPreTickHandler(IEventHandler<FactoryRecipeTickEvent> handler) {
+        addRecipeEventHandler(FactoryRecipeTickEvent.class, event -> {
+            if (event.phase != Phase.START) {
+                return;
+            }
+            handler.handle(event);
+        });
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFactoryTickHandler(IEventHandler<FactoryRecipeTickEvent> event) {
-        addRecipeEventHandler(FactoryRecipeTickEvent.class, event);
+    public RecipePrimer addFactoryPostTickHandler(IEventHandler<FactoryRecipeTickEvent> handler) {
+        addRecipeEventHandler(FactoryRecipeTickEvent.class, event -> {
+            if (event.phase != Phase.END) {
+                return;
+            }
+            handler.handle(event);
+        });
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFactoryFailureHandler(IEventHandler<FactoryRecipeFailureEvent> event) {
-        addRecipeEventHandler(FactoryRecipeFailureEvent.class, event);
+    @Deprecated
+    public RecipePrimer addFactoryTickHandler(IEventHandler<FactoryRecipeTickEvent> handler) {
+        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method addFactoryTickHandler()! Consider using addFactoryPostTickHandler()");
+        addRecipeEventHandler(FactoryRecipeTickEvent.class, handler);
         return this;
     }
 
     @ZenMethod
-    public RecipePrimer addFactoryFinishHandler(IEventHandler<FactoryRecipeFinishEvent> event) {
-        addRecipeEventHandler(FactoryRecipeFinishEvent.class, event);
+    public RecipePrimer addFactoryFailureHandler(IEventHandler<FactoryRecipeFailureEvent> handler) {
+        addRecipeEventHandler(FactoryRecipeFailureEvent.class, handler);
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addFactoryFinishHandler(IEventHandler<FactoryRecipeFinishEvent> handler) {
+        addRecipeEventHandler(FactoryRecipeFinishEvent.class, handler);
         return this;
     }
 

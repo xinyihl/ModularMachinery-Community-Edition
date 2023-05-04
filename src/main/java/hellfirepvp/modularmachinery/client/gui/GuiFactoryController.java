@@ -1,13 +1,11 @@
 package hellfirepvp.modularmachinery.client.gui;
 
-import crafttweaker.util.IEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.common.container.ContainerFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
@@ -22,7 +20,10 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class GuiFactoryController extends GuiContainerBase<ContainerFactoryController> {
     public static final double FONT_SCALE = 0.72;
@@ -271,27 +272,19 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
 
     private int drawExtraInfo(int offsetX, int y, FontRenderer fr, DynamicMachine found) {
         int offsetY = y;
-        List<IEventHandler<MachineEvent>> handlerList = found.getMachineEventHandlers(ControllerGUIRenderEvent.class);
-        if (handlerList != null) {
-            List<String> extraInfo = new ArrayList<>();
-            for (IEventHandler<MachineEvent> handler : handlerList) {
-                ControllerGUIRenderEvent event = new ControllerGUIRenderEvent(factory);
-                handler.handle(event);
-                String[] info = event.getInfo();
-                if (info.length > 0) {
-                    extraInfo.addAll(Arrays.asList(info));
-                }
+        ControllerGUIRenderEvent event = new ControllerGUIRenderEvent(factory);
+        event.postEvent();
+
+        String[] extraInfo = event.getExtraInfo();
+        List<String> waitForDraw = new ArrayList<>();
+        if (extraInfo.length != 0) {
+            for (String s : extraInfo) {
+                waitForDraw.addAll(fr.listFormattedStringToWidth(s, MathHelper.floor(135 * (1 / GuiFactoryController.FONT_SCALE))));
             }
-            List<String> waitForDraw = new ArrayList<>();
-            if (!extraInfo.isEmpty()) {
-                offsetY += 5;
-                for (String s : extraInfo) {
-                    waitForDraw.addAll(fr.listFormattedStringToWidth(s, MathHelper.floor(135 * (1 / GuiFactoryController.FONT_SCALE))));
-                }
-                for (String s : waitForDraw) {
-                    offsetY += 10;
-                    fr.drawStringWithShadow(s, offsetX, offsetY, 0xFFFFFF);
-                }
+            offsetY += 5;
+            for (String s : waitForDraw) {
+                offsetY += 10;
+                fr.drawStringWithShadow(s, offsetX, offsetY, 0xFFFFFF);
             }
         }
         return offsetY;

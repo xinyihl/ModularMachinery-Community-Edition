@@ -269,14 +269,23 @@ public class FactoryRecipeThread extends RecipeThread {
      */
     @ZenMethod
     public FactoryRecipeThread addRecipe(String recipeName) {
-        WAIT_FOR_ADD.add(() -> {
+        if (factory != null) {
             MachineRecipe recipe = RecipeRegistry.getRecipe(new ResourceLocation(ModularMachinery.MODID, recipeName));
             if (recipe != null) {
                 addRecipe(recipe);
             } else {
                 CraftTweakerAPI.logError("[ModularMachinery] Cloud not found recipe by name " + recipeName + "!");
             }
-        });
+        } else {
+            WAIT_FOR_ADD.add(() -> {
+                MachineRecipe recipe = RecipeRegistry.getRecipe(new ResourceLocation(ModularMachinery.MODID, recipeName));
+                if (recipe != null) {
+                    addRecipe(recipe);
+                } else {
+                    CraftTweakerAPI.logError("[ModularMachinery] Cloud not found recipe by name " + recipeName + "!");
+                }
+            });
+        }
 
         return this;
     }

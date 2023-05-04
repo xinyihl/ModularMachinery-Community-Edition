@@ -9,12 +9,11 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import com.google.common.collect.Iterables;
-import crafttweaker.api.minecraft.CraftTweakerMC;
+import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
+import github.kasuminova.mmce.common.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeItem;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifier;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -306,7 +305,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     stackRequired.setCount(amt);
                     if (!itemModifierList.isEmpty()) {
                         for (AdvancedItemModifier modifier : itemModifierList) {
-                            stackRequired = CraftTweakerMC.getItemStack(modifier.apply(context.getMachineController(), CraftTweakerMC.getIItemStackMutable(stackRequired)));
+                            stackRequired = modifier.apply(context.getMachineController(), stackRequired);
                         }
                     }
 
@@ -363,7 +362,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             if (!itemModifierList.isEmpty()) {
                 for (AdvancedItemModifier modifier : itemModifierList) {
-                    stack = CraftTweakerMC.getItemStack(modifier.apply(context.getMachineController(), CraftTweakerMC.getIItemStackMutable(stack)));
+                    stack = modifier.apply(context.getMachineController(),stack);
                 }
             } else {
                 if (tag != null) {

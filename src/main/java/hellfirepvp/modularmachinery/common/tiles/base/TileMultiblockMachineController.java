@@ -7,18 +7,18 @@ import crafttweaker.api.world.IWorld;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.concurrent.Sync;
+import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
+import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
+import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
+import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
+import github.kasuminova.mmce.common.helper.IMachineController;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.data.Config;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineStructureFormedEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineTickEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeCheckEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -338,13 +338,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected void onStructureFormed() {
-        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineStructureFormedEvent.class);
-        if (handlerList != null && !handlerList.isEmpty()) {
-            for (IEventHandler<MachineEvent> handler : handlerList) {
-                MachineStructureFormedEvent event = new MachineStructureFormedEvent(this);
-                handler.handle(event);
-            }
-        }
+        new MachineStructureFormedEvent(this).postEvent();
 
         if (this.foundMachine.getMachineColor() != Config.machineColor) {
             Sync.doSyncAction(this::distributeCasingColor);
@@ -615,13 +609,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     /**
      * <p>机器开始执行逻辑。</p>
      */
-    public void onMachineTick() {
-        List<IEventHandler<MachineEvent>> handlerList = this.foundMachine.getMachineEventHandlers(MachineTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return;
-        for (IEventHandler<MachineEvent> handler : handlerList) {
-            MachineTickEvent event = new MachineTickEvent(this);
-            handler.handle(event);
-        }
+    public void onMachineTick(Phase phase) {
+        new MachineTickEvent(this, phase).postEvent();
     }
 
     @Override

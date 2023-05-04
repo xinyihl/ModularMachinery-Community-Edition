@@ -1,9 +1,7 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
-import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.MachineEvent;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -98,18 +96,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
             return;
         }
         TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
-
-        if (ctrl.getFoundMachine() == null) {
-            return;
-        }
-
-        List<IEventHandler<MachineEvent>> handlerList = ctrl.getFoundMachine().getMachineEventHandlers(SmartInterfaceUpdateEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return;
-
-        for (IEventHandler<MachineEvent> handler : handlerList) {
-            SmartInterfaceUpdateEvent event = new SmartInterfaceUpdateEvent(ctrl, owner.getPos(), newData);
-            handler.handle(event);
-        }
+        new SmartInterfaceUpdateEvent(ctrl, owner.getPos(), newData).postEvent();
     }
 
     public static class SmartInterfaceProvider extends MachineComponent<SmartInterfaceProvider> {

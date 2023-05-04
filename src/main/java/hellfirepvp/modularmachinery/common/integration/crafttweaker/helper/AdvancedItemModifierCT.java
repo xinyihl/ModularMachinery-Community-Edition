@@ -2,12 +2,12 @@ package hellfirepvp.modularmachinery.common.integration.crafttweaker.helper;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IItemStack;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
+import github.kasuminova.mmce.common.helper.IMachineController;
 import stanhebben.zenscript.annotations.ZenClass;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.AdvancedItemModifier")
 @FunctionalInterface
-public interface AdvancedItemModifier {
+public interface AdvancedItemModifierCT {
     IItemStack apply(IMachineController controller, IItemStack stack);
 }

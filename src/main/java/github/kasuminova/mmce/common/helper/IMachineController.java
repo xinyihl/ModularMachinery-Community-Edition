@@ -1,4 +1,4 @@
-package hellfirepvp.modularmachinery.common.integration.crafttweaker;
+package github.kasuminova.mmce.common.helper;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.block.IBlockState;

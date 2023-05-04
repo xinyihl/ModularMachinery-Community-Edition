@@ -15,7 +15,7 @@ import static crafttweaker.mc1120.commands.SpecialMessagesChat.getNormalMessage;
 import static youyihj.zenutils.impl.reload.ReloadCommand.RELOADABLE_LOADER;
 
 /**
- * Similar to {@link CommandCTReload}, but only works in client.
+ * Similar to {@link CommandCTReload}, but only works in the client.
  */
 public class CommandCTReloadClient extends CommandBase {
     @Override

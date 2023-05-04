@@ -5,6 +5,8 @@ import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.SequentialTaskExecutor;
 import github.kasuminova.mmce.common.concurrent.Sync;
+import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.recipe.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
@@ -13,7 +15,6 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.recipe.*;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
@@ -68,8 +69,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            onMachineTick(Phase.START);
             executeSeqTask();
-            onMachineTick();
 
             if (hasIdleThread()) {
                 searchAndStartRecipe();
@@ -79,6 +80,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
                 doRecipeTick();
                 markForUpdateSync();
             }
+
+            onMachineTick(Phase.END);
         }, usedTimeAvg());
     }
 
@@ -133,9 +136,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         // PreTickEvent
-        if (!onThreadRecipePreTick(thread)) {
-            return;
-        }
+        new FactoryRecipeTickEvent(thread, this, Phase.START).postEvent();
+
         // RecipeTick
         CraftingStatus status = thread.onTick();
         if (!status.isCrafting()) {
@@ -146,15 +148,13 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
             return;
         }
-        // PostTickEvent
-        if (!onThreadRecipePostTick(thread)) {
-            return;
-        }
-        if (!activeRecipe.isCompleted()) {
-            return;
-        }
 
-        thread.onFinished();
+        // PostTickEvent
+        new FactoryRecipeTickEvent(thread, this, Phase.END).postEvent();
+
+        if (thread.isCompleted()) {
+            thread.onFinished();
+        }
     }
 
     /**
@@ -172,85 +172,17 @@ public class TileFactoryController extends TileMultiblockMachineController {
         activeRecipe.start(thread.getContext());
     }
 
-    /**
-     * <p>工厂线程在开始配方 Tick 前执行</p>
-     *
-     * @return 如果为 false，则进度停止增加，并在控制器状态栏输出原因
-     */
-    public boolean onThreadRecipePreTick(FactoryRecipeThread thread) {
-        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipePreTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return true;
-
-        for (IEventHandler<RecipeEvent> handler : handlerList) {
-            FactoryRecipePreTickEvent event = new FactoryRecipePreTickEvent(thread, this);
-            handler.handle(event);
-
-            if (event.isPreventProgressing()) {
-                activeRecipe.setTick(activeRecipe.getTick() - 1);
-                thread.setStatus(CraftingStatus.working(event.getReason()));
-                return true;
-            }
-            if (event.isFailure()) {
-                if (event.isDestructRecipe()) {
-                    thread.setActiveRecipe(null)
-                            .setContext(null)
-                            .setStatus(CraftingStatus.failure(event.getReason()))
-                            .getSemiPermanentModifiers().clear();
-                    return false;
-                }
-                thread.setStatus(CraftingStatus.failure(event.getReason()));
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * <p>与 {@code onPreTick()} 相似，但是可以销毁配方。</p>
-     *
-     * @return 如果返回 {@code false}，即代表运行失败。
-     */
-    public boolean onThreadRecipePostTick(FactoryRecipeThread thread) {
-        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeTickEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) return true;
-
-        for (IEventHandler<RecipeEvent> handler : handlerList) {
-            FactoryRecipeTickEvent event = new FactoryRecipeTickEvent(thread, this);
-            handler.handle(event);
-            if (event.isFailure()) {
-                if (event.isDestructRecipe()) {
-                    thread.setActiveRecipe(null)
-                            .setContext(null)
-                            .setStatus(CraftingStatus.failure(event.getFailureReason()))
-                            .getSemiPermanentModifiers().clear();
-                    return false;
-                }
-                thread.setStatus(CraftingStatus.failure(event.getFailureReason()));
-                return false;
-            }
-        }
-        return true;
-    }
-
     public boolean onThreadRecipeFailure(FactoryRecipeThread thread) {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        MachineRecipe recipe = activeRecipe.getRecipe();
-        boolean destruct = recipe.doesCancelRecipeOnPerTickFailure();
-
-        List<IEventHandler<RecipeEvent>> handlerList = recipe.getRecipeEventHandlers(FactoryRecipeFailureEvent.class);
-        if (handlerList == null || handlerList.isEmpty()) {
-            return destruct;
+        if (activeRecipe == null) {
+            return false;
         }
 
+        MachineRecipe recipe = activeRecipe.getRecipe();
         FactoryRecipeFailureEvent event = new FactoryRecipeFailureEvent(
                 thread, this, thread.getStatus().getUnlocMessage(),
-                destruct);
-        for (IEventHandler<RecipeEvent> handler : handlerList) {
-            handler.handle(event);
-        }
+                recipe.doesCancelRecipeOnPerTickFailure());
+        event.postEvent();
 
         return event.isDestructRecipe();
     }
@@ -259,14 +191,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * <p>工厂线程完成一个配方。</p>
      */
     public void onThreadRecipeFinished(FactoryRecipeThread thread) {
-        ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeFinishEvent.class);
-        if (handlerList != null && !handlerList.isEmpty()) {
-            FactoryRecipeFinishEvent event = new FactoryRecipeFinishEvent(thread, this);
-            for (IEventHandler<RecipeEvent> handler : handlerList) {
-                handler.handle(event);
-            }
-        }
+        new FactoryRecipeFinishEvent(thread, this).postEvent();
     }
 
     @Override

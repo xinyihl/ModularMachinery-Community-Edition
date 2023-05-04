@@ -128,6 +128,7 @@ public class RegistryBlocks {
         for (MachineBuilder builder : MachineBuilder.PRE_LOAD_MACHINES.values()) {
             waitForLoadMachines.add(builder.getMachine());
         }
+        MachineBuilder.PRE_LOAD_MACHINES.clear();
 
         if (Config.mocCompatibleMode) {
             for (DynamicMachine machine : waitForLoadMachines) {

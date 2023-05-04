@@ -83,5 +83,6 @@ public class MachineModifier {
         for (Action waitForRegister : WAIT_FOR_MODIFY) {
             waitForRegister.doAction();
         }
+        WAIT_FOR_MODIFY.clear();
     }
 }

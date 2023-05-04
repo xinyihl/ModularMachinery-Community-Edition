@@ -10,6 +10,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenRegister
 @ZenClass("mods.modularmachinery.AdvancedBlockChecker")
 @FunctionalInterface
-public interface AdvancedBlockChecker {
+public interface AdvancedBlockCheckerCT {
     boolean isMatch(IWorld world, IBlockPos pos, IBlockState blockState, IData nbt);
 }

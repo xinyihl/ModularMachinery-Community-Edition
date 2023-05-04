@@ -8,9 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import crafttweaker.api.minecraft.CraftTweakerMC;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.IMachineController;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTChecker;
+import github.kasuminova.mmce.common.helper.AdvancedItemNBTChecker;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import io.netty.util.collection.IntObjectHashMap;
 import net.minecraft.item.Item;
@@ -119,7 +118,7 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static boolean consumeFromInventory(IItemHandlerModifiable handler, ItemStack toConsume, boolean simulate, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static boolean consumeFromInventory(IItemHandlerModifiable handler, ItemStack toConsume, boolean simulate, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker, controller);
         if (contents.isEmpty()) return false;
 
@@ -151,7 +150,7 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, nbtChecker, controller);
         int canConsumed = maxCanConsumedInternal(contents);
         if (toConsume.getCount() <= 0 || toConsume.getCount() > canConsumed) {
@@ -169,7 +168,7 @@ public class ItemUtils {
         return Math.min(canConsumed / toConsume.getCount(), parallelism);
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker, controller);
         int canConsumed = maxCanConsumedInternal(contents);
         if (amount <= 0 || amount > canConsumed) {
@@ -260,7 +259,7 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static boolean consumeFromInventoryOreDict(IItemHandlerModifiable handler, String oreName, int amount, boolean simulate, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, nbtChecker, controller);
         if (contents.isEmpty()) return false;
 
@@ -440,14 +439,14 @@ public class ItemUtils {
         return stacksOut;
     }
 
-    public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static Map<Integer, ItemStack> findItemsIndexedInInventoryOreDict(IItemHandlerModifiable handler, String oreDict, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
             int[] ids = OreDictionary.getOreIDs(s);
             for (int id : ids) {
-                if (OreDictionary.getOreName(id).equals(oreDict) && nbtChecker.isMatch(controller, CraftTweakerMC.getIItemStack(s))) {
+                if (OreDictionary.getOreName(id).equals(oreDict) && nbtChecker.isMatch(controller, s)) {
                     stacksOut.put(j, s);
                 }
             }
@@ -466,11 +465,11 @@ public class ItemUtils {
         return stacksOut;
     }
 
-    public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker, IMachineController controller) {
+    public static Map<Integer, ItemStack> findItemsIndexedInInventory(IItemHandlerModifiable handler, ItemStack match, boolean strict, AdvancedItemNBTChecker nbtChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> stacksOut = new IntObjectHashMap<>(handler.getSlots() * 2);
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
-            if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(controller, CraftTweakerMC.getIItemStack(s))) {
+            if ((strict ? matchStacks(s, match) : matchStackLoosely(s, match)) && nbtChecker.isMatch(controller, s)) {
                 stacksOut.put(j, s);
             }
         }

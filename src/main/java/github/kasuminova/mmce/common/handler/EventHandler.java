@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.common.event;
+package github.kasuminova.mmce.common.handler;
 
 import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.ModularMachinery;

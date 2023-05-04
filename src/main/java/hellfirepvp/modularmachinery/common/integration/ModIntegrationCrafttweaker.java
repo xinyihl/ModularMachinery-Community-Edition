@@ -42,7 +42,6 @@ public class ModIntegrationCrafttweaker {
     public void onScriptsLoading(ScriptRunEvent.Pre event) {
         RecipeRegistry.getRegistry().clearLingeringRecipes();
         MachineBuilder.WAIT_FOR_LOAD.clear();
-        MachineModifier.WAIT_FOR_MODIFY.clear();
     }
 
     @SubscribeEvent
@@ -57,8 +56,6 @@ public class ModIntegrationCrafttweaker {
         sender.sendMessage(new TextComponentTranslation("message.reloading"));
 
         MachineBuilder.WAIT_FOR_LOAD.clear();
-        MachineModifier.WAIT_FOR_MODIFY.clear();
-        MMEvents.WAIT_FOR_REGISTER_LIST.clear();
 
         sender.sendMessage(new TextComponentTranslation(
                 "message.cleared.recipes", RecipeRegistry.registeredRecipeCount()));
