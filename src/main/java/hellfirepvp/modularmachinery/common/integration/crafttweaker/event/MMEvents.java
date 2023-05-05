@@ -59,7 +59,7 @@ public class MMEvents {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
                 machine.addMachineEventHandler(MachineTickEvent.class, event -> {
-                    if (event.phase != Phase.START) {
+                    if (event.phase != Phase.END) {
                         return;
                     }
                     function.handle(event);
