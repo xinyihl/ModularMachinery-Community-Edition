@@ -42,7 +42,7 @@ public class GTEnergyContainer implements IEnergyContainer {
             long maxAmperage = Math.min(getInputAmperage(), amperage);
 
             if (voltage > getInputVoltage()) {
-                if (ConfigHolder.doExplosions) {
+                if (ConfigHolder.machines.doesExplosionDamagesTerrain) {
                     BlockPos pos = hatch.getPos();
                     hatch.getWorld().createExplosion(null,
                             pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
