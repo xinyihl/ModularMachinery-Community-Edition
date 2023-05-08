@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.block.prop;
 
 import gregtech.api.GTValues;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.math.MathHelper;
@@ -17,6 +18,8 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nonnull;
+
+import static hellfirepvp.modularmachinery.common.base.Mods.GREGTECH;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -41,7 +44,7 @@ public enum EnergyHatchData implements IStringSerializable {
     public static int energyCoreSearchDelay = 100;
     public static int maxEnergyCoreSearchDelay = 300;
     public static int searchRange = 16;
-
+    public static boolean enableGTExplodes = true;
     private final int defaultConfigurationEnergy;
     private final int defaultConfigurationTransferLimit;
     private final int defaultIC2EnergyTier;
@@ -70,15 +73,19 @@ public enum EnergyHatchData implements IStringSerializable {
 
             size.ic2EnergyTier = cfg.get("energyhatch.tier", size.name().toUpperCase(), size.defaultIC2EnergyTier, "Defines the IC2 output-voltage tier. Only affects the power the output hatches will output power as. 0 = 'ULV' = 8 EU/t, 1 = 'LV' = 32 EU/t, 2 = 'MV' = 128 EU/t, ... [range: 0 ~ 12, default: " + size.defaultIC2EnergyTier + "]").getInt();
 
-            int gtEnergyTierlength = GTValues.VN.length + 1;
+            int gtEnergyTierlength = GTValues.VN.length - 1 ;
 
             size.gtEnergyTier = cfg.get("energyhatch.gtvoltage", size.name().toUpperCase(), size.defaultGTEnergyTier, "Defines the GT voltage tier. Affects both input and output hatches of this tier. [range: 0 ~ "+ gtEnergyTierlength +", default: " + size.defaultGTEnergyTier + "]").getInt();
             size.gtEnergyTier = MathHelper.clamp(size.gtEnergyTier, 0, gtEnergyTierlength);
 
             size.gtAmperage = cfg.get("energyhatch.gtamperage", size.name().toUpperCase(), size.defaultGTAmperage, "Defines the GT amperage. Affects both output amperage as well as maximum input amperage. [range: 1 ~ "+Integer.MAX_VALUE +", default: " + size.defaultGTAmperage + "]").getInt();
             size.gtAmperage = MathHelper.clamp(size.gtAmperage, 1, Integer.MAX_VALUE);
+
         }
 
+
+        enableGTExplodes = cfg.getBoolean("enable-GT-Explodes","energyhatch",true,
+                "When enabled, the energy chamber will use GT's explosive mechanism, which is only valid when GT is installed");
         enableDEIntegration = cfg.getBoolean("enable-de-integration", "energyhatch", true,
                 "When enabled, EnergyHatch can be used as an energy tower for the Draconic Evolution energy core and can automatically output energy at a rate that depends on the maximum rate in the configuration. Available only when Draconic Evolution is installed.");
         searchRange = cfg.getInt("energy-core-search-range", "energyhatch", 16, 1, 64,
@@ -109,7 +116,7 @@ public enum EnergyHatchData implements IStringSerializable {
 
     // MM only supports GTCE tiers from ULV to UV
     public int getGTEnergyTier() {
-        return MathHelper.clamp(this.gtEnergyTier, 0, GTValues.VN.length);
+        return MathHelper.clamp(this.gtEnergyTier, 0, GTValues.VN.length - 1);
     }
 
     public int getGtAmperage() {
