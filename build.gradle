@@ -93,8 +93,10 @@ dependencies {
     implementation "curse.maven:draconicevolution-223565:3051542"
     implementation "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
 
-    //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
     implementation "curse.maven:gregtech-293327:3266351"
+    //Because GTCEu 2.4 and above and NCo crashed, this is to use GTCEu 2.3.4 for testing
+    //Rendering errors occur when the GTCEu version is tested running, so just compileOnly
+    compileOnly "curse.maven:gregtech-ce-unofficial-557242:3859788"
 
     implementation "curse.maven:Mekanism-268560:2835175"
     implementation "curse.maven:industrialcraft-2-242638:3078604"
@@ -103,6 +105,7 @@ dependencies {
     implementation "curse.maven:tinkers-construct-74072:2902483"
     implementation "curse.maven:mantle-74924:2713386"
     compileOnly "curse.maven:ae2-extended-life-570458:4463434"
+
 }
 
 jar {
