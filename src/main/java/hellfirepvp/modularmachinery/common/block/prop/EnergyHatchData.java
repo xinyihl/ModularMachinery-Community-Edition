@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.block.prop;
 
 import gregtech.api.GTValues;
 import hellfirepvp.modularmachinery.ModularMachinery;
-import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.math.MathHelper;
@@ -73,16 +72,16 @@ public enum EnergyHatchData implements IStringSerializable {
 
             size.ic2EnergyTier = cfg.get("energyhatch.tier", size.name().toUpperCase(), size.defaultIC2EnergyTier, "Defines the IC2 output-voltage tier. Only affects the power the output hatches will output power as. 0 = 'ULV' = 8 EU/t, 1 = 'LV' = 32 EU/t, 2 = 'MV' = 128 EU/t, ... [range: 0 ~ 12, default: " + size.defaultIC2EnergyTier + "]").getInt();
 
-            int gtEnergyTierlength = GTValues.VN.length - 1 ;
+            if (GREGTECH.isPresent()) {
+                int gtEnergyTierlength = GTValues.VN.length - 1 ;
 
-            size.gtEnergyTier = cfg.get("energyhatch.gtvoltage", size.name().toUpperCase(), size.defaultGTEnergyTier, "Defines the GT voltage tier. Affects both input and output hatches of this tier. [range: 0 ~ "+ gtEnergyTierlength +", default: " + size.defaultGTEnergyTier + "]").getInt();
-            size.gtEnergyTier = MathHelper.clamp(size.gtEnergyTier, 0, gtEnergyTierlength);
+                size.gtEnergyTier = cfg.get("energyhatch.gtvoltage", size.name().toUpperCase(), size.defaultGTEnergyTier, "Defines the GT voltage tier. Affects both input and output hatches of this tier. [range: 0 ~ "+ gtEnergyTierlength +", default: " + size.defaultGTEnergyTier + "]").getInt();
+                size.gtEnergyTier = MathHelper.clamp(size.gtEnergyTier, 0, gtEnergyTierlength);
 
-            size.gtAmperage = cfg.get("energyhatch.gtamperage", size.name().toUpperCase(), size.defaultGTAmperage, "Defines the GT amperage. Affects both output amperage as well as maximum input amperage. [range: 1 ~ "+Integer.MAX_VALUE +", default: " + size.defaultGTAmperage + "]").getInt();
-            size.gtAmperage = MathHelper.clamp(size.gtAmperage, 1, Integer.MAX_VALUE);
-
+                size.gtAmperage = cfg.get("energyhatch.gtamperage", size.name().toUpperCase(), size.defaultGTAmperage, "Defines the GT amperage. Affects both output amperage as well as maximum input amperage. [range: 1 ~ "+Integer.MAX_VALUE +", default: " + size.defaultGTAmperage + "]").getInt();
+                size.gtAmperage = MathHelper.clamp(size.gtAmperage, 1, Integer.MAX_VALUE);
+            }
         }
-
 
         enableGTExplodes = cfg.getBoolean("enable-GT-Explodes","energyhatch",true,
                 "When enabled, the energy chamber will use GT's explosive mechanism, which is only valid when GT is installed");
