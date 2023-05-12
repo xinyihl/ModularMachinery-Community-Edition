@@ -11,28 +11,20 @@ package hellfirepvp.modularmachinery.common.util;
 import com.google.gson.JsonParseException;
 import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
+import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
+import ink.ikx.mmce.common.utils.StackUtils;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.BlockFluidBase;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.FluidUtil;
-import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -40,7 +32,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -158,32 +149,80 @@ public class BlockArray {
 
     @SideOnly(Side.CLIENT)
     public List<ItemStack> getAsDescriptiveStacks() {
-        return getAsDescriptiveStacks(Optional.empty());
+        return getAsDescriptiveStacks(-1);
     }
 
     @SideOnly(Side.CLIENT)
-    public List<ItemStack> getAsDescriptiveStacks(Optional<Long> snapSample) {
+    public List<ItemStack> getAsDescriptiveStacks(long snapSample) {
         List<ItemStack> out = new LinkedList<>();
-        for (Map.Entry<BlockPos, BlockInformation> infoEntry : pattern.entrySet()) {
-            BlockArray.BlockInformation bi = infoEntry.getValue();
+        pattern.forEach((key, bi) -> {
             ItemStack s = bi.getDescriptiveStack(snapSample);
+            if (s.isEmpty()) {
+                return;
+            }
 
-            if (!s.isEmpty()) {
-                AtomicBoolean found = new AtomicBoolean(false);
-
-                for (ItemStack stack : out) {
-                    if (stack.getItem().getRegistryName().equals(s.getItem().getRegistryName()) && stack.getItemDamage() == s.getItemDamage()) {
-                        stack.setCount(stack.getCount() + 1);
-                        found.set(true);
-                        break;
-                    }
-                }
-                if (!found.get()) {
-                    out.add(s);
+            boolean found = false;
+            for (ItemStack stack : out) {
+                if (stack.getItem().getRegistryName().equals(s.getItem().getRegistryName()) && stack.getItemDamage() == s.getItemDamage()) {
+                    stack.setCount(stack.getCount() + 1);
+                    found = true;
+                    break;
                 }
             }
-        }
+            if (!found) {
+                out.add(s);
+            }
+        });
         return out;
+    }
+
+    public List<List<ItemStack>> getIngredientList() {
+        List<List<ItemStack>> ingredient = new LinkedList<>();
+
+        pattern.forEach((pos, info) -> {
+            List<ItemStack> infoIngList = info.getIngredientList();
+            if (infoIngList.isEmpty()) {
+                return;
+            }
+
+            if (infoIngList.size() == 1) {
+                ItemStack input = infoIngList.get(0);
+
+                for (final List<ItemStack> itemStackList : ingredient) {
+                    ItemStack anotherInput = itemStackList.get(0);
+                    if (ItemUtils.matchStacks(input, anotherInput)) {
+                        anotherInput.grow(1);
+                        return;
+                    }
+                }
+            }
+
+            ingredient.add(infoIngList);
+        });
+
+        return ingredient;
+    }
+
+    public List<ItemStack> getDescriptiveStackList(long snapTick) {
+        List<ItemStack> stackList = new ArrayList<>();
+
+        pattern.forEach((pos, info) -> {
+            ItemStack descriptiveStack = info.getDescriptiveStack(snapTick);
+            if (descriptiveStack.isEmpty()) {
+                return;
+            }
+
+            for (final ItemStack stack : stackList) {
+                if (ItemUtils.matchStacks(descriptiveStack, stack)) {
+                    stack.grow(1);
+                    return;
+                }
+            }
+
+            stackList.add(descriptiveStack);
+        });
+
+        return stackList;
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
@@ -340,6 +379,17 @@ public class BlockArray {
             return hasTileEntity;
         }
 
+        public boolean hasStatedMachineComponent() {
+            for (final IBlockStateDescriptor matchingState : matchingStates) {
+                for (final IBlockState state : matchingState.applicable) {
+                    if (state.getBlock() instanceof BlockStatedMachineComponent) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         private static boolean hasTileEntity(List<IBlockState> matching) {
             for (IBlockState state : matching) {
                 if (state.getBlock().hasTileEntity(state)) {
@@ -377,59 +427,30 @@ public class BlockArray {
         }
 
         public IBlockState getSampleState() {
-            return getSampleState(Optional.empty());
+            return getSampleState(-1);
         }
 
-        public IBlockState getSampleState(Optional<Long> snapTick) {
+        public IBlockState getSampleState(long snapTick) {
             int tickSpeed = CYCLE_TICK_SPEED;
             if (samples.size() > 10) {
                 tickSpeed *= 0.6;
             }
-            int p = (int) (snapTick.orElse(ClientScheduler.getClientTick()) / tickSpeed);
+            int p = (int) ((snapTick == -1 ? ClientScheduler.getClientTick() : snapTick) / tickSpeed);
             int part = p % samples.size();
             return samples.get(part);
         }
 
-        @SideOnly(Side.CLIENT)
-        public ItemStack getDescriptiveStack(Optional<Long> snapTick) {
-            IBlockState state = getSampleState(snapTick);
+        public ItemStack getDescriptiveStack(long snapTick) {
+            return StackUtils.getStackFromBlockState(getSampleState(snapTick));
+        }
 
-            Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, this.matchingTag,
-                    new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, BlockPos.ORIGIN));
-            state = recovered.getFirst();
-            Block type = state.getBlock();
-            int meta = type.getMetaFromState(state);
-            ItemStack stack = ItemStack.EMPTY;
-
-            try {
-                if (IC_2_TILE_BLOCK.equals(type.getRegistryName())) {
-                    stack = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
-                } else {
-                    stack = state.getBlock().getPickBlock(state, null, null, BlockPos.ORIGIN, null);
-                }
-            } catch (Exception exc) {
-            }
-
-            if (stack.isEmpty()) {
-                if (type instanceof BlockFluidBase) {
-                    stack = FluidUtil.getFilledBucket(new FluidStack(((IFluidBlock) type).getFluid(), 1000));
-                } else if (type instanceof BlockLiquid) {
-                    Material m = state.getMaterial();
-                    if (m == Material.LAVA) {
-                        stack = new ItemStack(Items.LAVA_BUCKET);
-                    } else if (m == Material.WATER) {
-                        stack = new ItemStack(Items.WATER_BUCKET);
-                    } else {
-                        stack = ItemStack.EMPTY;
-                    }
-                } else {
-                    Item i = Item.getItemFromBlock(type);
-                    if (i != Items.AIR) {
-                        stack = new ItemStack(i, 1, meta);
-                    }
-                }
-            }
-            return stack;
+        public List<ItemStack> getIngredientList() {
+            List<ItemStack> list = new ArrayList<>();
+            samples.stream()
+                    .map(StackUtils::getStackFromBlockState)
+                    .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
+                    .forEach(list::add);
+            return list;
         }
 
         public BlockInformation copyRotateYCCW() {

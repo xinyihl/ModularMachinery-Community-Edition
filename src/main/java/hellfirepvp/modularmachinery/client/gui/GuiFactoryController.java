@@ -1,11 +1,11 @@
 package hellfirepvp.modularmachinery.client.gui;
 
+import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.common.container.ContainerFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;

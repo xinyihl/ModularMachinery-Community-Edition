@@ -30,8 +30,9 @@ import static hellfirepvp.modularmachinery.common.lib.ItemsMM.*;
 public class RegistryItems {
 
     public static final List<ItemDynamicColor> pendingDynamicColorItems = new LinkedList<>();
-    static final List<Item> itemBlocks = new ArrayList<>();
-    private static final List<Item> itemModelRegister = new ArrayList<>();
+    protected static final List<Item> ITEM_BLOCKS = new ArrayList<>();
+    protected static final List<Item> ITEM_BLOCKS_WITH_CUSTOM_NAME = new ArrayList<>();
+    protected static final List<Item> ITEM_MODEL_REGISTER = new ArrayList<>();
 
     public static void initialize() {
         blueprint = prepareRegister(new ItemBlueprint());
@@ -41,6 +42,7 @@ public class RegistryItems {
 
         registerItemBlocks();
         registerItemModels();
+        registerCustomNameItemBlocks();
     }
 
     private static <T extends Item> T prepareRegister(T item) {
@@ -55,7 +57,7 @@ public class RegistryItems {
     }
 
     private static <T extends Item> T register(T item) {
-        itemModelRegister.add(item);
+        ITEM_MODEL_REGISTER.add(item);
         CommonProxy.registryPrimer.register(item);
         if (item instanceof ItemDynamicColor) {
             pendingDynamicColorItems.add((ItemDynamicColor) item);
@@ -64,13 +66,23 @@ public class RegistryItems {
     }
 
     private static void registerItemBlocks() {
-        itemBlocks.forEach(RegistryItems::register);
+        ITEM_BLOCKS.forEach(RegistryItems::register);
     }
 
     private static void registerItemModels() {
-        itemModelRegister.stream()
+        ITEM_MODEL_REGISTER.stream()
                 .filter(item -> !(item instanceof ItemBlockCustomName))
                 .forEach(ModularMachinery.proxy::registerItemModel);
+    }
+
+    private static void registerCustomNameItemBlocks() {
+        ITEM_BLOCKS_WITH_CUSTOM_NAME.forEach(item -> {
+            CommonProxy.registryPrimer.register(item);
+            if (item instanceof ItemDynamicColor) {
+                pendingDynamicColorItems.add((ItemDynamicColor) item);
+            }
+            ModularMachinery.proxy.registerItemModelWithCustomName(item);
+        });
     }
 
 }

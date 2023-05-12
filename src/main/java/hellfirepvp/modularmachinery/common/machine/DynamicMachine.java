@@ -294,57 +294,29 @@ public class DynamicMachine extends AbstractMachine {
             DynamicMachine machine = new DynamicMachine(registryName);
             machine.setLocalizedName(localized);
 
-            //Failure Action
+            // Failure Action
             if (root.has("failure-action")) {
-                JsonElement failureAction = root.get("failure-action");
-                if (!failureAction.isJsonPrimitive() || !failureAction.getAsJsonPrimitive().isString()) {
-                    throw new JsonParseException("'failure-action' has to be 'reset', 'still' or 'decrease'!");
-                }
-                String action = failureAction.getAsJsonPrimitive().getAsString();
-                machine.setFailureAction(RecipeFailureActions.getFailureAction(action));
+                machine.setFailureAction(DynamicMachinePreDeserializer.getFailureActions(root));
             }
 
-            //Requires Blueprint
+            // Requires Blueprint
             if (root.has("requires-blueprint")) {
-                JsonElement elementBlueprint = root.get("requires-blueprint");
-                if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
-                    throw new JsonParseException("'requires-blueprint' has to be either 'true' or 'false'!");
-                }
-                machine.setRequiresBlueprint(elementBlueprint.getAsJsonPrimitive().getAsBoolean());
+                machine.setRequiresBlueprint(DynamicMachinePreDeserializer.getRequireBlueprint(root));
             }
 
-            //Color
+            // Color
             if (root.has("color")) {
-                JsonElement elementColor = root.get("color");
-                if (!elementColor.isJsonPrimitive()) {
-                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!");
-                }
-                int hexColor;
-                String hexStr = elementColor.getAsJsonPrimitive().getAsString();
-                try {
-                    hexColor = Integer.parseInt(hexStr, 16);
-                } catch (NumberFormatException parseExc) {
-                    throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!", parseExc);
-                }
-                machine.definedColor = hexColor;
+                machine.setDefinedColor(DynamicMachinePreDeserializer.getColor(root));
             }
 
-            //Parallelizable
-            if (root.has("parallelizable")) {
-                JsonElement parallelizable = root.get("parallelizable");
-                if (!parallelizable.isJsonPrimitive()) {
-                    throw new JsonParseException("The 'parallelizable' should be a boolean! Found " + parallelizable + " instead!");
-                }
-                machine.parallelizable = parallelizable.getAsBoolean();
+            // Has Factory
+            if (root.has("has-factory")) {
+                machine.setHasFactory(DynamicMachinePreDeserializer.getHasFactory(root));
             }
 
-            //Max Parallelism
-            if (root.has("max-parallelism")) {
-                JsonElement maxParallelism = root.get("max-parallelism");
-                if (!maxParallelism.isJsonPrimitive()) {
-                    throw new JsonParseException("The 'max-parallelism' should be a integer! Found " + maxParallelism + " instead!");
-                }
-                machine.maxParallelism = maxParallelism.getAsInt();
+            // Factory Only
+            if (root.has("factory-only")) {
+                machine.setFactoryOnly(DynamicMachinePreDeserializer.getFactoryOnly(root));
             }
 
             //Parts

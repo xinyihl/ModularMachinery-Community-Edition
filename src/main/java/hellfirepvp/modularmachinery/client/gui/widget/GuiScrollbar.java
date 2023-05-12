@@ -1,7 +1,7 @@
 package hellfirepvp.modularmachinery.client.gui.widget;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 
@@ -18,7 +18,7 @@ public class GuiScrollbar {
     private int minScroll = 0;
     private int currentScroll = 0;
 
-    public void draw(final GuiContainer g, Minecraft mc) {
+    public void draw(final GuiScreen g, Minecraft mc) {
         mc.getTextureManager().bindTexture(TEXTURES_TABS);
         GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -95,14 +95,19 @@ public class GuiScrollbar {
             return;
         }
 
-        if (x > this.displayX && x <= this.displayX + this.width) {
-            if (y > this.displayY && y <= this.displayY + this.height) {
-                this.currentScroll = (y - this.displayY);
-                this.currentScroll = this.minScroll + ((this.currentScroll * 2 * this.getRange() / this.height));
-                this.currentScroll = (this.currentScroll + 1) >> 1;
-                this.applyRange();
-            }
+        if (isMouseOver(x, y)) {
+            this.currentScroll = (y - this.displayY);
+            this.currentScroll = this.minScroll + ((this.currentScroll * 2 * this.getRange() / this.height));
+            this.currentScroll = (this.currentScroll + 1) >> 1;
+            this.applyRange();
         }
+    }
+
+    public boolean isMouseOver(final int x, final int y) {
+        if (x > this.displayX && x <= this.displayX + this.width) {
+            return y > this.displayY && y <= this.displayY + this.height;
+        }
+        return false;
     }
 
     public void wheel(int delta) {

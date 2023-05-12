@@ -1,4 +1,4 @@
-package hellfirepvp.modularmachinery.common.integration.crafttweaker.event.client;
+package github.kasuminova.mmce.common.event.client;
 
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;

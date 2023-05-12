@@ -67,7 +67,7 @@ public class RecipePrimer implements PreparedRecipe {
     private final List<String> toolTipList = new ArrayList<>();
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
     private boolean isParallelized = Config.recipeParallelizeEnabledByDefault;
-    private boolean singleThread = false;
+    private int maxThreads = -1;
     private String threadName = "";
     private ComponentRequirement<?, ?> lastComponent = null;
 
@@ -187,12 +187,22 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     /**
+     * 设置此配方在工厂中同时运行的数量是否不超过指定数值。
+     */
+    @ZenMethod
+    public RecipePrimer setMaxThreads(int maxThreads) {
+        this.maxThreads = maxThreads;
+        return this;
+    }
+
+    /**
      * 设置此配方在工厂中同时运行的数量是否不超过 1。
      */
     @ZenMethod
+    @Deprecated
     public RecipePrimer setSingleThread(boolean singleThread) {
-        this.singleThread = singleThread;
-        return this;
+        CraftTweakerAPI.logWarning("[ModularMachinery] setSingleThread() is deprecated! Consider using setMaxThreads(1)");
+        return setMaxThreads(singleThread ? 1 : -1);
     }
 
     /**
@@ -721,8 +731,8 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @Override
-    public boolean isSingleThread() {
-        return singleThread;
+    public int getMaxThreads() {
+        return maxThreads;
     }
 
     @Override

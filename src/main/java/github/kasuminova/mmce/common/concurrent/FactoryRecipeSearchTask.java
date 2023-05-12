@@ -8,10 +8,10 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class FactoryRecipeSearchTask extends RecipeSearchTask {
@@ -82,10 +82,13 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
     }
 
     private void filterRecipe() {
-        HashSet<ResourceLocation> set = new HashSet<>();
+        Object2IntArrayMap<ResourceLocation> activeRecipeCountMap = new Object2IntArrayMap<>();
+        activeRecipeCountMap.defaultReturnValue(0);
 
         for (ActiveMachineRecipe recipe : running) {
-            set.add(recipe.getRecipe().getRegistryName());
+            ResourceLocation registryName = recipe.getRecipe().getRegistryName();
+            int prevCount = activeRecipeCountMap.getInt(registryName);
+            activeRecipeCountMap.put(registryName, prevCount + 1);
         }
 
         for (MachineRecipe recipe : recipeList) {
@@ -94,15 +97,16 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
             if (!recipeRequiredName.isEmpty() && (thread == null || !thread.getThreadName().equals(recipeRequiredName))) {
                 continue;
             }
-            // If this recipe is single instantiated and there is already a thread running this recipe in the factory,
-            // Then this recipe is not checked.
-            if (recipe.isSingleThread() && set.contains(recipe.getRegistryName())) {
+            // If the number of running identical recipes in the factory exceeds
+            // the maximum number defined by the recipe, then this recipe is not checked.
+            int maxThreads = recipe.getMaxThreads();
+            if (maxThreads != -1 && activeRecipeCountMap.getInt(recipe.getRegistryName()) >= maxThreads){
                 continue;
             }
 
             filtered.add(recipe);
         }
 
-        set.clear();
+        activeRecipeCountMap.clear();
     }
 }

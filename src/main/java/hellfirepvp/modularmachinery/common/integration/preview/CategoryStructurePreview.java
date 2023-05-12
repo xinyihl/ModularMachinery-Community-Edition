@@ -14,6 +14,7 @@ import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiItemStackGroup;
 import mezz.jei.api.gui.IRecipeLayout;
 import mezz.jei.api.ingredients.IIngredients;
+import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
@@ -31,9 +32,9 @@ public class CategoryStructurePreview implements IRecipeCategory<StructurePrevie
     private final String trTitle;
 
     public CategoryStructurePreview() {
-        ResourceLocation location = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint.png");
+        ResourceLocation location = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_jei.png");
         this.background = ModIntegrationJEI.jeiHelpers.getGuiHelper()
-                .drawableBuilder(location, 4, 4, 168, 136)
+                .drawableBuilder(location, 4, 4, 168, 180)
                 .addPadding(6, 0, 0, 0)
                 .build();
         this.trTitle = I18n.format("jei.category.preview");
@@ -63,6 +64,10 @@ public class CategoryStructurePreview implements IRecipeCategory<StructurePrevie
     public void setRecipe(IRecipeLayout recipeLayout, StructurePreviewWrapper recipeWrapper, IIngredients ingredients) {
         IGuiItemStackGroup group = recipeLayout.getItemStacks();
         group.init(0, false, -999999, -999999);
+
+        for (int i = 0; i < Math.min(ingredients.getInputs(VanillaTypes.ITEM).size(), 81); i++) {
+            group.init(1 + i, true, -999999, -999999);
+        }
 
         group.set(ingredients);
     }

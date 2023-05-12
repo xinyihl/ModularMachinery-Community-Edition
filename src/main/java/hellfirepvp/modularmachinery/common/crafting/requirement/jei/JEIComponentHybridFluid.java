@@ -12,8 +12,6 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -55,20 +53,6 @@ public class JEIComponentHybridFluid extends ComponentRequirement.JEIComponent<H
     @Override
     @SideOnly(Side.CLIENT)
     public void onJEIHoverTooltip(int slotIndex, boolean input, HybridFluid ingredient, List<String> tooltip) {
-        if (requirement.chance < 1F && requirement.chance >= 0F) {
-            String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
-            String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
-
-            String chanceStr = String.valueOf(MathHelper.floor(requirement.chance * 100F));
-            if (requirement.chance == 0F) {
-                tooltip.add(I18n.format(keyNever));
-            } else {
-                if (requirement.chance < 0.01F) {
-                    chanceStr = "< 1";
-                }
-                chanceStr += "%";
-                tooltip.add(I18n.format(keyChance, chanceStr));
-            }
-        }
+        JEIComponentItem.addChanceTooltip(input, tooltip, requirement.chance);
     }
 }

@@ -31,7 +31,6 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -191,7 +190,7 @@ public class BlockArrayPreviewRenderHelper {
                     hash = (hash << 4) ^ (hash >> 28) ^ (entry.getKey().getX() * 5449 % 130651);
                     hash = (hash << 4) ^ (hash >> 28) ^ (entry.getKey().getY() * 5449 % 130651);
                     hash = (hash << 4) ^ (hash >> 28) ^ (entry.getKey().getZ() * 5449 % 130651);
-                    hash = (hash << 4) ^ (hash >> 28) ^ (entry.getValue().getSampleState(Optional.of(renderHelper.sampleSnap)).hashCode() * 5449 % 130651);
+                    hash = (hash << 4) ^ (hash >> 28) ^ (entry.getValue().getSampleState(renderHelper.sampleSnap).hashCode() * 5449 % 130651);
                 }
             }
         }

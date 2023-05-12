@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+@SuppressWarnings("MethodMayBeStatic")
 public class EventHandler {
     /**
      * <p>当玩家对打开控制器界面时更新控制器的信息，以避免某些消息不同步的问题。</p>

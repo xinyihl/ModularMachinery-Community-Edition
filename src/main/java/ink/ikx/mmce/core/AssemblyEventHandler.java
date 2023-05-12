@@ -96,7 +96,7 @@ public class AssemblyEventHandler {
 
         EnumFacing controllerFacing = player.world.getBlockState(pos).getValue(BlockController.FACING);
         BlockArray blockArray = hellfirepvp.modularmachinery.common.util.MiscUtils.rotateYCCWNorthUntil(machine.getPattern(), controllerFacing);
-        MachineAssembly assembly = new MachineAssembly(pos, player, blockArray.getPattern());
+        MachineAssembly assembly = new MachineAssembly(pos, player, machine);
 
         if (MachineAssemblyManager.checkMachineExist(assembly)) {
             player.sendMessage(MiscUtils.translate(2));

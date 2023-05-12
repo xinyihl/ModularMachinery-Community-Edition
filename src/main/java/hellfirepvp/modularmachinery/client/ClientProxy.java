@@ -77,6 +77,7 @@ public class ClientProxy extends CommonProxy {
 
     private final List<Block> blockModelsToRegister = new LinkedList<>();
     private final List<Item> itemModelsToRegister = new LinkedList<>();
+    private final List<Item> itemModelsCustomNameToRegister = new LinkedList<>();
 
     @Optional.Method(modid = "jei")
     private static void registerJEIEventHandler() {
@@ -155,17 +156,25 @@ public class ClientProxy extends CommonProxy {
             if (item instanceof ItemBlock) {
                 name = ((ItemBlock) item).getBlock().getClass().getSimpleName().toLowerCase();
             }
-            NonNullList<ItemStack> list = NonNullList.create();
-            item.getSubItems(item.getCreativeTab(), list);
-            if (!list.isEmpty()) {
-                for (ItemStack i : list) {
-                    ModelLoader.setCustomModelResourceLocation(item, i.getItemDamage(),
-                            new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
-                }
-            } else {
-                ModelLoader.setCustomModelResourceLocation(item, 0,
+            registryItemModel(item, name);
+        }
+        for (final Item item : itemModelsCustomNameToRegister) {
+            String name = item.getRegistryName().getPath();
+            registryItemModel(item, name);
+        }
+    }
+
+    private static void registryItemModel(final Item item, final String name) {
+        NonNullList<ItemStack> list = NonNullList.create();
+        item.getSubItems(item.getCreativeTab(), list);
+        if (!list.isEmpty()) {
+            for (ItemStack i : list) {
+                ModelLoader.setCustomModelResourceLocation(item, i.getItemDamage(),
                         new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
             }
+        } else {
+            ModelLoader.setCustomModelResourceLocation(item, 0,
+                    new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
         }
     }
 
@@ -193,6 +202,10 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void registerItemModel(Item item) {
         itemModelsToRegister.add(item);
+    }
+
+    public void registerItemModelWithCustomName(Item item) {
+        itemModelsCustomNameToRegister.add(item);
     }
 
     @Nullable

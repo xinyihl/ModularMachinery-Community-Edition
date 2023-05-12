@@ -101,15 +101,19 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
             }
             tooltip.add(I18n.format("tooltip.machinery.fuel"));
         }
-        if (requirement.chance < 1F && requirement.chance >= 0F) {
+        addChanceTooltip(input, tooltip, requirement.chance);
+    }
+
+    public static void addChanceTooltip(final boolean input, final List<String> tooltip, final float chance) {
+        if (chance < 1F && chance >= 0F) {
             String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
             String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
 
-            String chanceStr = String.valueOf(MathHelper.floor(requirement.chance * 100F));
-            if (requirement.chance == 0F) {
+            String chanceStr = String.valueOf(MathHelper.floor(chance * 100F));
+            if (chance == 0F) {
                 tooltip.add(I18n.format(keyNever));
             } else {
-                if (requirement.chance < 0.01F) {
+                if (chance < 0.01F) {
                     chanceStr = "< 1";
                 }
                 chanceStr += "%";

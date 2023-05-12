@@ -218,7 +218,7 @@ public class DynamicMachineRenderContext {
 
     @SideOnly(Side.CLIENT)
     public List<ItemStack> getDescriptiveStacks() {
-        return this.machine.getPattern().getAsDescriptiveStacks(shiftSnap == -1 ? Optional.empty() : Optional.of(shiftSnap));
+        return this.machine.getPattern().getAsDescriptiveStacks(shiftSnap);
     }
 
     public void renderAt(int x, int z) {

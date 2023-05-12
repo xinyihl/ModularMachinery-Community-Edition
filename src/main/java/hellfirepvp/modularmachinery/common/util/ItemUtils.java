@@ -24,6 +24,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -486,4 +487,12 @@ public class ItemUtils {
         return OreDictionary.itemMatches(other, stack, false);
     }
 
+    public static boolean stackNotInList(final List<ItemStack> list, final ItemStack stackFromBlockState) {
+        for (final ItemStack stack : list) {
+            if (matchStacks(stackFromBlockState, stack)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

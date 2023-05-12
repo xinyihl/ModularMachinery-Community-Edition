@@ -194,6 +194,8 @@ item.modularmachinery.itemmodularium.name=模块化合金锭
 item.modularmachinery.itemconstructtool.name=建造选择工具
 item.modularmachinery.machine_projector.name=机器结构投影仪
 
+block.modularmachinery.crushing_wheels.name=粉碎轮
+
 tile.modularmachinery.blockcontroller.name=机械控制器
 tile.modularmachinery.machinecontroller.name=%s控制器
 tile.modularmachinery.machinecontroller.deprecated.tip.0=模块化控制器兼容将会在未来的版本被移除。

@@ -194,6 +194,8 @@ item.modularmachinery.itemmodularium.name=Modularium
 item.modularmachinery.itemconstructtool.name=Construct Selection Tool
 item.modularmachinery.machine_projector.name=Machine Projector
 
+block.modularmachinery.crushing_wheels.name=Crushing Wheels
+
 tile.modularmachinery.blockcontroller.name=Machine Controller
 tile.modularmachinery.machinecontroller.name=%s Controller
 tile.modularmachinery.machinecontroller.deprecated.tip.0=Modular controller compatibility will be removed in a future release.

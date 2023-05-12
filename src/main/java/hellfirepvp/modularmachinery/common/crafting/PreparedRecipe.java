@@ -46,7 +46,7 @@ public interface PreparedRecipe {
 
     List<String> getTooltipList();
     boolean isParallelized();
-    boolean isSingleThread();
+    int getMaxThreads();
     String getThreadName();
     void loadNeedAfterInitActions();
 }

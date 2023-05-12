@@ -44,7 +44,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return machine;
     }
 
-    private static String getRegistryName(JsonObject root) throws JsonParseException {
+    public static String getRegistryName(JsonObject root) throws JsonParseException {
         String registryName = JsonUtils.getString(root, "registryname", "");
         if (registryName.isEmpty()) {
             registryName = JsonUtils.getString(root, "registryName", "");
@@ -55,7 +55,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return registryName;
     }
 
-    private static String getLocalizedName(JsonObject root) throws JsonParseException {
+    public static String getLocalizedName(JsonObject root) throws JsonParseException {
         String localized = JsonUtils.getString(root, "localizedname", "");
 
         if (localized.isEmpty()) {
@@ -65,7 +65,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return localized;
     }
 
-    private static RecipeFailureActions getFailureActions(JsonObject root) throws JsonParseException {
+    public static RecipeFailureActions getFailureActions(JsonObject root) throws JsonParseException {
         JsonElement failureAction = root.get("failure-action");
         if (!failureAction.isJsonPrimitive() || !failureAction.getAsJsonPrimitive().isString()) {
             throw new JsonParseException("'failure-action' has to be 'reset', 'still' or 'decrease'!");
@@ -74,7 +74,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return RecipeFailureActions.getFailureAction(action);
     }
 
-    private static boolean getRequireBlueprint(JsonObject root) throws JsonParseException {
+    public static boolean getRequireBlueprint(JsonObject root) throws JsonParseException {
         JsonElement elementBlueprint = root.get("requires-blueprint");
         if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
             throw new JsonParseException("'requires-blueprint' has to be either 'true' or 'false'!");
@@ -82,7 +82,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return elementBlueprint.getAsJsonPrimitive().getAsBoolean();
     }
 
-    private static int getColor(JsonObject root) throws JsonParseException {
+    public static int getColor(JsonObject root) throws JsonParseException {
         JsonElement elementColor = root.get("color");
         if (!elementColor.isJsonPrimitive()) {
             throw new JsonParseException("The Color defined in 'color' should be a hex integer number! Found " + elementColor + " instead!");
@@ -97,7 +97,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return hexColor;
     }
 
-    private static boolean getHasFactory(JsonObject root) throws JsonParseException {
+    public static boolean getHasFactory(JsonObject root) throws JsonParseException {
         JsonElement elementHasFactory = root.get("has-factory");
         if (!elementHasFactory.isJsonPrimitive() || !elementHasFactory.getAsJsonPrimitive().isBoolean()) {
             throw new JsonParseException("'has-factory' has to be either 'true' or 'false'!");
@@ -105,7 +105,7 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return elementHasFactory.getAsJsonPrimitive().getAsBoolean();
     }
 
-    private static boolean getFactoryOnly(JsonObject root) throws JsonParseException {
+    public static boolean getFactoryOnly(JsonObject root) throws JsonParseException {
         JsonElement elementFactoryOnly = root.get("factory-only");
         if (!elementFactoryOnly.isJsonPrimitive() || !elementFactoryOnly.getAsJsonPrimitive().isBoolean()) {
             throw new JsonParseException("'factory-only' has to be either 'true' or 'false'!");

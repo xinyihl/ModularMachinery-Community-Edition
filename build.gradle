@@ -3,7 +3,7 @@ plugins {
     id 'wtf.gofancy.fancygradle' version '1.1.+'
 }
 
-version = "1.12.2-1.11.1-r33-dev"
+version = "1.12.2-1.11.1-r34-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -84,25 +84,24 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
-    implementation files("libs/HadEnoughItems_1.12.2-4.24.2.jar")
-    implementation 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+'
-    implementation 'curse.maven:zenutil-401178:4394263'
-    implementation "curse.maven:RedstoneFlux-270789:2920436"
-    implementation "curse.maven:CodeChickenLib-242818:2779848"
-    implementation "curse.maven:brandonscore-231382:3051539"
-    implementation "curse.maven:draconicevolution-223565:3051542"
-    implementation "mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17"
+    implementation "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+"
+    implementation fg.deobf("curse.maven:had-enough-items-557549:4506796")
+    implementation fg.deobf("curse.maven:zenutil-401178:4394263")
+    implementation fg.deobf("curse.maven:RedstoneFlux-270789:2920436")
+    implementation fg.deobf("curse.maven:CodeChickenLib-242818:2779848")
+    implementation fg.deobf("curse.maven:brandonscore-231382:3051539")
+    implementation fg.deobf("curse.maven:draconicevolution-223565:3051542")
+    implementation fg.deobf("mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17")
 
     //TODO Change to GregTech Community Edition: Unofficial (GTCEu)
-    implementation "curse.maven:gregtech-293327:3266351"
+    implementation fg.deobf("curse.maven:gregtech-293327:3266351")
 
-    implementation "curse.maven:Mekanism-268560:2835175"
-    implementation "curse.maven:industrialcraft-2-242638:3078604"
-    implementation "curse.maven:nuclearcraft-overhauled-336895:3862197"
-    implementation "curse.maven:flux-networks-248020:3178199"
-    implementation "curse.maven:tinkers-construct-74072:2902483"
-    implementation "curse.maven:mantle-74924:2713386"
-    compileOnly "curse.maven:ae2-extended-life-570458:4463434"
+    implementation fg.deobf("curse.maven:Mekanism-268560:2835175")
+    implementation fg.deobf("curse.maven:industrialcraft-2-242638:3078604")
+    implementation fg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197")
+    implementation fg.deobf("curse.maven:flux-networks-248020:3178199")
+    implementation fg.deobf("curse.maven:tinkers-construct-74072:2902483")
+    implementation fg.deobf("curse.maven:mantle-74924:2713386")
 }
 
 jar {

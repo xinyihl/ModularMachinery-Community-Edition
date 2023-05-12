@@ -81,6 +81,9 @@ public class RegistryBlocks {
 
         registerCustomControllers();
 
+        registerExampleStatedMachineComponent();
+        registerCustomStatedMachineComponent();
+
         blockCasing = prepareRegister(new BlockCasing());
         prepareItemBlockRegister(blockCasing);
 
@@ -119,6 +122,32 @@ public class RegistryBlocks {
         registerTile(TileParallelController.class);
     }
 
+    private static void registerExampleStatedMachineComponent() {
+        registerStatedMachineComponent((BlockStatedMachineComponent)
+                new BlockStatedMachineComponent().setRegistryName("crushing_wheels"));
+    }
+
+    private static void registerCustomStatedMachineComponent() {
+        for (final BlockStatedMachineComponent block : BlockStatedMachineComponent.WAIT_FOR_REGISTRY) {
+            registerStatedMachineComponent(block);
+        }
+        BlockStatedMachineComponent.WAIT_FOR_REGISTRY.clear();
+    }
+
+    public static void registerStatedMachineComponent(final BlockStatedMachineComponent block) {
+        prepareRegisterWithCustomName(block);
+        ItemBlockCustomName itemBlock = new ItemBlockCustomName(block) {
+            @Nonnull
+            @Override
+            @SideOnly(Side.CLIENT)
+            public String getItemStackDisplayName(@Nonnull final ItemStack stack) {
+                return block.getLocalizedName();
+            }
+        };
+        itemBlock.setRegistryName(block.getRegistryName());
+        prepareItemBlockRegisterWithCustomName(itemBlock);
+    }
+
     private static void registerCustomControllers() {
         if (Config.onlyOneMachineController) {
             return;
@@ -143,7 +172,7 @@ public class RegistryBlocks {
                     @Nonnull
                     @Override
                     @SideOnly(Side.CLIENT)
-                    public String getItemStackDisplayName(ItemStack stack) {
+                    public String getItemStackDisplayName(@Nonnull ItemStack stack) {
                         return ctrlBlock.getLocalizedName();
                     }
                 }.setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
@@ -223,12 +252,12 @@ public class RegistryBlocks {
         String name = item.getBlock().getClass().getSimpleName().toLowerCase();
         item.setRegistryName(ModularMachinery.MODID, name).setTranslationKey(ModularMachinery.MODID + '.' + name);
 
-        RegistryItems.itemBlocks.add(item);
+        RegistryItems.ITEM_BLOCKS.add(item);
         return item;
     }
 
     private static <T extends ItemBlock> T prepareItemBlockRegisterWithCustomName(T item) {
-        RegistryItems.itemBlocks.add(item);
+        RegistryItems.ITEM_BLOCKS_WITH_CUSTOM_NAME.add(item);
         return item;
     }
 

@@ -42,7 +42,7 @@ public class PktParallelControllerUpdate implements IMessage, IMessageHandler<Pk
         int newParallelism = message.newParallelism;
         TileParallelController owner = ((ContainerParallelController) player.openContainer).getOwner();
         TileParallelController.ParallelControllerProvider provider = owner.provideComponent();
-        if (provider.getMaxParallelism() >= newParallelism) {
+        if (provider.getMaxParallelism() >= newParallelism && newParallelism >= 0) {
             provider.setParallelism(newParallelism);
         }
 

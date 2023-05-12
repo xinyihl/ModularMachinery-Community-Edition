@@ -137,7 +137,7 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
         int maxCanDecrement = Math.max(0, parallelism - 1);
         if (decrement_1.mousePressed(mc, mouseX, mouseY)) {
             ModularMachinery.NET_CHANNEL.sendToServer(
-                    new PktParallelControllerUpdate(parallelism - 1)
+                    new PktParallelControllerUpdate(Math.max(0, parallelism - 1))
             );
             decrement_1.playPressSound(soundHandler);
             return;
@@ -149,7 +149,7 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
                 );
             } else {
                 ModularMachinery.NET_CHANNEL.sendToServer(
-                        new PktParallelControllerUpdate(1)
+                        new PktParallelControllerUpdate(0)
                 );
             }
             decrement_10.playPressSound(soundHandler);
@@ -162,7 +162,7 @@ public class GuiContainerParallelController extends GuiContainerBase<ContainerPa
                 );
             } else {
                 ModularMachinery.NET_CHANNEL.sendToServer(
-                        new PktParallelControllerUpdate(1)
+                        new PktParallelControllerUpdate(0)
                 );
             }
             decrement_100.playPressSound(soundHandler);

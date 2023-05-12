@@ -29,11 +29,13 @@ public class TaskExecutor {
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
+
     private final ArrayList<ActionExecutor> submitted = new ArrayList<>();
     private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
     private final MpscLinkedAtomicQueue<Action> mainThreadActions = new MpscLinkedAtomicQueue<>();
     private final MpscLinkedAtomicQueue<TileEntitySynchronized> requireUpdateTEQueue = new MpscLinkedAtomicQueue<>();
     private final TaskSubmitter submitter = new TaskSubmitter();
+
     private volatile boolean inTick = false;
 
     public void init() {

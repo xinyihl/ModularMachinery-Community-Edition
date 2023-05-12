@@ -19,23 +19,23 @@ public class BlockArrayCache {
     private static final AtomicLong TRAIT_NUM_COUNTER = new AtomicLong(0);
 
     public static TaggedPositionBlockArray getBlockArrayCache(TaggedPositionBlockArray blockArray, EnumFacing facing) {
-        return (TaggedPositionBlockArray) BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class))
-                .get(facing);
+        return (TaggedPositionBlockArray) BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
+                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).get(facing);
     }
 
     public static BlockArray getBlockArrayCache(BlockArray blockArray, EnumFacing facing) {
-        return BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class))
-                .get(facing);
+        return BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
+                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).get(facing);
     }
 
     public static synchronized void addBlockArrayCache(TaggedPositionBlockArray blockArray, EnumFacing facing) {
-        BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class))
-                .put(facing, blockArray);
+        BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
+                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).put(facing, blockArray);
     }
 
     public static synchronized void addBlockArrayCache(BlockArray blockArray, EnumFacing facing) {
-        BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class))
-                .put(facing, blockArray);
+        BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
+                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).put(facing, blockArray);
     }
 
     public static long nextTraitNum() {

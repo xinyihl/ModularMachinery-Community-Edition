@@ -97,20 +97,20 @@ public class MiscUtils {
     }
 
     public static String formatNumber(long value) {
-        if (value < 1000L) {
+        if (value < 1_000L) {
             return String.valueOf(value);
-        } else if (value < 1000000L) {
+        } else if (value < 1_000_000L) {
             return (double) Math.round((float) value) / 1000.0 + "K";
-        } else if (value < 1000000000L) {
-            return (double) Math.round((float) (value / 1000L)) / 1000.0 + "M";
-        } else if (value < 1000000000000L) {
-            return (double) Math.round((float) (value / 1000000L)) / 1000.0 + "G";
-        } else if (value < 1000000000000000L) {
-            return (double) Math.round((float) (value / 1000000000L)) / 1000.0 + "T";
-        } else if (value < 1000000000000000000L) {
-            return (double) Math.round((float) (value / 1000000000000L)) / 1000.0 + "P";
+        } else if (value < 1_000_000_000L) {
+            return (double) Math.round((float) (value / 1_000L)) / 1000.0 + "M";
+        } else if (value < 1_000_000_000_000L) {
+            return (double) Math.round((float) (value / 1_000_000L)) / 1000.0 + "G";
+        } else if (value < 1_000_000_000_000_000L) {
+            return (double) Math.round((float) (value / 1_000_000_000L)) / 1000.0 + "T";
+        } else if (value < 1_000_000_000_000_000_000L) {
+            return (double) Math.round((float) (value / 1_000_000_000_000L)) / 1000.0 + "P";
         } else {
-            return (double) Math.round((float) (value / 1000000000000000L)) / 1000.0 + "E";
+            return (double) Math.round((float) (value / 1_000_000_000_000_000L)) / 1000.0 + "E";
         }
     }
 

@@ -2,11 +2,12 @@ package ink.ikx.mmce.common.assembly;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.util.BlockArray.BlockInformation;
-import ink.ikx.mmce.core.AssemblyConfig;
 import ink.ikx.mmce.common.utils.FluidUtils;
 import ink.ikx.mmce.common.utils.MiscUtils;
 import ink.ikx.mmce.common.utils.StackUtils;
+import ink.ikx.mmce.core.AssemblyConfig;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -29,12 +30,14 @@ public class MachineAssembly {
 
     private final BlockPos pos;
     private final EntityPlayer player;
+    private final DynamicMachine machine;
     private final Map<BlockPos, BlockInformation> pattern;
 
-    public MachineAssembly(BlockPos pos, EntityPlayer player, Map<BlockPos, BlockInformation> pattern) {
+    public MachineAssembly(BlockPos pos, EntityPlayer player, DynamicMachine machine) {
         this.pos = pos;
         this.player = player;
-        this.pattern = MiscUtils.sortedAndCopy(pattern);
+        this.machine = machine;
+        this.pattern = MiscUtils.sortedAndCopy(machine.getPattern().getPattern());
     }
 
     public boolean isAllItemsContains() {

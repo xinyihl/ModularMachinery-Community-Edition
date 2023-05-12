@@ -14,6 +14,8 @@ import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
+import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
@@ -30,6 +32,7 @@ import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplaceme
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.util.*;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -116,7 +119,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         updateUsedTime();
 
-        long tickStart = System.nanoTime();
+        final long tickStart = System.nanoTime();
 
         // Controller Tick
         doControllerTick();
@@ -236,6 +239,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 customModifiers.clear();
             }
         }
+        updateStatedMachineComponent(false);
+
         foundMachine = null;
         foundPattern = null;
         foundReplacements = null;
@@ -329,6 +334,40 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         updateComponents();
         return true;
+    }
+
+    protected void updateStatedMachineComponentSync(final boolean working) {
+        if (foundPattern == null) {
+            return;
+        }
+
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> updateStatedMachineComponent(working));
+    }
+
+    protected void updateStatedMachineComponent(final boolean working) {
+        if (foundPattern == null) {
+            return;
+        }
+        foundPattern.getPattern().forEach((pos, blockInfo) -> {
+            final long start = System.nanoTime() / 1000;
+
+            if (!blockInfo.hasStatedMachineComponent()) {
+                return;
+            }
+
+            BlockPos realPos = getPos().add(pos);
+            IBlockState blockState = getWorld().getBlockState(realPos);
+            Block block = blockState.getBlock();
+            if (!(block instanceof BlockStatedMachineComponent)) {
+                return;
+            }
+
+            getWorld().setBlockState(realPos, blockState.withProperty(
+                    BlockStatedMachineComponent.WORKING_STATE,
+                    working ? WorkingState.WORKING : WorkingState.IDLE));
+
+            addUsedTime((int) (System.nanoTime() / 1000 - start));
+        });
     }
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {

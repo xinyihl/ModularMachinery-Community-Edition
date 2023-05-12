@@ -12,13 +12,15 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.integration.preview.StructurePreviewWrapper;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
+import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
@@ -69,9 +71,12 @@ public class GuiScreenBlueprint extends GuiScreen {
     public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint.png");
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
     protected final int xSize = 176;
-    protected final int ySize = 144;
+    protected final int ySize = 184;
+
     private final DynamicMachine machine;
     private final DynamicMachineRenderContext renderContext;
+    private GuiScrollbar ingredientListScrollbar;
+
     protected int guiLeft;
     protected int guiTop;
     private int frameCount = 0;
@@ -86,6 +91,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         super.initGui();
         this.guiLeft = (this.width - this.xSize) / 2;
         this.guiTop = (this.height - this.ySize) / 2;
+        this.ingredientListScrollbar = new GuiScrollbar().setLeft(guiLeft + 156).setTop(guiTop + 142).setHeight(34);
     }
 
     @Override
@@ -113,12 +119,8 @@ public class GuiScreenBlueprint extends GuiScreen {
                 renderContext.moveRender(0.25 * Mouse.getDX(), 0, -0.25 * Mouse.getDY());
             }
         }
-        int dWheel = Mouse.getDWheel();
-        if (dWheel < 0) {
-            renderContext.zoomOut();
-        } else if (dWheel > 0) {
-            renderContext.zoomIn();
-        }
+
+        handleDWheel(mouseX, mouseY);
 
         if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
             if (renderContext.getShiftSnap() == -1) {
@@ -129,7 +131,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
 
         ScaledResolution res = new ScaledResolution(mc);
-        Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 43) * res.getScaleFactor(),
+        Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 82) * res.getScaleFactor(),
                 160 * res.getScaleFactor(), 94 * res.getScaleFactor());
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
@@ -138,6 +140,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
+        StructurePreviewWrapper.renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
         drawButtons(mouseX, mouseY);
         renderUpgradeInfo(mouseX, mouseY);
 
@@ -153,10 +156,25 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
     }
 
+    private void handleDWheel(final int x, final int y) {
+        int dWheel = Mouse.getDWheel();
+
+        if (ingredientListScrollbar.isMouseOver(x, y)) {
+            ingredientListScrollbar.wheel(dWheel);
+            return;
+        }
+
+        if (dWheel < 0) {
+            renderContext.zoomOut();
+        } else if (dWheel > 0) {
+            renderContext.zoomIn();
+        }
+    }
+
     private void renderUpgradeInfo(int mouseX, int mouseY) {
         if (!machine.getModifiers().isEmpty()) {
             this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
-            this.drawTexturedModalRect(guiLeft + 5, guiTop + 124, 0, 145, 100, 15);
+            this.drawTexturedModalRect(guiLeft + 5, guiTop + 124, 0, 185, 100, 15);
 
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.upgrades");
             fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 127, 0xFFFFFF);
@@ -181,7 +199,7 @@ public class GuiScreenBlueprint extends GuiScreen {
                     descriptionList.add(new Tuple<>(ItemStack.EMPTY, ""));
                 }
                 first = false;
-                ItemStack stack = mod.getBlockInformation().getDescriptiveStack(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
+                ItemStack stack = mod.getBlockInformation().getDescriptiveStack(renderContext.getShiftSnap());
                 List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
                         ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
                 descriptionList.add(new Tuple<>(
@@ -197,7 +215,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             BlockArray blockArray = multiBlockModifier.getBlockArray();
             Optional<BlockArray.BlockInformation> opt = blockArray.getPattern().values().stream().findFirst();
             if (opt.isPresent()) {
-                ItemStack stack = opt.get().getDescriptiveStack(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
+                ItemStack stack = opt.get().getDescriptiveStack(renderContext.getShiftSnap());
                 List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
                         ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
                 descriptionList.add(new Tuple<>(
@@ -230,7 +248,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             int zMod = pos.getZ() + 1 + this.renderContext.getMoveOffset().getZ();
             Rectangle.Double rct = new Rectangle2D.Double(offset.x - xMod * scaleJump, offset.y - zMod * scaleJump, scaleJump, scaleJump);
             if (rct.contains(mouseX, mouseY)) {
-                IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap() == -1 ? Optional.empty() : Optional.of(renderContext.getShiftSnap()));
+                IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap());
                 Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).previewTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                 state = recovered.getFirst();
@@ -378,6 +396,7 @@ public class GuiScreenBlueprint extends GuiScreen {
                     fontRenderer, Minecraft.getMinecraft().getRenderItem());
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableLighting();
     }
 
     @Override

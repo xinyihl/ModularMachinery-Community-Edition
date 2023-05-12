@@ -13,6 +13,8 @@ import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nonnull;
+
 /**
  * This class is part of the Modular Machinery Mod
  * The complete source code for this mod can be found on github.
@@ -32,8 +34,9 @@ public class ItemBlockCustomName extends ItemBlock {
         return damage;
     }
 
+    @Nonnull
     @Override
-    public String getUnlocalizedNameInefficiently(ItemStack stack) {
+    public String getUnlocalizedNameInefficiently(@Nonnull ItemStack stack) {
         Block block = getBlock();
         if (block instanceof BlockCustomName) {
             String identifier = ((BlockCustomName) block).getIdentifierForMeta(stack.getItemDamage());

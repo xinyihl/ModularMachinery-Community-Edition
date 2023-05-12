@@ -68,8 +68,15 @@ public class TileMachineController extends TileMultiblockMachineController {
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
             onMachineTick(Phase.START);
 
+            final boolean prevWorkingStatus = isWorking();
+
             if (doRecipeTick()) {
                 markForUpdateSync();
+            }
+
+            final boolean workingStatus = isWorking();
+            if (prevWorkingStatus != workingStatus) {
+                updateStatedMachineComponentSync(workingStatus);
             }
 
             onMachineTick(Phase.END);

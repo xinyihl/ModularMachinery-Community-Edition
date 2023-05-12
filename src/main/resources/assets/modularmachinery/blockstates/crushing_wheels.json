@@ -1,0 +1,10 @@
+{
+  "defaults": {
+    "model": "modularmachinery:crushing_wheels_idle"
+  },
+  "variants": {
+    "inventory": { "model": "modularmachinery:crushing_wheels_idle" },
+    "working_state=idle": { "model": "modularmachinery:crushing_wheels_idle" },
+    "working_state=working": { "model": "modularmachinery:crushing_wheels_working" }
+  }
+}
