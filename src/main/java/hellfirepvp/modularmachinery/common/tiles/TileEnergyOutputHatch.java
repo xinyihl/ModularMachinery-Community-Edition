@@ -85,7 +85,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
             this.energy.addAndGet(-transferred);
         }
 
-        long usableAmps = Math.min(this.size.getGtAmperage(), maxCanExtract / 4L / this.size.getGTEnergyTransferVoltage());
+        long usableAmps = Mods.GREGTECH.isPresent() ? Math.min(this.size.getGtAmperage(), maxCanExtract / 4L / this.size.getGTEnergyTransferVoltage()) : 0;
         for (EnumFacing face : EnumFacing.VALUES) {
             // FluxNetworks Transfer
             if (maxCanExtract > 0 && Mods.FLUX_NETWORKS.isPresent() && Config.enableFluxNetworksIntegration) {
