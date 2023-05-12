@@ -10,11 +10,13 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos;;
 import net.minecraftforge.fml.common.Optional;
+
+import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.enableGTExplodes;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -42,7 +44,7 @@ public class GTEnergyContainer implements IEnergyContainer {
             long maxAmperage = Math.min(getInputAmperage(), amperage);
 
             if (voltage > getInputVoltage()) {
-                if (ConfigHolder.doExplosions) {
+                if (Mods.GREGTECH.isPresent() && enableGTExplodes) {
                     BlockPos pos = hatch.getPos();
                     hatch.getWorld().createExplosion(null,
                             pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
@@ -124,4 +126,5 @@ public class GTEnergyContainer implements IEnergyContainer {
     public long getInputVoltage() {
         return ioType == IOType.INPUT ? hatch.getTier().getGTEnergyTransferVoltage() : 0L;
     }
+
 }
