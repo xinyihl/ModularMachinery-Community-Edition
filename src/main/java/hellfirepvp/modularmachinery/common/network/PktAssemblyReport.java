@@ -16,6 +16,8 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,6 +121,7 @@ public class PktAssemblyReport implements IMessage, IMessageHandler<PktAssemblyR
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public IMessage onMessage(final PktAssemblyReport message, final MessageContext ctx) {
         List<List<ItemStack>> itemStackIngList = message.itemStackIngList;
         List<List<FluidStack>> fluidStackIngList = message.fluidStackIngList;
