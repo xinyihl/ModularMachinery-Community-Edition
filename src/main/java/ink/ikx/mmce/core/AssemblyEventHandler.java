@@ -5,10 +5,10 @@ import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
-import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import ink.ikx.mmce.common.assembly.MachineAssembly;
 import ink.ikx.mmce.common.assembly.MachineAssemblyManager;
-import ink.ikx.mmce.common.utils.MiscUtils;
+import ink.ikx.mmce.common.utils.StructureIngredient;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -17,17 +17,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.Set;
+import java.util.Collection;
 
+@SuppressWarnings("MethodMayBeStatic")
 public class AssemblyEventHandler {
-
-    public static AssemblyEventHandler INSTANCE = new AssemblyEventHandler();
+    public static final AssemblyEventHandler INSTANCE = new AssemblyEventHandler();
 
     @SubscribeEvent
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
@@ -47,30 +49,32 @@ public class AssemblyEventHandler {
             return;
         }
 
-        if (tileEntity instanceof TileMultiblockMachineController) {
-            TileMultiblockMachineController controller = (TileMultiblockMachineController) tileEntity;
-            if (stack.getItem().equals(ItemsMM.blueprint)) {
-                if (getBlueprint(controller).isEmpty()) {
-                    ItemStack copy = stack.copy();
-                    copy.setCount(1);
-                    if (isPlayerNotCreative(player)) stack.setCount(stack.getCount() - 1);
-                    controller.getInventory().setStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT, copy);
-                }
-                event.setCanceled(true);
-            } else if (stack.isItemEqual(new ItemStack(item, 1, AssemblyConfig.itemMeta))) {
-                DynamicMachine machine = controller.getBlueprintMachine();
-                if (machine == null) {
-                    if (block instanceof BlockController) {
-                        machine = ((BlockController) block).getParentMachine();
-                    }
-                    if (block instanceof BlockFactoryController) {
-                        machine = ((BlockFactoryController) block).getParentMachine();
-                    }
-                }
+        if (!(tileEntity instanceof TileMultiblockMachineController)) {
+            return;
+        }
 
-                assemblyBefore(machine, player, blockPos);
-                event.setCanceled(true);
+        TileMultiblockMachineController controller = (TileMultiblockMachineController) tileEntity;
+        if (stack.getItem().equals(ItemsMM.blueprint)) {
+            if (getBlueprint(controller).isEmpty()) {
+                ItemStack copy = stack.copy();
+                copy.setCount(1);
+                if (isPlayerNotCreative(player)) stack.setCount(stack.getCount() - 1);
+                controller.getInventory().setStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT, copy);
             }
+            event.setCanceled(true);
+        } else if (stack.isItemEqual(new ItemStack(item, 1, AssemblyConfig.itemMeta))) {
+            DynamicMachine machine = controller.getBlueprintMachine();
+            if (machine == null) {
+                if (block instanceof BlockController) {
+                    machine = ((BlockController) block).getParentMachine();
+                }
+                if (block instanceof BlockFactoryController) {
+                    machine = ((BlockFactoryController) block).getParentMachine();
+                }
+            }
+
+            assemblyBefore(machine, player, blockPos);
+            event.setCanceled(true);
         }
     }
 
@@ -78,41 +82,61 @@ public class AssemblyEventHandler {
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         EntityPlayer player = event.player;
         World world = player.world;
-        if (event.phase == TickEvent.Phase.START || event.side.isClient() || world.getWorldTime() % AssemblyConfig.tickBlock != 0)
+        if (event.phase == TickEvent.Phase.START || world.isRemote || world.getWorldTime() % AssemblyConfig.tickBlock != 0) {
             return;
+        }
 
-        Set<MachineAssembly> machineAssemblyListFromPlayer = MachineAssemblyManager.getMachineAssemblyListFromPlayer(player);
+        Collection<MachineAssembly> assemblies = MachineAssemblyManager.getMachineAssemblyListFromPlayer(player);
 
-        if (MiscUtils.isNotEmpty(machineAssemblyListFromPlayer)) {
-            machineAssemblyListFromPlayer.stream().filter(MachineAssembly::isFilter).forEach(MachineAssembly::assembly);
+        if (assemblies == null || assemblies.isEmpty()) {
+            return;
+        }
+
+        for (final MachineAssembly assembly : assemblies) {
+            assembly.assembly(true);
+            if (assembly.isCompleted()) {
+                MachineAssemblyManager.removeMachineAssembly(assembly.getCtrlPos());
+                player.sendMessage(new TextComponentTranslation("message.assembly.tip.success"));
+            }
         }
     }
 
-    private static boolean assemblyBefore(DynamicMachine machine, EntityPlayer player, BlockPos pos) {
+    @SubscribeEvent
+    public void onPlayerLogOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        MachineAssemblyManager.removeMachineAssembly(event.player);
+    }
+
+    private static void assemblyBefore(DynamicMachine machine, EntityPlayer player, BlockPos pos) {
         if (machine == null) {
-            player.sendMessage(MiscUtils.translate(1));
-            return false;
+            player.sendMessage(new TextComponentTranslation("message.assembly.tip.no_machine"));
+            return;
+        }
+
+        if (MachineAssemblyManager.checkMachineExist(pos)) {
+            player.sendMessage(new TextComponentTranslation("message.assembly.tip.already_assembly"));
+            return;
         }
 
         EnumFacing controllerFacing = player.world.getBlockState(pos).getValue(BlockController.FACING);
-        BlockArray blockArray = hellfirepvp.modularmachinery.common.util.MiscUtils.rotateYCCWNorthUntil(machine.getPattern(), controllerFacing);
-        MachineAssembly assembly = new MachineAssembly(pos, player, machine);
+        MachineAssembly assembly = new MachineAssembly(
+                player.world, pos, player,
+                StructureIngredient.of(player.world, pos,
+                        BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerFacing))
+        );
 
-        if (MachineAssemblyManager.checkMachineExist(assembly)) {
-            player.sendMessage(MiscUtils.translate(2));
-            return false;
-        }
-        if (isPlayerNotCreative(player)) {
-            if (!assembly.isAllItemsContains() && AssemblyConfig.needAllBlocks) {
-                player.sendMessage(MiscUtils.translate(3));
-                return false;
+        if (!isPlayerNotCreative(player)) {
+            assembly.assemblyCreative();
+        } else {
+            if (AssemblyConfig.needAllBlocks) {
+                if (MachineAssembly.checkAllItems(player, assembly.getIngredient().copy())) {
+                    assembly.buildIngredients(false);
+                    MachineAssemblyManager.addMachineAssembly(assembly);
+                }
             } else {
+                assembly.buildIngredients(false);
                 MachineAssemblyManager.addMachineAssembly(assembly);
             }
-        } else {
-            assembly.buildWithCreative();
         }
-        return true;
     }
 
     private static ItemStack getBlueprint(TileMultiblockMachineController controller) {

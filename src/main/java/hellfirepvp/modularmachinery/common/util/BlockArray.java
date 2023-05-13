@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import ink.ikx.mmce.common.utils.StackUtils;
+import ink.ikx.mmce.common.utils.StructureIngredient;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -22,6 +23,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
@@ -32,6 +34,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -203,10 +206,21 @@ public class BlockArray {
         return ingredient;
     }
 
+    public List<StructureIngredient.ItemIngredient> getBlockStateIngredientList(World world, BlockPos ctrlPos) {
+        List<StructureIngredient.ItemIngredient> ingredientList = new ArrayList<>();
+        pattern.forEach((pos, info) -> {
+            BlockPos realPos = ctrlPos.add(pos);
+            if (!info.matches(world, realPos, false)) {
+                ingredientList.add(new StructureIngredient.ItemIngredient(pos, info.getBlockStateIngredientList()));
+            }
+        });
+        return ingredientList;
+    }
+
     public List<ItemStack> getDescriptiveStackList(long snapTick) {
         List<ItemStack> stackList = new ArrayList<>();
 
-        pattern.forEach((pos, info) -> {
+        pattern.values().forEach((info) -> {
             ItemStack descriptiveStack = info.getDescriptiveStack(snapTick);
             if (descriptiveStack.isEmpty()) {
                 return;
@@ -358,11 +372,9 @@ public class BlockArray {
         }
 
         public void addMatchingStates(List<IBlockStateDescriptor> matching) {
-            for (int i = 0; i < matching.size(); i++) {
-                IBlockStateDescriptor desc = matching.get(i);
+            for (IBlockStateDescriptor desc : matching) {
                 if (!matchingStates.contains(desc)) {
-                    matching.add(desc);
-                    i++;
+                    matchingStates.add(desc);
                 }
                 for (IBlockState state : desc.applicable) {
                     if (!samples.contains(state)) {
@@ -451,6 +463,16 @@ public class BlockArray {
                     .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
                     .forEach(list::add);
             return list;
+        }
+
+        public List<Tuple<ItemStack, IBlockState>> getBlockStateIngredientList() {
+            return samples.stream()
+                    .map(BlockInformation::getTupleIngredientFromBlockState)
+                    .collect(Collectors.toList());
+        }
+
+        public static Tuple<ItemStack, IBlockState> getTupleIngredientFromBlockState(IBlockState state) {
+            return new Tuple<>(StackUtils.getStackFromBlockState(state), state);
         }
 
         public BlockInformation copyRotateYCCW() {
