@@ -19,8 +19,8 @@ public class RecipeTickEvent extends RecipeEvent {
     private boolean preventProgressing = false;
     private String failureReason = null;
 
-    public RecipeTickEvent(RecipeThread recipeThread, TileMultiblockMachineController controller, Phase phase) {
-        super(controller, controller.getActiveRecipeList()[0]);
+    public RecipeTickEvent(TileMultiblockMachineController controller, RecipeThread recipeThread, Phase phase) {
+        super(controller, recipeThread.getContext());
         this.phase = phase;
         this.recipeThread = recipeThread;
     }

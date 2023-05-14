@@ -14,7 +14,7 @@ public class FactoryRecipeFailureEvent extends FactoryRecipeEvent {
     private boolean destructRecipe;
 
     public FactoryRecipeFailureEvent(FactoryRecipeThread recipeThread, TileMultiblockMachineController controller, String cause, boolean destructRecipe) {
-        super(recipeThread, recipeThread.getActiveRecipe(), controller);
+        super(recipeThread, controller);
         this.cause = cause;
         this.destructRecipe = destructRecipe;
     }

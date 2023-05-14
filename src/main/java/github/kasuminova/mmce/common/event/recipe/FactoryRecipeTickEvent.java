@@ -19,7 +19,7 @@ public class FactoryRecipeTickEvent extends FactoryRecipeEvent {
     private String failureReason = null;
 
     public FactoryRecipeTickEvent(FactoryRecipeThread recipeThread, TileMultiblockMachineController controller, Phase phase) {
-        super(recipeThread, recipeThread.getActiveRecipe(), controller);
+        super(recipeThread, controller);
         this.phase = phase;
     }
 

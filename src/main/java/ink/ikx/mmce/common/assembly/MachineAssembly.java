@@ -152,7 +152,7 @@ public class MachineAssembly {
 
             for (final Tuple<ItemStack, IBlockState> tuple : ingredient.getIngredientList()) {
                 ItemStack required = tuple.getFirst();
-                if (consumeInventoryItem(required, inventory)) {
+                if (required.isEmpty() || consumeInventoryItem(required, inventory)) {
                     itemIngredientIter.remove();
                     continue itemIngredient;
                 }
@@ -358,7 +358,6 @@ public class MachineAssembly {
                 return;
             }
         }
-        ModularMachinery.log.info("Requirements: " + required.getTranslationKey());
 
         world.setBlockState(realPos, state);
         world.playSound(null, realPos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 1.0F);

@@ -21,15 +21,15 @@ public class AssemblyConfig {
     public static boolean skipBlockContainNBT = false;
 
     public static void loadFormConfig(Configuration config) {
-        config.getString("itemName", "auto-assembly", "minecraft:stick",
+        itemName = config.getString("itemName", "auto-assembly", "minecraft:stick",
                 "Set the Item auto-assembly.");
-        config.getInt("itemMeta", "auto-assembly", 0,
+        itemMeta = config.getInt("itemMeta", "auto-assembly", 0,
                 0, 32767, "Set the Item's meta, e.g. 0");
-        config.getInt("tickBlock", "auto-assembly", 5,
+        tickBlock = config.getInt("tickBlock", "auto-assembly", 5,
                 0, 1000, "Set how many ticks to assemble the block once.");
-        config.getBoolean("needAllBlocks", "auto-assembly", true,
+        needAllBlocks = config.getBoolean("needAllBlocks", "auto-assembly", true,
                 "Set the auto-assembly need all blocks must be in the inventory.");
-        config.getBoolean("skipBlockContainNBT", "auto-assembly", false,
+        skipBlockContainNBT = config.getBoolean("skipBlockContainNBT", "auto-assembly", false,
                 "Set whether to skip blocks containing NBTs.");
     }
 }

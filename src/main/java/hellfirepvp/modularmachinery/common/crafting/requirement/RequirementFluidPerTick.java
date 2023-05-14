@@ -10,6 +10,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.CopyHandlerHelper;
+import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
@@ -21,11 +22,14 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick> {
+public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick>
+        implements ComponentRequirement.Parallelizable {
     public final HybridFluid required;
     protected final HybridFluid requirementCheck;
     protected NBTTagCompound tagMatch = null, tagDisplay = null;
     protected boolean isSuccess = false;
+    private int parallelism = 1;
+    private boolean parallelizeUnaffected = false;
 
     public RequirementFluidPerTick(IOType actionType, FluidStack required) {
         super(RequirementTypesMM.REQUIREMENT_FLUID_PERTICK, actionType);
@@ -37,8 +41,8 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_FLUID) &&
-               cmp instanceof MachineComponent.FluidHatch &&
-               cmp.ioType == this.actionType;
+                cmp instanceof MachineComponent.FluidHatch &&
+                cmp.ioType == this.actionType;
     }
 
     @Override
@@ -137,12 +141,13 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
 
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
+        fluid.parallelizeUnaffected = parallelizeUnaffected;
         return fluid;
     }
 
     @Override
     public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false)));
+        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false)) * parallelism);
     }
 
     @Override
@@ -164,7 +169,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false) * durationMultiplier));
+        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false) * durationMultiplier * parallelism));
     }
 
     @Nonnull
@@ -186,5 +191,42 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
         this.isSuccess = craftCheck.isSuccess();
 
         return craftCheck;
+    }
+
+    @Override
+    public int maxParallelism(final ProcessingComponent<?> component, final RecipeCraftingContext context, final int maxParallelism) {
+        if (parallelizeUnaffected) {
+            return maxParallelism;
+        }
+        HybridTank handler = (HybridTank) component.providedComponent;
+        switch (actionType) {
+            case INPUT: {
+                FluidStack fluid = requirementCheck.asFluidStack().copy();
+                return HybridFluidUtils.maxFluidInputParallelism(
+                        handler, fluid, maxParallelism);
+
+            }
+            case OUTPUT: {
+                FluidStack fluid = requirementCheck.asFluidStack().copy();
+                return HybridFluidUtils.maxFluidOutputParallelism(
+                        handler, fluid, maxParallelism);
+            }
+        }
+        return maxParallelism;
+    }
+
+    @Override
+    public void setParallelism(final int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    @Override
+    public void setParallelizeUnaffected(final boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+        }
     }
 }

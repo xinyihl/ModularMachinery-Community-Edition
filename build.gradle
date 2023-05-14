@@ -3,7 +3,7 @@ plugins {
     id 'wtf.gofancy.fancygradle' version '1.1.+'
 }
 
-version = "1.12.2-1.11.1-r37-dev"
+version = "1.12.2-1.11.1-r39-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {

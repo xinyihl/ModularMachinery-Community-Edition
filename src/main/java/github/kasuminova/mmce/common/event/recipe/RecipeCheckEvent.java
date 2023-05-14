@@ -1,7 +1,7 @@
 package github.kasuminova.mmce.common.event.recipe;
 
 import crafttweaker.annotations.ZenRegister;
-import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -12,8 +12,8 @@ public class RecipeCheckEvent extends RecipeEvent {
     private boolean isFailure = false;
     private String failureReason = null;
 
-    public RecipeCheckEvent(TileMultiblockMachineController controller, ActiveMachineRecipe recipe) {
-        super(controller, recipe);
+    public RecipeCheckEvent(TileMultiblockMachineController controller, RecipeCraftingContext context) {
+        super(controller, context);
     }
 
     @ZenMethod

@@ -1,12 +1,14 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
-import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.SequentialTaskExecutor;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
-import github.kasuminova.mmce.common.event.recipe.*;
+import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFailureEvent;
+import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFinishEvent;
+import github.kasuminova.mmce.common.event.recipe.FactoryRecipeStartEvent;
+import github.kasuminova.mmce.common.event.recipe.FactoryRecipeTickEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
@@ -169,14 +171,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * <p>工厂线程开始执行一个配方。</p>
      */
     public void onThreadRecipeStart(FactoryRecipeThread thread) {
+        new FactoryRecipeStartEvent(thread, this).postEvent();
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(FactoryRecipeStartEvent.class);
-        if (handlerList != null && !handlerList.isEmpty()) {
-            FactoryRecipeStartEvent event = new FactoryRecipeStartEvent(thread, this);
-            for (IEventHandler<RecipeEvent> handler : handlerList) {
-                handler.handle(event);
-            }
-        }
         activeRecipe.start(thread.getContext());
     }
 

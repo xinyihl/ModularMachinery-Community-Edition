@@ -8,10 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
-import github.kasuminova.mmce.common.event.recipe.*;
+import github.kasuminova.mmce.common.event.recipe.RecipeFailureEvent;
+import github.kasuminova.mmce.common.event.recipe.RecipeFinishEvent;
+import github.kasuminova.mmce.common.event.recipe.RecipeStartEvent;
+import github.kasuminova.mmce.common.event.recipe.RecipeTickEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -29,12 +31,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * <p>完全重构的社区版机械控制器，拥有强大的异步逻辑和极低的性能消耗。</p>
  * <p>Completely refactored community edition mechanical controller with powerful asynchronous logic and extremely low performance consumption.</p>
- * TODO: This class is too large, consider improving readability.
  */
 public class TileMachineController extends TileMultiblockMachineController {
     private MachineRecipeThread recipeThread = new MachineRecipeThread(this);
@@ -106,7 +106,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         // PreTickEvent
-        new RecipeTickEvent(thread, this, Phase.START).postEvent();
+        new RecipeTickEvent(this, thread, Phase.START).postEvent();
 
         // RecipeTick
         CraftingStatus status = thread.onTick();
@@ -120,7 +120,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         // PostTickEvent
-        new RecipeTickEvent(thread, this, Phase.END).postEvent();
+        new RecipeTickEvent(this, thread, Phase.END).postEvent();
 
         if (thread.isCompleted()) {
             thread.onFinished();
@@ -156,14 +156,8 @@ public class TileMachineController extends TileMultiblockMachineController {
      * <p>机器开始执行一个配方。</p>
      */
     public void onStart() {
+        new RecipeStartEvent(this, recipeThread).postEvent();
         ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
-        List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(RecipeStartEvent.class);
-        if (handlerList != null && !handlerList.isEmpty()) {
-            RecipeStartEvent event = new RecipeStartEvent(this);
-            for (IEventHandler<RecipeEvent> handler : handlerList) {
-                handler.handle(event);
-            }
-        }
         activeRecipe.start(recipeThread.getContext());
     }
 
@@ -180,7 +174,7 @@ public class TileMachineController extends TileMultiblockMachineController {
 
         MachineRecipe recipe = activeRecipe.getRecipe();
         RecipeFailureEvent event = new RecipeFailureEvent(
-                this, recipeThread.getStatus().getUnlocMessage(), recipe.doesCancelRecipeOnPerTickFailure());
+                this, recipeThread, recipeThread.getStatus().getUnlocMessage(), recipe.doesCancelRecipeOnPerTickFailure());
         event.postEvent();
 
         return event.isDestructRecipe();
@@ -190,7 +184,7 @@ public class TileMachineController extends TileMultiblockMachineController {
      * <p>机械完成一个配方。</p>
      */
     public void onFinished() {
-        new RecipeFinishEvent(this).postEvent();
+        new RecipeFinishEvent(this, recipeThread).postEvent();
     }
 
     @Override

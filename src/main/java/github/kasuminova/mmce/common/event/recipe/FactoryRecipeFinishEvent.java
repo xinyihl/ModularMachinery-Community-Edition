@@ -9,6 +9,6 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass("mods.modularmachinery.FactoryRecipeFinishEvent")
 public class FactoryRecipeFinishEvent extends FactoryRecipeEvent {
     public FactoryRecipeFinishEvent(FactoryRecipeThread recipeThread, TileMultiblockMachineController controller) {
-        super(recipeThread, recipeThread.getActiveRecipe(), controller);
+        super(recipeThread, controller);
     }
 }
