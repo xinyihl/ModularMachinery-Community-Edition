@@ -240,6 +240,10 @@ public class BlockArray {
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
+        if (pattern.size() >= 3000) {
+            return matchesParallel(world, center, oldState, modifierReplacementPattern);
+        }
+
         patternCheck:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             BlockPos at = center.add(entry.getKey());
@@ -264,6 +268,31 @@ public class BlockArray {
             return false;
         }
         return true;
+    }
+
+    public boolean matchesParallel(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
+        return pattern.entrySet().parallelStream().allMatch(entry -> {
+            BlockPos at = center.add(entry.getKey());
+            // Block is matched, continue.
+            if (entry.getValue().matches(world, at, oldState)) {
+                return true;
+            }
+
+            // Block is not match, and there are no replaceable blocks in the configuration, end check.
+            if (modifierReplacementPattern == null || !modifierReplacementPattern.containsKey(entry.getKey())) {
+                return false;
+            }
+
+            // Check if the replacement block match.
+            for (BlockInformation info : modifierReplacementPattern.get(entry.getKey())) {
+                if (info.matches(world, at, oldState)) {
+                    return true;
+                }
+            }
+
+            // All the above conditions are not valid, and the check fails.
+            return false;
+        });
     }
 
     public BlockPos getRelativeMismatchPosition(World world, BlockPos center, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {

@@ -4,14 +4,12 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
-import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
-import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
@@ -628,18 +626,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
-        ActiveMachineRecipe activeRecipe = context.getActiveRecipe();
-        if (result.isSuccess()) {
-            List<IEventHandler<RecipeEvent>> handlerList = activeRecipe.getRecipe().getRecipeEventHandlers(RecipeCheckEvent.class);
-            if (handlerList == null || handlerList.isEmpty()) return result;
-            for (IEventHandler<RecipeEvent> handler : handlerList) {
-                RecipeCheckEvent event = new RecipeCheckEvent(this, activeRecipe);
-                handler.handle(event);
-                if (event.isFailure()) {
-                    result.overrideError(event.getFailureReason());
-                    return result;
-                }
-            }
+        RecipeCheckEvent event = new RecipeCheckEvent(this, context);
+        event.postEvent();
+
+        if (event.isFailure()) {
+            result.overrideError(event.getFailureReason());
+            return result;
         }
 
         return result;

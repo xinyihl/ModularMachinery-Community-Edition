@@ -26,6 +26,7 @@ import static hellfirepvp.modularmachinery.common.base.Mods.GREGTECH;
  * Class: EnergyHatchSize
  * Created by HellFirePvP
  * Date: 08.07.2017 / 10:25
+ * TODO: Transfer to normal class.
  */
 public enum EnergyHatchData implements IStringSerializable {
 

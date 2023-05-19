@@ -158,6 +158,7 @@ public class DynamicMachine extends AbstractMachine {
             context.addComponent(tpl.getFirst(), tpl.getSecond());
         }
         modifiers.forEach(context::addModifier);
+        context.updateRequirementComponents();
         return context;
     }
 

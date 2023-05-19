@@ -11,6 +11,8 @@ package hellfirepvp.modularmachinery.common.crafting.helper;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import github.kasuminova.mmce.common.concurrent.Sync;
+import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.recipe.ResultChanceCreateEvent;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSender;
@@ -51,6 +53,7 @@ public class RecipeCraftingContext {
     private final List<RecipeModifier> permanentModifierList = new ArrayList<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements;
+    private final Map<ComponentRequirement<?, ?>, Iterable<ProcessingComponent<?>>> requirementComponents = new HashMap<>();
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMultiblockMachineController controller) {
         this.activeRecipe = activeRecipe;
@@ -115,7 +118,7 @@ public class RecipeCraftingContext {
             perTickRequirement.resetIOTick(this);
             perTickRequirement.startIOTick(this, durMultiplier);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
+            for (ProcessingComponent<?> component : requirementComponents.getOrDefault(requirement, Collections.emptyList())) {
                 AtomicReference<CraftCheck> result = new AtomicReference<>();
                 if (perTickRequirement instanceof Asyncable) {
                     result.set(perTickRequirement.doIOTick(component, this));
@@ -145,11 +148,15 @@ public class RecipeCraftingContext {
     }
 
     public void startCrafting(long seed) {
-        ResultChance chance = new ResultChance(seed);
+        ResultChanceCreateEvent event = new ResultChanceCreateEvent(
+                controller, this, new ResultChance(seed), Phase.START);
+        event.postEvent();
+        ResultChance chance = event.getResultChance();
+
         for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(chance, this);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
+            for (ProcessingComponent<?> component : requirementComponents.getOrDefault(requirement, Collections.emptyList())) {
                 AtomicBoolean success = new AtomicBoolean(false);
                 if (requirement instanceof Asyncable) {
                     success.set(requirement.startCrafting(component, this, chance));
@@ -172,11 +179,15 @@ public class RecipeCraftingContext {
     }
 
     public void finishCrafting(long seed) {
-        ResultChance chance = new ResultChance(seed);
+        ResultChanceCreateEvent event = new ResultChanceCreateEvent(
+                controller, this, new ResultChance(seed), Phase.END);
+        event.postEvent();
+        ResultChance chance = event.getResultChance();
+
         for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(chance, this);
 
-            for (ProcessingComponent<?> component : getComponentsFor(requirement, requirement.tag)) {
+            for (ProcessingComponent<?> component : requirementComponents.getOrDefault(requirement, Collections.emptyList())) {
                 AtomicReference<CraftCheck> check = new AtomicReference<>();
                 if (requirement instanceof Asyncable) {
                     check.set(requirement.finishCrafting(component, this, chance));
@@ -197,12 +208,12 @@ public class RecipeCraftingContext {
     public int getMaxParallelism() {
         int maxParallelism = this.activeRecipe.getMaxParallelism();
         List<ComponentRequirement<?, ?>> parallelizableList = requirements.stream()
-                .filter(requirement -> requirement instanceof ComponentRequirement.Parallelizable)
+                .filter(ComponentRequirement.Parallelizable.class::isInstance)
                 .collect(Collectors.toList());
 
         int requirementMaxParallelism = maxParallelism;
         for (ComponentRequirement<?, ?> requirement : parallelizableList) {
-            Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
+            Iterable<ProcessingComponent<?>> components = requirementComponents.getOrDefault(requirement, Collections.emptyList());
             ComponentRequirement.Parallelizable parallelizable = (ComponentRequirement.Parallelizable) requirement;
             int componentMaxParallelism = 1;
             for (ProcessingComponent<?> component : components) {
@@ -220,7 +231,7 @@ public class RecipeCraftingContext {
 
     public void setParallelism(int parallelism) {
         List<ComponentRequirement<?, ?>> parallelizableList = requirements.stream()
-                .filter(requirement -> requirement instanceof ComponentRequirement.Parallelizable)
+                .filter(ComponentRequirement.Parallelizable.class::isInstance)
                 .collect(Collectors.toList());
 
         for (ComponentRequirement<?, ?> requirement : parallelizableList) {
@@ -256,7 +267,7 @@ public class RecipeCraftingContext {
         for (ComponentRequirement<?, ?> requirement : requirements) {
             requirement.startRequirementCheck(ResultChance.GUARANTEED, this);
 
-            Iterable<ProcessingComponent<?>> components = getComponentsFor(requirement, requirement.tag);
+            Iterable<ProcessingComponent<?>> components = requirementComponents.getOrDefault(requirement, Collections.emptyList());
             if (!Iterables.isEmpty(components)) {
 
                 List<String> errorMessages = new ArrayList<>();
@@ -289,6 +300,12 @@ public class RecipeCraftingContext {
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag) {
         this.typeComponents.add(new ProcessingComponent<>(component, component.getContainerProvider(), tag));
+    }
+
+    public void updateRequirementComponents() {
+        requirementComponents.clear();
+        requirements.forEach(req ->
+                requirementComponents.put(req, getComponentsFor(req, req.tag)));
     }
 
     public void addModifier(SingleBlockModifierReplacement modifier) {
@@ -362,11 +379,14 @@ public class RecipeCraftingContext {
         }
 
         public List<String> getUnlocalizedErrorMessages() {
-            return this.unlocErrorMessagesMap.entrySet()
-                    .stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .map(Map.Entry::getKey)
-                    .collect(Collectors.toList());
+            List<Map.Entry<String, Integer>> toSort = new ArrayList<>(this.unlocErrorMessagesMap.entrySet());
+            toSort.sort(Map.Entry.comparingByValue());
+            List<String> list = new ArrayList<>();
+            for (Map.Entry<String, Integer> stringIntegerEntry : toSort) {
+                String key = stringIntegerEntry.getKey();
+                list.add(key);
+            }
+            return list;
         }
 
         public String getFirstErrorMessage(String defaultMessage) {
