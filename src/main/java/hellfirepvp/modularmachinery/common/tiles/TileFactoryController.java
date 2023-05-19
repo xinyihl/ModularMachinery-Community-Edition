@@ -145,6 +145,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
+        if (thread.getContext() == null) {
+            thread.setContext(thread.createContext(activeRecipe));
+        }
+
         // PreTickEvent
         new FactoryRecipeTickEvent(thread, this, Phase.START).postEvent();
 

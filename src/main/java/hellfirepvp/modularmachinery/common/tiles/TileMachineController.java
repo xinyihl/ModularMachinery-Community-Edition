@@ -105,6 +105,10 @@ public class TileMachineController extends TileMultiblockMachineController {
             return true;
         }
 
+        if (thread.getContext() == null) {
+            thread.setContext(thread.createContext(activeRecipe));
+        }
+
         // PreTickEvent
         new RecipeTickEvent(this, thread, Phase.START).postEvent();
 
