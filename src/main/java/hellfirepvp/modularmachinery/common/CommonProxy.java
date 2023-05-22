@@ -8,9 +8,11 @@
 
 package hellfirepvp.modularmachinery.common;
 
+import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import github.kasuminova.mmce.common.handler.EventHandler;
+import github.kasuminova.mmce.common.handler.MachineEventHandler;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;
@@ -30,10 +32,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.registry.internal.InternalRegistryPrimer;
 import hellfirepvp.modularmachinery.common.registry.internal.PrimerEventHandler;
-import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
-import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
-import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
-import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
+import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
@@ -82,27 +81,6 @@ public class CommonProxy implements IGuiHandler {
         }
     }
 
-    private static void checkThirdPartyServer() {
-        if (isClassExist("catserver.server.CatServer") || isClassExist("com.mohistmc.MohistMC")) {
-            ModularMachinery.log.warn("//////// Plugin Server Detected! ////////");
-            ModularMachinery.log.warn("Plugin server will break MMCE's asynchronous functionality.");
-            ModularMachinery.log.warn("Plugin server compatibility mode is enabled!");
-            ModularMachinery.log.warn("This will cause asynchronous effects to drop and raise the overhead of the main thread!");
-            ModularMachinery.pluginServerCompatibleMode = true;
-        } else {
-            ModularMachinery.pluginServerCompatibleMode = false;
-        }
-    }
-
-    private static boolean isClassExist(String className) {
-        try {
-            Class.forName(className);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public void preInit() {
         creativeTabModularMachinery = new CreativeTabs(ModularMachinery.MODID) {
             @Override
@@ -123,12 +101,14 @@ public class CommonProxy implements IGuiHandler {
 
         MachineRegistry.preloadMachines();
 
+        CapabilityUpgrade.register();
+
         MinecraftForge.EVENT_BUS.register(AssemblyEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
-
+        MinecraftForge.EVENT_BUS.register(new MachineEventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
+
         ModularMachinery.EXECUTE_MANAGER.init();
-        checkThirdPartyServer();
         ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_COUNT));
     }
 
@@ -200,6 +180,8 @@ public class CommonProxy implements IGuiHandler {
                 return new ContainerSmartInterface((TileSmartInterface) present, player);
             case PARALLEL_CONTROLLER:
                 return new ContainerParallelController((TileParallelController) present, player);
+            case UPGRADE_BUS:
+                return new ContainerUpgradeBus((TileUpgradeBus) present, player);
             case BLUEPRINT_PREVIEW:
                 break;
         }
@@ -221,6 +203,7 @@ public class CommonProxy implements IGuiHandler {
         ENERGY_INVENTORY(TileEnergyHatch.class),
         SMART_INTERFACE(TileSmartInterface.class),
         PARALLEL_CONTROLLER(TileParallelController.class),
+        UPGRADE_BUS(TileUpgradeBus.class),
         BLUEPRINT_PREVIEW(null);
 
         public final Class<? extends TileEntity> requiredTileEntity;

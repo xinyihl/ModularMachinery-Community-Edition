@@ -51,6 +51,11 @@ gui.parallelcontroller.title=Parallel Controller
 gui.parallelcontroller.max_value=Max Parallelism: %s
 gui.parallelcontroller.current_value=Current Parallelism: %s
 
+gui.upgradebus.title=Upgrade Bus
+gui.upgradebus.bounded.empty=No binding machinery.
+gui.upgradebus.bounded=Bound %s machinery
+gui.upgradebus.incompatible=§eWarning: %s is not compatible with this machinery.
+
 top.recipe.progress=Progress
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
@@ -279,3 +284,10 @@ tile.modularmachinery.blockparallelcontroller.elite.name=§bElite Parallel Contr
 tile.modularmachinery.blockparallelcontroller.super.name=§5Super Parallel Controller
 tile.modularmachinery.blockparallelcontroller.ultimate.name=§cUltimate Parallel Controller
 tile.modularmachinery.blockparallelcontroller.tip=Up to §a%s§7 of identical recipes can be run simultaneously.
+
+tile.modularmachinery.blockupgradebus.normal.name=§aNormal Upgrade Bus
+tile.modularmachinery.blockupgradebus.reinforced.name=§6Reinforced Upgrade Bus
+tile.modularmachinery.blockupgradebus.elite.name=§bElite Upgrade Bus
+tile.modularmachinery.blockupgradebus.super.name=§5Super Upgrade Bus
+tile.modularmachinery.blockupgradebus.ultimate.name=§eUltimate Upgrade Bus
+tile.modularmachinery.blockupgradebus.tip=Up to §a%s§7 different upgrades can be placed.

@@ -50,14 +50,7 @@ public class BlockArrayCache {
 
         machines.parallelStream().forEach((machine -> {
             TaggedPositionBlockArray blockArray = machine.getPattern();
-            EnumFacing facing = EnumFacing.NORTH;
-            addBlockArrayCache(blockArray, facing);
-            do {
-                facing = facing.rotateYCCW();
-                blockArray = blockArray.rotateYCCW();
-                addBlockArrayCache(blockArray, facing);
-            } while (facing != EnumFacing.NORTH);
-
+            buildBlockArrayCache(blockArray);
             buildMultiBlockModifierCache(machine.getMultiBlockModifiers());
         }));
 
@@ -67,13 +60,19 @@ public class BlockArrayCache {
     private static void buildMultiBlockModifierCache(List<MultiBlockModifierReplacement> replacementList) {
         for (MultiBlockModifierReplacement replacement : replacementList) {
             BlockArray blockArray = replacement.getBlockArray();
-            EnumFacing facing = EnumFacing.NORTH;
-            addBlockArrayCache(blockArray, facing);
-            do {
-                facing = facing.rotateYCCW();
-                blockArray = blockArray.rotateYCCW();
-                addBlockArrayCache(blockArray, facing);
-            } while (facing != EnumFacing.NORTH);
+            buildBlockArrayCache(blockArray);
         }
+    }
+
+    private static void buildBlockArrayCache(BlockArray blockArray) {
+        EnumFacing facing = EnumFacing.NORTH;
+        blockArray.flushTileBlocksCache();
+        addBlockArrayCache(blockArray, facing);
+        do {
+            facing = facing.rotateYCCW();
+            blockArray = blockArray.rotateYCCW();
+            blockArray.flushTileBlocksCache();
+            addBlockArrayCache(blockArray, facing);
+        } while (facing != EnumFacing.NORTH);
     }
 }

@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.recipe.ResultChanceCreateEvent;
@@ -24,7 +23,6 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
-import hellfirepvp.modularmachinery.common.util.PriorityProvider;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 
 import javax.annotation.Nonnull;
@@ -50,6 +48,8 @@ public class RecipeCraftingContext {
     private final ControllerCommandSender commandSender;
     private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
     private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
+    private final Map<RequirementType<?, ?>, RecipeModifier.ModifierApplier> modifierAppliers = new HashMap<>();
+    private final Map<RequirementType<?, ?>, RecipeModifier.ModifierApplier> chanceModifierAppliers = new HashMap<>();
     private final List<RecipeModifier> permanentModifierList = new ArrayList<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements;
@@ -83,9 +83,16 @@ public class RecipeCraftingContext {
         return modifiers.computeIfAbsent(target, t -> new LinkedList<>());
     }
 
+    @Nonnull
+    public RecipeModifier.ModifierApplier getModifierApplier(RequirementType<?, ?> target, boolean isChance) {
+        return isChance
+                ? chanceModifierAppliers.getOrDefault(target, RecipeModifier.ModifierApplier.DEFAULT_APPLIER)
+                : modifierAppliers.getOrDefault(target, RecipeModifier.ModifierApplier.DEFAULT_APPLIER);
+    }
+
     public float getDurationMultiplier() {
         float dur = this.getParentRecipe().getRecipeTotalTickTime();
-        float result = RecipeModifier.applyModifiers(getModifiers(RequirementTypesMM.REQUIREMENT_DURATION), RequirementTypesMM.REQUIREMENT_DURATION, null, dur, false);
+        float result = RecipeModifier.applyModifiers(this, RequirementTypesMM.REQUIREMENT_DURATION, null, dur, false);
         return dur / result;
     }
 
@@ -94,17 +101,20 @@ public class RecipeCraftingContext {
     }
 
     public Iterable<ProcessingComponent<?>> getComponentsFor(ComponentRequirement<?, ?> requirement, @Nullable ComponentSelectorTag tag) {
-        List<ProcessingComponent<?>> validComponents = new ArrayList<>();
+        LinkedList<ProcessingComponent<?>> validComponents = new LinkedList<>();
         for (ProcessingComponent<?> typeComponent : this.typeComponents) {
-            if (requirement.isValidComponent(typeComponent, this)) {
-                validComponents.add(typeComponent);
+            if (!requirement.isValidComponent(typeComponent, this)) {
+                continue;
+            }
+
+            if (tag != null && typeComponent.tag.equals(requirement.tag)) {
+                validComponents.addFirst(typeComponent);
+            } else {
+                validComponents.addLast(typeComponent);
             }
         }
-        if (tag == null) {
-            return Collections.unmodifiableList(validComponents);
-        } else {
-            return new PriorityProvider<>(validComponents, compList -> Iterators.tryFind(compList.iterator(), comp -> tag.equals(comp.tag)).orNull());
-        }
+
+        return validComponents;
     }
 
     public CraftingCheckResult ioTick(int currentTick) {
@@ -317,17 +327,20 @@ public class RecipeCraftingContext {
             }
             this.modifiers.computeIfAbsent(target, t -> new LinkedList<>()).add(mod);
         }
+        updateModifierAppliers();
     }
 
     public void addModifier(RecipeModifier modifier) {
         if (modifier != null) {
             this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+            updateModifierAppliers();
         }
     }
 
     public void addModifier(Collection<RecipeModifier> modifiers) {
         for (RecipeModifier modifier : modifiers) {
             this.modifiers.computeIfAbsent(modifier.getTarget(), t -> new LinkedList<>()).add(modifier);
+            updateModifierAppliers();
         }
     }
 
@@ -335,6 +348,51 @@ public class RecipeCraftingContext {
         if (modifier != null) {
             this.permanentModifierList.add(modifier);
             addModifier(modifier);
+        }
+    }
+
+    public void updateModifierAppliers() {
+        modifierAppliers.clear();
+        chanceModifierAppliers.clear();
+
+        modifiers.forEach((type, modifiers) -> {
+            RecipeModifier.ModifierApplier applier = new RecipeModifier.ModifierApplier();
+            RecipeModifier.ModifierApplier chancedApplier = new RecipeModifier.ModifierApplier();
+
+            for (RecipeModifier mod : modifiers) {
+                if (mod.affectsChance()) {
+                    applyValueToApplier(chancedApplier, mod);
+                } else {
+                    applyValueToApplier(applier, mod);
+                }
+            }
+
+            if (!applier.isDefault()) {
+                modifierAppliers.put(type, applier);
+            }
+            if (!chancedApplier.isDefault()) {
+                chanceModifierAppliers.put(type, chancedApplier);
+            }
+        });
+    }
+
+    private static void applyValueToApplier(final RecipeModifier.ModifierApplier applier, final RecipeModifier mod) {
+        if (mod.getOperation() == RecipeModifier.OPERATION_ADD) {
+            IOType ioTarget = mod.getIOTarget();
+            if (ioTarget == null || ioTarget == IOType.INPUT) {
+                applier.inputAdd += mod.getModifier();
+            } else {
+                applier.outputAdd += mod.getModifier();
+            }
+        } else if (mod.getOperation() == RecipeModifier.OPERATION_MULTIPLY) {
+            IOType ioTarget = mod.getIOTarget();
+            if (ioTarget == null || ioTarget == IOType.INPUT) {
+                applier.inputMul *= mod.getModifier();
+            } else {
+                applier.outputMul *= mod.getModifier();
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown modifier operation: " + mod.getOperation());
         }
     }
 

@@ -51,6 +51,11 @@ gui.parallelcontroller.title=并行控制器
 gui.parallelcontroller.max_value=最大并行数：%s
 gui.parallelcontroller.current_value=当前并行数：%s
 
+gui.upgradebus.title=升级总线
+gui.upgradebus.bounded.empty=无绑定机械。
+gui.upgradebus.bounded=已绑定 %s 个机械
+gui.upgradebus.incompatible=§e警告：%s 与此机械不兼容。
+
 top.recipe.progress=进度
 top.machine.working=工作中
 top.machine.structure.found=结构已形成
@@ -278,3 +283,10 @@ tile.modularmachinery.blockparallelcontroller.elite.name=§b精英并行控制�
 tile.modularmachinery.blockparallelcontroller.super.name=§5超级并行控制器
 tile.modularmachinery.blockparallelcontroller.ultimate.name=§c终极并行控制器
 tile.modularmachinery.blockparallelcontroller.tip=最多可以同时运行 §a%s§7 个相同配方。
+
+tile.modularmachinery.blockupgradebus.normal.name=§a升级总线
+tile.modularmachinery.blockupgradebus.reinforced.name=§6强化升级总线
+tile.modularmachinery.blockupgradebus.elite.name=§b精英升级总线
+tile.modularmachinery.blockupgradebus.super.name=§5超级升级总线
+tile.modularmachinery.blockupgradebus.ultimate.name=§e终极升级总线
+tile.modularmachinery.blockupgradebus.tip=最多可以放置 §a%s§7 种不同的升级。

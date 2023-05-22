@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.crafting.helper;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -39,12 +38,12 @@ public class ComponentSelectorTag {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ComponentSelectorTag that = (ComponentSelectorTag) o;
-        return Objects.equals(tag, that.tag);
+        ComponentSelectorTag another = (ComponentSelectorTag) o;
+        return tag.equals(another.tag);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tag);
+        return tag.hashCode();
     }
 }

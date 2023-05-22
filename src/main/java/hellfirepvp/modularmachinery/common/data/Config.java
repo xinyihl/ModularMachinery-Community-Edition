@@ -14,6 +14,7 @@ import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
 import hellfirepvp.modularmachinery.common.block.prop.ParallelControllerData;
+import hellfirepvp.modularmachinery.common.block.prop.UpgradeBusData;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
 import hellfirepvp.modularmachinery.common.machine.RecipeFailureActions;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -61,6 +62,7 @@ public class Config {
         FluidHatchSize.loadFromConfig(lastReadConfig);
         EnergyHatchData.loadFromConfig(lastReadConfig);
         ParallelControllerData.loadFromConfig(lastReadConfig);
+        UpgradeBusData.loadFromConfig(lastReadConfig);
         EnergyDisplayUtil.loadFromConfig(lastReadConfig);
         RecipeFailureActions.loadFromConfig(lastReadConfig);
         TileMultiblockMachineController.loadFromConfig(lastReadConfig);

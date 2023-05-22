@@ -56,7 +56,6 @@ public class ModularMachinery {
     public static final String COMMON_PROXY = "hellfirepvp.modularmachinery.common.CommonProxy";
     public static final SimpleNetworkWrapper NET_CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
     public static final TaskExecutor EXECUTE_MANAGER = new TaskExecutor();
-    public static boolean pluginServerCompatibleMode = false;
     @Mod.Instance(MODID)
     public static ModularMachinery instance;
     public static Logger log;

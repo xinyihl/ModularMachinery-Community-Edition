@@ -103,6 +103,8 @@ public class RegistryBlocks {
         prepareItemBlockRegister(smartInterface);
         parallelController = prepareRegister(new BlockParallelController());
         prepareItemBlockRegister(parallelController);
+        upgradeBus = prepareRegister(new BlockUpgradeBus());
+        prepareItemBlockRegister(upgradeBus);
     }
 
     private static void registerTiles() {
@@ -120,6 +122,7 @@ public class RegistryBlocks {
 
         registerTile(TileSmartInterface.class);
         registerTile(TileParallelController.class);
+        registerTile(TileUpgradeBus.class);
     }
 
     private static void registerExampleStatedMachineComponent() {

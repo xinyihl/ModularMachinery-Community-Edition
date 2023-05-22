@@ -85,8 +85,11 @@ public class RecipeModifier {
     }
 
     public static float applyModifiers(RecipeCraftingContext context, ComponentRequirement<?, ?> in, float value, boolean isChance) {
-        RequirementType<?, ?> target = in.requirementType;
-        return applyModifiers(context.getModifiers(target), target, in.getActionType(), value, isChance);
+        return applyModifiers(context, in.requirementType, in.getActionType(), value, isChance);
+    }
+
+    public static float applyModifiers(RecipeCraftingContext context, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
+        return context.getModifierApplier(target, isChance).apply(value, ioType);
     }
 
     public static float applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, float value, boolean isChance) {
@@ -96,7 +99,7 @@ public class RecipeModifier {
     public static float applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
         List<RecipeModifier> applicable = new ArrayList<>();
         for (RecipeModifier recipeModifier : modifiers) {
-            if (recipeModifier.target.equals(target)) {
+            if (recipeModifier.target != null && recipeModifier.target.equals(target)) {
                 if (ioType == null || recipeModifier.ioTarget == ioType) {
                     if (recipeModifier.affectsChance() == isChance) {
                         applicable.add(recipeModifier);
@@ -112,7 +115,7 @@ public class RecipeModifier {
             } else if (mod.operation == OPERATION_MULTIPLY) {
                 mul *= mod.modifier;
             } else {
-                throw new RuntimeException("Unknown modifier operation: " + mod.operation);
+                throw new IllegalArgumentException("Unknown modifier operation: " + mod.operation);
             }
         }
         return (value + add) * mul;
@@ -137,6 +140,25 @@ public class RecipeModifier {
 
     public int getOperation() {
         return operation;
+    }
+
+    public static class ModifierApplier {
+        public static final ModifierApplier DEFAULT_APPLIER = new ModifierApplier();
+
+        public float inputAdd = 0;
+        public float inputMul = 1;
+        public float outputAdd = 0;
+        public float outputMul = 1;
+
+        public float apply(final float value, final IOType ioType) {
+            return ioType == null || ioType == IOType.INPUT
+                    ? (value + inputAdd) * inputMul
+                    : (value + outputAdd) * outputMul;
+        }
+
+        public boolean isDefault() {
+            return inputAdd == 0 && inputMul == 0 && outputAdd == 0 && outputMul == 0;
+        }
     }
 
     public static class Deserializer implements JsonDeserializer<RecipeModifier> {

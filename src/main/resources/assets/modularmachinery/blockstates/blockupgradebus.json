@@ -1,0 +1,9 @@
+{
+  "variants": {
+    "type=normal": { "model":"modularmachinery:blockupgradebus_normal" },
+    "type=reinforced": { "model":"modularmachinery:blockupgradebus_reinforced" },
+    "type=elite": { "model":"modularmachinery:blockupgradebus_elite" },
+    "type=super": { "model":"modularmachinery:blockupgradebus_super" },
+    "type=ultimate": { "model":"modularmachinery:blockupgradebus_ultimate" }
+  }
+}

@@ -2,7 +2,6 @@ package hellfirepvp.modularmachinery.common.block;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
-import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.block.prop.ParallelControllerData;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import net.minecraft.block.SoundType;
@@ -28,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class BlockParallelController extends BlockMachineComponent implements BlockCustomName, BlockVariants {
-    protected static final PropertyEnum<ParallelControllerData> INTERFACE_TYPE = PropertyEnum.create("type", ParallelControllerData.class);
+    protected static final PropertyEnum<ParallelControllerData> CONTROLLER_TYPE = PropertyEnum.create("type", ParallelControllerData.class);
 
     public BlockParallelController() {
         super(Material.IRON);
@@ -42,7 +41,7 @@ public class BlockParallelController extends BlockMachineComponent implements Bl
     @Override
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         super.addInformation(stack, worldIn, tooltip, flagIn);
-        ParallelControllerData data = ParallelControllerData.values()[MathHelper.clamp(stack.getMetadata(), 0, EnergyHatchData.values().length - 1)];
+        ParallelControllerData data = ParallelControllerData.values()[MathHelper.clamp(stack.getMetadata(), 0, ParallelControllerData.values().length - 1)];
         tooltip.add(I18n.format("tile.modularmachinery.blockparallelcontroller.tip", data.getMaxParallelism()));
     }
 
@@ -71,36 +70,36 @@ public class BlockParallelController extends BlockMachineComponent implements Bl
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(INTERFACE_TYPE).ordinal();
+        return state.getValue(CONTROLLER_TYPE).ordinal();
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, INTERFACE_TYPE);
+        return new BlockStateContainer(this, CONTROLLER_TYPE);
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(INTERFACE_TYPE, ParallelControllerData.values()[meta]);
+        return getDefaultState().withProperty(CONTROLLER_TYPE, ParallelControllerData.values()[meta]);
     }
 
     @Override
     public String getIdentifierForMeta(int meta) {
-        return getStateFromMeta(meta).getValue(INTERFACE_TYPE).getName();
+        return getStateFromMeta(meta).getValue(CONTROLLER_TYPE).getName();
     }
 
     @Override
     public Iterable<IBlockState> getValidStates() {
         LinkedList<IBlockState> states = new LinkedList<>();
         for (ParallelControllerData type : ParallelControllerData.values()) {
-            states.add(getDefaultState().withProperty(INTERFACE_TYPE, type));
+            states.add(getDefaultState().withProperty(CONTROLLER_TYPE, type));
         }
         return states;
     }
 
     @Override
     public String getBlockStateName(IBlockState state) {
-        return state.getValue(INTERFACE_TYPE).getName();
+        return state.getValue(CONTROLLER_TYPE).getName();
     }
 
     @Override
@@ -116,7 +115,7 @@ public class BlockParallelController extends BlockMachineComponent implements Bl
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileParallelController(state.getValue(INTERFACE_TYPE).getMaxParallelism());
+        return new TileParallelController(state.getValue(CONTROLLER_TYPE).getMaxParallelism());
     }
 
     @Nullable

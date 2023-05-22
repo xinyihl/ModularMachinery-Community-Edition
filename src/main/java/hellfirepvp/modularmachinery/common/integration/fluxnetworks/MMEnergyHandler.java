@@ -50,12 +50,13 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
         TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
         long remainingCapacity = energyHatch.getRemainingCapacity();
+        long transferLimit = Math.min(energyHatch.getTier().transferLimit, remainingCapacity);
         if (simulate) {
-            return Math.min(remainingCapacity, amount);
+            return Math.min(transferLimit, amount);
         }
 
-        if (remainingCapacity < amount) {
-            return energyHatch.receiveEnergy(remainingCapacity) ? remainingCapacity : 0;
+        if (transferLimit < amount) {
+            return energyHatch.receiveEnergy(transferLimit) ? transferLimit : 0;
         } else {
             return energyHatch.receiveEnergy(amount) ? amount : 0;
         }
@@ -69,11 +70,12 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
         TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
         long currentEnergy = energyHatch.getCurrentEnergy();
+        long transferLimit = Math.min(energyHatch.getTier().transferLimit, currentEnergy);
 
-        if (currentEnergy < amount) {
+        if (transferLimit < amount) {
             return energyHatch.extractEnergy(amount) ? amount : 0;
         } else {
-            return energyHatch.extractEnergy(currentEnergy) ? currentEnergy : 0;
+            return energyHatch.extractEnergy(transferLimit) ? transferLimit : 0;
         }
     }
 }

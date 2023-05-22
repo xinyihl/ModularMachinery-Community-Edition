@@ -34,6 +34,7 @@ public class RegistryComponentTypes {
         COMPONENT_GAS = register(new ComponentGas(), KEY_COMPONENT_GAS);
         COMPONENT_SMART_INTERFACE = register(new ComponentSmartInterface(), KEY_COMPONENT_SMART_INTERFACE);
         COMPONENT_PARALLEL_CONTROLLER = register(new ComponentParallelController(), KEY_COMPONENT_PARALLEL_CONTROLLER);
+        COMPONENT_UPGRADE_BUS = register(new ComponentUpgradeBus(), KEY_COMPONENT_UPGRADE_BUS);
     }
 
     private static <T extends ComponentType> T register(T componentType, ResourceLocation registryName) {

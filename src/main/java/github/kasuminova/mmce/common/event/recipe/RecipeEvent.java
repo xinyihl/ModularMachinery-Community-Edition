@@ -13,7 +13,7 @@ import java.util.List;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeEvent")
-public abstract class RecipeEvent extends MachineEvent {
+public class RecipeEvent extends MachineEvent {
     private final ActiveMachineRecipe activeRecipe;
     private final RecipeCraftingContext context;
 

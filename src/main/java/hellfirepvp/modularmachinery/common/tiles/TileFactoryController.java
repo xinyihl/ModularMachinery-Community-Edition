@@ -3,7 +3,6 @@ package hellfirepvp.modularmachinery.common.tiles;
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import github.kasuminova.mmce.common.concurrent.SequentialTaskExecutor;
-import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFinishEvent;
@@ -19,7 +18,9 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.block.state.IBlockState;
@@ -66,11 +67,12 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (getWorld().getStrongPower(getPos()) > 0) {
             return;
         }
-        if (!doStructureCheck() || !isStructureFormed()) {
-            return;
-        }
 
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            if (!doStructureCheck() || !isStructureFormed()) {
+                return;
+            }
+
             onMachineTick(Phase.START);
 
             final boolean prevWorkingStatus = isWorking();
@@ -204,15 +206,17 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     protected void onStructureFormed() {
-        Sync.doSyncAction(() -> {
-            if (parentController != null) {
-                this.world.setBlockState(pos, parentController.getDefaultState().withProperty(
-                        BlockController.FACING, this.controllerRotation));
-            } else {
-                this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState().withProperty(
-                        BlockController.FACING, this.controllerRotation));
-            }
-        });
+        if (world.getBlockState(getPos()).getBlock() != parentController) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+                if (parentController != null) {
+                    this.world.setBlockState(pos, parentController.getDefaultState()
+                            .withProperty(BlockController.FACING, this.controllerRotation));
+                } else {
+                    this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
+                            .withProperty(BlockController.FACING, this.controllerRotation));
+                }
+            });
+        }
 
         super.onStructureFormed();
 
@@ -286,7 +290,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         coreRecipeThreads.clear();
     }
 
-    public List<FactoryRecipeThread> getRecipeThreadList() {
+    public List<FactoryRecipeThread> getFactoryRecipeThreadList() {
         return recipeThreadList;
     }
 
@@ -554,6 +558,14 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     @Override
+    public RecipeThread[] getRecipeThreadList() {
+        List<RecipeThread> list = new ArrayList<>();
+        list.addAll(coreRecipeThreads.values());
+        list.addAll(recipeThreadList);
+        return list.toArray(new RecipeThread[0]);
+    }
+
+    @Override
     public boolean isWorking() {
         if (coreRecipeThreads.isEmpty() && recipeThreadList.isEmpty()) {
             return false;
@@ -569,6 +581,18 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
         }
         return false;
+    }
+
+    @Override
+    public void addModifier(final String key, final RecipeModifier modifier) {
+        coreRecipeThreads.values().forEach(thread -> thread.addModifier(key, modifier));
+        recipeThreadList.forEach(thread -> thread.addModifier(key, modifier));
+    }
+
+    @Override
+    public void removeModifier(final String key) {
+        coreRecipeThreads.values().forEach(thread -> thread.removeModifier(key));
+        recipeThreadList.forEach(thread -> thread.removeModifier(key));
     }
 
     @Override

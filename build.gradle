@@ -19,9 +19,10 @@ repositories {
     maven {
         url 'https://maven.blamejared.com/'
     }
-    maven {
-        url 'https://dvs1.progwml6.com/files/maven/'
-    }
+//    No longer available
+//    maven {
+//        url 'https://dvs1.progwml6.com/files/maven/'
+//    }
     maven {
         url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
     }
@@ -36,7 +37,10 @@ repositories {
 
 java {
     archivesBaseName = 'ModularMachinery-CE'
-    toolchain.languageVersion = JavaLanguageVersion.of(8)
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+        implementation = JvmImplementation.VENDOR_SPECIFIC
+    }
 }
 
 minecraft {
@@ -91,7 +95,7 @@ dependencies {
     implementation fg.deobf("curse.maven:CodeChickenLib-242818:2779848")
     implementation fg.deobf("curse.maven:brandonscore-231382:3051539")
     implementation fg.deobf("curse.maven:draconicevolution-223565:3051542")
-    implementation fg.deobf("mcjty.theoneprobe:TheOneProbe-1.12:1.12-1.4.28-17")
+    implementation fg.deobf("curse.maven:the-one-probe-245211:2667280")
 
     implementation fg.deobf("curse.maven:gregtech-293327:3266351")
     //Because GTCEu 2.4 and above and NCo crashed, this is to use GTCEu 2.3.4 for testing

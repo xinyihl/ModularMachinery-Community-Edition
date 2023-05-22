@@ -77,8 +77,7 @@ public class ActiveMachineRecipe {
     @Nonnull
     public CraftingStatus tick(TileMultiblockMachineController ctrl, RecipeCraftingContext context) {
         totalTick = Math.round(RecipeModifier.applyModifiers(
-                context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
-                RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
+                context, RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
 
         //Skip per-tick logic until the controller can finish the recipe
         if (this.isCompleted()) {
@@ -124,8 +123,7 @@ public class ActiveMachineRecipe {
     public void start(RecipeCraftingContext context) {
         context.startCrafting();
         totalTick = Math.round(RecipeModifier.applyModifiers(
-                context.getModifiers(RequirementTypesMM.REQUIREMENT_DURATION),
-                RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
+                context, RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false));
     }
 
     public NBTTagCompound serialize() {

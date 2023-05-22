@@ -5,7 +5,9 @@ import crafttweaker.api.block.IBlockState;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
+import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
@@ -69,6 +71,13 @@ public interface IMachineController {
     ActiveMachineRecipe[] getActiveRecipeList();
 
     /**
+     * 获取机器所有的配方线程。
+     * @return 线程列表，所有元素均不为空，包括闲置线程。
+     */
+    @ZenGetter("recipeThreadList")
+    RecipeThread[] getRecipeThreadList();
+
+    /**
      * 机器是否在工作。
      *
      * @return true 为工作，反之为闲置或未形成结构
@@ -102,21 +111,40 @@ public interface IMachineController {
     void setCustomData(IData data);
 
     /**
-     * 添加一个 RecipeModifier。
+     * 添加一个半永久 RecipeModifier，会在配方完成的时候自动删除。
+     *
+     * @param key      KEY，方便删除使用
+     * @param modifier Modifier
+     */
+
+    @ZenMethod
+    void addModifier(String key, RecipeModifier modifier);
+
+    /**
+     * 删除一个半永久 RecipeModifier。
+     *
+     * @param key KEY
+     */
+
+    @ZenMethod
+    void removeModifier(String key);
+
+    /**
+     * 添加一个永久性的 RecipeModifier。
      *
      * @param key      KEY，方便删除使用
      * @param modifier Modifier
      */
     @ZenMethod
-    void addModifier(String key, RecipeModifier modifier);
+    void addPermanentModifier(String key, RecipeModifier modifier);
 
     /**
-     * 删除一个 RecipeModifier。
+     * 删除一个永久性的 RecipeModifier。
      *
      * @param key KEY
      */
     @ZenMethod
-    void removeModifier(String key);
+    void removePermanentModifier(String key);
 
     /**
      * 检查某个 RecipeModifier 是否已存在。
@@ -167,6 +195,25 @@ public interface IMachineController {
      */
     @ZenMethod
     boolean hasModifierReplacement(String modifierName);
+
+    /**
+     * 机械是否存在给定名称的机械升级。
+     * @param upgradeName 名称
+     * @return 存在返回 true，否则返回 false
+     */
+    @ZenMethod
+    boolean hasMachineUpgrade(String upgradeName);
+
+    /**
+     * 根据给定的名称，获取控制器中的一个机械升级。
+     * 可为 null。
+     *
+     * @param upgradeName 名称
+     * @return 机械升级，如果无则返回 null
+     */
+    @Nullable
+    @ZenMethod
+    MachineUpgrade getMachineUpgrade(String upgradeName);
 
     TileMultiblockMachineController getController();
 }

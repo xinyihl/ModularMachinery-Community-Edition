@@ -6,9 +6,11 @@ import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
+import github.kasuminova.mmce.common.event.machine.MachineEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
+import github.kasuminova.mmce.common.event.recipe.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
@@ -99,6 +101,82 @@ public class MMEvents {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
         });
+    }
+
+    //----------------------------------------------------------------------------------------------
+    // 让我们谈谈这段转换的问题...
+    // ZenScript 的强制转换存在问题，即时目标类能够转换，它依然会抛出错误。
+    // 我把这个问题归咎于 CraftTweaker，让事件处理变得可怕。
+    // 我曾尝试过使用泛型函数接口，可惜它只支持一个泛型参数。
+    // 我不能指望 CraftTweaker 做更多事情，这些事件系统已经变得颇有难度，如果有能力，我会建议你使用模组来实现这些功能。
+    //
+    // Let's talk about this conversion problem...
+    // ZenScript has a problem with forced conversions. Even if the target class is able to convert,
+    // it still throws an error.
+    // I blame this problem on CraftTweaker, which makes event handling horrible.
+    // I have tried using the generic function interface, but unfortunately it only supports one generic parameter.
+    // I can't expect CraftTweaker to do much more than that, these event systems have become quite challenging,
+    // and I would recommend using a mod for these functions if you are able to.
+    //----------------------------------------------------------------------------------------------
+
+    @ZenMethod
+    public static RecipeCheckEvent castToRecipeCheckEvent(MachineEvent event) {
+        return event instanceof RecipeCheckEvent ? (RecipeCheckEvent) event : null;
+    }
+
+    @ZenMethod
+    public static RecipeStartEvent castToRecipeStartEvent(MachineEvent event) {
+        return event instanceof RecipeStartEvent ? (RecipeStartEvent) event : null;
+    }
+
+    @ZenMethod
+    public static RecipeTickEvent castToRecipeTickEvent(MachineEvent event) {
+        return event instanceof RecipeTickEvent ? (RecipeTickEvent) event : null;
+    }
+
+    @ZenMethod
+    public static RecipeFailureEvent castToRecipeFailureEvent(MachineEvent event) {
+        return event instanceof RecipeFailureEvent ? (RecipeFailureEvent) event : null;
+    }
+
+    @ZenMethod
+    public static RecipeFinishEvent castToRecipeFinishEvent(MachineEvent event) {
+        return event instanceof RecipeFinishEvent ? (RecipeFinishEvent) event : null;
+    }
+
+    @ZenMethod
+    public static MachineStructureFormedEvent castToMachineStructureFormedEvent(MachineEvent event) {
+        return event instanceof MachineStructureFormedEvent ? (MachineStructureFormedEvent) event : null;
+    }
+
+    @ZenMethod
+    public static MachineTickEvent castToMachineTickEvent(MachineEvent event) {
+        return event instanceof MachineTickEvent ? (MachineTickEvent) event : null;
+    }
+
+    @ZenMethod
+    public static SmartInterfaceUpdateEvent castToSmartInterfaceUpdateEvent(MachineEvent event) {
+        return event instanceof SmartInterfaceUpdateEvent ? (SmartInterfaceUpdateEvent) event : null;
+    }
+
+    @ZenMethod
+    public static FactoryRecipeStartEvent castToFactoryRecipeStartEvent(MachineEvent event) {
+        return event instanceof FactoryRecipeStartEvent ? (FactoryRecipeStartEvent) event : null;
+    }
+
+    @ZenMethod
+    public static FactoryRecipeTickEvent castToFactoryRecipeTickEvent(MachineEvent event) {
+        return event instanceof FactoryRecipeTickEvent ? (FactoryRecipeTickEvent) event : null;
+    }
+
+    @ZenMethod
+    public static FactoryRecipeFailureEvent castToFactoryRecipeFailureEvent(MachineEvent event) {
+        return event instanceof FactoryRecipeFailureEvent ? (FactoryRecipeFailureEvent) event : null;
+    }
+
+    @ZenMethod
+    public static FactoryRecipeFinishEvent castToFactoryRecipeFinishEvent(MachineEvent event) {
+        return event instanceof FactoryRecipeFinishEvent ? (FactoryRecipeFinishEvent) event : null;
     }
 
     public static void registryAll() {

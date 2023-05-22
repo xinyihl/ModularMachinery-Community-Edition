@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
-import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.recipe.RecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeFinishEvent;
@@ -23,6 +22,8 @@ import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRecipeThread;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import net.minecraft.block.state.IBlockState;
@@ -61,11 +62,12 @@ public class TileMachineController extends TileMultiblockMachineController {
         if (getWorld().getStrongPower(getPos()) > 0) {
             return;
         }
-        if (!doStructureCheck() || !isStructureFormed()) {
-            return;
-        }
 
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+            if (!doStructureCheck() || !isStructureFormed()) {
+                return;
+            }
+
             onMachineTick(Phase.START);
 
             final boolean prevWorkingStatus = isWorking();
@@ -216,8 +218,23 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     @Override
+    public RecipeThread[] getRecipeThreadList() {
+        return new RecipeThread[]{recipeThread};
+    }
+
+    @Override
     public boolean isWorking() {
         return getControllerStatus().isCrafting();
+    }
+
+    @Override
+    public void addModifier(final String key, final RecipeModifier modifier) {
+        recipeThread.addModifier(key, modifier);
+    }
+
+    @Override
+    public void removeModifier(final String key) {
+        recipeThread.removeModifier(key);
     }
 
     @Override
@@ -231,13 +248,15 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     @Override
     protected void onStructureFormed() {
-        Sync.doSyncAction(() -> {
-            if (parentController != null) {
-                this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-            } else {
-                this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-            }
-        });
+        if (world.getBlockState(getPos()).getBlock() != parentController) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+                if (parentController != null) {
+                    this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+                } else {
+                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+                }
+            });
+        }
 
         super.onStructureFormed();
     }

@@ -5,12 +5,13 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IWorld;
 import github.kasuminova.mmce.common.concurrent.ActionExecutor;
-import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
 import github.kasuminova.mmce.common.helper.IMachineController;
+import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
+import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -29,6 +30,7 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
+import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
 import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -65,8 +67,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
     protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
     protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
+    protected final Map<String, MachineUpgrade> foundUpgrades = new ConcurrentHashMap<>();
+    protected final List<TileUpgradeBus.UpgradeBusProvider> foundUpgradeBuses = new ArrayList<>();
+    protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
     protected final List<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new CopyOnWriteArrayList<>();
-    protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new CopyOnWriteArrayList<>();
     protected EnumFacing controllerRotation = null;
     protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
     protected IOInventory inventory;
@@ -237,7 +241,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 customModifiers.clear();
             }
         }
-        updateStatedMachineComponent(false);
+        updateStatedMachineComponentSync(false);
 
         foundMachine = null;
         foundPattern = null;
@@ -287,7 +291,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     /**
      * 尝试对方块上色。
-     * 此方法内容不应被修改，因为内容已被 gugu_utils 所覆盖。
      *
      * @param pos   位置
      * @param color 颜色
@@ -378,7 +381,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         new MachineStructureFormedEvent(this).postEvent();
 
         if (this.foundMachine.getMachineColor() != Config.machineColor) {
-            Sync.doSyncAction(this::distributeCasingColor);
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
         }
 
         resetStructureCheckCounter();
@@ -397,21 +400,17 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         if (isStructureFormed()) {
+            BlockPos ctrlPos = getPos();
             if (foundComponents.isEmpty()) {
-                for (BlockPos potentialPosition : foundPattern.getPattern().keySet()) {
-                    BlockPos realPos = getPos().add(potentialPosition);
-                    //Is Chunk Loaded? Prevention of unanticipated consumption of something.
-                    if (!getWorld().isBlockLoaded(realPos)) {
-                        return false;
-                    }
+                //Is chunk area loaded? Prevention of unanticipated consumption of something.
+                if (!getWorld().isAreaLoaded(foundPattern.getPatternBoundingBox(ctrlPos))) {
+                    return false;
                 }
             }
             if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
-            } else if (!foundPattern.matches(getWorld(), getPos(), true, this.foundReplacements)) {
+            } else if (!foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements)) {
                 resetMachine(true);
-            } else {
-                incrementStructureCheckCounter();
             }
         }
 
@@ -455,12 +454,17 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected void checkAllPatterns() {
+        BlockPos ctrlPos = getPos();
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
             if (machine.isRequiresBlueprint()) continue;
-            if (matchesRotation(
-                    BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation),
-                    machine, controllerRotation))
-            {
+            TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(
+                    machine.getPattern(), controllerRotation);
+
+            if (!getWorld().isAreaLoaded(pattern.getPatternBoundingBox(ctrlPos))) {
+                continue;
+            }
+
+            if (matchesRotation(pattern, machine, controllerRotation)) {
                 onStructureFormed();
                 break;
             }
@@ -480,43 +484,56 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
 
+        this.foundUpgrades.clear();
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
         ArrayList<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
-        for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry : this.foundPattern.getPattern().entrySet()) {
-            BlockArray.BlockInformation info = entry.getValue();
-            if (!info.hasTileEntity()) {
-                continue;
-            }
-
-            BlockPos potentialPosition = entry.getKey();
-            BlockPos realPos = getPos().add(potentialPosition);
+        this.foundPattern.getTileBlocksArray().forEach((pos, info) -> {
+            BlockPos realPos = getPos().add(pos);
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {
-                continue;
+                return;
             }
 
-            ComponentSelectorTag tag = this.foundPattern.getTag(potentialPosition);
+            ComponentSelectorTag tag = this.foundPattern.getTag(pos);
             MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
             if (component == null) {
-                continue;
+                return;
             }
 
             foundComponents.add(new Tuple<>(component, tag));
-
             if (component instanceof TileParallelController.ParallelControllerProvider) {
                 this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
-                continue;
+                return;
             }
-
+            checkAndAddUpgrades(component);
             checkAndAddSmartInterface(component, realPos);
-        }
+        });
         this.foundComponents.addAll(foundComponents);
 
         foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
+    }
+
+    private void checkAndAddUpgrades(final MachineComponent<?> component) {
+        if (!(component instanceof TileUpgradeBus.UpgradeBusProvider)) {
+            return;
+        }
+        TileUpgradeBus.UpgradeBusProvider upgradeBus = (TileUpgradeBus.UpgradeBusProvider) component;
+        upgradeBus.boundMachine(this);
+        foundUpgradeBuses.add(upgradeBus);
+
+        Map<UpgradeType, MachineUpgrade> upgrades = upgradeBus.getUpgrades(this);
+        upgrades.forEach((type, newUpgrade) -> {
+            MachineUpgrade upgrade = foundUpgrades.get(type.getName());
+            if (upgrade != null) {
+                upgrade.incrementStackSize(newUpgrade.getStackSize());
+            } else {
+                foundUpgrades.put(type.getName(), newUpgrade);
+            }
+        });
     }
 
     protected void updateMultiBlockModifiers() {
@@ -645,7 +662,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     @Override
-    public void addModifier(String key, RecipeModifier newModifier) {
+    public void addPermanentModifier(String key, RecipeModifier newModifier) {
         if (newModifier != null) {
             customModifiers.put(key, newModifier);
             flushContextModifier();
@@ -653,7 +670,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     @Override
-    public void removeModifier(String key) {
+    public void removePermanentModifier(String key) {
         if (hasModifier(key)) {
             customModifiers.remove(key);
             flushContextModifier();
@@ -661,6 +678,30 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public abstract void flushContextModifier();
+
+    public Map<TileSmartInterface.SmartInterfaceProvider, String> getFoundSmartInterfaces() {
+        return foundSmartInterfaces;
+    }
+
+    public Map<String, MachineUpgrade> getFoundUpgrades() {
+        return foundUpgrades;
+    }
+
+    public List<TileUpgradeBus.UpgradeBusProvider> getFoundUpgradeBuses() {
+        return foundUpgradeBuses;
+    }
+
+    public List<TileParallelController.ParallelControllerProvider> getFoundParallelControllers() {
+        return foundParallelControllers;
+    }
+
+    public List<Tuple<MachineComponent<?>, ComponentSelectorTag>> getFoundComponents() {
+        return foundComponents;
+    }
+
+    public DynamicMachine.ModifierReplacementMap getFoundReplacements() {
+        return foundReplacements;
+    }
 
     public Map<String, RecipeModifier> getCustomModifiers() {
         return customModifiers;
@@ -704,6 +745,29 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public boolean hasModifierReplacement(String modifierName) {
         return foundModifiers.containsKey(modifierName);
+    }
+
+    @Override
+    public boolean hasMachineUpgrade(final String upgradeName) {
+        MachineUpgrade upgrade = foundUpgrades.get(upgradeName);
+        return upgrade != null && upgrade.getParentBus() != null;
+    }
+
+    @Nullable
+    @Override
+    public MachineUpgrade getMachineUpgrade(final String upgradeName) {
+        MachineUpgrade upgrade = foundUpgrades.get(upgradeName);
+        if (upgrade == null) {
+            return null;
+        }
+
+        TileUpgradeBus parentBus = upgrade.getParentBus();
+        if (parentBus == null) {
+            return null;
+        }
+
+        upgrade.readNBT(parentBus.provideComponent().getUpgradeCustomData(upgrade));
+        return upgrade;
     }
 
     public TileMultiblockMachineController getController() {

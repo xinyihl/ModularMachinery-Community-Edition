@@ -1,0 +1,77 @@
+package github.kasuminova.mmce.common.capability;
+
+import github.kasuminova.mmce.common.upgrade.DynamicMachineUpgrade;
+import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
+import hellfirepvp.modularmachinery.ModularMachinery;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CapabilityUpgrade {
+    public static final ResourceLocation CAPABILITY_NAME = new ResourceLocation(ModularMachinery.MODID, "upgrade_cap");
+
+    @CapabilityInject(CapabilityUpgrade.class)
+    public static Capability<CapabilityUpgrade> MACHINE_UPGRADE_CAPABILITY = null;
+
+    private static final NBTTagCompound EMPTY_TAG_COMPOUND = new NBTTagCompound();
+
+    private final List<MachineUpgrade> upgrades = new ArrayList<>();
+
+    public static void register() {
+        CapabilityManager.INSTANCE.register(CapabilityUpgrade.class, new Capability.IStorage<CapabilityUpgrade>() {
+            @Nullable
+            @Override
+            public NBTBase writeNBT(final Capability<CapabilityUpgrade> capability, final CapabilityUpgrade instance, final EnumFacing side) {
+                return instance.writeNBT();
+            }
+
+            @Override
+            public void readNBT(final Capability<CapabilityUpgrade> capability, final CapabilityUpgrade instance, final EnumFacing side, final NBTBase nbt) {
+                instance.readNBT((NBTTagCompound) nbt);
+            }
+        }, CapabilityUpgrade::new);
+    }
+
+    public List<MachineUpgrade> getUpgrades() {
+        return upgrades;
+    }
+
+    public void readNBT(NBTTagCompound tag) {
+        upgrades.clear();
+        for (final String upgradeType : tag.getKeySet()) {
+            NBTTagCompound upgradeTag = tag.getCompoundTag(upgradeType);
+            MachineUpgrade upgrade = MachineUpgrade.getUpgrade(upgradeType);
+
+            if (upgrade == null) {
+                continue;
+            }
+            upgrade = upgrade.copy();
+
+            upgrades.add(upgrade);
+            if (upgrade instanceof DynamicMachineUpgrade) {
+                ((DynamicMachineUpgrade) upgrade).readItemNBT(upgradeTag);
+            }
+        }
+    }
+
+    public NBTTagCompound writeNBT() {
+        NBTTagCompound tag = new NBTTagCompound();
+        for (final MachineUpgrade upgrade : upgrades) {
+            if (upgrade instanceof DynamicMachineUpgrade) {
+                tag.setTag(upgrade.getType().getName(), ((DynamicMachineUpgrade) upgrade).writeItemNBT());
+            } else {
+                tag.setTag(upgrade.getType().getName(), EMPTY_TAG_COMPOUND);
+            }
+        }
+
+        return tag;
+    }
+}

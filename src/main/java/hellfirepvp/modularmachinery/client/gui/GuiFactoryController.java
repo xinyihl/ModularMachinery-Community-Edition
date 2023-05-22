@@ -73,7 +73,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int currentScroll = scrollbar.getCurrentScroll();
 
         Collection<FactoryRecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
-        List<FactoryRecipeThread> threads = factory.getRecipeThreadList();
+        List<FactoryRecipeThread> threads = factory.getFactoryRecipeThreadList();
         List<FactoryRecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + threads.size()) * 1.5));
         recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(threads);
@@ -212,7 +212,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
         assert factory.getFoundMachine() != null;
         fr.drawStringWithShadow(I18n.format("gui.factory.threads",
-                factory.getRecipeThreadList().size(), factory.getFoundMachine().getMaxThreads()),
+                factory.getFactoryRecipeThreadList().size(), factory.getFoundMachine().getMaxThreads()),
                 offsetX, offsetY, 0xFFFFFF);
         return offsetY + 10;
     }
@@ -226,7 +226,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             return offsetY;
         }
 
-        for (FactoryRecipeThread queueThread : factory.getRecipeThreadList()) {
+        for (FactoryRecipeThread queueThread : factory.getFactoryRecipeThreadList()) {
             ActiveMachineRecipe activeRecipe = queueThread.getActiveRecipe();
             if (activeRecipe != null) {
                 parallelism += (activeRecipe.getParallelism() - 1);
@@ -324,7 +324,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         scrollbar.setLeft(SCROLLBAR_LEFT + displayX).setTop(SCROLLBAR_TOP + displayY).setHeight(SCROLLBAR_HEIGHT);
 
         Map<String, FactoryRecipeThread> coreThreads = factory.getCoreRecipeThreads();
-        List<FactoryRecipeThread> threadList = factory.getRecipeThreadList();
+        List<FactoryRecipeThread> threadList = factory.getFactoryRecipeThreadList();
         scrollbar.setRange(0, Math.max(0, coreThreads.size() + threadList.size() - MAX_PAGE_ELEMENTS), 1);
     }
 

@@ -76,7 +76,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             return;
         }
 
-        List<FactoryRecipeThread> recipeThreads = factory.getRecipeThreadList();
+        List<FactoryRecipeThread> recipeThreads = factory.getFactoryRecipeThreadList();
 
         probeInfo.text(
                 TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +

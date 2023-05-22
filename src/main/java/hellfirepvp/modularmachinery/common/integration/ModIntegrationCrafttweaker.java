@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.integration;
 
 import crafttweaker.mc1120.events.ScriptRunEvent;
 import github.kasuminova.mmce.common.concurrent.Action;
+import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
@@ -56,6 +57,8 @@ public class ModIntegrationCrafttweaker {
         sender.sendMessage(new TextComponentTranslation("message.reloading"));
 
         MachineBuilder.WAIT_FOR_LOAD.clear();
+
+        MachineUpgrade.clearAll();
 
         sender.sendMessage(new TextComponentTranslation(
                 "message.cleared.recipes", RecipeRegistry.registeredRecipeCount()));

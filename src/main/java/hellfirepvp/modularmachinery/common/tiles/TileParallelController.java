@@ -11,8 +11,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import javax.annotation.Nonnull;
 
 public class TileParallelController extends TileColorableMachineComponent implements MachineComponentTile {
-    private int maxParallelism = 1;
     private final ParallelControllerProvider provider = new ParallelControllerProvider();
+    private int maxParallelism = 1;
     private int parallelism = 1;
 
     public TileParallelController(int maxParallelism) {
@@ -21,7 +21,6 @@ public class TileParallelController extends TileColorableMachineComponent implem
     }
 
     public TileParallelController() {
-
     }
 
     @Nonnull

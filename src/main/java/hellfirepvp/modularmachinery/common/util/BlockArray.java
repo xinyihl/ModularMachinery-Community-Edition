@@ -27,6 +27,7 @@ import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -48,6 +49,7 @@ public class BlockArray {
 
     public final long traitNum;
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
+    protected Map<BlockPos, BlockInformation> tileBlocksArray = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
 
     public BlockArray() {
@@ -76,6 +78,24 @@ public class BlockArray {
         this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
 
         this.traitNum = other.traitNum;
+    }
+
+    public StructureBoundingBox getPatternBoundingBox(final BlockPos ctrlPos) {
+        BlockPos min = ctrlPos.add(this.min);
+        BlockPos max = ctrlPos.add(this.max);
+        return new StructureBoundingBox(new int[]{
+                min.getX(), min.getY(), min.getZ(),
+                max.getX(), max.getY(), max.getZ()
+        });
+    }
+
+    public void flushTileBlocksCache() {
+        tileBlocksArray.clear();
+        pattern.forEach((pos, info) -> {
+            if (info.hasTileEntity()) {
+                tileBlocksArray.put(pos, info);
+            }
+        });
     }
 
     public void overwrite(BlockArray other) {
@@ -138,6 +158,10 @@ public class BlockArray {
 
     public Map<BlockPos, BlockInformation> getPattern() {
         return pattern;
+    }
+
+    public Map<BlockPos, BlockInformation> getTileBlocksArray() {
+        return tileBlocksArray;
     }
 
     public Map<BlockPos, BlockInformation> getPatternSlice(int slice) {
@@ -240,7 +264,7 @@ public class BlockArray {
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
-        if (pattern.size() >= 3000) {
+        if (pattern.size() >= 1500) {
             return matchesParallel(world, center, oldState, modifierReplacementPattern);
         }
 

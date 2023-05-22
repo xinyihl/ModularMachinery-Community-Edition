@@ -33,5 +33,6 @@ public class BlocksMM {
 
     public static BlockSmartInterface smartInterface;
     public static BlockParallelController parallelController;
+    public static BlockUpgradeBus upgradeBus;
 
 }

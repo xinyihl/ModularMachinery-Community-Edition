@@ -15,7 +15,7 @@ import java.util.List;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineEvent")
-public abstract class MachineEvent extends Event {
+public class MachineEvent extends Event {
     protected final TileMultiblockMachineController controller;
 
     public MachineEvent(TileMultiblockMachineController controller) {
@@ -23,7 +23,11 @@ public abstract class MachineEvent extends Event {
     }
 
     @ZenGetter("controller")
-    public IMachineController getController() {
+    public IMachineController getIMachineController() {
+        return controller;
+    }
+
+    public TileMultiblockMachineController getController() {
         return controller;
     }
 

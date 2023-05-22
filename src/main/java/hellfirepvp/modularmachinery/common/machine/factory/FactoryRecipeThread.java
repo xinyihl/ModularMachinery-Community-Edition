@@ -80,17 +80,21 @@ public class FactoryRecipeThread extends RecipeThread {
     }
 
     public void tryRestartRecipe() {
+        ActiveMachineRecipe activeRecipe = this.activeRecipe;
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
-        context = createContext(activeRecipe);
+        RecipeCraftingContext context = createContext(activeRecipe);
+
+        this.activeRecipe = null;
+        this.context = null;
 
         RecipeCraftingContext.CraftingCheckResult result = ctrl.onCheck(context);
         if (result.isSuccess()) {
+            this.activeRecipe = activeRecipe;
+            this.context = context;
             factory.onThreadRecipeStart(this);
         } else {
-            activeRecipe = null;
-            context = null;
-            status = CraftingStatus.IDLE;
+            status = CraftingStatus.failure(result.getFirstErrorMessage(""));
             if (isCoreThread) {
                 createRecipeSearchTask();
             }

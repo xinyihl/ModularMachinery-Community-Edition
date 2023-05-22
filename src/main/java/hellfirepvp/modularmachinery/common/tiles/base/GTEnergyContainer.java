@@ -13,7 +13,7 @@ import gregtech.api.util.GTUtility;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Optional;
 
 import static hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData.enableGTExplodes;
