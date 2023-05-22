@@ -32,6 +32,16 @@ public class DynamicMachineUpgradeBuilder {
         this.machineUpgrade = machineUpgrade;
     }
 
+    /**
+     * 创建一个新的机械升级构建器。
+     * 动态升级和普通升级的区别是，物品也可以添加自定义 NBT（实验性）。
+     *
+     * @param name          升级名称，必须是唯一的
+     * @param localizedName 译名，可以是翻译键
+     * @param level         等级（暂无作用）
+     * @param maxStack      最大堆叠数
+     * @return 构建器
+     */
     @ZenMethod
     public static DynamicMachineUpgradeBuilder newBuilder(String name, String localizedName, int level, int maxStack) {
         if (SimpleMachineUpgrade.getUpgrade(name) != null) {
@@ -41,18 +51,33 @@ public class DynamicMachineUpgradeBuilder {
         return new DynamicMachineUpgradeBuilder(new SimpleDynamicMachineUpgrade(new UpgradeType(name, localizedName, level, maxStack)));
     }
 
+    /**
+     * 为升级添加动态工具提示，会在添加了升级的物品上显示。
+     *
+     * @param handler 动态参数回调，相当于事件
+     */
     @ZenMethod
     public DynamicMachineUpgradeBuilder setDescriptionHandler(IFunction<SimpleDynamicMachineUpgrade, String[]> handler) {
         machineUpgrade.setDescriptionHandler(handler);
         return this;
     }
 
+    /**
+     * 为升级添加升级总线提示，会在升级总线的右方显示。
+     *
+     * @param handler 动态参数回调，相当于事件
+     */
     @ZenMethod
     public DynamicMachineUpgradeBuilder setBusGUIDescriptionHandler(IFunction<SimpleDynamicMachineUpgrade, String[]> handler) {
         machineUpgrade.setBusGUIDescriptionHandler(handler);
         return this;
     }
 
+    /**
+     * 为升级添加白名单机械，与 addIncompatibleMachines 冲突。
+     *
+     * @param machineNames 机械名称
+     */
     @ZenMethod
     public DynamicMachineUpgradeBuilder addCompatibleMachines(String... machineNames) {
         MachineModifier.WAIT_FOR_MODIFY.add(() -> {
@@ -68,6 +93,11 @@ public class DynamicMachineUpgradeBuilder {
         return this;
     }
 
+    /**
+     * 为升级添加黑名单机械，与 addCompatibleMachines 冲突
+     *
+     * @param machineNames 机械名称
+     */
     @ZenMethod
     public DynamicMachineUpgradeBuilder addIncompatibleMachines(String... machineNames) {
         MachineModifier.WAIT_FOR_MODIFY.add(() -> {
@@ -82,6 +112,13 @@ public class DynamicMachineUpgradeBuilder {
         });
         return this;
     }
+
+    //--------------------------------------------------------
+    // 以下方法均为监听机械的事件。
+    // 它们将会在配方中添加的事件执行前执行。
+    // 注意：MachineEvent 和 MachineUpgrade 需要使用特殊方法才能转换为特定事件，
+    // 详情请参考 MMEvents 和 MachineUpgradeHelper。
+    //--------------------------------------------------------
 
     @ZenMethod
     public DynamicMachineUpgradeBuilder addRecipeCheckHandler(UpgradeEventHandlerCT handler) {

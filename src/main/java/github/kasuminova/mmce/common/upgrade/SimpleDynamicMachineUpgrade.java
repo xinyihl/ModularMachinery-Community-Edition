@@ -26,21 +26,49 @@ public class SimpleDynamicMachineUpgrade extends DynamicMachineUpgrade {
         super(type);
     }
 
+    /**
+     * 获取物品所储存的自定义 NBT。
+     * NBT 会被储存在物品上而不是升级总线上。
+     * 用法与 IMachineController 中的 customData 相同。
+     *
+     * @return IData，永不为空。
+     */
     @ZenGetter("itemData")
     public IData getItemData() {
         return CraftTweakerMC.getIDataModifyable(itemData);
     }
 
-    @ZenGetter("customData")
-    public IData getCustomData() {
-        return CraftTweakerMC.getIDataModifyable(customData);
-    }
-
+    /**
+     * 储存 IData 至物品所储存的自定义 NBT。
+     * NBT 会被储存在物品上而不是升级总线上。
+     * 用法与 IMachineController 中的 customData 相同。
+     *
+     * @param itemData IData，不能为空。
+     */
     @ZenSetter("itemData")
     public void setItemData(final IData itemData) {
         this.itemData = CraftTweakerMC.getNBTCompound(itemData);
     }
 
+    /**
+     * 获取升级总线所储存的对应升级的自定义 NBT。
+     * NBT 会被储存在升级总线上而不是物品上。
+     * 用法与 IMachineController 中的 customData 相同。
+     *
+     * @return IData，永不为空。
+     */
+    @ZenGetter("customData")
+    public IData getCustomData() {
+        return CraftTweakerMC.getIDataModifyable(customData);
+    }
+
+    /**
+     * 储存 IData 至升级总线所储存的对应升级的自定义 NBT。
+     * NBT 会被储存在升级总线上而不是物品上。
+     * 用法与 IMachineController 中的 customData 相同。
+     *
+     * @param customData IData，不能为空。
+     */
     @ZenSetter("customData")
     public void setCustomData(final IData customData) {
         this.customData = CraftTweakerMC.getNBTCompound(customData);
