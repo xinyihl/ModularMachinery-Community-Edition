@@ -14,6 +14,7 @@ import github.kasuminova.mmce.common.upgrade.SimpleDynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.IFunction;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.UpgradeEventHandlerCT;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -54,27 +55,31 @@ public class DynamicMachineUpgradeBuilder {
 
     @ZenMethod
     public DynamicMachineUpgradeBuilder addCompatibleMachines(String... machineNames) {
-        for (final String machineName : machineNames) {
-            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
-            if (machine == null) {
-                CraftTweakerAPI.logError("Cloud not found machine " + machineName);
-                continue;
+        MachineModifier.WAIT_FOR_MODIFY.add(() -> {
+            for (final String machineName : machineNames) {
+                DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+                if (machine == null) {
+                    CraftTweakerAPI.logError("Cloud not found machine " + machineName);
+                    continue;
+                }
+                machineUpgrade.getType().addCompatibleMachine(machine);
             }
-            machineUpgrade.getType().addCompatibleMachine(machine);
-        }
+        });
         return this;
     }
 
     @ZenMethod
     public DynamicMachineUpgradeBuilder addIncompatibleMachines(String... machineNames) {
-        for (final String machineName : machineNames) {
-            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
-            if (machine == null) {
-                CraftTweakerAPI.logError("Cloud not found machine " + machineName);
-                continue;
+        MachineModifier.WAIT_FOR_MODIFY.add(() -> {
+            for (final String machineName : machineNames) {
+                DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+                if (machine == null) {
+                    CraftTweakerAPI.logError("Cloud not found machine " + machineName);
+                    continue;
+                }
+                machineUpgrade.getType().addIncompatibleMachine(machine);
             }
-            machineUpgrade.getType().addIncompatibleMachine(machine);
-        }
+        });
         return this;
     }
 

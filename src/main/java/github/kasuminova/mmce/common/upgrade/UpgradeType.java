@@ -2,6 +2,8 @@ package github.kasuminova.mmce.common.upgrade;
 
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import net.minecraft.client.resources.I18n;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -58,6 +60,7 @@ public class UpgradeType {
         return name;
     }
 
+    @SideOnly(Side.CLIENT)
     public String getLocalizedName() {
         return I18n.hasKey(localizedName) ? I18n.format(localizedName) : localizedName;
     }
