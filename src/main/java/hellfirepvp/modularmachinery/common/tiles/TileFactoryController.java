@@ -180,6 +180,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         new FactoryRecipeStartEvent(thread, this).postEvent();
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         activeRecipe.start(thread.getContext());
+        resetRecipeSearchRetryCount();
     }
 
     public boolean onThreadRecipeFailure(FactoryRecipeThread thread) {
@@ -251,7 +252,6 @@ public class TileFactoryController extends TileMultiblockMachineController {
                 if (hasIdleThread()) {
                     createRecipeSearchTask();
                 }
-                resetRecipeSearchRetryCount();
                 return;
             } else {
                 incrementRecipeSearchRetryCount();

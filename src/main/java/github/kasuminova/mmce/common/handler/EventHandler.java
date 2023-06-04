@@ -10,6 +10,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -46,7 +47,7 @@ public class EventHandler {
      */
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || !Config.selectiveUpdateTileEntity || event.side == Side.CLIENT) {
+        if (event.phase != TickEvent.Phase.START || event.side == Side.CLIENT) {
             return;
         }
 
@@ -59,19 +60,39 @@ public class EventHandler {
             return;
         }
 
-        SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
-
-        if (event.player instanceof EntityPlayerMP) {
-            EntityPlayerMP playerMP = (EntityPlayerMP) player;
-            playerMP.connection.sendPacket(packet);
-
-            World world = event.player.getEntityWorld();
-            if (world.getWorldTime() % 15 == 0 && te instanceof TileMultiblockMachineController) {
-                TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
-                int usedTime = ctrl.usedTimeAvg();
-                TileMultiblockMachineController.performanceCache = usedTime;
-                ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime), playerMP);
-            }
+        if (checkTERange(player, te)) {
+            player.closeScreen();
+            return;
         }
+
+        if (!Config.selectiveUpdateTileEntity) {
+            return;
+        }
+
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
+
+            if (event.player instanceof EntityPlayerMP) {
+                EntityPlayerMP playerMP = (EntityPlayerMP) player;
+                playerMP.connection.sendPacket(packet);
+
+                World world = event.player.getEntityWorld();
+                if (world.getWorldTime() % 15 == 0 && te instanceof TileMultiblockMachineController) {
+                    TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
+                    int usedTime = ctrl.usedTimeAvg();
+                    ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime), playerMP);
+                }
+            }
+        });
+    }
+
+    private static boolean checkTERange(final EntityPlayer player, final TileEntity te) {
+        BlockPos tePos = te.getPos();
+        BlockPos playerPos = player.getPosition();
+        double distance = tePos.getDistance(playerPos.getX(), playerPos.getY(), playerPos.getZ());
+        if (distance >= 6.0D) {
+            return true;
+        }
+        return false;
     }
 }

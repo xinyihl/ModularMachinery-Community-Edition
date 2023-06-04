@@ -4,6 +4,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluidPerTick;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
+import hellfirepvp.modularmachinery.common.machine.IOType;
 import net.minecraft.client.resources.I18n;
 
 import java.awt.*;
@@ -34,6 +35,11 @@ public class JEIComponentHybridFluidPerTick extends ComponentRequirement.JEIComp
 
     @Override
     public void onJEIHoverTooltip(int slotIndex, boolean input, HybridFluid ingredient, List<String> tooltip) {
-        tooltip.add(I18n.format("tooltip.fluid_pertick", ingredient.getAmount()));
+        IOType ioType = requirement.getActionType();
+        if (ioType == IOType.INPUT) {
+            tooltip.add(I18n.format("tooltip.fluid_pertick.in", ingredient.getAmount()));
+        } else if (ioType == IOType.OUTPUT) {
+            tooltip.add(I18n.format("tooltip.fluid_pertick.out", ingredient.getAmount()));
+        }
     }
 }

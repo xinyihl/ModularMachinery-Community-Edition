@@ -315,6 +315,11 @@ public class BlockArrayBuilder {
         return this;
     }
 
+    @ZenMethod
+    public TaggedPositionBlockArray getBlockArray() {
+        return blockArray;
+    }
+
     private void addBlock(BlockPos pos, BlockArray.BlockInformation information) {
         blockArray.addBlock(pos, information);
         lastInformation = information;

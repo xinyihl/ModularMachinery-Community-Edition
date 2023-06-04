@@ -1,6 +1,8 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
+import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -98,7 +100,12 @@ public class TaskExecutor {
 
         Action action;
         while ((action = mainThreadActions.poll()) != null) {
-            action.doAction();
+            try {
+                action.doAction();
+            } catch (Exception e) {
+                ModularMachinery.log.warn("An error occurred during synchronous task execution!");
+                ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+            }
             executed++;
         }
         return executed;
@@ -156,7 +163,7 @@ public class TaskExecutor {
     }
 
     /**
-     * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在<strong>主线程</strong>执行。</p>
+     * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在<strong>主线程</strong>中顺序执行。</p>
      *
      * @param action 要执行的同步任务
      */

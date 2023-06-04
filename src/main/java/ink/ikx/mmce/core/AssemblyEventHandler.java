@@ -1,5 +1,6 @@
 package ink.ikx.mmce.core;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
@@ -58,7 +59,7 @@ public class AssemblyEventHandler {
             if (getBlueprint(controller).isEmpty()) {
                 ItemStack copy = stack.copy();
                 copy.setCount(1);
-                if (isPlayerNotCreative(player)) stack.setCount(stack.getCount() - 1);
+                if (!player.isCreative()) stack.setCount(stack.getCount() - 1);
                 controller.getInventory().setStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT, copy);
             }
             event.setCanceled(true);
@@ -92,13 +93,15 @@ public class AssemblyEventHandler {
             return;
         }
 
-        for (final MachineAssembly assembly : assemblies) {
-            assembly.assembly(true);
-            if (assembly.isCompleted()) {
-                MachineAssemblyManager.removeMachineAssembly(assembly.getCtrlPos());
-                player.sendMessage(new TextComponentTranslation("message.assembly.tip.success"));
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            for (final MachineAssembly assembly : assemblies) {
+                assembly.assembly(true);
+                if (assembly.isCompleted()) {
+                    MachineAssemblyManager.removeMachineAssembly(assembly.getCtrlPos());
+                    player.sendMessage(new TextComponentTranslation("message.assembly.tip.success"));
+                }
             }
-        }
+        });
     }
 
     @SubscribeEvent
@@ -124,27 +127,25 @@ public class AssemblyEventHandler {
                         BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerFacing))
         );
 
-        if (!isPlayerNotCreative(player)) {
+        if (player.isCreative()) {
             assembly.assemblyCreative();
-        } else {
-            if (AssemblyConfig.needAllBlocks) {
-                if (MachineAssembly.checkAllItems(player, assembly.getIngredient().copy())) {
-                    assembly.buildIngredients(false);
-                    MachineAssemblyManager.addMachineAssembly(assembly);
-                }
-            } else {
-                assembly.buildIngredients(false);
-                MachineAssemblyManager.addMachineAssembly(assembly);
-            }
+            return;
+        }
+
+        if (MachineAssembly.checkAllItems(player, assembly.getIngredient().copy())) {
+            assembly.buildIngredients(false);
+            MachineAssemblyManager.addMachineAssembly(assembly);
+            return;
+        }
+
+        if (!AssemblyConfig.needAllBlocks) {
+            player.sendMessage(new TextComponentTranslation("message.assembly.tip.partial_assembly"));
+            assembly.buildIngredients(false);
+            MachineAssemblyManager.addMachineAssembly(assembly);
         }
     }
 
     private static ItemStack getBlueprint(TileMultiblockMachineController controller) {
         return controller.getInventory().getStackInSlot(TileMultiblockMachineController.BLUEPRINT_SLOT);
     }
-
-    private static boolean isPlayerNotCreative(EntityPlayer player) {
-        return !player.isCreative();
-    }
-
 }

@@ -134,7 +134,7 @@ public class FactoryRecipeThread extends RecipeThread {
                 factory.onThreadRecipeStart(this);
             }
         } else {
-            if (factory.getTicksExisted() % RECIPE_SEARCH_DELAY == 0) {
+            if (factory.getTicksExisted() % factory.currentRecipeSearchDelay() == 0) {
                 createRecipeSearchTask();
             }
         }

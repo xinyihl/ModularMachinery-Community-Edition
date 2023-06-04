@@ -19,8 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeThread")
 public abstract class RecipeThread {
-
-    public static final int RECIPE_SEARCH_DELAY = 20;
     protected final TileMultiblockMachineController ctrl;
     protected final Map<String, RecipeModifier> permanentModifiers = new ConcurrentHashMap<>();
     protected final Map<String, RecipeModifier> semiPermanentModifiers = new ConcurrentHashMap<>();

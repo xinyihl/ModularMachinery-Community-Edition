@@ -73,9 +73,9 @@ public class MMEnergyHandler implements ITileEnergyHandler {
         long transferLimit = Math.min(energyHatch.getTier().transferLimit, currentEnergy);
 
         if (transferLimit < amount) {
-            return energyHatch.extractEnergy(amount) ? amount : 0;
-        } else {
             return energyHatch.extractEnergy(transferLimit) ? transferLimit : 0;
+        } else {
+            return energyHatch.extractEnergy(amount) ? amount : 0;
         }
     }
 }

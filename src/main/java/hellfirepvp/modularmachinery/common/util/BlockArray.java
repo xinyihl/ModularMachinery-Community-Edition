@@ -264,9 +264,9 @@ public class BlockArray {
     }
 
     public boolean matches(World world, BlockPos center, boolean oldState, @Nullable Map<BlockPos, List<BlockInformation>> modifierReplacementPattern) {
-        if (pattern.size() >= 1500) {
-            return matchesParallel(world, center, oldState, modifierReplacementPattern);
-        }
+//        if (pattern.size() >= 1500) {
+//            return matchesParallel(world, center, oldState, modifierReplacementPattern);
+//        }
 
         patternCheck:
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {

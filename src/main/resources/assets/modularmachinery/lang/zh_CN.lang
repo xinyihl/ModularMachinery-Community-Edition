@@ -98,14 +98,15 @@ message.structurebuild.warndedicated=你现在是在服务器上保存机器配�
 message.structurebuild.save=机器配置已保存在机器文件夹下的 '%s' 中！
 message.structurebuild.fail=机器配置保存失败！请查阅日志文件获取详细信息！
 message.machine_projector.project=正在投影%s的结构
-message.assembly.tip.no_machine=模块化组装: 没有找到对应的模块化机器！
-message.assembly.tip.already_assembly=模块化组装: 机器已在组装队列中！
-message.assembly.tip.success=模块化组装: 组装完成！
+message.assembly.tip.no_machine=模块化组装：没有找到对应的模块化机器！
+message.assembly.tip.already_assembly=模块化组装：机器已在组装队列中！
+message.assembly.tip.success=模块化组装：组装完成！
 message.assembly.tip.cannot_replace=模块化组装: 无法在 %s 放置方块，请检查目标坐标是否存在方块！
-message.assembly.tip.skipped=模块化组装: 已跳过 %s 的方块放置。
-message.assembly.tip.missing=模块化组装: %s 需要物品组装，但是物品栏中缺少方块或桶！
-message.assembly.tip.required=模块化组装: 缺失材料，需要以下材料：
+message.assembly.tip.skipped=模块化组装：已跳过 %s 的方块放置。
+message.assembly.tip.missing=模块化组装：%s 需要物品组装，但是物品栏中缺少方块或桶！
+message.assembly.tip.required=模块化组装：缺失材料，需要以下材料：
 message.assembly.tip.or=或
+message.assembly.tip.partial_assembly=模块化组装：尽管缺失部分材料，组装§c依然会使用现有的材料继续组装！
 
 message.reloading=模块化机械：重载中！
 message.reloaded=模块化机械：已完成重载！JEI 中的配方变化需要重启客户端！
@@ -149,7 +150,8 @@ tooltip.energy.type.rf=RF
 tooltip.energy.type.ic2_eu=EU
 tooltip.energy.type.gt_eu=EU
 
-tooltip.fluid_pertick=每 Tick 消耗：%smB
+tooltip.fluid_pertick.in=每 Tick 消耗：%smB
+tooltip.fluid_pertick.out=每 Tick 产出：%smB
 
 tooltip.constructtool.creative=创造模式用机械结构到 JSON 转换工具
 

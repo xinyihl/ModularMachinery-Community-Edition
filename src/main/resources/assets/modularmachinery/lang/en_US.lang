@@ -106,6 +106,7 @@ message.assembly.tip.skipped=Modular Assembly: Placement of block that have skip
 message.assembly.tip.missing=Modular Assembly: %s Needs item assembly, but inventory is missing block or bucket!
 message.assembly.tip.required=Modular assembly: Missing ingredients, the following ingredients are required:
 message.assembly.tip.or=or
+message.assembly.tip.partial_assembly=Modular Assembly: despite the absence of some materials, the assembly §cwill continue using the existing materials!
 
 message.reloading=Modular Machinery: Reloading!
 message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client!
@@ -149,7 +150,8 @@ tooltip.energy.type.rf=RF
 tooltip.energy.type.ic2_eu=EU
 tooltip.energy.type.gt_eu=EU
 
-tooltip.fluid_pertick=Consumption per Tick：%smB
+tooltip.fluid_pertick.in=Consumption per Tick: %smB
+tooltip.fluid_pertick.out=Prooduction per Tick: %smB
 
 tooltip.constructtool.creative=Creative Structure-To-JSON Tool
 

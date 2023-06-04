@@ -16,7 +16,6 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 
 import javax.annotation.Nonnull;
-import java.util.Random;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -26,8 +25,6 @@ import java.util.Random;
  * Date: 28.06.2017 / 17:15
  */
 public class TileEntitySynchronized extends TileEntity {
-
-    protected static final Random rand = new Random();
 
     public final void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);

@@ -83,6 +83,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected int usedTimeCache = 0;
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
+    private IBlockState lastState = null;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -105,7 +106,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         //检查最短结构检查间隔是否大于最长结构检查间隔
         if (structureCheckDelay >= maxStructureCheckDelay) {
             ModularMachinery.log.warn("structure-check-delay is bigger than or equal max-structure-check-delay!, use default value...");
-            structureCheckDelay = 40;
+            structureCheckDelay = 30;
             maxStructureCheckDelay = 100;
         }
 
@@ -223,7 +224,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public int currentRecipeSearchDelay() {
-        return Math.min(10 + this.recipeResearchRetryCounter * 5, 80);
+        return Math.min(20 + this.recipeResearchRetryCounter * 5, 100);
     }
 
     public boolean isStructureFormed() {
@@ -261,6 +262,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (pattern == null) {
             return false;
         }
+        if (!getWorld().isAreaLoaded(pattern.getPatternBoundingBox(getPos()))) {
+            return false;
+        }
+
         DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
 
         EnumFacing rotation = EnumFacing.NORTH;
@@ -401,11 +406,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         if (isStructureFormed()) {
             BlockPos ctrlPos = getPos();
-            if (foundComponents.isEmpty()) {
-                //Is chunk area loaded? Prevention of unanticipated consumption of something.
-                if (!getWorld().isAreaLoaded(foundPattern.getPatternBoundingBox(ctrlPos))) {
-                    return false;
-                }
+            //Is chunk area loaded? Prevention of unanticipated consumption of something.
+            if (!getWorld().isAreaLoaded(foundPattern.getPatternBoundingBox(ctrlPos))) {
+                return false;
             }
             if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
@@ -491,6 +494,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         ArrayList<Tuple<MachineComponent<?>, ComponentSelectorTag>> foundComponents = new ArrayList<>();
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> {
             BlockPos realPos = getPos().add(pos);
+            if (!getWorld().isBlockLoaded(realPos)) {
+                return;
+            }
             TileEntity te = getWorld().getTileEntity(realPos);
             if (!(te instanceof MachineComponentTile)) {
                 return;
@@ -909,10 +915,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void markForUpdate() {
         IBlockState state = world.getBlockState(pos);
-        world.notifyBlockUpdate(pos, state, state, 3);
-        if (ticksExisted % 10 == 0) {
-            markDirty();
+        if (lastState == null || lastState.getBlock() != state.getBlock()) {
+            world.notifyBlockUpdate(pos, state, state, 3);
+            lastState = state;
         }
+        markDirty();
     }
 
     public enum Type {
