@@ -6,8 +6,8 @@ import github.kasuminova.mmce.common.helper.IMachineController;
 import stanhebben.zenscript.annotations.ZenClass;
 
 @ZenRegister
-@ZenClass("mods.modularmachinery.AdvancedItemNBTChecker")
+@ZenClass("mods.modularmachinery.AdvancedItemCheckerCT")
 @FunctionalInterface
-public interface AdvancedItemNBTCheckerCT {
+public interface AdvancedItemCheckerCT {
     boolean isMatch(IMachineController controller, IItemStack stack);
 }

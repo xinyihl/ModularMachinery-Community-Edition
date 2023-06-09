@@ -8,6 +8,8 @@ import crafttweaker.api.item.IngredientStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.oredict.IOreDictEntry;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemCheckerCT;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifierCT;
 import net.minecraft.item.ItemStack;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -62,6 +64,24 @@ public class IngredientArrayPrimer {
     public IngredientArrayPrimer setChance(float chance) {
         if (lastIngredientStack != null) {
             lastIngredientStack.chance = chance;
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer setChecker(AdvancedItemCheckerCT checker) {
+        if (lastIngredientStack != null) {
+            lastIngredientStack.itemChecker = (controller, stack) ->
+                    checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack));
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public IngredientArrayPrimer addItemModifier(AdvancedItemModifierCT modifier) {
+        if (lastIngredientStack != null) {
+            lastIngredientStack.itemModifierList.add((controller, stack) -> CraftTweakerMC.getItemStack(
+                    modifier.apply(controller, CraftTweakerMC.getIItemStackMutable(stack))));
         }
         return this;
     }

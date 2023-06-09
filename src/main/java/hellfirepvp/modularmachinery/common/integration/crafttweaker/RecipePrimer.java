@@ -27,8 +27,8 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.*;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemCheckerCT;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifierCT;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemNBTCheckerCT;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -130,10 +130,10 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
-    public RecipePrimer setNBTChecker(AdvancedItemNBTCheckerCT checker) {
+    public RecipePrimer setNBTChecker(AdvancedItemCheckerCT checker) {
         if (lastComponent != null) {
             if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).setNbtChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
+                ((RequirementItem) lastComponent).setItemChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
             } else {
                 CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to Item or Catalyst!");
             }
@@ -153,6 +153,32 @@ public class RecipePrimer implements PreparedRecipe {
             }
         } else {
             CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to Item or Catalyst!");
+        }
+        return this;
+    }
+
+    /**
+     * 为某个输入或输出设置特定触发时间。
+     *
+     * @param tickTime 触发时间，实际触发时间受到配方修改器影响
+     */
+    @ZenMethod
+    public RecipePrimer setTriggerTime(int tickTime) {
+        if (lastComponent != null) {
+            lastComponent.setTriggerTime(tickTime);
+        }
+        return this;
+    }
+
+    /**
+     * 使触发时间可以被重复触发。
+     *
+     * @param repeatable true 为可重复，默认 false。
+     */
+    @ZenMethod
+    public RecipePrimer setTriggerRepeatable(boolean repeatable) {
+        if (lastComponent != null) {
+            lastComponent.setTriggerRepeatable(repeatable);
         }
         return this;
     }

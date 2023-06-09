@@ -157,7 +157,7 @@ public class RecipeModifier {
         }
 
         public boolean isDefault() {
-            return inputAdd == 0 && inputMul == 0 && outputAdd == 0 && outputMul == 0;
+            return inputAdd == 0 && inputMul == 1 && outputAdd == 0 && outputMul == 1;
         }
     }
 

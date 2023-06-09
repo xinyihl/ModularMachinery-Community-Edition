@@ -79,9 +79,11 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
 
             for (int internalSlotId = 0; internalSlotId < inventory.getSlots(); internalSlotId++) {
                 ItemStack internalStack = inventory.getStackInSlot(internalSlotId);
+                int maxCanExtract = Math.min(externalStack.getCount(), externalStack.getMaxStackSize());
+
                 if (internalStack == ItemStack.EMPTY) {
                     // Extract external item and insert to internal.
-                    ItemStack extracted = external.extractItem(externalSlotId, externalStack.getCount(), false);
+                    ItemStack extracted = external.extractItem(externalSlotId, maxCanExtract, false);
                     inventory.setStackInSlot(internalSlotId, extracted);
                     successAtLeastOnce = true;
                     // If there are no more items in the current slot, check the next external slot.
@@ -97,7 +99,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
 
                 int extractAmt = Math.min(
                         internalStack.getMaxStackSize() - internalStack.getCount(),
-                        externalStack.getCount());
+                        maxCanExtract);
 
                 // Extract external item and insert to internal.
                 ItemStack extracted = external.extractItem(externalSlotId, extractAmt, false);

@@ -33,7 +33,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.ModifiableParallelize {
+public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.Parallelizable {
 
     public final long requirementPerTick;
     public float parallelMultiplier = 1F;
@@ -243,10 +243,5 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
             this.parallelism = 1;
             this.parallelMultiplier = 1;
         }
-    }
-
-    @Override
-    public void setParallelMultiplier(float multiplier) {
-        this.parallelMultiplier = multiplier;
     }
 }

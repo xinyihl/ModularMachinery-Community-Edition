@@ -57,7 +57,15 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
                     copiedStack.setCount(amt);
 
-                    if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.tag)) {
+                    if (stack.itemChecker != null) {
+                        if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.itemChecker, context.getMachineController())) {
+                            if (chance.canProduce(productionChance)) {
+                                return true;
+                            } else {
+                                return ItemUtils.consumeFromInventory(handler, copiedStack, false, stack.itemChecker, context.getMachineController());
+                            }
+                        }
+                    } else if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.tag)) {
                         if (chance.canProduce(productionChance)) {
                             return true;
                         } else {
@@ -69,7 +77,15 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                 case ORE_DICT: {
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
 
-                    if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
+                    if (stack.itemChecker != null) {
+                        if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.itemChecker, context.getMachineController())) {
+                            if (chance.canProduce(productionChance)) {
+                                return true;
+                            } else {
+                                return ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, false, stack.itemChecker, context.getMachineController());
+                            }
+                        }
+                    } else if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
                         if (chance.canProduce(productionChance)) {
                             return true;
                         } else {
@@ -101,14 +117,24 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     ItemStack copiedStack = stack.itemStack.copy();
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
                     copiedStack.setCount(amt);
-                    if (ItemUtils.consumeFromInventory(handler, copiedStack, true, copiedStack.getTagCompound())) {
+
+                    if (stack.itemChecker != null) {
+                        if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.itemChecker, context.getMachineController())) {
+                            return CraftCheck.success();
+                        }
+                    } else if (ItemUtils.consumeFromInventory(handler, copiedStack, true, copiedStack.getTagCompound())) {
                         return CraftCheck.success();
                     }
                     break;
                 }
                 case ORE_DICT: {
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
-                    if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt,true, stack.tag)) {
+
+                    if (stack.itemChecker != null) {
+                        if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.itemChecker, context.getMachineController())) {
+                            return CraftCheck.success();
+                        }
+                    } else if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
                         return CraftCheck.success();
                     }
                     break;
@@ -123,6 +149,8 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
     public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopy() {
         RequirementIngredientArray copied = new RequirementIngredientArray(this.itemArray);
         copied.parallelizeUnaffected = this.parallelizeUnaffected;
+        copied.triggerTime = this.triggerTime;
+        copied.triggerRepeatable = this.triggerRepeatable;
         return copied;
     }
 
@@ -186,7 +214,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             switch (ingredientStack.ingredientType) {
                 case ITEMSTACK: {
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredientStack.itemStack, ingredientStack.count);
-                    stack.setCount(Math.round(stack.getCount() * parallelism));
+                    stack.setCount(stack.getCount() * parallelism);
                     return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, ingredientStack.tag);
                 }
                 case ORE_DICT: {

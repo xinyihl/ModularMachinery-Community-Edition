@@ -118,11 +118,21 @@ public class RecipeCraftingContext {
     }
 
     public CraftingCheckResult ioTick(int currentTick) {
+        ResultChance chance = new ResultChance(RAND.nextLong());
+        CraftingCheckResult checkResult = new CraftingCheckResult();
         float durMultiplier = this.getDurationMultiplier();
 
         //Input / Output tick
         for (ComponentRequirement<?, ?> requirement : requirements) {
-            if (!(requirement instanceof ComponentRequirement.PerTick)) continue;
+            if (!(requirement instanceof ComponentRequirement.PerTick)) {
+                if (requirement.getTriggerTime() >= 1) {
+                    checkAndTriggerRequirement(checkResult, currentTick, chance, requirement);
+                    if (checkResult.isFailure()) return checkResult;
+                    continue;
+                }
+                continue;
+            }
+
             ComponentRequirement.PerTick<?, ?> perTickRequirement = (ComponentRequirement.PerTick<?, ?>) requirement;
 
             perTickRequirement.resetIOTick(this);
@@ -142,15 +152,27 @@ public class RecipeCraftingContext {
 
             CraftCheck result = perTickRequirement.resetIOTick(this);
             if (!result.isSuccess()) {
-                CraftingCheckResult res = new CraftingCheckResult();
-                res.addError(result.getUnlocalizedMessage());
-                return res;
+                checkResult.addError(result.getUnlocalizedMessage());
+                return checkResult;
             }
         }
 
         this.getParentRecipe().getCommandContainer().runTickCommands(this.commandSender, currentTick);
 
         return CraftingCheckResult.SUCCESS;
+    }
+
+    private void checkAndTriggerRequirement(final CraftingCheckResult res, final int currentTick, final ResultChance chance, final ComponentRequirement<?, ?> req) {
+        int triggerTime = req.getTriggerTime() * Math.round(RecipeModifier.applyModifiers(
+                this, RequirementTypesMM.REQUIREMENT_DURATION, null, 1, false));
+        if (triggerTime <= 0 || triggerTime != currentTick || (req.isTriggered() && !req.isTriggerRepeatable())) {
+            return;
+        }
+
+        if (canStartCrafting(res, req)) {
+            startCrafting(chance, req);
+            req.setTriggered(true);
+        }
     }
 
     public void startCrafting() {
@@ -164,24 +186,28 @@ public class RecipeCraftingContext {
         ResultChance chance = event.getResultChance();
 
         for (ComponentRequirement<?, ?> requirement : requirements) {
-            requirement.startRequirementCheck(chance, this);
-
-            for (ProcessingComponent<?> component : requirementComponents.getOrDefault(requirement, Collections.emptyList())) {
-                AtomicBoolean success = new AtomicBoolean(false);
-                if (requirement instanceof Asyncable) {
-                    success.set(requirement.startCrafting(component, this, chance));
-                } else {
-                    Sync.doSyncAction(() -> success.set(requirement.startCrafting(component, this, chance)));
-                }
-                if (success.get()) {
-                    requirement.endRequirementCheck();
-                    break;
-                }
-            }
-            requirement.endRequirementCheck();
+            startCrafting(chance, requirement);
         }
 
         this.getParentRecipe().getCommandContainer().runStartCommands(this.commandSender);
+    }
+
+    private void startCrafting(final ResultChance chance, final ComponentRequirement<?, ?> requirement) {
+        requirement.startRequirementCheck(chance, this);
+
+        for (ProcessingComponent<?> component : requirementComponents.getOrDefault(requirement, Collections.emptyList())) {
+            AtomicBoolean success = new AtomicBoolean(false);
+            if (requirement instanceof Asyncable) {
+                success.set(requirement.startCrafting(component, this, chance));
+            } else {
+                Sync.doSyncAction(() -> success.set(requirement.startCrafting(component, this, chance)));
+            }
+            if (success.get()) {
+                requirement.endRequirementCheck();
+                break;
+            }
+        }
+        requirement.endRequirementCheck();
     }
 
     public void finishCrafting() {
@@ -275,37 +301,44 @@ public class RecipeCraftingContext {
 
         lblRequirements:
         for (ComponentRequirement<?, ?> requirement : requirements) {
-            requirement.startRequirementCheck(ResultChance.GUARANTEED, this);
-
-            Iterable<ProcessingComponent<?>> components = requirementComponents.getOrDefault(requirement, Collections.emptyList());
-            if (!Iterables.isEmpty(components)) {
-
-                List<String> errorMessages = new ArrayList<>();
-                for (ProcessingComponent<?> component : components) {
-                    CraftCheck check = requirement.canStartCrafting(component, this, this.currentRestrictions);
-
-                    if (check.isSuccess()) {
-                        requirement.endRequirementCheck();
-                        successfulRequirements += 1;
-                        continue lblRequirements;
-                    }
-
-                    if (!check.isInvalid() && !check.getUnlocalizedMessage().isEmpty()) {
-                        errorMessages.add(check.getUnlocalizedMessage());
-                    }
-                }
-                errorMessages.forEach(result::addError);
-            } else {
-                // No component found that would apply for the given requirement
-                result.addError(requirement.getMissingComponentErrorMessage(requirement.actionType));
+            if (canStartCrafting(result, requirement)) {
+                successfulRequirements++;
+                continue lblRequirements;
             }
-
-            requirement.endRequirementCheck();
         }
         result.setValidity(successfulRequirements / requirements.size());
 
         currentRestrictions.clear();
         return result;
+    }
+
+    private boolean canStartCrafting(final CraftingCheckResult result, final ComponentRequirement<?, ?> requirement) {
+        requirement.startRequirementCheck(ResultChance.GUARANTEED, this);
+
+        Iterable<ProcessingComponent<?>> components = requirementComponents.getOrDefault(requirement, Collections.emptyList());
+        if (!Iterables.isEmpty(components)) {
+
+            List<String> errorMessages = new ArrayList<>();
+            for (ProcessingComponent<?> component : components) {
+                CraftCheck check = requirement.canStartCrafting(component, this, this.currentRestrictions);
+
+                if (check.isSuccess()) {
+                    requirement.endRequirementCheck();
+                    return true;
+                }
+
+                if (!check.isInvalid() && !check.getUnlocalizedMessage().isEmpty()) {
+                    errorMessages.add(check.getUnlocalizedMessage());
+                }
+            }
+            errorMessages.forEach(result::addError);
+        } else {
+            // No component found that would apply for the given requirement
+            result.addError(requirement.getMissingComponentErrorMessage(requirement.actionType));
+        }
+
+        requirement.endRequirementCheck();
+        return false;
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag) {

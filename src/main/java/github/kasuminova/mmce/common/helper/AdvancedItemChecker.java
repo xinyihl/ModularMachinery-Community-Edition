@@ -4,6 +4,6 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.minecraft.item.ItemStack;
 
 @FunctionalInterface
-public interface AdvancedItemNBTChecker {
+public interface AdvancedItemChecker {
     boolean isMatch(TileMultiblockMachineController controller, ItemStack stack);
 }

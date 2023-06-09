@@ -1,7 +1,12 @@
 package github.kasuminova.mmce.common.itemtype;
 
+import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
+import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class IngredientStack {
     public final IngredientType ingredientType;
@@ -9,6 +14,8 @@ public class IngredientStack {
     public ItemStack itemStack;
     public int count;
     public NBTTagCompound tag = null;
+    public AdvancedItemChecker itemChecker = null;
+    public List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
 
     public IngredientStack(ItemStack itemStack) {
         this.itemStack = itemStack;

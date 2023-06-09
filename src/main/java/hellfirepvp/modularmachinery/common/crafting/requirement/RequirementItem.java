@@ -9,8 +9,8 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import com.google.common.collect.Iterables;
+import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
-import github.kasuminova.mmce.common.helper.AdvancedItemNBTChecker;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeItem;
@@ -46,11 +46,14 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public final int oreDictItemAmount;
 
     public final int fuelBurntime;
+
+    public final List<ItemStack> previewItemStacks = new ArrayList<>();
+
     public final List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
     public int countIOBuffer = 0;
     public NBTTagCompound tag = null;
     public NBTTagCompound previewDisplayTag = null;
-    public AdvancedItemNBTChecker nbtChecker = null;
+    public AdvancedItemChecker itemChecker = null;
     public float chance = 1F;
     protected int parallelism = 1;
     protected boolean parallelizeUnaffected = false;
@@ -82,8 +85,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         this.required = ItemStack.EMPTY;
     }
 
-    public void setNbtChecker(AdvancedItemNBTChecker nbtChecker) {
-        this.nbtChecker = nbtChecker;
+    public void setItemChecker(AdvancedItemChecker itemChecker) {
+        this.itemChecker = itemChecker;
     }
 
     public void addItemModifier(AdvancedItemModifier itemModifier) {
@@ -112,10 +115,12 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 item = new RequirementItem(this.actionType, this.required.copy());
                 break;
         }
+        item.triggerTime = this.triggerTime;
+        item.triggerRepeatable = this.triggerRepeatable;
         item.chance = this.chance;
         item.parallelizeUnaffected = this.parallelizeUnaffected;
-        if (this.nbtChecker != null) {
-            item.nbtChecker = this.nbtChecker;
+        if (this.itemChecker != null) {
+            item.itemChecker = this.itemChecker;
         } else if (this.tag != null) {
             item.tag = this.tag.copy();
         }
@@ -220,8 +225,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false) * parallelism);
                     inReq.setCount(amt);
 
-                    isSuccess = (this.nbtChecker != null)
-                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.nbtChecker, context.getMachineController())
+                    isSuccess = (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.itemChecker, context.getMachineController())
                             : ItemUtils.consumeFromInventory(handler, inReq, true, this.tag);
                     if (isSuccess) {
                         return CraftCheck.success();
@@ -230,8 +235,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 case OREDICT:
                     int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
 
-                    isSuccess = (this.nbtChecker != null)
-                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, nbtChecker, context.getMachineController())
+                    isSuccess = (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, itemChecker, context.getMachineController())
                             : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag);
                     if (isSuccess) {
                         return CraftCheck.success();
@@ -310,23 +315,23 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     }
 
                     if (chance.canProduce(productionChance)) {
-                        return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.nbtChecker, context.getMachineController())
+                        return (this.itemChecker != null)
+                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.itemChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
                     } else {
-                        return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.nbtChecker, context.getMachineController())
+                        return (this.itemChecker != null)
+                                ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.itemChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
                     }
                 case OREDICT:
                     int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
                     if (chance.canProduce(productionChance)) {
-                        return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, nbtChecker, context.getMachineController())
+                        return (this.itemChecker != null)
+                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, itemChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
                     } else {
-                        return (this.nbtChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, nbtChecker, context.getMachineController())
+                        return (this.itemChecker != null)
+                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, itemChecker, context.getMachineController())
                                 : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
                     }
                 case FUEL:
@@ -401,16 +406,16 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
                                 RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
                                 parallelism);
-                        if (nbtChecker != null) {
-                            return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, nbtChecker, context.getMachineController());
+                        if (itemChecker != null) {
+                            return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, itemChecker, context.getMachineController());
                         } else {
                             return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, tag);
                         }
                     }
                     case OREDICT: {
                         int amount = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false) * parallelism);
-                        if (nbtChecker != null) {
-                            return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, nbtChecker, context.getMachineController());
+                        if (itemChecker != null) {
+                            return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, itemChecker, context.getMachineController());
                         } else {
                             return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, tag);
                         }
