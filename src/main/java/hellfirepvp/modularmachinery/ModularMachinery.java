@@ -44,7 +44,7 @@ import org.apache.logging.log4j.Logger;
                 "after:zenutils@[1.12.8,);" +
                 "after:jei@[4.13.1.222,);" +
                 "after:fluxnetworks@[4.1.0,);" +
-                "after:tconstruct@[1.12.2-2.13.0.157,)",
+                "after:tconstruct@[1.12.2-2.12.0.157,)",
         acceptedMinecraftVersions = "[1.12, 1.13)"
 )
 public class ModularMachinery {
