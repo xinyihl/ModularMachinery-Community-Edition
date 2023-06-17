@@ -879,7 +879,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+        return null;
     }
 
     @Override

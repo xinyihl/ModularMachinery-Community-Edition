@@ -10,7 +10,6 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.FluidHatchSize;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.HybridGasTank;
@@ -102,7 +101,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+        return null;
     }
 
     @Override

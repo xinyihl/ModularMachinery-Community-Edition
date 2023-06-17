@@ -13,7 +13,6 @@ import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore
 import gregtech.api.capability.GregtechCapabilities;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
@@ -195,7 +194,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
 
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+        return null;
     }
 
     @Override

@@ -3,7 +3,6 @@ package github.kasuminova.mmce.common.handler;
 import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
@@ -27,7 +26,7 @@ public class EventHandler {
     @SubscribeEvent
     public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         World world = event.getWorld();
-        if (!Config.selectiveUpdateTileEntity || world.isRemote) {
+        if (world.isRemote) {
             return;
         }
 
@@ -65,10 +64,6 @@ public class EventHandler {
             return;
         }
 
-        if (!Config.selectiveUpdateTileEntity) {
-            return;
-        }
-
         ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
             SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
 
@@ -90,9 +85,6 @@ public class EventHandler {
         BlockPos tePos = te.getPos();
         BlockPos playerPos = player.getPosition();
         double distance = tePos.getDistance(playerPos.getX(), playerPos.getY(), playerPos.getZ());
-        if (distance >= 6.0D) {
-            return true;
-        }
-        return false;
+        return distance >= 6.0D;
     }
 }

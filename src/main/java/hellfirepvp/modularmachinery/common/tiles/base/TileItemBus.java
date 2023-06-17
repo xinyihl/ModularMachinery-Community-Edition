@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.tiles.base;
 
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
-import hellfirepvp.modularmachinery.common.data.Config;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.math.MathHelper;
@@ -70,7 +69,7 @@ public abstract class TileItemBus extends TileInventory implements SelectiveUpda
 
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
-        return Config.selectiveUpdateTileEntity ? null : super.getUpdatePacket();
+        return null;
     }
 
     @Override

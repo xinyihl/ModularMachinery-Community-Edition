@@ -26,7 +26,7 @@ public class AssemblyConfig {
         itemMeta = config.getInt("itemMeta", "auto-assembly", 0,
                 0, 32767, "Set the Item's meta, e.g. 0");
         tickBlock = config.getInt("tickBlock", "auto-assembly", 5,
-                0, 1000, "Set how many ticks to assemble the block once.");
+                1, 1000, "Set how many ticks to assemble the block once.");
         needAllBlocks = config.getBoolean("needAllBlocks", "auto-assembly", true,
                 "Set the auto-assembly need all blocks must be in the inventory.");
         skipBlockContainNBT = config.getBoolean("skipBlockContainNBT", "auto-assembly", false,

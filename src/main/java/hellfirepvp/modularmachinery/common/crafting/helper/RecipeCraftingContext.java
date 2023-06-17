@@ -392,13 +392,7 @@ public class RecipeCraftingContext {
             RecipeModifier.ModifierApplier applier = new RecipeModifier.ModifierApplier();
             RecipeModifier.ModifierApplier chancedApplier = new RecipeModifier.ModifierApplier();
 
-            for (RecipeModifier mod : modifiers) {
-                if (mod.affectsChance()) {
-                    applyValueToApplier(chancedApplier, mod);
-                } else {
-                    applyValueToApplier(applier, mod);
-                }
-            }
+            modifiers.forEach(mod -> applyValueToApplier(mod.affectsChance() ? chancedApplier : applier, mod));
 
             if (!applier.isDefault()) {
                 modifierAppliers.put(type, applier);
