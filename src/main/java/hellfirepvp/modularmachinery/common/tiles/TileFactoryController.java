@@ -64,12 +64,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     public void doControllerTick() {
-        if (getWorld().getStrongPower(getPos()) > 0) {
-            return;
-        }
-
         tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
-            if (!doStructureCheck() || !isStructureFormed()) {
+            if (getWorld().getStrongPower(getPos()) > 0 || !doStructureCheck() || !isStructureFormed()) {
                 return;
             }
 
