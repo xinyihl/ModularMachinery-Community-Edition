@@ -102,3 +102,8 @@ The Community Edition is all about modernizing the Modular Machinery and providi
 * Factory implementation (similar to the factory in Mekanism)
 * Merging of dependent functions
 * Additional support for TheOneProbe
+
+## Special Thanks
+Special thanks to **JetBrains** offers free open-source licenses for us!
+
+[<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="200"/>](https://www.jetbrains.com)
