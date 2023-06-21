@@ -130,7 +130,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         TileEntity te = world.getTileEntity(at);
         if (te instanceof TileFluxPlug) {
             TileFluxPlug plug = (TileFluxPlug) te;
-            long maxCanReceive = Math.min(plug.getMaxTransferLimit() - plug.getStoredPower(), maxCanExtract);
+            long maxCanReceive = Math.min(plug.getMaxTransferLimit() - plug.getTransferBuffer(), maxCanExtract);
             return plug.getTransferHandler().receiveFromSupplier(maxCanReceive, oppositeSide, false);
         }
 
