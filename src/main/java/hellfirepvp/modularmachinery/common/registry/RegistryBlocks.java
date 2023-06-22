@@ -61,7 +61,7 @@ public class RegistryBlocks {
 
     public static void initialize() {
         registerBlocks();
-        if (Mods.RESOURCELOADER.isPresent()) {
+        if (Mods.RESOURCELOADER.isPresent() || Mods.TX_LOADER.isPresent()) {
             try {
                 RegistryBlocks.writeAllCustomControllerModels();
             } catch (IOException e) {

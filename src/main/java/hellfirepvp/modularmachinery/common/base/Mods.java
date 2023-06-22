@@ -28,6 +28,9 @@ public enum Mods {
     TOP("theoneprobe"),
     NUCLEARCRAFT_OVERHAULED("nuclearcraft"),
     RESOURCELOADER("resourceloader"),
+    // TXLoader uses fully private variables and I can't get the correct resource folder.
+    // Bad design.
+    TX_LOADER("txloader"),
     FLUX_NETWORKS("fluxnetworks"),
     ZEN_UTILS("zenutils"),
     TCONSTRUCT("tconstruct"),

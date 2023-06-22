@@ -24,6 +24,7 @@ import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplaceme
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
+import net.minecraft.util.Tuple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -339,6 +340,14 @@ public class RecipeCraftingContext {
 
         requirement.endRequirementCheck();
         return false;
+    }
+
+    public void updateComponents(Collection<Tuple<MachineComponent<?>, ComponentSelectorTag>> components) {
+        this.typeComponents.clear();
+        for (final Tuple<MachineComponent<?>, ComponentSelectorTag> tuple : components) {
+            addComponent(tuple.getFirst(), tuple.getSecond());
+        }
+        updateRequirementComponents();
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag) {

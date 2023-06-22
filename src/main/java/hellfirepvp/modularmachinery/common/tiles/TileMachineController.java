@@ -18,6 +18,7 @@ import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRecipeThread;
@@ -132,6 +133,16 @@ public class TileMachineController extends TileMultiblockMachineController {
             thread.onFinished();
         }
         return true;
+    }
+
+    @Override
+    protected void updateComponents() {
+        super.updateComponents();
+        RecipeCraftingContext ctx = this.recipeThread.getContext();
+        if (ctx == null) {
+            return;
+        }
+        ctx.updateComponents(this.foundComponents);
     }
 
     @Override

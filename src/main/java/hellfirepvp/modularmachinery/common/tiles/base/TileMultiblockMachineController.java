@@ -377,7 +377,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, Collections.unmodifiableList(this.foundComponents), MiscUtils.flatten(this.foundModifiers.values()));
+        RecipeCraftingContext context = this.foundMachine.createContext(activeRecipe, this, this.foundComponents, MiscUtils.flatten(this.foundModifiers.values()));
         context.addModifier(customModifiers.values());
         return context;
     }

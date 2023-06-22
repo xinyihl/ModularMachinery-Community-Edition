@@ -83,10 +83,7 @@ public class BlockArray {
     public StructureBoundingBox getPatternBoundingBox(final BlockPos ctrlPos) {
         BlockPos min = ctrlPos.add(this.min);
         BlockPos max = ctrlPos.add(this.max);
-        return new StructureBoundingBox(new int[]{
-                min.getX(), min.getY(), min.getZ(),
-                max.getX(), max.getY(), max.getZ()
-        });
+        return new StructureBoundingBox(min, max);
     }
 
     public void flushTileBlocksCache() {

@@ -347,8 +347,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
         FactoryRecipeThread thread = new FactoryRecipeThread(this);
         thread.setContext(context)
-                  .setActiveRecipe(context.getActiveRecipe())
-                  .setStatus(CraftingStatus.SUCCESS);
+                .setActiveRecipe(context.getActiveRecipe())
+                .setStatus(CraftingStatus.SUCCESS);
         recipeThreadList.add(thread);
         onThreadRecipeStart(thread);
     }
@@ -435,6 +435,26 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         return false;
+    }
+
+    @Override
+    protected void updateComponents() {
+        super.updateComponents();
+        for (final FactoryRecipeThread thread : this.recipeThreadList) {
+            RecipeCraftingContext ctx = thread.getContext();
+            if (ctx == null) {
+                continue;
+            }
+            ctx.updateComponents(this.foundComponents);
+        }
+
+        for (final FactoryRecipeThread thread : this.coreRecipeThreads.values()) {
+            RecipeCraftingContext ctx = thread.getContext();
+            if (ctx == null) {
+                continue;
+            }
+            ctx.updateComponents(this.foundComponents);
+        }
     }
 
     @Override

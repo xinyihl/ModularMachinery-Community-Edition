@@ -108,8 +108,7 @@ dependencies {
     implementation fg.deobf("curse.maven:flux-networks-248020:3178199")
     implementation fg.deobf("curse.maven:tinkers-construct-74072:2902483")
     implementation fg.deobf("curse.maven:mantle-74924:2713386")
-
-    compileOnly fg.deobf("curse.maven:lazy-ae2-322347:3254160")
+    implementation fg.deobf("curse.maven:tx-loader-706505:4515357")
 }
 
 jar {

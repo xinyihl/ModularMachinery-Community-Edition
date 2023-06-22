@@ -153,13 +153,10 @@ public class DynamicMachine extends AbstractMachine {
         if (!activeRecipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {
             throw new IllegalArgumentException("Tried to create context for a recipe that doesn't belong to the referenced machine!");
         }
-        RecipeCraftingContext context = new RecipeCraftingContext(activeRecipe, controller);
-        for (Tuple<MachineComponent<?>, ComponentSelectorTag> tpl : taggedComponents) {
-            context.addComponent(tpl.getFirst(), tpl.getSecond());
-        }
-        modifiers.forEach(context::addModifier);
-        context.updateRequirementComponents();
-        return context;
+        RecipeCraftingContext ctx = new RecipeCraftingContext(activeRecipe, controller);
+        ctx.updateComponents(taggedComponents);
+        modifiers.forEach(ctx::addModifier);
+        return ctx;
     }
 
     public void mergeFrom(DynamicMachine another) {

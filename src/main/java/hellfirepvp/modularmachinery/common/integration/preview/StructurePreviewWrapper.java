@@ -328,10 +328,20 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         ri.renderItemOverlays(mc.fontRenderer, stack, x, y);
 
         if ((mouseX >= x && mouseX <= x + 16) && (mouseY >= y && mouseY <= y + 16)) {
-            GuiScreen.drawRect(x, y, x + 16, y + 16, new Color(255, 255, 255, 150).getRGB());
+            renderHoveredForeground(x, y);
             return stack;
         }
         return null;
+    }
+
+    private static void renderHoveredForeground(final int x, final int y) {
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.colorMask(true, true, true, false);
+        GuiScreen.drawRect(x, y, x + 16, y + 16, new Color(255, 255, 255, 150).getRGB());
+        GlStateManager.colorMask(true, true, true, true);
+        GlStateManager.enableLighting();
+        GlStateManager.enableDepth();
     }
 
     private void renderUpgrades(final Minecraft minecraft, final int mouseX, final int mouseY) {
