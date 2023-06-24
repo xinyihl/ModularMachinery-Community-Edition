@@ -82,7 +82,7 @@ import java.util.Map;
  */
 public class StructurePreviewWrapper implements IRecipeWrapper {
 
-    public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_jei.png");
+    public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_jei_large.png");
     private static final Field layouts;
     private static final Field recipeLayoutWrapper;
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");

@@ -115,6 +115,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 item = new RequirementItem(this.actionType, this.required.copy());
                 break;
         }
+        // ComponentSelectorTag
+        item.setTag(getTag());
         item.triggerTime = this.triggerTime;
         item.triggerRepeatable = this.triggerRepeatable;
         item.chance = this.chance;

@@ -128,6 +128,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     @Override
     public RequirementFluidPerTick deepCopy() {
         RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, required.asFluidStack());
+        fluid.setTag(getTag());
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
         return fluid;
@@ -138,7 +139,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
         HybridFluid hybrid = this.required.copy();
         hybrid.setAmount(Math.round(RecipeModifier.applyModifiers(modifiers, this, hybrid.getAmount(), false)));
         RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, hybrid.asFluidStack());
-
+        fluid.setTag(getTag());
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
         fluid.parallelizeUnaffected = parallelizeUnaffected;

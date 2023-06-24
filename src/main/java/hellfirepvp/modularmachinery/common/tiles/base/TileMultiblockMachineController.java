@@ -83,7 +83,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected int usedTimeCache = 0;
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
-    private IBlockState lastState = null;
+    protected int lastStrongPower = 0;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -134,6 +134,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected IOInventory buildInventory() {
         return new IOInventory(this, new int[0], new int[0]).setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
+    }
+
+    protected int getStrongPower() {
+        if (ticksExisted % 20 == 0) {
+            lastStrongPower = getWorld().getStrongPower(getPos());
+        }
+        return lastStrongPower;
     }
 
     protected void updateUsedTime() {
@@ -910,16 +917,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @ZenMethod
     public int getTicksExisted() {
         return ticksExisted;
-    }
-
-    @Override
-    public void markForUpdate() {
-        IBlockState state = world.getBlockState(pos);
-        if (lastState == null || lastState.getBlock() != state.getBlock()) {
-            world.notifyBlockUpdate(pos, state, state, 3);
-            lastState = state;
-        }
-        markDirty();
     }
 
     public enum Type {

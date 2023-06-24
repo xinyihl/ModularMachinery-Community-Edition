@@ -60,7 +60,7 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     @Override
     public void doControllerTick() {
-        if (getWorld().getStrongPower(getPos()) > 0) {
+        if (getStrongPower() > 0) {
             return;
         }
 

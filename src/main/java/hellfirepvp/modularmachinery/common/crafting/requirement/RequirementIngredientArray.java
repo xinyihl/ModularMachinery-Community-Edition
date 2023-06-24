@@ -148,6 +148,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
     @Override
     public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopy() {
         RequirementIngredientArray copied = new RequirementIngredientArray(this.itemArray);
+        copied.setTag(getTag());
         copied.parallelizeUnaffected = this.parallelizeUnaffected;
         copied.triggerTime = this.triggerTime;
         copied.triggerRepeatable = this.triggerRepeatable;
@@ -174,6 +175,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             item.chance = RecipeModifier.applyModifiers(modifiers, this, item.chance, true);
         });
         RequirementIngredientArray copied = new RequirementIngredientArray(newArray);
+        copied.setTag(getTag());
         copied.parallelizeUnaffected = this.parallelizeUnaffected;
         return copied;
     }

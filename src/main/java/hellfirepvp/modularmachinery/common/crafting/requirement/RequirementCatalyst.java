@@ -72,6 +72,7 @@ public class RequirementCatalyst extends RequirementItem {
                 catalyst = new RequirementCatalyst(this.required.copy());
                 break;
         }
+        catalyst.setTag(getTag());
         catalyst.triggerTime = this.triggerTime;
         catalyst.triggerRepeatable = this.triggerRepeatable;
         catalyst.chance = this.chance;
@@ -112,7 +113,7 @@ public class RequirementCatalyst extends RequirementItem {
                 catalyst = new RequirementCatalyst(inReq);
                 break;
         }
-
+        catalyst.setTag(getTag());
         catalyst.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
         catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
         if (this.tag != null) {

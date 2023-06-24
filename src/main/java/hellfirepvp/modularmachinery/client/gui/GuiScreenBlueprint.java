@@ -68,17 +68,17 @@ import java.util.Optional;
  */
 public class GuiScreenBlueprint extends GuiScreen {
 
-    public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint.png");
+    public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_large.png");
+    public static final int X_SIZE = 176;
+    public static final int Y_SIZE = 184;
+
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
-    protected final int xSize = 176;
-    protected final int ySize = 184;
 
     private final DynamicMachine machine;
     private final DynamicMachineRenderContext renderContext;
-    private GuiScrollbar ingredientListScrollbar;
-
     protected int guiLeft;
     protected int guiTop;
+    private GuiScrollbar ingredientListScrollbar;
     private int frameCount = 0;
 
     public GuiScreenBlueprint(DynamicMachine machine) {
@@ -89,8 +89,8 @@ public class GuiScreenBlueprint extends GuiScreen {
     @Override
     public void initGui() {
         super.initGui();
-        this.guiLeft = (this.width - this.xSize) / 2;
-        this.guiTop = (this.height - this.ySize) / 2;
+        this.guiLeft = (this.width - X_SIZE) / 2;
+        this.guiTop = (this.height - Y_SIZE) / 2;
         this.ingredientListScrollbar = new GuiScrollbar().setLeft(guiLeft + 156).setTop(guiTop + 142).setHeight(34);
     }
 
@@ -106,9 +106,9 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
-        int x = (this.width - this.xSize) / 2;
-        int z = (this.height - this.ySize) / 2;
-        this.drawTexturedModalRect(x, z, 0, 0, this.xSize, this.ySize);
+        int x = (this.width - X_SIZE) / 2;
+        int z = (this.height - Y_SIZE) / 2;
+        this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
 
         if (renderContext.doesRenderIn3D()) {
             if (Mouse.isButtonDown(0) && frameCount > 20) {

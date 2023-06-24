@@ -100,7 +100,9 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
 
     @Override
     public ComponentRequirement<Float, RequirementTypeInterfaceNumInput> deepCopy() {
-        return new RequirementInterfaceNumInput(type, minValue, maxValue);
+        RequirementInterfaceNumInput copied = new RequirementInterfaceNumInput(type, minValue, maxValue);
+        copied.setTag(getTag());
+        return copied;
     }
 
     @Override

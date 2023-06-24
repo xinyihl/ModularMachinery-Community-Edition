@@ -108,7 +108,7 @@ public class RecipeCraftingContext {
                 continue;
             }
 
-            if (tag != null && typeComponent.tag.equals(requirement.tag)) {
+            if (tag != null && tag.equals(requirement.tag)) {
                 validComponents.addFirst(typeComponent);
             } else {
                 validComponents.addLast(typeComponent);
