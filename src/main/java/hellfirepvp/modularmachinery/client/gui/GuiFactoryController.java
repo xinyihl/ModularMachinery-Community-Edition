@@ -210,9 +210,15 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     }
 
     private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
-        assert factory.getFoundMachine() != null;
+        DynamicMachine foundMachine = factory.getFoundMachine();
+        assert foundMachine != null;
+
+        if (foundMachine.getMaxThreads() <= 0) {
+            return offsetY;
+        }
+
         fr.drawStringWithShadow(I18n.format("gui.factory.threads",
-                factory.getFactoryRecipeThreadList().size(), factory.getFoundMachine().getMaxThreads()),
+                factory.getFactoryRecipeThreadList().size(), foundMachine.getMaxThreads()),
                 offsetX, offsetY, 0xFFFFFF);
         return offsetY + 10;
     }

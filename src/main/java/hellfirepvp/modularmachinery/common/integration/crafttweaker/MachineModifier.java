@@ -55,7 +55,7 @@ public class MachineModifier {
     public static void setMaxThreads(String machineName, int maxThreads) {
         // Maybe the author only wanted to use the core thread?
         if (maxThreads < 0) {
-            CraftTweakerAPI.logError("Max Threads must larger than 0!");
+            CraftTweakerAPI.logError("Max Threads must larger than or equal 0!");
         }
         WAIT_FOR_MODIFY.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));

@@ -644,6 +644,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         customData = CraftTweakerMC.getNBTCompound(data);
     }
 
+    public void setCustomDataTag(NBTTagCompound customData) {
+        this.customData = customData;
+    }
+
     public boolean hasModifier(String key) {
         return customModifiers.containsKey(key);
     }

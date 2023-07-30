@@ -151,11 +151,19 @@ public class TileFactoryController extends TileMultiblockMachineController {
             thread.setContext(thread.createContext(activeRecipe));
         }
 
+        CraftingStatus status = thread.getStatus();
+
         // PreTickEvent
         new FactoryRecipeTickEvent(thread, this, Phase.START).postEvent();
 
+        if (status != thread.getStatus()) {
+            thread.onTick();
+            thread.setStatus(status);
+        } else {
+            status = thread.onTick();
+        }
+
         // RecipeTick
-        CraftingStatus status = thread.onTick();
         if (!status.isCrafting()) {
             boolean destruct = onThreadRecipeFailure(thread);
             if (destruct) {

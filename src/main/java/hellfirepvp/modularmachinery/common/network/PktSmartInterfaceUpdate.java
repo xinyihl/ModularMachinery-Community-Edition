@@ -52,7 +52,7 @@ public class PktSmartInterfaceUpdate implements IMessage, IMessageHandler<PktSma
         if (machineData != null) {
             machineData.setValue(newData.getValue());
             TileSmartInterface.onDataUpdate(owner, newData);
-            owner.markForUpdate();
+            owner.markForUpdateSync();
         }
 
         return null;

@@ -3,7 +3,7 @@ plugins {
     id 'wtf.gofancy.fancygradle' version '1.1.+'
 }
 
-version = "1.12.2-1.11.1-r41-dev"
+version = "1.12.2-1.11.1-r42-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -109,6 +109,7 @@ dependencies {
     implementation fg.deobf("curse.maven:tinkers-construct-74072:2902483")
     implementation fg.deobf("curse.maven:mantle-74924:2713386")
     implementation fg.deobf("curse.maven:tx-loader-706505:4515357")
+    implementation fg.deobf("curse.maven:ae2-extended-life-570458:4646658")
 }
 
 jar {

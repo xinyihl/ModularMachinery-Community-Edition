@@ -47,7 +47,7 @@ public class MachineRecipeThread extends RecipeThread {
         } else {
             activeRecipe = null;
             context = null;
-            status = CraftingStatus.IDLE;
+            status = CraftingStatus.failure(result.getFirstErrorMessage(""));
             createRecipeSearchTask();
         }
     }
@@ -158,6 +158,14 @@ public class MachineRecipeThread extends RecipeThread {
         }
 
         ActiveMachineRecipe activeRecipe = deserializeActiveRecipe(tag, ctrl);
+
+        // https://github.com/KasumiNova/ModularMachinery-Community-Edition/issues/34
+        if (ctrl.getFoundMachine() != null
+                && activeRecipe != null
+                && !activeRecipe.getRecipe().getOwningMachineIdentifier().equals(ctrl.getFoundMachine().getRegistryName())) {
+            return new MachineRecipeThread(ctrl);
+        }
+
         MachineRecipeThread thread = (MachineRecipeThread) new MachineRecipeThread(ctrl)
                 .setActiveRecipe(activeRecipe)
                 .setStatus(CraftingStatus.deserialize(tag.getCompoundTag("statusTag")));

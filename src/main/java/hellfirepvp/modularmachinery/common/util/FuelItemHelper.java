@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.ImmutableList;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -36,7 +37,12 @@ public class FuelItemHelper {
         for (Item item : ForgeRegistries.ITEMS) {
             CreativeTabs tab = item.getCreativeTab();
             if (tab != null) {
-                item.getSubItems(tab, stacks);
+                // https://github.com/KasumiNova/ModularMachinery-Community-Edition/issues/32
+                try {
+                    item.getSubItems(tab, stacks);
+                } catch (Exception e) {
+                    ModularMachinery.log.warn("[ModularMachinery] Exception when loading FuelItems!", e);
+                }
             }
         }
         List<ItemStack> out = new LinkedList<>();

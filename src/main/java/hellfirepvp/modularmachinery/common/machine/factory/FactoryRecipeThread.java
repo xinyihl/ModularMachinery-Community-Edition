@@ -213,6 +213,14 @@ public class FactoryRecipeThread extends RecipeThread {
         }
 
         ActiveMachineRecipe activeRecipe = deserializeActiveRecipe(tag, factory);
+
+        // https://github.com/KasumiNova/ModularMachinery-Community-Edition/issues/34
+        if (factory.getFoundMachine() != null
+                && activeRecipe != null
+                && !activeRecipe.getRecipe().getOwningMachineIdentifier().equals(factory.getFoundMachine().getRegistryName())) {
+            activeRecipe = null;
+        }
+
         FactoryRecipeThread thread = (FactoryRecipeThread) new FactoryRecipeThread(factory)
                 .setActiveRecipe(activeRecipe)
                 .setStatus(CraftingStatus.deserialize(tag.getCompoundTag("status")));
@@ -249,7 +257,7 @@ public class FactoryRecipeThread extends RecipeThread {
      */
     @ZenGetter("isIdle")
     public boolean isIdle() {
-        return status == CraftingStatus.IDLE;
+        return activeRecipe == null && context == null;
     }
 
     /**

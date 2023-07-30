@@ -9,7 +9,6 @@ import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.awt.*;
@@ -96,12 +95,11 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
                 if (chance == 0F) {
                     tooltipBuilder.append(I18n.format(keyNever));
                 } else {
-                    String chanceStr = String.valueOf(MathHelper.floor(chance * 100F));
+                    String chanceStr = String.format("%.2f", chance * 100F) + "%";
 
-                    if (chance < 0.01F) {
-                        chanceStr = "< 1";
+                    if (chance < 0.0001F) {
+                        chanceStr = "< 0.001";
                     }
-                    chanceStr += "%";
                     tooltipBuilder.append(I18n.format(keyChance, chanceStr));
                 }
 
