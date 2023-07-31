@@ -219,50 +219,54 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                                                                 RecipeCraftingContext context,
                                                                 HybridTank handler,
                                                                 List<ComponentOutputRestrictor> restrictions) {
-        if (handler instanceof HybridGasTank) {
-            HybridGasTank gasTank = (HybridGasTank) handler;
-            switch (actionType) {
-                case INPUT:
-                    if (this.requirementCheck instanceof HybridFluidGas) {
-                        GasStack drained = gasTank.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), false);
-                        if (drained == null) {
-                            return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
-                        }
-                        if (drained.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
-                            return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
-                        }
-                        this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
-                        if (this.requirementCheck.getAmount() <= 0) {
-                            return Optional.of(CraftCheck.success());
-                        }
-                        return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
-                    }
+        if (!(handler instanceof HybridGasTank)) {
+            return Optional.empty();
+        }
+
+        HybridGasTank gasTank = (HybridGasTank) handler;
+        switch (actionType) {
+            case INPUT:
+                if (!(this.requirementCheck instanceof HybridFluidGas)) {
                     break;
-                case OUTPUT:
-                    if (this.requirementCheck instanceof HybridFluidGas) {
-                        gasTank = (HybridGasTank) CopyHandlerHelper.copyTank(gasTank);
+                }
+                GasStack drained = gasTank.drawGas(EnumFacing.UP, this.requirementCheck.getAmount(), false);
+                if (drained == null) {
+                    return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
+                }
+                if (drained.getGas() != ((HybridFluidGas) this.requirementCheck).asGasStack().getGas()) {
+                    return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
+                }
+                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
+                if (this.requirementCheck.getAmount() <= 0) {
+                    return Optional.of(CraftCheck.success());
+                }
+                return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
+            case OUTPUT:
+                if (!(this.requirementCheck instanceof HybridFluidGas)) {
+                    return Optional.empty();
+                }
 
-                        for (ComponentOutputRestrictor restrictor : restrictions) {
-                            if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
-                                ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
+                gasTank = (HybridGasTank) CopyHandlerHelper.copyTank(gasTank);
 
-                                if (tank.exactComponent.equals(component) && tank.inserted instanceof HybridFluidGas) {
-                                    gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), true);
-                                }
-                            }
-                        }
+                for (ComponentOutputRestrictor restrictor : restrictions) {
+                    if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
+                        ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
 
-                        int gasFilled = gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), false);
-                        boolean didFill = gasFilled >= this.requirementCheck.getAmount();
-                        if (didFill) {
-                            context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
+                        if (tank.exactComponent.equals(component) && tank.inserted instanceof HybridFluidGas) {
+                            gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), true);
                         }
-                        if (didFill) {
-                            return Optional.of(CraftCheck.success());
-                        }
-                        return Optional.of(CraftCheck.failure("craftcheck.failure.gas.output.space"));
                     }
-            }
+                }
+
+                int gasFilled = gasTank.receiveGas(EnumFacing.UP, ((HybridFluidGas) this.requirementCheck).asGasStack(), false);
+                boolean didFill = gasFilled >= this.requirementCheck.getAmount();
+                if (didFill) {
+                    context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
+                }
+                if (didFill) {
+                    return Optional.of(CraftCheck.success());
+                }
+                return Optional.of(CraftCheck.failure("craftcheck.failure.gas.output.space"));
         }
         return Optional.empty();
     }

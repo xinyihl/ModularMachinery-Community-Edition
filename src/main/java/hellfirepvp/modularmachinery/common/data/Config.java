@@ -70,7 +70,7 @@ public class Config {
             ModIntegrationTOP.loadFromConfig(lastReadConfig);
         }
 
-        String strColor = lastReadConfig.getString("general-casing-color", "general", "FF4900", "Defines the _default_ color for machine casings as items or blocks. (Hex color without alpha) Has to be defined both server and clientside!");
+        String strColor = lastReadConfig.getString("general-casing-color", "general", "FFFFFF", "Defines the _default_ color for machine casings as items or blocks. (Hex color without alpha) Has to be defined both server and clientside!");
         int col = 0xff921e; //TODO uh
         try {
             col = Integer.parseInt(strColor, 16);

@@ -5,7 +5,7 @@
         "description": "A modpack-maker toolset to create custom, massive, unique and complex machines and recipes from scratch with JSON.\n\nWiki: https://github.com/HellFirePvP/ModularMachinery/wiki",
         "version": "${version}",
         "mcversion": "${mcversion}",
-        "url": "https://minecraft.curseforge.com/projects/modular-machinery",
+        "url": "https://www.curseforge.com/minecraft/mc-mods/modularmachinery-community-edition",
         "updateUrl": "",
         "authorList": [ "HellFirePvP", "wiiv", "KasumiNova", "youyihj", "ikexing"],
         "credits": "HellFirePvP code, wiiv ALL THE TEXTURES :3, and KasumiNova Improvements! And more community edition contributors!",

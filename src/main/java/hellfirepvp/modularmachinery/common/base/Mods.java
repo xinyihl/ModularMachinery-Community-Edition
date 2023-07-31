@@ -34,6 +34,7 @@ public enum Mods {
     FLUX_NETWORKS("fluxnetworks"),
     ZEN_UTILS("zenutils"),
     TCONSTRUCT("tconstruct"),
+    AE2("appliedenergistics2"),
     ;
 
     public final String modid;

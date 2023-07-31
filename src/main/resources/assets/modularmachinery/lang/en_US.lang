@@ -56,6 +56,9 @@ gui.upgradebus.bounded.empty=No binding machinery.
 gui.upgradebus.bounded=Bound %s machinery
 gui.upgradebus.incompatible=§eWarning: %s is not compatible with this machinery.
 
+gui.meitemoutputbus.title=ME Item Output Bus
+gui.meitemoutputbus.inventory=Inventory
+
 top.recipe.progress=Progress
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
@@ -293,3 +296,5 @@ tile.modularmachinery.blockupgradebus.elite.name=§bElite Upgrade Bus
 tile.modularmachinery.blockupgradebus.super.name=§5Super Upgrade Bus
 tile.modularmachinery.blockupgradebus.ultimate.name=§eUltimate Upgrade Bus
 tile.modularmachinery.blockupgradebus.tip=Up to §a%s§7 different upgrades can be placed.
+
+tile.modularmachinery.blockmeitemoutputbus.name=ME Item Output Bus

@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.registry;
 
+import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -17,6 +19,7 @@ import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuild
 import hellfirepvp.modularmachinery.common.item.ItemBlockCustomName;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
+import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.*;
@@ -105,6 +108,11 @@ public class RegistryBlocks {
         prepareItemBlockRegister(parallelController);
         upgradeBus = prepareRegister(new BlockUpgradeBus());
         prepareItemBlockRegister(upgradeBus);
+
+        if (Mods.AE2.isPresent()) {
+            meItemOutputBus = prepareRegister(new BlockMEItemOutputBus());
+            ItemsMM.meItemOutputBus = prepareItemBlockRegister(meItemOutputBus);
+        }
     }
 
     private static void registerTiles() {
@@ -123,6 +131,10 @@ public class RegistryBlocks {
         registerTile(TileSmartInterface.class);
         registerTile(TileParallelController.class);
         registerTile(TileUpgradeBus.class);
+
+        if (Mods.AE2.isPresent()) {
+            registerTileWithModID(MEItemOutputBus.class);
+        }
     }
 
     private static void registerExampleStatedMachineComponent() {
@@ -235,18 +247,22 @@ public class RegistryBlocks {
         registerTile(tile, tile.getSimpleName().toLowerCase());
     }
 
-    private static void prepareItemBlockRegister(Block block) {
+    private static void registerTileWithModID(final Class<? extends TileEntity> aClass) {
+        GameRegistry.registerTileEntity(aClass, new ResourceLocation(ModularMachinery.MODID, aClass.getSimpleName().toLowerCase()));
+    }
+
+    private static ItemBlock prepareItemBlockRegister(Block block) {
         if (block instanceof BlockMachineComponent) {
             if (block instanceof BlockCustomName) {
-                prepareItemBlockRegister(new ItemBlockMachineComponentCustomName(block));
+                return prepareItemBlockRegister(new ItemBlockMachineComponentCustomName(block));
             } else {
-                prepareItemBlockRegister(new ItemBlockMachineComponent(block));
+                return prepareItemBlockRegister(new ItemBlockMachineComponent(block));
             }
         } else {
             if (block instanceof BlockCustomName) {
-                prepareItemBlockRegister(new ItemBlockCustomName(block));
+                return prepareItemBlockRegister(new ItemBlockCustomName(block));
             } else {
-                prepareItemBlockRegister(new ItemBlock(block));
+                return prepareItemBlockRegister(new ItemBlock(block));
             }
         }
     }

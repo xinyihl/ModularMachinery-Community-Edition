@@ -138,8 +138,8 @@ public class MMInfoProvider implements IProbeInfoProvider {
                 //如：20.5 秒 / 40.0 秒
                 //Example: 20.5 Sec / 40.0 Sec
                 progressStr = String.format("%.1f s / %.1f s", (float) tick / 20, (float) totalTick / 20);
-            } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1000) {
-                //只有当启用了显示小数点且配方耗时超过 1000 tick 才会显示小数点
+            } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1200) {
+                //只有当启用了显示小数点且配方耗时超过 1200 tick 才会显示小数点
                 progressStr = String.format("%.2f", progress) + "%";
             } else {
                 progressStr = String.format("%.0f", progress) + "%";
@@ -193,8 +193,8 @@ public class MMInfoProvider implements IProbeInfoProvider {
             //如：20.5 秒 / 40.0 秒
             //Example: 20.5 Sec / 40.0 Sec
             progressStr = String.format("%.1f s / %.1f s", (float) tick / 20, (float) totalTick / 20);
-        } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1000) {
-            //只有当启用了显示小数点且配方耗时超过 1000 tick 才会显示小数点
+        } else if (ModIntegrationTOP.showRecipeProgressBarDecimalPoints && totalTick >= 1200) {
+            //只有当启用了显示小数点且配方耗时超过 1200 tick 才会显示小数点
             progressStr = String.format("%.2f", progress) + "%";
         } else {
             progressStr = String.format("%.0f", progress) + "%";

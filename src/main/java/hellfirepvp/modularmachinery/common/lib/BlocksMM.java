@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.lib;
 
+import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
 import hellfirepvp.modularmachinery.common.block.*;
 
 /**
@@ -34,5 +35,7 @@ public class BlocksMM {
     public static BlockSmartInterface smartInterface;
     public static BlockParallelController parallelController;
     public static BlockUpgradeBus upgradeBus;
+
+    public static BlockMEItemOutputBus meItemOutputBus;
 
 }

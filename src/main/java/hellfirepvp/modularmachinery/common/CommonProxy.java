@@ -11,8 +11,10 @@ package hellfirepvp.modularmachinery.common;
 import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.handler.EventHandler;
 import github.kasuminova.mmce.common.handler.MachineEventHandler;
+import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;
@@ -165,6 +167,7 @@ public class CommonProxy implements IGuiHandler {
                 return null;
             }
         }
+
         switch (type) {
             case CONTROLLER:
                 return new ContainerController((TileMachineController) present, player);
@@ -184,7 +187,13 @@ public class CommonProxy implements IGuiHandler {
                 return new ContainerUpgradeBus((TileUpgradeBus) present, player);
             case BLUEPRINT_PREVIEW:
                 break;
+            case ME_ITEM_OUTPUT_BUS:
+                if (!Mods.AE2.isPresent()) {
+                    return null;
+                }
+                return new ContainerMEItemOutputBus((MEItemOutputBus) present, player);
         }
+
         return null;
     }
 
@@ -204,7 +213,9 @@ public class CommonProxy implements IGuiHandler {
         SMART_INTERFACE(TileSmartInterface.class),
         PARALLEL_CONTROLLER(TileParallelController.class),
         UPGRADE_BUS(TileUpgradeBus.class),
-        BLUEPRINT_PREVIEW(null);
+        BLUEPRINT_PREVIEW(null),
+        ME_ITEM_OUTPUT_BUS(MEItemOutputBus.class),
+        ;
 
         public final Class<? extends TileEntity> requiredTileEntity;
 

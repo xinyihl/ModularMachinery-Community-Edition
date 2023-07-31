@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.client;
 
+import github.kasuminova.mmce.client.gui.GuiMEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.*;
 import hellfirepvp.modularmachinery.client.util.BlockArrayPreviewRenderHelper;
@@ -248,9 +250,14 @@ public class ClientProxy extends CommonProxy {
                     return new GuiScreenBlueprint(machine);
                 }
                 break;
+            case ME_ITEM_OUTPUT_BUS:
+                if (!Mods.AE2.isPresent()) {
+                    return null;
+                }
+                return new GuiMEItemOutputBus((MEItemOutputBus) present, player);
         }
+
         return null;
     }
-
 
 }
