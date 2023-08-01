@@ -8,7 +8,9 @@
 
 package hellfirepvp.modularmachinery.common.registry;
 
+import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
@@ -112,6 +114,8 @@ public class RegistryBlocks {
         if (Mods.AE2.isPresent()) {
             meItemOutputBus = prepareRegister(new BlockMEItemOutputBus());
             ItemsMM.meItemOutputBus = prepareItemBlockRegister(meItemOutputBus);
+            meItemInputBus = prepareRegister(new BlockMEItemInputBus());
+            ItemsMM.meItemInputBus = prepareItemBlockRegister(meItemInputBus);
         }
     }
 
@@ -134,6 +138,7 @@ public class RegistryBlocks {
 
         if (Mods.AE2.isPresent()) {
             registerTileWithModID(MEItemOutputBus.class);
+            registerTileWithModID(MEItemInputBus.class);
         }
     }
 

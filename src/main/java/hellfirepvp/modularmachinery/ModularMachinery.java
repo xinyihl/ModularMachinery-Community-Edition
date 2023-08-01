@@ -43,6 +43,7 @@ import org.apache.logging.log4j.Logger;
                 "required-after:crafttweaker@[4.0.4,);" +
                 "after:zenutils@[1.12.8,);" +
                 "after:jei@[4.13.1.222,);" +
+                "after:appliedenergistics2@[rv6-stable-7,);" +
                 "after:fluxnetworks@[4.1.0,);" +
                 "after:tconstruct@[1.12.2-2.12.0.157,)",
         acceptedMinecraftVersions = "[1.12, 1.13)"

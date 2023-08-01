@@ -26,5 +26,6 @@ public class ItemsMM {
     public static ItemModularium modularium;
     public static ItemConstructTool constructTool;
     public static Item meItemOutputBus;
+    public static Item meItemInputBus;
 
 }

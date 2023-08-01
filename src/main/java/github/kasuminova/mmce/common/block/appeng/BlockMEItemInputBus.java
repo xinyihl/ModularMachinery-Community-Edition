@@ -1,6 +1,6 @@
 package github.kasuminova.mmce.common.block.appeng;
 
-import github.kasuminova.mmce.common.tile.MEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import net.minecraft.block.state.IBlockState;
@@ -14,8 +14,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class BlockMEItemOutputBus extends BlockMEItemBus {
-
+public class BlockMEItemInputBus extends BlockMEItemBus {
     @Override
     public boolean onBlockActivated(
             @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer playerIn,
@@ -23,8 +22,8 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
             float hitX, float hitY, float hitZ) {
         if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
-            if (te instanceof MEItemOutputBus) {
-                playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_ITEM_OUTPUT_BUS.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
+            if (te instanceof MEItemInputBus) {
+                playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_ITEM_INPUT_BUS.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
             }
         }
         return true;
@@ -33,7 +32,7 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
     @Nullable
     @Override
     public TileEntity createTileEntity(final World world, final IBlockState state) {
-        return new MEItemOutputBus();
+        return new MEItemInputBus();
     }
 
 }

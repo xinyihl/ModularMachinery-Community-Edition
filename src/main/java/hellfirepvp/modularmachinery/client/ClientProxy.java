@@ -8,7 +8,9 @@
 
 package hellfirepvp.modularmachinery.client;
 
+import github.kasuminova.mmce.client.gui.GuiMEItemInputBus;
 import github.kasuminova.mmce.client.gui.GuiMEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.*;
@@ -255,6 +257,11 @@ public class ClientProxy extends CommonProxy {
                     return null;
                 }
                 return new GuiMEItemOutputBus((MEItemOutputBus) present, player);
+            case ME_ITEM_INPUT_BUS:
+                if (!Mods.AE2.isPresent()) {
+                    return null;
+                }
+                return new GuiMEItemInputBus((MEItemInputBus) present, player);
         }
 
         return null;

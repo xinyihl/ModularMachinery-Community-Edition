@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.tiles;
 
+import github.kasuminova.mmce.common.tile.base.MEItemBus;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -53,6 +55,10 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
             BlockPos offset = getPos().offset(facing);
             TileEntity te = getWorld().getTileEntity(offset);
             if (te == null || te instanceof TileItemBus) {
+                continue;
+            }
+
+            if (Mods.AE2.isPresent() && (te instanceof MEItemBus)) {
                 continue;
             }
 
