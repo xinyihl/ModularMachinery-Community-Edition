@@ -8,8 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.registry;
 
+import github.kasuminova.mmce.common.block.appeng.BlockMEFluidInputBus;
+import github.kasuminova.mmce.common.block.appeng.BlockMEFluidOutputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
+import github.kasuminova.mmce.common.tile.MEFluidInputBus;
+import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -116,6 +120,10 @@ public class RegistryBlocks {
             ItemsMM.meItemOutputBus = prepareItemBlockRegister(meItemOutputBus);
             meItemInputBus = prepareRegister(new BlockMEItemInputBus());
             ItemsMM.meItemInputBus = prepareItemBlockRegister(meItemInputBus);
+            meFluidOutputBus = prepareRegister(new BlockMEFluidOutputBus());
+            ItemsMM.meFluidOutputBus = prepareItemBlockRegister(meFluidOutputBus);
+            meFluidInputBus = prepareRegister(new BlockMEFluidInputBus());
+            ItemsMM.meFluidinputBus = prepareItemBlockRegister(meFluidInputBus);
         }
     }
 
@@ -139,6 +147,8 @@ public class RegistryBlocks {
         if (Mods.AE2.isPresent()) {
             registerTileWithModID(MEItemOutputBus.class);
             registerTileWithModID(MEItemInputBus.class);
+            registerTileWithModID(MEFluidOutputBus.class);
+            registerTileWithModID(MEFluidInputBus.class);
         }
     }
 

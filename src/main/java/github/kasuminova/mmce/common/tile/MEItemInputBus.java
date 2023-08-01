@@ -130,7 +130,6 @@ public class MEItemInputBus extends MEItemBus {
                         continue;
                     }
                     inventory.setStackInSlot(slot, insertStackToAE(inv, invStack));
-                    successAtLeastOnce = true;
                     continue;
                 }
 
@@ -183,7 +182,7 @@ public class MEItemInputBus extends MEItemBus {
     private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack invStack) throws GridAccessException {
         IAEItemStack aeStack = channel.createStack(invStack);
         if (aeStack == null) {
-            return invStack;
+            return ItemStack.EMPTY;
         }
 
         IAEItemStack extracted = Platform.poweredExtraction(proxy.getEnergy(), inv, aeStack, source);

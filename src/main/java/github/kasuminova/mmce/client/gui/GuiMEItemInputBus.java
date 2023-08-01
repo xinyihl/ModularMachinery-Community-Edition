@@ -23,7 +23,7 @@ public class GuiMEItemInputBus extends AEBaseGui {
         this.fontRenderer.drawString(I18n.format("gui.meiteminputbus.title"), 8, 8, 0x404040);
         this.fontRenderer.drawString(GuiText.Config.getLocal(), 8, 6 + 11 + 7, 0x404040);
         this.fontRenderer.drawString(GuiText.StoredItems.getLocal(), 97, 6 + 11 + 7, 0x404040);
-        this.fontRenderer.drawString(I18n.format("gui.meitembus.inventory"), 8, this.ySize - 93, 0x404040);
+        this.fontRenderer.drawString(GuiText.inventory.getLocal(), 8, this.ySize - 93, 0x404040);
     }
 
     @Override

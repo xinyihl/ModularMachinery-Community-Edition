@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.lib;
 
+import github.kasuminova.mmce.common.block.appeng.BlockMEFluidInputBus;
+import github.kasuminova.mmce.common.block.appeng.BlockMEFluidOutputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
 import hellfirepvp.modularmachinery.common.block.*;
@@ -39,5 +41,7 @@ public class BlocksMM {
 
     public static BlockMEItemOutputBus meItemOutputBus;
     public static BlockMEItemInputBus meItemInputBus;
+    public static BlockMEFluidOutputBus meFluidOutputBus;
+    public static BlockMEFluidInputBus meFluidInputBus;
 
 }

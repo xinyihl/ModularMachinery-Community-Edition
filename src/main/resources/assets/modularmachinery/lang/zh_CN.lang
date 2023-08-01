@@ -56,9 +56,10 @@ gui.upgradebus.bounded.empty=无绑定机械。
 gui.upgradebus.bounded=已绑定 %s 个机械
 gui.upgradebus.incompatible=§e警告：%s 与此机械不兼容。
 
-gui.meitemoutputbus.title=ME 物品输出总线
-gui.meiteminputbus.title=ME 物品输入总线
-gui.meitembus.inventory=物品栏
+gui.meitemoutputbus.title=ME 机械物品输出总线
+gui.meiteminputbus.title=ME 机械物品输入总线
+gui.mefluidoutputbus.title=ME 机械流体输出总线
+gui.mefluidinputbus.title=ME 机械流体输入总线
 
 top.recipe.progress=进度
 top.machine.working=工作中
@@ -297,5 +298,7 @@ tile.modularmachinery.blockupgradebus.super.name=§5超级升级总线
 tile.modularmachinery.blockupgradebus.ultimate.name=§e终极升级总线
 tile.modularmachinery.blockupgradebus.tip=最多可以放置 §a%s§7 种不同的升级。
 
-tile.modularmachinery.blockmeitemoutputbus.name=ME物品输出总线
-tile.modularmachinery.blockmeiteminputbus.name=ME物品输入总线
+tile.modularmachinery.blockmeitemoutputbus.name=ME机械物品输出总线
+tile.modularmachinery.blockmeiteminputbus.name=ME机械物品输入总线
+tile.modularmachinery.blockmefluidoutputbus.name=ME机械流体输出总线
+tile.modularmachinery.blockmefluidinputbus.name=ME机械流体输入总线

@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.client.gui;
 
 import appeng.client.gui.AEBaseGui;
+import appeng.core.localization.GuiText;
 import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import net.minecraft.client.renderer.GlStateManager;
@@ -20,7 +21,7 @@ public class GuiMEItemOutputBus extends AEBaseGui {
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.fontRenderer.drawString(I18n.format("gui.meitemoutputbus.title"), 8, 8, 0x404040);
-        this.fontRenderer.drawString(I18n.format("gui.meitembus.inventory"), 8, this.ySize - 96 + 2, 0x404040);
+        this.fontRenderer.drawString(GuiText.inventory.getLocal(), 8, this.ySize - 96 + 2, 0x404040);
     }
 
     @Override

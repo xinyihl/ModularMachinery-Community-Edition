@@ -50,7 +50,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     }
 
     public TileFluidTank(FluidHatchSize size, IOType type) {
-        this.tank = size.buildTank(this, type == IOType.INPUT, type == IOType.OUTPUT);
+        this.tank = size.buildTank(this, true, true);
         this.hatchSize = size;
         this.ioType = type;
     }
@@ -115,7 +115,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
         this.ioType = compound.getBoolean("input") ? IOType.INPUT : IOType.OUTPUT;
         this.hatchSize = FluidHatchSize.values()[MathHelper.clamp(compound.getInteger("size"), 0, FluidHatchSize.values().length - 1)];
-        HybridTank newTank = hatchSize.buildTank(this, ioType == IOType.INPUT, ioType == IOType.OUTPUT);
+        HybridTank newTank = hatchSize.buildTank(this, true, true);
         NBTTagCompound tankTag = compound.getCompoundTag("tank");
         newTank.readFromNBT(tankTag);
         this.tank = newTank;

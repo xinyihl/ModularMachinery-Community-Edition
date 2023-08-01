@@ -84,7 +84,7 @@ public class RecipePrimer implements PreparedRecipe {
         if (lastComponent instanceof ComponentRequirement.Parallelizable) {
             ((ComponentRequirement.Parallelizable) lastComponent).setParallelizeUnaffected(unaffected);
         } else {
-            CraftTweakerAPI.logWarning("The Input / Output must can be parallelized!");
+            CraftTweakerAPI.logWarning("Target " + lastComponent.getClass().toString() + " cannot be parallelized!");
         }
         return this;
     }

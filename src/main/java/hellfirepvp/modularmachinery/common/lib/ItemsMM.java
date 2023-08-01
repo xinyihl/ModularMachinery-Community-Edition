@@ -25,7 +25,12 @@ public class ItemsMM {
     public static ItemBlueprint blueprint;
     public static ItemModularium modularium;
     public static ItemConstructTool constructTool;
+
+    // AppEng Compat
+
     public static Item meItemOutputBus;
     public static Item meItemInputBus;
+    public static Item meFluidOutputBus;
+    public static Item meFluidinputBus;
 
 }

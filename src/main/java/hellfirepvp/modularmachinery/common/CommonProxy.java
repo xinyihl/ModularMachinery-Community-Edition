@@ -11,10 +11,15 @@ package hellfirepvp.modularmachinery.common;
 import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.container.ContainerMEFluidInputBus;
+import github.kasuminova.mmce.common.container.ContainerMEFluidOutputBus;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
 import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.handler.EventHandler;
 import github.kasuminova.mmce.common.handler.MachineEventHandler;
+import github.kasuminova.mmce.common.integration.ModIntegrationAE2;
+import github.kasuminova.mmce.common.tile.MEFluidInputBus;
+import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -128,6 +133,10 @@ public class CommonProxy implements IGuiHandler {
     }
 
     public void postInit() {
+        if (Mods.AE2.isPresent()) {
+            ModIntegrationAE2.registerUpgrade();
+        }
+
         MachineRegistry.registerMachines(MachineRegistry.loadMachines(null));
         MachineRegistry.registerMachines(MachineBuilder.WAIT_FOR_LOAD);
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
@@ -199,6 +208,16 @@ public class CommonProxy implements IGuiHandler {
                     return null;
                 }
                 return new ContainerMEItemInputBus((MEItemInputBus) present, player);
+            case ME_FLUID_OUTPUT_BUS:
+                if (!Mods.AE2.isPresent()) {
+                    return null;
+                }
+                return new ContainerMEFluidOutputBus((MEFluidOutputBus) present, player);
+            case ME_FLUID_INPUT_BUS:
+                if (!Mods.AE2.isPresent()) {
+                    return null;
+                }
+                return new ContainerMEFluidInputBus((MEFluidInputBus) present, player);
         }
 
         return null;
@@ -223,6 +242,8 @@ public class CommonProxy implements IGuiHandler {
         BLUEPRINT_PREVIEW(null),
         ME_ITEM_OUTPUT_BUS(MEItemOutputBus.class),
         ME_ITEM_INPUT_BUS(MEItemInputBus.class),
+        ME_FLUID_OUTPUT_BUS(MEFluidOutputBus.class),
+        ME_FLUID_INPUT_BUS(MEFluidInputBus.class),
         ;
 
         public final Class<? extends TileEntity> requiredTileEntity;

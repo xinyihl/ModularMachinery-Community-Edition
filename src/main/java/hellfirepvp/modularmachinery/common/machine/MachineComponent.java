@@ -10,9 +10,9 @@ package hellfirepvp.modularmachinery.common.machine;
 
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
-import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -51,7 +51,7 @@ public abstract class MachineComponent<T> {
     }
 
 
-    public abstract static class FluidHatch extends MachineComponent<HybridTank> {
+    public abstract static class FluidHatch extends MachineComponent<IFluidHandler> {
 
         public FluidHatch(IOType ioType) {
             super(ioType);

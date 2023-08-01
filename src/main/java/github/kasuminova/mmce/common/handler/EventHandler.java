@@ -1,12 +1,15 @@
 package github.kasuminova.mmce.common.handler;
 
+import appeng.container.AEBaseContainer;
 import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -51,10 +54,19 @@ public class EventHandler {
         }
 
         EntityPlayer player = event.player;
-        if (!(player.openContainer instanceof ContainerBase)) {
-            return;
+
+        Container container = player.openContainer;
+        TileEntity te;
+        if (container instanceof ContainerBase) {
+            te = ((ContainerBase<?>) container).getOwner();
+        } else {
+            if (Mods.AE2.isPresent() && container instanceof AEBaseContainer) {
+                te = ((AEBaseContainer) container).getTileEntity();
+            } else {
+                return;
+            }
         }
-        TileEntity te = ((ContainerBase<?>) player.openContainer).getOwner();
+
         if (!(te instanceof SelectiveUpdateTileEntity)) {
             return;
         }

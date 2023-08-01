@@ -2,6 +2,7 @@ package hellfirepvp.modularmachinery.common.util;
 
 import mekanism.api.gas.GasStack;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class HybridFluidUtils {
     public static int maxGasInputParallelism(HybridGasTank handler, GasStack gas, int parallelism) {
@@ -31,30 +32,38 @@ public class HybridFluidUtils {
         return Math.min(remaining / gas.amount, parallelism);
     }
 
-    public static int maxFluidInputParallelism(HybridTank handler, FluidStack fluid, int parallelism) {
-        FluidStack internal = handler.getFluid();
-        if (internal == null) {
+    public static int maxFluidInputParallelism(IFluidHandler handler, FluidStack fluid, int parallelism) {
+        if (fluid == null || fluid.amount <= 0) {
             return 0;
         }
-        if (!internal.equals(fluid)) {
+        int baseDrain = fluid.amount;
+        int maxParallelism = Math.min(Integer.MAX_VALUE / fluid.amount, parallelism);
+
+        fluid.amount *= maxParallelism;
+
+        FluidStack drained = handler.drain(fluid, false);
+        if (drained == null) {
             return 0;
         }
-        if (internal.amount < fluid.amount || fluid.amount < 0) {
-            return 0;
-        }
-        return Math.min(internal.amount / fluid.amount, parallelism);
+
+        return drained.amount / baseDrain;
     }
 
-    public static int maxFluidOutputParallelism(HybridTank handler, FluidStack fluid, int parallelism) {
-        FluidStack internal = handler.getFluid();
-        int internalAmount = internal == null ? 0 : internal.amount;
-        if (internal != null && !internal.equals(fluid)) {
+    public static int maxFluidOutputParallelism(IFluidHandler handler, FluidStack fluid, int parallelism) {
+        if (fluid == null) {
             return 0;
         }
-        if (handler.getCapacity() < fluid.amount || internalAmount < fluid.amount || fluid.amount < 0) {
-            return 0;
+
+        if (fluid.amount <= 0) {
+            return parallelism;
         }
-        int remaining = handler.getCapacity() - internalAmount;
-        return Math.min(remaining / fluid.amount, parallelism);
+
+        int baseFill = fluid.amount;
+        int maxParallelism = Math.min(Integer.MAX_VALUE / fluid.amount, parallelism);
+
+        fluid.amount *= maxParallelism;
+        int filled = handler.fill(fluid, false);
+
+        return filled / baseFill;
     }
 }

@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
+import github.kasuminova.util.MultiFluidTank;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentHybridFluidPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeFluidPerTick;
@@ -9,7 +10,6 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.CopyHandlerHelper;
 import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
@@ -17,6 +17,7 @@ import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -59,11 +60,11 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        HybridTank handler = (HybridTank) component.providedComponent;
+        IFluidHandler handler = (IFluidHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
                 //If it doesn't consume the item, we only need to see if it's actually there.
-                FluidStack drained = handler.drainInternal(this.requirementCheck.copy().asFluidStack(), false);
+                FluidStack drained = handler.drain(this.requirementCheck.copy().asFluidStack(), false);
                 if (drained == null) {
                     return CraftCheck.failure("craftcheck.failure.fluid.input");
                 }
@@ -76,18 +77,18 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
-                handler = CopyHandlerHelper.copyTank(handler);
+                handler = new MultiFluidTank(handler);
 
                 for (ComponentOutputRestrictor restrictor : restrictions) {
                     if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
                         ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
 
                         if (tank.exactComponent.equals(component)) {
-                            handler.fillInternal(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
+                            handler.fill(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
                         }
                     }
                 }
-                int filled = handler.fillInternal(this.requirementCheck.copy().asFluidStack(), false); //True or false doesn't really matter tbh
+                int filled = handler.fill(this.requirementCheck.copy().asFluidStack(), false); //True or false doesn't really matter tbh
                 boolean didFill = filled >= this.requirementCheck.getAmount();
                 if (didFill) {
                     context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
@@ -101,12 +102,12 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     }
 
     public CraftCheck doFluidIO(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions, boolean doFillOrDrain) {
-        HybridTank handler = (HybridTank) component.providedComponent;
+        IFluidHandler handler = (IFluidHandler) component.providedComponent;
 
         switch (actionType) {
             case INPUT:
                 //If it doesn't consume the fluid, we only need to see if it's actually there.
-                FluidStack drained = handler.drainInternal(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
+                FluidStack drained = handler.drain(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
                 if (drained == null || !NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
                     return CraftCheck.failure("craftcheck.failure.fluid.input");
                 }
@@ -116,7 +117,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
                         ? CraftCheck.success()
                         : CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
-                int filled = handler.fillInternal(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
+                int filled = handler.fill(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
 
                 return filled >= this.requirementCheck.getAmount()
                         ? CraftCheck.success()
