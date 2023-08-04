@@ -240,10 +240,10 @@ public class CommonProxy implements IGuiHandler {
         PARALLEL_CONTROLLER(TileParallelController.class),
         UPGRADE_BUS(TileUpgradeBus.class),
         BLUEPRINT_PREVIEW(null),
-        ME_ITEM_OUTPUT_BUS(MEItemOutputBus.class),
-        ME_ITEM_INPUT_BUS(MEItemInputBus.class),
-        ME_FLUID_OUTPUT_BUS(MEFluidOutputBus.class),
-        ME_FLUID_INPUT_BUS(MEFluidInputBus.class),
+        ME_ITEM_OUTPUT_BUS(Mods.AE2.isPresent() ? MEItemOutputBus.class : null),
+        ME_ITEM_INPUT_BUS(Mods.AE2.isPresent() ? MEItemInputBus.class : null),
+        ME_FLUID_OUTPUT_BUS(Mods.AE2.isPresent() ? MEFluidOutputBus.class : null),
+        ME_FLUID_INPUT_BUS(Mods.AE2.isPresent() ? MEFluidInputBus.class : null),
         ;
 
         public final Class<? extends TileEntity> requiredTileEntity;

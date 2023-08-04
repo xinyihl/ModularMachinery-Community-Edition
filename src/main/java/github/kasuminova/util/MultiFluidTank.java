@@ -66,7 +66,7 @@ public class MultiFluidTank implements IFluidHandler {
     }
 
     @Override
-    public int fill(final FluidStack fluid, final boolean doFill) {
+    public synchronized int fill(final FluidStack fluid, final boolean doFill) {
         if (fluid == null || fluid.amount <= 0) {
             return 0;
         }
@@ -131,7 +131,7 @@ public class MultiFluidTank implements IFluidHandler {
 
     @Nullable
     @Override
-    public FluidStack drain(final FluidStack resource, final boolean doDrain) {
+    public synchronized FluidStack drain(final FluidStack resource, final boolean doDrain) {
         if (resource == null || resource.amount <= 0) {
             return null;
         }

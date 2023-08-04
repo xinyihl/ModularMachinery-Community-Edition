@@ -151,12 +151,12 @@ public class MEFluidInputBus extends MEFluidBus {
         }
     }
 
-    private IAEFluidStack extractStackFromAE(final IMEMonitor<IAEFluidStack> inv, final IAEFluidStack invStack) throws GridAccessException {
-        return Platform.poweredExtraction(proxy.getEnergy(), inv, invStack.copy(), source);
+    private IAEFluidStack extractStackFromAE(final IMEMonitor<IAEFluidStack> inv, final IAEFluidStack stack) throws GridAccessException {
+        return Platform.poweredExtraction(proxy.getEnergy(), inv, stack.copy(), source);
     }
 
-    private IAEFluidStack insertStackToAE(final IMEMonitor<IAEFluidStack> inv, final IAEFluidStack invStack) throws GridAccessException {
-        return Platform.poweredInsert(proxy.getEnergy(), inv, invStack.copy(), source);
+    private IAEFluidStack insertStackToAE(final IMEMonitor<IAEFluidStack> inv, final IAEFluidStack stack) throws GridAccessException {
+        return Platform.poweredInsert(proxy.getEnergy(), inv, stack.copy(), source);
     }
 
     @Nullable

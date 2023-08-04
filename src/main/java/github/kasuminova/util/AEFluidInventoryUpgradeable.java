@@ -40,7 +40,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     @Override
-    public void setFluidInSlot(final int slot, final IAEFluidStack fluid) {
+    public synchronized void setFluidInSlot(final int slot, final IAEFluidStack fluid) {
         if (slot >= 0 && slot < this.getSlots()) {
             if (Objects.equals(this.fluids[slot], fluid)) {
                 if (fluid != null && fluid.getStackSize() != this.fluids[slot].getStackSize()) {
@@ -153,7 +153,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     @Override
-    public int fill(final FluidStack fluid, final boolean doFill) {
+    public synchronized int fill(final FluidStack fluid, final boolean doFill) {
         if (fluid == null || fluid.amount <= 0) {
             return 0;
         }
@@ -173,7 +173,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     @Override
-    public FluidStack drain(final FluidStack fluid, final boolean doDrain) {
+    public synchronized FluidStack drain(final FluidStack fluid, final boolean doDrain) {
         if (fluid == null || fluid.amount <= 0) {
             return null;
         }

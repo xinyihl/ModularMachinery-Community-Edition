@@ -179,8 +179,8 @@ public class MEItemInputBus extends MEItemBus {
         }
     }
 
-    private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack invStack) throws GridAccessException {
-        IAEItemStack aeStack = channel.createStack(invStack);
+    private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
+        IAEItemStack aeStack = channel.createStack(stack);
         if (aeStack == null) {
             return ItemStack.EMPTY;
         }
@@ -192,10 +192,10 @@ public class MEItemInputBus extends MEItemBus {
         return extracted.createItemStack();
     }
 
-    private ItemStack insertStackToAE(final IMEMonitor<IAEItemStack> inv, final ItemStack invStack) throws GridAccessException {
-        IAEItemStack aeStack = channel.createStack(invStack);
+    private ItemStack insertStackToAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
+        IAEItemStack aeStack = channel.createStack(stack);
         if (aeStack == null) {
-            return invStack;
+            return stack;
         }
 
         IAEItemStack left = Platform.poweredInsert(proxy.getEnergy(), inv, aeStack, source);

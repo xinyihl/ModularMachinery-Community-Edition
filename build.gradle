@@ -1,12 +1,18 @@
 plugins {
     id 'net.minecraftforge.gradle' version '5.+'
-    id 'wtf.gofancy.fancygradle' version '1.1.+'
+    id 'wtf.gofancy.fancygradle' version '1.+'
 }
 
 version = "1.12.2-1.11.1-r44-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/groups/public/'
+    }
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'
+    }
     maven {
         url 'https://maven.cleanroommc.com'
     }
@@ -113,12 +119,12 @@ dependencies {
 jar {
     manifest {
         attributes([
-                "Specification-Title": "modularmachinery",
-                "Specification-Vendor": "hellfirepvp",
-                "Specification-Version": "1",
-                "Implementation-Title": project.name,
-                "Implementation-Version": "${version}",
-                "Implementation-Vendor" : "hellfirepvp",
+                "Specification-Title"     : "modularmachinery",
+                "Specification-Vendor"    : "hellfirepvp",
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${version}",
+                "Implementation-Vendor"   : "hellfirepvp",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
