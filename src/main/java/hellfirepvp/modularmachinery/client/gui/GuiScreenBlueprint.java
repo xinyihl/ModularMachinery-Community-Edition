@@ -16,7 +16,6 @@ import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
 import hellfirepvp.modularmachinery.common.block.BlockController;
-import hellfirepvp.modularmachinery.common.integration.preview.StructurePreviewWrapper;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
@@ -32,6 +31,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.util.ITooltipFlag;
@@ -84,6 +85,71 @@ public class GuiScreenBlueprint extends GuiScreen {
     public GuiScreenBlueprint(DynamicMachine machine) {
         this.machine = machine;
         this.renderContext = DynamicMachineRenderContext.createContext(this.machine);
+    }
+
+    public static void renderIngredientList(final GuiScreen g, final Minecraft mc, final RenderItem ri,
+                                            final GuiScrollbar scrollbar, final DynamicMachineRenderContext dynamicContext,
+                                            final int mouseX, final int mouseY, final int screenX, final int screenY) {
+        List<ItemStack> ingredientList = dynamicContext.getDisplayedMachine().getPattern().getDescriptiveStackList(dynamicContext.getShiftSnap());
+        scrollbar.setRange(0, Math.max(0, (ingredientList.size() - 8) / 8), 1);
+        scrollbar.draw(g, mc);
+
+        int indexOffset = scrollbar.getCurrentScroll() * 8;
+        int x = screenX;
+        int y = screenY;
+
+        GlStateManager.color(1F, 1F, 1F, 1F);
+        GlStateManager.pushMatrix();
+        RenderHelper.enableGUIStandardItemLighting();
+
+        ItemStack tooltipStack = null;
+
+        for (int i = 0; i + indexOffset < Math.min(16 + indexOffset, ingredientList.size()); i++) {
+            ItemStack stack = ingredientList.get(i + indexOffset);
+            if (tooltipStack == null) {
+                tooltipStack = renderItemStackToGUI(g, mc, ri, x, y, mouseX, mouseY, stack);
+            } else {
+                renderItemStackToGUI(g, mc, ri, x, y, mouseX, mouseY, stack);
+            }
+            x += 18;
+
+            if (i == 7) {
+                x = screenX;
+                y += 18;
+            }
+        }
+
+        if (tooltipStack != null) {
+            net.minecraftforge.fml.client.config.GuiUtils.preItemToolTip(tooltipStack);
+            g.drawHoveringText(g.getItemToolTip(tooltipStack), mouseX, mouseY);
+            net.minecraftforge.fml.client.config.GuiUtils.postItemToolTip();
+        }
+
+        GlStateManager.disableLighting();
+        GlStateManager.popMatrix();
+    }
+
+    public static ItemStack renderItemStackToGUI(final GuiScreen g, final Minecraft mc, final RenderItem ri,
+                                                 final int x, final int y, final int mouseX, final int mouseY,
+                                                 final ItemStack stack) {
+        ri.renderItemAndEffectIntoGUI(stack, x, y);
+        ri.renderItemOverlays(mc.fontRenderer, stack, x, y);
+
+        if ((mouseX >= x && mouseX <= x + 16) && (mouseY >= y && mouseY <= y + 16)) {
+            renderHoveredForeground(x, y);
+            return stack;
+        }
+        return null;
+    }
+
+    private static void renderHoveredForeground(final int x, final int y) {
+        GlStateManager.disableLighting();
+        GlStateManager.disableDepth();
+        GlStateManager.colorMask(true, true, true, false);
+        GuiScreen.drawRect(x, y, x + 16, y + 16, new Color(255, 255, 255, 150).getRGB());
+        GlStateManager.colorMask(true, true, true, true);
+        GlStateManager.enableLighting();
+        GlStateManager.enableDepth();
     }
 
     @Override
@@ -140,7 +206,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
-        StructurePreviewWrapper.renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
+        renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
         drawButtons(mouseX, mouseY);
         renderUpgradeInfo(mouseX, mouseY);
 

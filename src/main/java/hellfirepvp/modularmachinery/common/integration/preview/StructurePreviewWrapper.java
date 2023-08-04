@@ -13,6 +13,7 @@ import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientMouseJEIGuiEventHandler;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.gui.GuiScreenBlueprint;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
@@ -42,8 +43,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.settings.GameSettings;
@@ -252,7 +251,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         dynamnicContext.renderAt(x, z);
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
-        renderIngredientList(current, minecraft, minecraft.getRenderItem(), ingredientListScrollbar, dynamnicContext, mouseX, mouseY, 4, 144);
+        GuiScreenBlueprint.renderIngredientList(current, minecraft, minecraft.getRenderItem(), ingredientListScrollbar, dynamnicContext, mouseX, mouseY, 4, 144);
         drawButtons(minecraft, mouseX, mouseY, 0, 0, recipeWidth, recipeHeight);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -277,71 +276,6 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         }
 
         renderIngredientTooltip(mouseX, mouseY, x, z);
-    }
-
-    public static void renderIngredientList(final GuiScreen g, final Minecraft mc, final RenderItem ri,
-                                      final GuiScrollbar scrollbar, final DynamicMachineRenderContext dynamicContext,
-                                      final int mouseX, final int mouseY, final int screenX, final int screenY) {
-        List<ItemStack> ingredientList = dynamicContext.getDisplayedMachine().getPattern().getDescriptiveStackList(dynamicContext.getShiftSnap());
-        scrollbar.setRange(0, Math.max(0, (ingredientList.size() - 8) / 8), 1);
-        scrollbar.draw(g, mc);
-
-        int indexOffset = scrollbar.getCurrentScroll() * 8;
-        int x = screenX;
-        int y = screenY;
-
-        GlStateManager.color(1F, 1F, 1F, 1F);
-        GlStateManager.pushMatrix();
-        RenderHelper.enableGUIStandardItemLighting();
-
-        ItemStack tooltipStack = null;
-
-        for (int i = 0; i + indexOffset < Math.min(16 + indexOffset, ingredientList.size()) ; i++) {
-            ItemStack stack = ingredientList.get(i + indexOffset);
-            if (tooltipStack == null) {
-                tooltipStack = renderItemStackToGUI(g, mc, ri, x, y, mouseX, mouseY, stack);
-            } else {
-                renderItemStackToGUI(g, mc, ri, x, y, mouseX, mouseY, stack);
-            }
-            x += 18;
-
-            if (i == 7) {
-                x = screenX;
-                y += 18;
-            }
-        }
-
-        if (tooltipStack != null) {
-            net.minecraftforge.fml.client.config.GuiUtils.preItemToolTip(tooltipStack);
-            g.drawHoveringText(g.getItemToolTip(tooltipStack), mouseX, mouseY);
-            net.minecraftforge.fml.client.config.GuiUtils.postItemToolTip();
-        }
-
-        GlStateManager.disableLighting();
-        GlStateManager.popMatrix();
-    }
-
-    public static ItemStack renderItemStackToGUI(final GuiScreen g, final Minecraft mc, final RenderItem ri,
-                                      final int x, final int y, final int mouseX, final int mouseY,
-                                      final ItemStack stack) {
-        ri.renderItemAndEffectIntoGUI(stack, x, y);
-        ri.renderItemOverlays(mc.fontRenderer, stack, x, y);
-
-        if ((mouseX >= x && mouseX <= x + 16) && (mouseY >= y && mouseY <= y + 16)) {
-            renderHoveredForeground(x, y);
-            return stack;
-        }
-        return null;
-    }
-
-    private static void renderHoveredForeground(final int x, final int y) {
-        GlStateManager.disableLighting();
-        GlStateManager.disableDepth();
-        GlStateManager.colorMask(true, true, true, false);
-        GuiScreen.drawRect(x, y, x + 16, y + 16, new Color(255, 255, 255, 150).getRGB());
-        GlStateManager.colorMask(true, true, true, true);
-        GlStateManager.enableLighting();
-        GlStateManager.enableDepth();
     }
 
     private void renderUpgrades(final Minecraft minecraft, final int mouseX, final int mouseY) {
