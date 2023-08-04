@@ -217,7 +217,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IOInventory handler = (IOInventory) component.providedComponent;
+        IItemHandlerImpl handler = (IOInventory) component.providedComponent;
 
         if (actionType == IOType.INPUT) {
             boolean isSuccess;
@@ -253,7 +253,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
         } else if (actionType == IOType.OUTPUT) {
-            handler = CopyHandlerHelper.copyInventory(handler);
+            handler = handler.copy();
             for (ComponentOutputRestrictor restrictor : restrictions) {
                 if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
                     ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;

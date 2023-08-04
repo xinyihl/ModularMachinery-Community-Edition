@@ -24,6 +24,7 @@ import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplaceme
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import net.minecraft.util.Tuple;
 
 import javax.annotation.Nonnull;
@@ -53,14 +54,13 @@ public class RecipeCraftingContext {
     private final Map<RequirementType<?, ?>, RecipeModifier.ModifierApplier> chanceModifierAppliers = new HashMap<>();
     private final List<RecipeModifier> permanentModifierList = new ArrayList<>();
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
-    private final List<ComponentRequirement<?, ?>> requirements;
-    private final Map<ComponentRequirement<?, ?>, Iterable<ProcessingComponent<?>>> requirementComponents = new HashMap<>();
+    private final List<ComponentRequirement<?, ?>> requirements = new ArrayList<>();
+    private final Map<ComponentRequirement<?, ?>, Iterable<ProcessingComponent<?>>> requirementComponents = new Object2ObjectArrayMap<>();
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMultiblockMachineController controller) {
         this.activeRecipe = activeRecipe;
         this.controller = controller;
         this.commandSender = new ControllerCommandSender(this.controller);
-        this.requirements = new ArrayList<>((int) (getParentRecipe().getCraftingRequirements().size() * 1.5));
 
         for (ComponentRequirement<?, ?> craftingRequirement : getParentRecipe().getCraftingRequirements()) {
             this.requirements.add(craftingRequirement.deepCopy());

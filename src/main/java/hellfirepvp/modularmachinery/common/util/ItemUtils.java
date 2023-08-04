@@ -299,9 +299,9 @@ public class ItemUtils {
 
     public static int tryPlaceItemInInventory(@Nonnull ItemStack stack, IItemHandlerModifiable handler, int start, int end, boolean simulate) {
         ItemStack toAdd = stack.copy();
-        if (!hasInventorySpace(toAdd, handler, start, end)) {
-            return 0;
-        }
+//        if (!hasInventorySpace(toAdd, handler, start, end)) {
+//            return 0;
+//        }
         int insertedAmt = 0;
         int max = toAdd.getMaxStackSize();
 

@@ -133,7 +133,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public abstract void doControllerTick();
 
     protected IOInventory buildInventory() {
-        return new IOInventory(this, new int[0], new int[0]).setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
+        return (IOInventory) new IOInventory(this, new int[0], new int[0]).setMiscSlots(BLUEPRINT_SLOT, ACCELERATOR_SLOT);
     }
 
     protected int getStrongPower() {

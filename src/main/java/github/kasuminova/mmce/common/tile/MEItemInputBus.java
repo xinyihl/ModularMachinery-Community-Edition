@@ -46,7 +46,7 @@ public class MEItemInputBus extends MEItemBus {
             slotIDs[slotID] = slotID;
         }
 
-        return new IOInventory(this, new int[]{}, new int[]{}).setMiscSlots(slotIDs);
+        return (IOInventory) new IOInventory(this, new int[]{}, new int[]{}).setMiscSlots(slotIDs);
     }
 
     @Override
