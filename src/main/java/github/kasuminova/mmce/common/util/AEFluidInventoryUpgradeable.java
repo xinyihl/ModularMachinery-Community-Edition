@@ -1,4 +1,4 @@
-package github.kasuminova.util;
+package github.kasuminova.mmce.common.util;
 
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.core.AELog;
@@ -21,10 +21,10 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     private int capacity;
     private IFluidTankProperties[] props = null;
 
-    public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots, final int capcity) {
+    public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots, final int capacity) {
         this.fluids = new IAEFluidStack[slots];
         this.handler = handler;
-        this.capacity = capcity;
+        this.capacity = capacity;
     }
 
     public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots) {
@@ -98,14 +98,14 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
         final IAEFluidStack fluid = this.fluids[slot];
 
-        if (fluid != null && !fluid.equals(resource)) {
+        if (fluid != null && !fluid.getFluidStack().isFluidEqual(resource)) {
             return 0;
         }
 
         int amountToStore = this.capacity;
 
         if (fluid != null) {
-            amountToStore -= fluid.getStackSize();
+            amountToStore -= (int) fluid.getStackSize();
         }
 
         amountToStore = Math.min(amountToStore, resource.amount);
@@ -124,7 +124,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
     public FluidStack drain(final int slot, final FluidStack resource, final boolean doDrain) {
         final IAEFluidStack fluid = this.fluids[slot];
-        if (fluid == null || !fluid.equals(resource)) {
+        if (fluid == null || !fluid.getFluidStack().isFluidEqual(resource)) {
             return null;
         }
         return this.drain(slot, resource.amount, doDrain);
@@ -254,7 +254,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
     public void readFromNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = data.getCompoundTag(name);
-        if (c != null) {
+        if (!c.isEmpty()) {
             this.readFromNBT(c);
         }
     }
@@ -264,7 +264,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
             try {
                 final NBTTagCompound c = target.getCompoundTag("#" + x);
 
-                if (c != null) {
+                if (!c.isEmpty()) {
                     this.fluids[x] = AEFluidStack.fromNBT(c);
                 }
             } catch (final Exception e) {
@@ -276,7 +276,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     private class FluidTankPropertiesWrapper implements IFluidTankProperties {
         private final int slot;
 
-        public FluidTankPropertiesWrapper(final int slot) {
+        private FluidTankPropertiesWrapper(final int slot) {
             this.slot = slot;
         }
 

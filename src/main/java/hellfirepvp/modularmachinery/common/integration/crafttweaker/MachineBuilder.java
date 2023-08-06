@@ -10,6 +10,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
+import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -331,6 +332,15 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder addStructureFormedHandler(IEventHandler<MachineStructureFormedEvent> function) {
         machine.addMachineEventHandler(MachineStructureFormedEvent.class, function);
+        return this;
+    }
+
+    /**
+     * 添加结构更新事件监听器。
+     */
+    @ZenMethod
+    public MachineBuilder addStructureUpdateHandler(IEventHandler<MachineStructureUpdateEvent> function) {
+        machine.addMachineEventHandler(MachineStructureUpdateEvent.class, function);
         return this;
     }
 

@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
@@ -29,7 +30,6 @@ import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.JsonUtils;
-import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -148,8 +148,8 @@ public class DynamicMachine extends AbstractMachine {
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe,
                                                TileMultiblockMachineController controller,
-                                               Collection<Tuple<MachineComponent<?>, ComponentSelectorTag>> taggedComponents,
-                                               Collection<RecipeModifier> modifiers) {
+                                               List<ProcessingComponent<?>> taggedComponents,
+                                               List<RecipeModifier> modifiers) {
         if (!activeRecipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {
             throw new IllegalArgumentException("Tried to create context for a recipe that doesn't belong to the referenced machine!");
         }

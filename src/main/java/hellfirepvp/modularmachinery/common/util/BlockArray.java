@@ -48,6 +48,7 @@ public class BlockArray {
     private static final ResourceLocation IC_2_TILE_BLOCK = new ResourceLocation("ic2", "te");
 
     public final long traitNum;
+
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     protected Map<BlockPos, BlockInformation> tileBlocksArray = new HashMap<>();
     private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
@@ -555,28 +556,7 @@ public class BlockArray {
             return bi;
         }
 
-        public boolean matchesState(IBlockState state) {
-            Block atBlock = state.getBlock();
-            int atMeta = atBlock.getMetaFromState(state);
-
-            for (IBlockStateDescriptor descriptor : matchingStates) {
-                for (IBlockState applicable : descriptor.applicable) {
-                    Block type = applicable.getBlock();
-                    int meta = type.getMetaFromState(applicable);
-                    if (type.equals(state.getBlock()) && meta == atMeta) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public boolean matches(World world, BlockPos at, boolean default_) {
-            if (!world.isBlockLoaded(at)) {
-                return default_;
-            }
-
-            IBlockState state = world.getBlockState(at);
+        public boolean matchesState(World world, BlockPos at, IBlockState state) {
             Block atBlock = state.getBlock();
             int atMeta = atBlock.getMetaFromState(state);
 
@@ -602,6 +582,15 @@ public class BlockArray {
                 }
             }
             return false;
+        }
+
+        public boolean matches(World world, BlockPos at, boolean default_) {
+            if (!world.isBlockLoaded(at)) {
+                return default_;
+            }
+
+            IBlockState state = world.getBlockState(at);
+            return matchesState(world, at, state);
         }
 
         private boolean isNBTCheckerMatch(World world, BlockPos at, IBlockState applicable) {

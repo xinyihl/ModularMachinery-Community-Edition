@@ -6,10 +6,7 @@ import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
-import github.kasuminova.mmce.common.event.machine.MachineEvent;
-import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
-import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
-import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
+import github.kasuminova.mmce.common.event.machine.*;
 import github.kasuminova.mmce.common.event.recipe.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -32,6 +29,18 @@ public class MMEvents {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
                 machine.addMachineEventHandler(MachineStructureFormedEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onStructureUpdate(String machineRegistryName, IEventHandler<MachineStructureUpdateEvent> function) {
+        WAIT_FOR_REGISTER_LIST.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(MachineStructureUpdateEvent.class, function);
             } else {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
@@ -147,6 +156,11 @@ public class MMEvents {
     @ZenMethod
     public static MachineStructureFormedEvent castToMachineStructureFormedEvent(MachineEvent event) {
         return event instanceof MachineStructureFormedEvent ? (MachineStructureFormedEvent) event : null;
+    }
+
+    @ZenMethod
+    public static MachineStructureUpdateEvent castToMachineStructureUpdateEvent(MachineEvent event) {
+        return event instanceof MachineStructureUpdateEvent ? (MachineStructureUpdateEvent) event : null;
     }
 
     @ZenMethod

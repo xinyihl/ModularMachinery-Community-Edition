@@ -8,8 +8,7 @@ import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleDynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
+import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import net.minecraft.item.ItemStack;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
@@ -27,9 +26,9 @@ public class MachineUpgradeHelper {
      */
     @ZenMethod
     public static void registerSupportedItem(IItemStack itemStack) {
-        Item item = CraftTweakerMC.getItemStack(itemStack).getItem();
-        if (item != Items.AIR) {
-            MachineUpgrade.addSupportedItem(item);
+        ItemStack stack = CraftTweakerMC.getItemStack(itemStack);
+        if (!stack.isEmpty()) {
+            RegistryUpgrade.addSupportedItem(stack);
         }
     }
 
@@ -41,43 +40,43 @@ public class MachineUpgradeHelper {
      */
     @ZenMethod
     public static void addFixedUpgrade(IItemStack itemStack, String upgradeName) {
-        Item item = CraftTweakerMC.getItemStack(itemStack).getItem();
-        if (item == Items.AIR) {
+        ItemStack stack = CraftTweakerMC.getItemStack(itemStack);
+        if (stack.isEmpty()) {
             return;
         }
-        MachineUpgrade upgrade = MachineUpgrade.getUpgrade(upgradeName);
+        MachineUpgrade upgrade = RegistryUpgrade.getUpgrade(upgradeName);
         if (upgrade == null) {
             CraftTweakerAPI.logError("[ModularMachinery] Cloud not find MachineUpgrade " + upgradeName + '!');
             return;
         }
-        MachineUpgrade.addFixedUpgrade(item, upgrade);
+        RegistryUpgrade.addFixedUpgrade(stack, upgrade);
     }
 
     /**
-     * 将一个升级应用至机械升级
+     * 将一个升级应用至机械升级，相当于直接写入相关升级的 NBT.
      *
-     * @param iItemStack  物品
+     * @param stackCT  物品
      * @param upgradeName 名称
      * @return 添加了目标机械升级的物品。
      */
     @ZenMethod
-    public static IItemStack addUpgradeToIItemStack(IItemStack iItemStack, String upgradeName) {
-        ItemStack itemStack = CraftTweakerMC.getItemStack(iItemStack);
-        if (!MachineUpgrade.supportsUpgrade(itemStack.getItem())) {
-            CraftTweakerAPI.logWarning(iItemStack.getDefinition().getId() + " does not support upgrade!");
-            return iItemStack;
+    public static IItemStack addUpgradeToIItemStack(IItemStack stackCT, String upgradeName) {
+        ItemStack stack = CraftTweakerMC.getItemStack(stackCT);
+        if (!RegistryUpgrade.supportsUpgrade(stack)) {
+            CraftTweakerAPI.logWarning(stackCT.getDefinition().getId() + " does not support upgrade!");
+            return stackCT;
         }
-        CapabilityUpgrade capability = itemStack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
+        CapabilityUpgrade capability = stack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
         if (capability == null) {
-            return iItemStack;
+            return stackCT;
         }
-        MachineUpgrade upgrade = MachineUpgrade.getUpgrade(upgradeName);
+        MachineUpgrade upgrade = RegistryUpgrade.getUpgrade(upgradeName);
         if (upgrade == null) {
             CraftTweakerAPI.logWarning("Cloud not found MachineUpgrade " + upgradeName + '!');
-            return iItemStack;
+            return stackCT;
         }
         capability.getUpgrades().add(upgrade);
-        return CraftTweakerMC.getIItemStack(itemStack);
+        return CraftTweakerMC.getIItemStack(stack);
     }
 
     /**
@@ -89,7 +88,7 @@ public class MachineUpgradeHelper {
     @Nullable
     @ZenMethod
     public static MachineUpgrade getUpgrade(String upgradeName) {
-        return MachineUpgrade.getUpgrade(upgradeName);
+        return RegistryUpgrade.getUpgrade(upgradeName);
     }
 
     /**

@@ -426,13 +426,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * 清理闲置时间过长的线程。
      */
     protected void cleanIdleTimeoutThread() {
-        for (int i = 0; i < recipeThreadList.size(); i++) {
-            FactoryRecipeThread thread = recipeThreadList.get(i);
-            if (thread.isIdle() && thread.idleTime >= FactoryRecipeThread.IDLE_TIME_OUT) {
-                recipeThreadList.remove(i);
-                i--;
-            }
+        if (ticksExisted % 20 != 0) {
+            return;
         }
+        recipeThreadList.removeIf(thread -> thread.isIdle() && thread.idleTime >= FactoryRecipeThread.IDLE_TIME_OUT);
     }
 
     public boolean hasIdleThread() {
@@ -452,20 +449,20 @@ public class TileFactoryController extends TileMultiblockMachineController {
     @Override
     protected void updateComponents() {
         super.updateComponents();
-        for (final FactoryRecipeThread thread : this.recipeThreadList) {
+        for (final FactoryRecipeThread thread : recipeThreadList) {
             RecipeCraftingContext ctx = thread.getContext();
             if (ctx == null) {
                 continue;
             }
-            ctx.updateComponents(this.foundComponents);
+            ctx.updateComponents(Collections.unmodifiableList(foundComponents));
         }
 
-        for (final FactoryRecipeThread thread : this.coreRecipeThreads.values()) {
+        for (final FactoryRecipeThread thread : coreRecipeThreads.values()) {
             RecipeCraftingContext ctx = thread.getContext();
             if (ctx == null) {
                 continue;
             }
-            ctx.updateComponents(this.foundComponents);
+            ctx.updateComponents(Collections.unmodifiableList(foundComponents));
         }
     }
 

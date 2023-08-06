@@ -2,6 +2,7 @@ package github.kasuminova.mmce.common.capability;
 
 import github.kasuminova.mmce.common.upgrade.DynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
+import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,6 +19,7 @@ import java.util.List;
 public class CapabilityUpgrade {
     public static final ResourceLocation CAPABILITY_NAME = new ResourceLocation(ModularMachinery.MODID, "upgrade_cap");
 
+    @SuppressWarnings("NonConstantFieldWithUpperCaseName")
     @CapabilityInject(CapabilityUpgrade.class)
     public static Capability<CapabilityUpgrade> MACHINE_UPGRADE_CAPABILITY = null;
 
@@ -48,7 +50,7 @@ public class CapabilityUpgrade {
         upgrades.clear();
         for (final String upgradeType : tag.getKeySet()) {
             NBTTagCompound upgradeTag = tag.getCompoundTag(upgradeType);
-            MachineUpgrade upgrade = MachineUpgrade.getUpgrade(upgradeType);
+            MachineUpgrade upgrade = RegistryUpgrade.getUpgrade(upgradeType);
 
             if (upgrade == null) {
                 continue;

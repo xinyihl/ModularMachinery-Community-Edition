@@ -61,7 +61,7 @@ public class GuiContainerUpgradeBus extends GuiContainerBase<ContainerUpgradeBus
 
         List<String> description = new ArrayList<>();
         Map<BlockPos, DynamicMachine> boundedMachine = component.getBoundedMachine();
-        Map<UpgradeType, MachineUpgrade> upgrades = component.getUpgrades(null);
+        Map<UpgradeType, List<MachineUpgrade>> upgrades = component.getUpgrades(null);
 
         collectBoundedMachineDescriptions(description, boundedMachine, upgrades);
         collectUpgradeDescriptions(component, description, upgrades);
@@ -81,42 +81,47 @@ public class GuiContainerUpgradeBus extends GuiContainerBase<ContainerUpgradeBus
         GlStateManager.popMatrix();
     }
 
-    private static void collectBoundedMachineDescriptions(final List<String> description,
+    private static void collectBoundedMachineDescriptions(final List<String> desc,
                                                           final Map<BlockPos, DynamicMachine> boundedMachine,
-                                                          final Map<UpgradeType, MachineUpgrade> upgrades) {
+                                                          final Map<UpgradeType, List<MachineUpgrade>> founded) {
         if (boundedMachine.isEmpty()) {
-            description.add(I18n.format("gui.upgradebus.bounded.empty"));
+            desc.add(I18n.format("gui.upgradebus.bounded.empty"));
             return;
         } else {
-            description.add(I18n.format("gui.upgradebus.bounded", boundedMachine.size()));
+            desc.add(I18n.format("gui.upgradebus.bounded", boundedMachine.size()));
         }
+
         boundedMachine.forEach((pos, machine) -> {
-            description.add(String.format("%s (%s)", machine.getLocalizedName(), MiscUtils.posToString(pos)));
-            upgrades.forEach((type, upgrade) -> {
-                if (type.isCompatible(machine)) {
-                    return;
+            desc.add(String.format("%s (%s)", machine.getLocalizedName(), MiscUtils.posToString(pos)));
+            founded.forEach((type, upgrades) -> {
+                for (final MachineUpgrade upgrade : upgrades) {
+                    if (type.isCompatible(machine)) {
+                        return;
+                    }
+
+                    desc.add("   " + I18n.format(
+                            "gui.upgradebus.incompatible", upgrade.getType().getLocalizedName()));
                 }
-                description.add("   " + I18n.format("gui.upgradebus.incompatible", upgrade.getType().getLocalizedName()));
             });
         });
-        description.add("");
+        desc.add("");
     }
 
-    private static void collectUpgradeDescriptions(final TileUpgradeBus.UpgradeBusProvider component, final List<String> description, final Map<UpgradeType, MachineUpgrade> upgrades) {
-        upgrades.values().forEach(upgrade -> {
+    private static void collectUpgradeDescriptions(final TileUpgradeBus.UpgradeBusProvider component, final List<String> desc, final Map<UpgradeType, List<MachineUpgrade>> founded) {
+        founded.values().forEach(upgrades -> upgrades.forEach(upgrade -> {
             upgrade.readNBT(component.getUpgradeCustomData(upgrade));
 
             int stackSize = upgrade.getStackSize();
-            description.add(stackSize + "x " + upgrade.getType().getLocalizedName());
+            desc.add(stackSize + "x " + upgrade.getType().getLocalizedName());
 
             List<String> busDesc = upgrade.getBusGUIDescriptions();
             if (busDesc.isEmpty()) {
                 return;
             }
 
-            description.addAll(busDesc);
-            description.add("");
-        });
+            desc.addAll(busDesc);
+            desc.add("");
+        }));
     }
 
     @Override
@@ -142,8 +147,8 @@ public class GuiContainerUpgradeBus extends GuiContainerBase<ContainerUpgradeBus
     }
 
     public void updateScrollbar(int displayX, int displayY, int range) {
-        scrollbar.setLeft(SCROLLBAR_LEFT + displayX).setTop(SCROLLBAR_TOP + displayY).setHeight(SCROLLBAR_HEIGHT);
-        scrollbar.setRange(0, range, 1);
+        scrollbar.setLeft(SCROLLBAR_LEFT + displayX).setTop(SCROLLBAR_TOP + displayY).setHeight(SCROLLBAR_HEIGHT)
+                .setRange(0, range, 1);
     }
 
     @Override

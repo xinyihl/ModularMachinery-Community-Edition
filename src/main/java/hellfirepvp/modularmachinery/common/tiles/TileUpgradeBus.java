@@ -3,6 +3,7 @@ package hellfirepvp.modularmachinery.common.tiles;
 import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
+import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -26,9 +27,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineComponentTile {
@@ -171,27 +170,34 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             return boundedMachine;
         }
 
-        public Map<UpgradeType, MachineUpgrade> getUpgrades(@Nullable TileMultiblockMachineController controller) {
+        public Map<UpgradeType, List<MachineUpgrade>> getUpgrades(@Nullable TileMultiblockMachineController controller) {
             IOInventory inventory = TileUpgradeBus.this.inventory;
-            HashMap<UpgradeType, MachineUpgrade> found = new HashMap<>();
+            HashMap<UpgradeType, List<MachineUpgrade>> found = new HashMap<>();
             for (int i = 0; i < inventory.getSlots(); i++) {
-                ItemStack stackInSlot = inventory.getStackInSlot(i);
-                if (!MachineUpgrade.supportsUpgrade(stackInSlot.getItem())) {
+                ItemStack stack = inventory.getStackInSlot(i);
+                if (!RegistryUpgrade.supportsUpgrade(stack)) {
                     continue;
                 }
 
-                CapabilityUpgrade capability = stackInSlot.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
+                CapabilityUpgrade capability = stack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
                 if (capability == null) {
                     continue;
                 }
 
+                add:
                 for (MachineUpgrade upgrade : capability.getUpgrades()) {
                     if (controller != null && !upgrade.getType().isCompatible(controller.getFoundMachine())) {
                         continue;
                     }
 
-                    found.computeIfAbsent(upgrade.getType(), v -> upgrade.copy().setParentBus(TileUpgradeBus.this))
-                            .incrementStackSize(stackInSlot.getCount());
+                    List<MachineUpgrade> upgrades = found.computeIfAbsent(upgrade.getType(), v -> new ArrayList<>());
+                    for (final MachineUpgrade u : upgrades) {
+                        if (u.equals(upgrade)) {
+                            u.incrementStackSize(stack.getCount());
+                        }
+                        continue add;
+                    }
+                    upgrades.add(upgrade.copy().setParentBus(TileUpgradeBus.this));
                 }
             }
             return found;

@@ -121,4 +121,17 @@ public class SimpleDynamicMachineUpgrade extends DynamicMachineUpgrade {
         upgrade.eventProcessor.putAll(eventProcessor);
         return upgrade;
     }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof SimpleDynamicMachineUpgrade)) {
+            return false;
+        }
+        SimpleDynamicMachineUpgrade another = (SimpleDynamicMachineUpgrade) obj;
+        if (!type.equals(((SimpleDynamicMachineUpgrade) obj).type)) {
+            return false;
+        }
+
+        return itemData.equals(another.itemData);
+    }
 }
