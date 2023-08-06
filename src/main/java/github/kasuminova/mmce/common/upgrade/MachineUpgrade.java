@@ -3,19 +3,15 @@ package github.kasuminova.mmce.common.upgrade;
 import crafttweaker.annotations.ZenRegister;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.UpgradeEventHandlerCT;
 import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
-import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineUpgrade")
 public abstract class MachineUpgrade {
-    private static final HashMap<String, MachineUpgrade> UPGRADES = new HashMap<>();
-    private static final HashMap<Item, List<MachineUpgrade>> ITEM_UPGRADES = new HashMap<>();
 
     protected final UpgradeType type;
     protected final Map<Class<?>, List<UpgradeEventHandlerCT>> eventProcessor = new HashMap<>();
@@ -26,35 +22,6 @@ public abstract class MachineUpgrade {
         this.type = type;
     }
 
-    public static void clearAll() {
-        UPGRADES.clear();
-        ITEM_UPGRADES.clear();
-    }
-
-    @Nullable
-    public static List<MachineUpgrade> getItemUpgradeList(Item item) {
-        return ITEM_UPGRADES.get(item);
-    }
-
-    public static boolean supportsUpgrade(Item item) {
-        return ITEM_UPGRADES.containsKey(item);
-    }
-
-    public static void addFixedUpgrade(Item item, MachineUpgrade upgrade) {
-        ITEM_UPGRADES.computeIfAbsent(item, v -> new ArrayList<>()).add(upgrade);
-    }
-
-    public static void addSupportedItem(Item item) {
-        ITEM_UPGRADES.computeIfAbsent(item, v -> new ArrayList<>());
-    }
-
-    public static void registerUpgrade(String type, MachineUpgrade upgrade) {
-        UPGRADES.put(type, upgrade);
-    }
-
-    public static MachineUpgrade getUpgrade(String type) {
-        return UPGRADES.get(type);
-    }
 
     public void readNBT(NBTTagCompound tag) {
 
@@ -114,6 +81,7 @@ public abstract class MachineUpgrade {
         if (!(obj instanceof MachineUpgrade)) {
             return false;
         }
-        return type.equals(((MachineUpgrade) obj).type);
+        MachineUpgrade another = (MachineUpgrade) obj;
+        return type.equals((another).type) && parentBus == another.parentBus;
     }
 }

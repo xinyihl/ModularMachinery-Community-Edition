@@ -33,6 +33,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 
 /**
  * <p>完全重构的社区版机械控制器，拥有强大的异步逻辑和极低的性能消耗。</p>
@@ -150,7 +151,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         if (ctx == null) {
             return;
         }
-        ctx.updateComponents(this.foundComponents);
+        ctx.updateComponents(Collections.unmodifiableList(foundComponents));
     }
 
     @Override

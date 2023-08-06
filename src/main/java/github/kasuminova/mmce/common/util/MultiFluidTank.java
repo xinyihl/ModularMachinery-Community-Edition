@@ -1,4 +1,4 @@
-package github.kasuminova.util;
+package github.kasuminova.mmce.common.util;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;

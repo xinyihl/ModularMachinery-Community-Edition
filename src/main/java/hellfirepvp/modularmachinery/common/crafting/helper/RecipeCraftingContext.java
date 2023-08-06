@@ -18,14 +18,12 @@ import hellfirepvp.modularmachinery.common.crafting.command.ControllerCommandSen
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import net.minecraft.util.Tuple;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,7 +46,6 @@ public class RecipeCraftingContext {
     private final ActiveMachineRecipe activeRecipe;
     private final TileMultiblockMachineController controller;
     private final ControllerCommandSender commandSender;
-    private final List<ProcessingComponent<?>> typeComponents = new LinkedList<>();
     private final Map<RequirementType<?, ?>, List<RecipeModifier>> modifiers = new HashMap<>();
     private final Map<RequirementType<?, ?>, RecipeModifier.ModifierApplier> modifierAppliers = new HashMap<>();
     private final Map<RequirementType<?, ?>, RecipeModifier.ModifierApplier> chanceModifierAppliers = new HashMap<>();
@@ -56,6 +53,8 @@ public class RecipeCraftingContext {
     private final List<ComponentOutputRestrictor> currentRestrictions = new ArrayList<>();
     private final List<ComponentRequirement<?, ?>> requirements = new ArrayList<>();
     private final Map<ComponentRequirement<?, ?>, Iterable<ProcessingComponent<?>>> requirementComponents = new Object2ObjectArrayMap<>();
+
+    private List<ProcessingComponent<?>> typeComponents = new ArrayList<>();
 
     public RecipeCraftingContext(ActiveMachineRecipe activeRecipe, TileMultiblockMachineController controller) {
         this.activeRecipe = activeRecipe;
@@ -108,10 +107,12 @@ public class RecipeCraftingContext {
                 continue;
             }
 
-            if (tag != null && tag.equals(requirement.tag)) {
-                validComponents.addFirst(typeComponent);
+            if (requirement.tag != null) {
+                if (requirement.tag.equals(tag)) {
+                    validComponents.addFirst(typeComponent);
+                }
             } else {
-                validComponents.addLast(typeComponent);
+                validComponents.addFirst(typeComponent);
             }
         }
 
@@ -300,11 +301,9 @@ public class RecipeCraftingContext {
                 .filter(requirementFilter)
                 .collect(Collectors.toList());
 
-        lblRequirements:
         for (ComponentRequirement<?, ?> requirement : requirements) {
             if (canStartCrafting(result, requirement)) {
                 successfulRequirements++;
-                continue lblRequirements;
             }
         }
         result.setValidity(successfulRequirements / requirements.size());
@@ -342,16 +341,9 @@ public class RecipeCraftingContext {
         return false;
     }
 
-    public void updateComponents(Collection<Tuple<MachineComponent<?>, ComponentSelectorTag>> components) {
-        this.typeComponents.clear();
-        for (final Tuple<MachineComponent<?>, ComponentSelectorTag> tuple : components) {
-            addComponent(tuple.getFirst(), tuple.getSecond());
-        }
+    public void updateComponents(List<ProcessingComponent<?>> components) {
+        this.typeComponents = components;
         updateRequirementComponents();
-    }
-
-    public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag) {
-        this.typeComponents.add(new ProcessingComponent<>(component, component.getContainerProvider(), tag));
     }
 
     public void updateRequirementComponents() {

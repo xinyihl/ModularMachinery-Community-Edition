@@ -30,7 +30,7 @@ public interface IMachineController {
      * 获取对应 IWorld 中的某个坐标的控制器。
      *
      * @param worldCT IWorld
-     * @param posCT IBlockPos
+     * @param posCT   IBlockPos
      * @return 如果无控制器则返回 null，否则返回 IMachineController 实例。
      */
     @ZenMethod
@@ -97,8 +97,8 @@ public interface IMachineController {
     /**
      * 获取机器当前正在执行的配方。
      *
-     * @deprecated 已弃用，请使用 {@link ActiveMachineRecipe[] getActiveRecipeList}
      * @return 配方
+     * @deprecated 已弃用，请使用 {@link ActiveMachineRecipe[] getActiveRecipeList}
      */
     @Nullable
     @Deprecated
@@ -115,6 +115,7 @@ public interface IMachineController {
 
     /**
      * 获取机器所有的配方线程。
+     *
      * @return 线程列表，所有元素均不为空，包括闲置线程。
      */
     @ZenGetter("recipeThreadList")
@@ -241,6 +242,7 @@ public interface IMachineController {
 
     /**
      * 机械是否存在给定名称的机械升级。
+     *
      * @param upgradeName 名称
      * @return 存在返回 true，否则返回 false
      */
@@ -249,14 +251,14 @@ public interface IMachineController {
 
     /**
      * 根据给定的名称，获取控制器中的一个机械升级。
-     * 可为 null。
+     * 永不返回 null，但是回返回空数组。
      *
      * @param upgradeName 名称
-     * @return 机械升级，如果无则返回 null
+     * @return 机械升级，如果无则返回空数组
      */
     @Nullable
     @ZenMethod
-    MachineUpgrade getMachineUpgrade(String upgradeName);
+    MachineUpgrade[] getMachineUpgrade(String upgradeName);
 
     TileMultiblockMachineController getController();
 }

@@ -4,15 +4,11 @@ import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
-import github.kasuminova.mmce.common.event.machine.MachineEvent;
-import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
-import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
-import github.kasuminova.mmce.common.event.machine.SmartInterfaceUpdateEvent;
+import github.kasuminova.mmce.common.event.machine.*;
 import github.kasuminova.mmce.common.event.recipe.*;
-import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.SimpleDynamicMachineUpgrade;
-import github.kasuminova.mmce.common.upgrade.SimpleMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
+import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineModifier;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.IFunction;
@@ -44,7 +40,7 @@ public class DynamicMachineUpgradeBuilder {
      */
     @ZenMethod
     public static DynamicMachineUpgradeBuilder newBuilder(String name, String localizedName, int level, int maxStack) {
-        if (SimpleMachineUpgrade.getUpgrade(name) != null) {
+        if (RegistryUpgrade.getUpgrade(name) != null) {
             CraftTweakerAPI.logError("[ModularMachinery] Already registered SimpleMachineUpgrade " + name + '!');
             return null;
         }
@@ -224,6 +220,12 @@ public class DynamicMachineUpgradeBuilder {
     }
 
     @ZenMethod
+    public DynamicMachineUpgradeBuilder addStructureUpdateHandler(UpgradeEventHandlerCT handler) {
+        addEventHandler(MachineStructureUpdateEvent.class, handler);
+        return this;
+    }
+
+    @ZenMethod
     public DynamicMachineUpgradeBuilder addControllerGUIRenderHandler(UpgradeEventHandlerCT handler) {
         addEventHandler(ControllerGUIRenderEvent.class, handler);
         return this;
@@ -237,7 +239,7 @@ public class DynamicMachineUpgradeBuilder {
 
     @ZenMethod
     public void buildAndRegister() {
-        MachineUpgrade.registerUpgrade(machineUpgrade.getType().getName(), machineUpgrade);
+        RegistryUpgrade.registerUpgrade(machineUpgrade.getType().getName(), machineUpgrade);
     }
 
     private <E extends MachineEvent> void addEventHandler(Class<E> eventClass, UpgradeEventHandlerCT handler) {

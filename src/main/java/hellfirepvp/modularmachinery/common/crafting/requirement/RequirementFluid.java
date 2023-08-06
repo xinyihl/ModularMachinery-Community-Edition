@@ -8,7 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import github.kasuminova.util.MultiFluidTank;
+import github.kasuminova.mmce.common.util.MultiFluidTank;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentHybridFluid;

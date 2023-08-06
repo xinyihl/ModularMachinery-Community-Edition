@@ -13,7 +13,7 @@ import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
-import github.kasuminova.util.AEFluidInventoryUpgradeable;
+import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
