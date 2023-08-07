@@ -52,7 +52,7 @@ public class MachineEventHandler {
                 provider.setUpgradeCustomData(upgrade, upgrade.writeNBT());
 
                 if (event.isCanceled()) {
-                    break;
+                    return;
                 }
             }
         }
