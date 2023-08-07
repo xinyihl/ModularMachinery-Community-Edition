@@ -2,11 +2,13 @@ package github.kasuminova.mmce.common.util;
 
 import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
@@ -158,12 +160,12 @@ public class DynamicPattern {
                 final int patternIndex = i;
                 // DynamicComponentSelectorTag
                 pattern.getTaggedPositions().forEach((pos, tag) -> ((TaggedPositionBlockArray) toAdd).setTag(
-                        pos, new ComponentSelectorTag(String.format("%s_%s_%d", tag.getTag(), name, patternIndex))));
+                        pos.add(finalOffset), new ComponentSelectorTag(String.format("%s_%s_%d", tag.getTag(), name, patternIndex))));
             }
         }
 
         if (patternEnd != null) {
-            BlockArray patternEnd = BlockArrayCache.getBlockArrayCache(this.patternEnd, facing);
+            TaggedPositionBlockArray patternEnd = BlockArrayCache.getBlockArrayCache(this.patternEnd, facing);
 //            if (patternOffset == EnumFacing.UP || patternOffset == EnumFacing.DOWN) {
 //                patternEnd = BlockArrayCache.getHorizontalBlockArrayCache(this.patternEnd, patternOffset, facing);
 //            } else {
@@ -175,34 +177,32 @@ public class DynamicPattern {
 
             if (toAdd instanceof TaggedPositionBlockArray) {
                 // DynamicComponentSelectorTag
-                pattern.getTaggedPositions().forEach((pos, tag) -> ((TaggedPositionBlockArray) toAdd).setTag(
-                        pos, new ComponentSelectorTag(String.format("%s_%s_end", tag.getTag(), name))));
+                patternEnd.getTaggedPositions().forEach((pos, tag) -> ((TaggedPositionBlockArray) toAdd).setTag(
+                        pos.add(finalOffset), new ComponentSelectorTag(String.format("%s_%s_end", tag.getTag(), name))));
             }
         }
     }
 
     private Set<EnumFacing> getTrueFacing(final EnumFacing facingOffset) {
-        Set<EnumFacing> faces = this.faces;
-
-        if (facingOffset != EnumFacing.NORTH) {
-            faces = faces.stream().map(face -> {
-                if (face == EnumFacing.UP || face == EnumFacing.DOWN) {
-                    return face;
-                }
-
-                EnumFacing facing = facingOffset;
-                EnumFacing rotated = face;
-
-                while (facing != EnumFacing.NORTH) {
-                    facing = facing.rotateYCCW();
-                    rotated = rotated.rotateYCCW();
-                }
-
-                return rotated;
-            }).collect(Collectors.toSet());
+        if (facingOffset == EnumFacing.NORTH) {
+            return faces;
         }
 
-        return faces;
+        return this.faces.stream().map(face -> {
+            if (face == EnumFacing.UP || face == EnumFacing.DOWN) {
+                return face;
+            }
+
+            EnumFacing facing = facingOffset;
+            EnumFacing rotated = face;
+
+            while (facing != EnumFacing.NORTH) {
+                facing = facing.rotateYCCW();
+                rotated = rotated.rotateYCCW();
+            }
+
+            return rotated;
+        }).collect(Collectors.toSet());
     }
 
     public String getName() {
@@ -324,6 +324,25 @@ public class DynamicPattern {
             this.pattern = pattern;
             this.matchFacing = matchFacing;
             this.size = size;
+        }
+
+        public static Status readFromNBT(final NBTTagCompound tag, final DynamicMachine machine) {
+            if (!tag.hasKey("size") || !tag.hasKey("facing") || !tag.hasKey("pattern")) {
+                return null;
+            }
+            DynamicPattern pattern = machine.getDynamicPatternByName(tag.getString("pattern"));
+            if (pattern == null) {
+                return null;
+            }
+
+            return new Status(pattern, EnumFacing.values()[tag.getInteger("facing")], tag.getInteger("size"));
+        }
+
+        public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+            tag.setString("pattern", pattern.name);
+            tag.setInteger("size", size);
+            tag.setInteger("facing", matchFacing.getIndex());
+            return tag;
         }
 
         @Override

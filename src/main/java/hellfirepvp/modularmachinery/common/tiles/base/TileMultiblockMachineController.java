@@ -60,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
@@ -291,7 +292,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             replacements = replacements.rotateYCCW();
         }
 
-        if (pattern.matches(getWorld(), getPos(), false, replacements) && matchesDynamicPattern(machine, rotation)) {
+        if (pattern.matches(getWorld(), getPos(), false, replacements) && matchesDynamicPatternRotation(machine, rotation)) {
             this.foundPattern = pattern;
             this.foundMachine = machine;
             this.foundReplacements = replacements;
@@ -301,7 +302,19 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return false;
     }
 
-    protected boolean matchesDynamicPattern(final DynamicMachine machine, final EnumFacing rotation) {
+    protected boolean matchesDynamicPattern(final DynamicMachine machine) {
+        for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
+            DynamicPattern pattern = status.getPattern();
+            DynamicPattern.MatchResult result = pattern.matches(this, true, controllerRotation);
+            if (!result.isMatched()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected boolean matchesDynamicPatternRotation(final DynamicMachine machine, final EnumFacing rotation) {
         this.foundDynamicPatterns.clear();
 
         Map<String, DynamicPattern> dynamicPatterns = machine.getDynamicPatterns();
@@ -439,18 +452,21 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
         }
 
-        this.foundPattern = new TaggedPositionBlockArray(foundPattern);
-        for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
-            DynamicPattern pattern = status.getPattern();
-            EnumFacing matchFacing = status.getMatchFacing();
-            int size = status.getSize();
-
-            pattern.addPatternToBlockArray(foundPattern, size, matchFacing, controllerRotation);
+        if (!foundDynamicPatterns.isEmpty()) {
+            addDynamicPatternToBlockArray();
         }
-        this.foundPattern.flushTileBlocksCache();
 
         resetStructureCheckCounter();
         markForUpdateSync();
+    }
+
+    private void addDynamicPatternToBlockArray() {
+        this.foundPattern = new TaggedPositionBlockArray(foundPattern);
+        for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
+            DynamicPattern pattern = status.getPattern();
+            pattern.addPatternToBlockArray(foundPattern, status.getSize(), status.getMatchFacing(), controllerRotation);
+        }
+        this.foundPattern.flushTileBlocksCache();
     }
 
     /**
@@ -474,7 +490,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 resetMachine(true);
             } else if (
                     !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
-                    !matchesDynamicPattern(foundMachine, controllerRotation))
+                    !matchesDynamicPattern(foundMachine))
             {
                 resetMachine(true);
             }
@@ -897,6 +913,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (this.foundMachine != null) {
             compound.setString("machine", this.foundMachine.getRegistryName().toString());
 
+            if (!foundDynamicPatterns.isEmpty()) {
+                NBTTagList tagList = new NBTTagList();
+                foundDynamicPatterns.values().forEach(pattern -> {
+                    NBTTagCompound patternTag = new NBTTagCompound();
+                    pattern.writeToNBT(patternTag);
+                    tagList.appendTag(patternTag);
+                });
+                compound.setTag("dynamicPatterns", tagList);
+            }
             if (!customData.isEmpty()) {
                 compound.setTag("customData", customData);
             }
@@ -938,6 +963,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
         this.foundPattern = pattern;
+
+        if (compound.hasKey("dynamicPatterns", Constants.NBT.TAG_LIST)) {
+            NBTTagList dynPatterns = compound.getTagList("dynamicPatterns", Constants.NBT.TAG_COMPOUND);
+            IntStream.range(0, dynPatterns.tagCount())
+                    .mapToObj(dynPatterns::getCompoundTagAt)
+                    .map(tag -> DynamicPattern.Status.readFromNBT(tag, foundMachine))
+                    .filter(Objects::nonNull)
+                    .forEach(patternStatus -> foundDynamicPatterns.put(patternStatus.getPatternName(), patternStatus));
+            if (!foundDynamicPatterns.isEmpty()) {
+                addDynamicPatternToBlockArray();
+            }
+        }
 
         DynamicMachine.ModifierReplacementMap replacements = machine.getModifiersAsMatchingReplacements();
         EnumFacing offset = EnumFacing.NORTH;
