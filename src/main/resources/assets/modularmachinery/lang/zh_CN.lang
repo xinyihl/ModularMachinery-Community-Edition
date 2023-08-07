@@ -93,6 +93,8 @@ component.missing.modularmachinery.interface.number=没有找到对应类型的�
 
 gui.blueprint.popout.info=潜行以将当前预览锁定在当前世界中。
 gui.blueprint.popout.place=右击以显示预览；远离或放置其他结构预览（蓝图）将会清除此前世界中的结构预览。
+gui.blueprint.smaller.info=点击减小动态结构的大小。（当前：%s）
+gui.blueprint.larger.info=点击增加动态结构的大小。（当前：%s）
 
 jei.category.preview=结构预览
 

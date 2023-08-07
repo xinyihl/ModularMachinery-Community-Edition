@@ -250,15 +250,25 @@ public interface IMachineController {
     boolean hasMachineUpgrade(String upgradeName);
 
     /**
-     * 根据给定的名称，获取控制器中的一个机械升级。
-     * 永不返回 null，但是回返回空数组。
+     * 根据给定的名称，获取控制器中的一类机械升级。
+     * 如果不存在时不返回 null，返回空数组。
      *
      * @param upgradeName 名称
      * @return 机械升级，如果无则返回空数组
      */
-    @Nullable
     @ZenMethod
     MachineUpgrade[] getMachineUpgrade(String upgradeName);
+
+    /**
+     * 根据给定的名称，获取控制器对应机械的一个动态结构。
+     * 如果不存在给定的动态结构，则返回 null。
+     *
+     * @param patternName 名称
+     * @return 动态结构信息，如果无则返回 null
+     */
+    @Nullable
+    @ZenMethod
+    IDynamicPatternInfo getDynamicPattern(String patternName);
 
     TileMultiblockMachineController getController();
 }

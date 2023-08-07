@@ -70,6 +70,14 @@ public class MiscUtils {
         return new BlockPos(pos.getZ(), pos.getY(), -pos.getX());
     }
 
+    public static BlockPos rotateDown(BlockPos pos) {
+        return new BlockPos(pos.getX(), pos.getZ(), -pos.getY());
+    }
+
+    public static BlockPos rotateUp(BlockPos pos) {
+        return new BlockPos(pos.getX(), pos.getZ(), pos.getY());
+    }
+
     public static <T> List<T> flatten(Collection<List<T>> collection) {
         List<T> list = new ArrayList<>(collection.size());
         for (List<T> ts : collection) {

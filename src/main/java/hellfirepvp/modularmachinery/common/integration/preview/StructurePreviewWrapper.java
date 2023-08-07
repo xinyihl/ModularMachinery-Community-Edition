@@ -33,6 +33,7 @@ import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import mezz.jei.gui.TooltipRenderer;
 import mezz.jei.gui.recipes.RecipeLayout;
 import mezz.jei.gui.recipes.RecipesGui;
 import net.minecraft.block.Block;
@@ -113,6 +114,10 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
     private final IDrawable drawable2DDisabled, drawable2DHover, drawable2DActive;
     private final IDrawable drawablePopOutDisabled, drawablePopOutHover, drawablePopOutActive;
     private final IDrawable drawableContentsDisabled, drawableContentsHover, drawableContentsActive;
+
+    private final IDrawable drawableDynPatternSizeSmaller, drawableDynPatternSizeSmallerHover;
+    private final IDrawable drawableDynPatternSizeLarger, drawableDynPatternSizeLargerHover;
+
     private final IDrawable drawableUpgradesHover;
     private final DynamicMachine machine;
     private DynamicMachineRenderContext dynamnicContext;
@@ -140,7 +145,13 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         this.drawableContentsHover = h.createDrawable(TEXTURE_BACKGROUND, 192, 64, 16, 16);
         this.drawableContentsActive = h.createDrawable(TEXTURE_BACKGROUND, 208, 64, 16, 16);
 
-        this.drawableUpgradesHover = h.createDrawable(TEXTURE_BACKGROUND, 0, 185, 100, 14);
+        this.drawableDynPatternSizeSmaller = h.createDrawable(TEXTURE_BACKGROUND, 176, 80, 16, 16);
+        this.drawableDynPatternSizeSmallerHover = h.createDrawable(TEXTURE_BACKGROUND, 192, 80, 16, 16);
+
+        this.drawableDynPatternSizeLarger = h.createDrawable(TEXTURE_BACKGROUND, 176, 96, 16, 16);
+        this.drawableDynPatternSizeLargerHover = h.createDrawable(TEXTURE_BACKGROUND, 192, 96, 16, 16);
+
+        this.drawableUpgradesHover = h.createDrawable(TEXTURE_BACKGROUND, 0, 185, 80, 14);
 
         this.ingredientListScrollbar = new GuiScrollbar().setLeft(152).setTop(144).setHeight(34);
     }
@@ -163,6 +174,31 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
 
     private static boolean isMouseOver(int mouseX, int mouseY, int width, int height) {
         return 0 < mouseX && mouseX < width && 0 < mouseY && mouseY < height;
+    }
+
+    public static List<Tuple<ItemStack, String>> getMachineUpgradeIngredients(DynamicMachineRenderContext dynamicContext) {
+        List<Tuple<ItemStack, String>> descriptionList = new LinkedList<>();
+        boolean first = true;
+        for (List<SingleBlockModifierReplacement> modifiers : dynamicContext.getDisplayedMachine().getModifiers().values()) {
+            for (SingleBlockModifierReplacement mod : modifiers) {
+                List<String> description = mod.getDescriptionLines();
+                if (description.isEmpty()) {
+                    continue;
+                }
+                if (!first) {
+                    descriptionList.add(new Tuple<>(ItemStack.EMPTY, ""));
+                }
+                first = false;
+                ItemStack stack = mod.getBlockInformation().getDescriptiveStack(dynamicContext.getShiftSnap());
+                List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
+                        ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
+                descriptionList.add(new Tuple<>(stack, Iterables.getFirst(tooltip, "")));
+                for (String str : description) {
+                    descriptionList.add(new Tuple<>(ItemStack.EMPTY, str));
+                }
+            }
+        }
+        return descriptionList;
     }
 
     @Override
@@ -191,6 +227,20 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
                 if (mouseX >= 132 && mouseX <= 132 + 16 &&
                         mouseY >= 122 && mouseY <= 122 + 16) {
                     dynamnicContext.setTo2D();
+                }
+
+                // DynamicPattern Size Smaller
+                if (mouseX >= 100 && mouseX <= +100 + 16 &&
+                        mouseY >= 106 && mouseY <= 106 + 16) {
+                    dynamnicContext = DynamicMachineRenderContext.createContext(
+                            dynamnicContext.getDisplayedMachine(), dynamnicContext.getDynamicPatternSize() - 1);
+                }
+
+                // DynamicPattern Size Larger
+                if (mouseX >= 100 && mouseX <= 100 + 16 &&
+                        mouseY >= 122 && mouseY <= 122 + 16) {
+                    dynamnicContext = DynamicMachineRenderContext.createContext(
+                            dynamnicContext.getDisplayedMachine(), dynamnicContext.getDynamicPatternSize() + 1);
                 }
             }
             if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&
@@ -280,14 +330,14 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
 
     private void renderUpgrades(final Minecraft minecraft, final int mouseX, final int mouseY) {
         minecraft.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
-        this.drawableUpgradesHover.draw(minecraft, 5, 124);
+        this.drawableUpgradesHover.draw(minecraft, 3, 124);
 
         GlStateManager.disableDepth();
         String reqBlueprint = I18n.format("tooltip.machinery.blueprint.upgrades");
-        minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 10, 127, 0xFFFFFF);
+        minecraft.fontRenderer.drawStringWithShadow(reqBlueprint, 6, 127, 0xFFFFFF);
         GlStateManager.enableDepth();
 
-        if (mouseX >= 5 && mouseX <= 105 && mouseY >= 124 && mouseY <= 139) {
+        if (mouseX >= 3 && mouseX <= 83 && mouseY >= 124 && mouseY <= 138) {
             List<Tuple<ItemStack, String>> descriptionList = getMachineUpgradeIngredients(dynamnicContext);
 
             RenderingUtils.renderBlueStackTooltip(mouseX, mouseY, descriptionList, minecraft.fontRenderer, Minecraft.getMinecraft().getRenderItem());
@@ -331,7 +381,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         double scaleJump = jumpWidth * scale;
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
-        Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
+        Map<BlockPos, BlockArray.BlockInformation> slice = dynamnicContext.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
         if (dynamnicContext.getRenderSlice() == 0) {
             slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
         }
@@ -409,31 +459,6 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         }
     }
 
-    public static List<Tuple<ItemStack, String>> getMachineUpgradeIngredients(DynamicMachineRenderContext dynamicContext) {
-        List<Tuple<ItemStack, String>> descriptionList = new LinkedList<>();
-        boolean first = true;
-        for (List<SingleBlockModifierReplacement> modifiers : dynamicContext.getDisplayedMachine().getModifiers().values()) {
-            for (SingleBlockModifierReplacement mod : modifiers) {
-                List<String> description = mod.getDescriptionLines();
-                if (description.isEmpty()) {
-                    continue;
-                }
-                if (!first) {
-                    descriptionList.add(new Tuple<>(ItemStack.EMPTY, ""));
-                }
-                first = false;
-                ItemStack stack = mod.getBlockInformation().getDescriptiveStack(dynamicContext.getShiftSnap());
-                List<String> tooltip = stack.getTooltip(Minecraft.getMinecraft().player, Minecraft.getMinecraft().gameSettings.advancedItemTooltips ?
-                        ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL);
-                descriptionList.add(new Tuple<>(stack, Iterables.getFirst(tooltip, "")));
-                for (String str : description) {
-                    descriptionList.add(new Tuple<>(ItemStack.EMPTY, str));
-                }
-            }
-        }
-        return descriptionList;
-    }
-
     private void drawButtons(Minecraft minecraft, int mouseX, int mouseY, int guiLeft, int guiTop, int recipeWidth, int recipeHeight) {
         if (dynamnicContext == null) { //Didn't even render machine yet...
             return;
@@ -443,7 +468,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         minecraft.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         minecraft.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
 
-        boolean drawPopoutInfo = false, drawContents = false;
+        boolean drawPopoutInfo = false, drawContents = false, drawSmallerPatternTip = false, drawLargerPatternTip = false;
 
         IDrawable drawable = drawable3DDisabled;
         if (!dynamnicContext.doesRenderIn3D()) {
@@ -486,6 +511,26 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         }
         drawable.draw(minecraft, guiLeft + 116, guiTop + 122);
 
+        if (!machine.getDynamicPatterns().isEmpty()) {
+            // DynamicPattern Size Smaller
+            drawable = drawableDynPatternSizeSmaller;
+            if (mouseX >= guiLeft + 100 && mouseX <= guiLeft + 100 + 16 &&
+                    mouseY >= guiTop + 106 && mouseY <= guiTop + 106 + 16) {
+                drawable = drawableDynPatternSizeSmallerHover;
+                drawSmallerPatternTip = true;
+            }
+            drawable.draw(minecraft, guiLeft + 100, guiTop + 106);
+
+            // DynamicPattern Size Larger
+            drawable = drawableDynPatternSizeLarger;
+            if (mouseX >= guiLeft + 100 && mouseX <= guiLeft + 100 + 16 &&
+                    mouseY >= guiTop + 122 && mouseY <= guiTop + 122 + 16) {
+                drawable = drawableDynPatternSizeLargerHover;
+                drawLargerPatternTip = true;
+            }
+            drawable.draw(minecraft, guiLeft + 100, guiTop + 122);
+        }
+
         if (dynamnicContext.doesRenderIn3D()) {
             GlStateManager.color(0.3F, 0.3F, 0.3F, 1.0F);
         } else {
@@ -515,11 +560,15 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         GlStateManager.translate(0.5, 0, 0); //Don't ask.
         minecraft.fontRenderer.drawStringWithShadow(String.valueOf(dynamnicContext.getRenderSlice()), guiLeft + 158 - (width / 2F), guiTop + 118, 0xFFFFFF);
         if (drawPopoutInfo) {
-            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
-            java.util.List<String> out = minecraft.fontRenderer.listFormattedStringToWidth(
-                    I18n.format("gui.blueprint.popout.info"),
-                    Math.min(res.getScaledWidth() - mouseX, 200));
-            RenderingUtils.renderBlueTooltip(mouseX, mouseY, out, minecraft.fontRenderer);
+            TooltipRenderer.drawHoveringText(minecraft, I18n.format("gui.blueprint.popout.info"), mouseX, mouseY);
+        }
+        if (drawSmallerPatternTip) {
+            TooltipRenderer.drawHoveringText(minecraft, I18n.format(
+                    "gui.blueprint.smaller.info", dynamnicContext.getDynamicPatternSize()), mouseX, mouseY);
+        }
+        if (drawLargerPatternTip) {
+            TooltipRenderer.drawHoveringText(minecraft, I18n.format(
+                    "gui.blueprint.larger.info", dynamnicContext.getDynamicPatternSize()), mouseX, mouseY);
         }
         if (drawContents) {
             java.util.List<ItemStack> contents = dynamnicContext.getDescriptiveStacks();

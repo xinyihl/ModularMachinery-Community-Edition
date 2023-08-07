@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.client.util;
 
+import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
@@ -19,6 +20,7 @@ import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -39,7 +41,9 @@ public class DynamicMachineRenderContext {
 
     private final DynamicMachine machine;
     private final BlockArrayRenderHelper render;
+    private final BlockArray pattern;
     private final Vec3i moveOffset;
+    private int dynamicPatternSize;
 
     private boolean render3D = true;
     private int renderSlice = 0;
@@ -48,24 +52,53 @@ public class DynamicMachineRenderContext {
     private long shiftSnap = -1;
 
     private DynamicMachineRenderContext(DynamicMachine machine) {
+        this(machine, machine.getPattern(), 0);
+    }
+
+    private DynamicMachineRenderContext(DynamicMachine machine, BlockArray pattern, int dynamicPatternSize) {
         this.machine = machine;
-        BlockArray pattern = machine.getPattern();
-        Vec3i min = pattern.getMin();
-        Vec3i max = pattern.getMax();
+        this.dynamicPatternSize = dynamicPatternSize;
+
+        BlockArray copy = buildDynamicPattern(machine, new BlockArray(pattern));
+
+        Vec3i min = copy.getMin();
+        Vec3i max = copy.getMax();
         this.moveOffset = new Vec3i(
                 (min.getX() + (max.getX() - min.getX()) / 2) * -1,
                 -min.getY(),
-                (min.getZ() + (max.getZ() - min.getZ()) / 2) * -1);
+                (min.getZ() + (max.getZ() - min.getZ()) / 2) * -1
+        );
 
-        BlockArray copy = new BlockArray(pattern, this.moveOffset);
+        copy = new BlockArray(copy, moveOffset);
 
         addControllerToBlockArray(machine, copy, this.moveOffset);
         addReplacementToBlockArray(machine.getModifiersAsMatchingReplacements(), copy, this.moveOffset);
 
+        this.pattern = copy;
         this.render = new BlockArrayRenderHelper(copy);
     }
 
-    private void addControllerToBlockArray(DynamicMachine machine, BlockArray copy, Vec3i moveOffset) {
+    private BlockArray buildDynamicPattern(final DynamicMachine machine, BlockArray copy) {
+        Map<String, DynamicPattern> dynamicPatterns = machine.getDynamicPatterns();
+
+        if (!dynamicPatterns.isEmpty()) {
+            for (final DynamicPattern pattern : dynamicPatterns.values()) {
+                this.dynamicPatternSize = Math.max(dynamicPatternSize, pattern.getMinSize());
+            }
+
+            for (final DynamicPattern pattern : dynamicPatterns.values()) {
+                pattern.addPatternToBlockArray(
+                        copy,
+                        Math.min(Math.max(pattern.getMinSize(), dynamicPatternSize), pattern.getMaxSize()),
+                        pattern.getFaces().iterator().next(),
+                        EnumFacing.NORTH);
+            }
+        }
+
+        return copy;
+    }
+
+    private static void addControllerToBlockArray(DynamicMachine machine, BlockArray copy, Vec3i moveOffset) {
         // Factory Only
         if (machine.isHasFactory() && machine.isFactoryOnly()) {
             BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(machine);
@@ -115,8 +148,22 @@ public class DynamicMachineRenderContext {
         return new DynamicMachineRenderContext(machine);
     }
 
+    public static DynamicMachineRenderContext createContext(final DynamicMachine machine,
+                                                            final int dynamicPatternSize)
+    {
+        return new DynamicMachineRenderContext(machine, machine.getPattern(), dynamicPatternSize);
+    }
+
     BlockArrayRenderHelper getRender() {
         return render;
+    }
+
+    public BlockArray getPattern() {
+        return pattern;
+    }
+
+    public int getDynamicPatternSize() {
+        return dynamicPatternSize;
     }
 
     public Vec3i getMoveOffset() {
@@ -218,7 +265,7 @@ public class DynamicMachineRenderContext {
 
     @SideOnly(Side.CLIENT)
     public List<ItemStack> getDescriptiveStacks() {
-        return this.machine.getPattern().getAsDescriptiveStacks(shiftSnap);
+        return this.pattern.getAsDescriptiveStacks(shiftSnap);
     }
 
     public void renderAt(int x, int z) {

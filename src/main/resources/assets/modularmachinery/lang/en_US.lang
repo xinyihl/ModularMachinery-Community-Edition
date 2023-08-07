@@ -93,6 +93,8 @@ component.missing.modularmachinery.interface.number=No Smart Data Interface foun
 
 gui.blueprint.popout.info=Sneak to freeze the current preview to be able to preview it in world.
 gui.blueprint.popout.place=Rightclick to place preview; move away from the placed one or open another structure preview (blueprint) to remove the one in-world.
+gui.blueprint.smaller.info=Click to reduce the size of the dynamic structure. (Current: %s)
+gui.blueprint.larger.info=Click to increase the size of the dynamic structure. (Current: %s)
 
 jei.category.preview=Structure Preview
 

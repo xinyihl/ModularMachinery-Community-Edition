@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
+import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
@@ -29,6 +30,7 @@ import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.JsonUtils;
 import net.minecraft.util.math.BlockPos;
 
@@ -46,14 +48,32 @@ import java.util.*;
  */
 public class DynamicMachine extends AbstractMachine {
     private final Map<BlockPos, List<SingleBlockModifierReplacement>> modifiers = new HashMap<>();
-    private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
-    private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
     private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
+
+    private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();
+
     private final TaggedPositionBlockArray pattern = new TaggedPositionBlockArray();
+    private final Map<String, DynamicPattern> dynamicPatterns = new HashMap<>();
+
+    // TODO: Remove this
+    private final Map<String, SmartInterfaceType> smartInterfaces = new HashMap<>();
+
     private final Map<String, FactoryRecipeThread> coreThreadPreset = new LinkedHashMap<>();
 
     public DynamicMachine(String registryName) {
         super(registryName);
+    }
+
+    public Map<String, DynamicPattern> getDynamicPatterns() {
+        return dynamicPatterns;
+    }
+
+    public DynamicPattern getDynamicPatternByName(String name) {
+        return dynamicPatterns.get(name);
+    }
+
+    public void addDynamicPattern(String name, DynamicPattern pattern) {
+        dynamicPatterns.put(name, pattern);
     }
 
     public void addCoreThread(FactoryRecipeThread thread) {
@@ -170,6 +190,9 @@ public class DynamicMachine extends AbstractMachine {
 
         machineEventHandlers.clear();
         machineEventHandlers.putAll(another.machineEventHandlers);
+
+        dynamicPatterns.clear();
+        dynamicPatterns.putAll(another.dynamicPatterns);
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {
@@ -241,9 +264,9 @@ public class DynamicMachine extends AbstractMachine {
             ComponentSelectorTag selector = tag != null && !tag.isEmpty() ? new ComponentSelectorTag(tag) : null;
 
             for (BlockPos permutation : buildPermutations(avX, avY, avZ)) {
-                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
-                    continue; //We're not going to overwrite the controller.
-                }
+//                if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
+//                    continue; //We're not going to overwrite the controller.
+//                }
                 pattern.addBlock(permutation, information);
 
                 if (tag != null && !tag.isEmpty()) {
@@ -317,7 +340,194 @@ public class DynamicMachine extends AbstractMachine {
                 machine.setFactoryOnly(DynamicMachinePreDeserializer.getFactoryOnly(root));
             }
 
-            //Parts
+            // Parts
+            addParts(parts, machine.pattern);
+
+            // Modifiers
+            if (root.has("modifiers")) {
+                addModifiers(context, root, machine);
+            }
+
+            // DynamicPatterns
+            if (root.has("dynamic-patterns")) {
+                addDynamicPatterns(root, machine);
+            }
+
+            return machine;
+        }
+
+        private static void addDynamicPatterns(final JsonObject root, final DynamicMachine machine) {
+            JsonArray patterns = JsonUtils.getJsonArray(root, "dynamic-patterns", new JsonArray());
+            if (patterns.size() == 0) {
+                throw new JsonParseException("Empty 'dynamic-patterns'!");
+            }
+
+            Map<String, DynamicPattern> dynamicPatterns = new HashMap<>();
+
+            for (int i = 0; i < patterns.size(); i++) {
+                JsonElement element = patterns.get(i);
+
+                if (!element.isJsonObject()) {
+                    throw new JsonParseException("A pattern of 'dynamic-patterns' is not a compound object!");
+                }
+
+                JsonObject jsonPattern = element.getAsJsonObject();
+
+                DynamicPattern pattern = new DynamicPattern(getName(jsonPattern));
+
+                // faces
+                setFaces(jsonPattern, pattern);
+
+                // maxSize
+                setMaxSize(jsonPattern, pattern, element);
+
+                // parts
+                addDynamicPatternParts(jsonPattern, "parts", pattern.getPattern());
+
+                // parts-end
+                if (jsonPattern.has("parts-end")) {
+                    pattern.setPatternEnd(new TaggedPositionBlockArray());
+                    addDynamicPatternParts(jsonPattern, "parts-end", pattern.getPatternEnd());
+                }
+
+                // minSize
+                if (jsonPattern.has("minSize")) {
+                    setMinSize(jsonPattern, pattern, element);
+                }
+
+                // structure-size-offset-start
+                if (jsonPattern.has("structure-size-offset-start")) {
+                    pattern.setStructureSizeOffsetStart(getStructureSizeOffset(jsonPattern, "structure-size-offset-start"));
+                }
+
+                // structure-size-offset
+                if (jsonPattern.has("structure-size-offset")) {
+                    pattern.setStructureSizeOffset(getStructureSizeOffset(jsonPattern, "structure-size-offset"));
+                }
+
+                dynamicPatterns.put(pattern.getName(), pattern);
+            }
+
+            machine.getDynamicPatterns().putAll(dynamicPatterns);
+        }
+
+        private static String getName(final JsonObject jsonPattern) {
+            if (!jsonPattern.has("name")) {
+                throw new JsonParseException("Pattern must have a 'name'!");
+            } else {
+                JsonElement element = jsonPattern.get("name");
+                if (!element.isJsonPrimitive()) {
+                    throw new JsonParseException("Expected only string in JsonPrimitive, but found " + element);
+                }
+                return element.getAsString();
+            }
+        }
+
+        private static void addDynamicPatternParts(final JsonObject jsonPattern, final String name, final TaggedPositionBlockArray pattern) {
+            if (!jsonPattern.has(name)) {
+                throw new JsonParseException("Empty/Missing '" + name + "'!");
+            }
+            JsonArray parts = JsonUtils.getJsonArray(jsonPattern, name, new JsonArray());
+            if (parts.size() == 0) {
+                throw new JsonParseException("Empty/Missing 'parts'!");
+            }
+            addParts(parts, pattern);
+        }
+
+        private static void setFaces(final JsonObject jsonPattern, final DynamicPattern pattern) {
+            if (!jsonPattern.has("faces")) {
+                throw new JsonParseException("Pattern is missing string array 'faces'!");
+            }
+            JsonElement element = jsonPattern.get("faces");
+            if (!element.isJsonArray()) {
+                throw new JsonParseException("'faces' must to be string array!");
+            }
+
+            JsonArray jsonArray = element.getAsJsonArray();
+
+            Set<EnumFacing> faces = EnumSet.noneOf(EnumFacing.class);
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JsonElement faceElement = jsonArray.get(i);
+                if (!faceElement.isJsonPrimitive()) {
+                    throw new JsonParseException("Expected only string in JsonPrimitive, but found " + element);
+                }
+
+                String face = faceElement.getAsString();
+
+                try {
+                    faces.add(EnumFacing.valueOf(face.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new JsonParseException(
+                            "Invalid facing '" + face + "'! Expect: 'up', 'down', 'north', 'south', 'west', 'east' !");
+                }
+            }
+
+            if (faces.isEmpty()) {
+                throw new JsonParseException("faces is empty!");
+            }
+
+            pattern.addFaces(faces);
+        }
+
+        private static BlockPos getStructureSizeOffset(final JsonObject pattern, String name) {
+            JsonElement element = pattern.get(name);
+            if (!element.isJsonObject()) {
+                throw new JsonParseException("Elements of '" + name + "' have to be objects!");
+            }
+            JsonObject structureSizeOffsetStart = element.getAsJsonObject();
+            LinkedList<Integer> x = new LinkedList<>();
+            LinkedList<Integer> y = new LinkedList<>();
+            LinkedList<Integer> z = new LinkedList<>();
+
+            addCoordinates("x", structureSizeOffsetStart, x);
+            addCoordinates("y", structureSizeOffsetStart, y);
+            addCoordinates("z", structureSizeOffsetStart, z);
+
+            return new BlockPos(x.getFirst(), y.getFirst(), z.getFirst());
+        }
+
+        private static void setMinSize(final JsonObject jsonPattern, final DynamicPattern pattern, final JsonElement element) {
+            JsonElement e = jsonPattern.get("minSize");
+            if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isNumber()) {
+                pattern.setMinSize(e.getAsInt());
+            } else {
+                throw new JsonParseException("Expected only numbers in JsonPrimitive 'minSize' but found " + element);
+            }
+        }
+
+        private static void setMaxSize(final JsonObject jsonPattern, final DynamicPattern pattern, final JsonElement element) {
+            if (!jsonPattern.has("maxSize")) {
+                throw new JsonParseException("Pattern must be has 'maxSize'!");
+            } else {
+                JsonElement e = jsonPattern.get("maxSize");
+                if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isNumber()) {
+                    int maxSize = e.getAsInt();
+                    if (pattern.getMinSize() > maxSize) {
+                        throw new JsonParseException("The 'minSize' of the pattern is bigger than the 'maxSize'!");
+                    }
+                    pattern.setMaxSize(maxSize);
+                } else {
+                    throw new JsonParseException("Expected only numbers in JsonPrimitive 'maxSize' but found " + element);
+                }
+            }
+        }
+
+        private static void addModifiers(final JsonDeserializationContext context, final JsonObject root, final DynamicMachine machine) {
+            JsonElement partModifiers = root.get("modifiers");
+            if (!partModifiers.isJsonArray()) {
+                throw new JsonParseException("'modifiers' has to be an array of modifiers!");
+            }
+            JsonArray modifiersArray = partModifiers.getAsJsonArray();
+            for (int j = 0; j < modifiersArray.size(); j++) {
+                JsonElement modifier = modifiersArray.get(j);
+                if (!modifier.isJsonObject()) {
+                    throw new JsonParseException("Elements of 'modifiers' have to be objects!");
+                }
+                addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), SingleBlockModifierReplacement.class), modifier.getAsJsonObject());
+            }
+        }
+
+        private static void addParts(final JsonArray parts, final TaggedPositionBlockArray pattern) {
             for (int i = 0; i < parts.size(); i++) {
                 JsonElement element = parts.get(i);
                 if (!element.isJsonObject()) {
@@ -353,7 +563,7 @@ public class DynamicMachine extends AbstractMachine {
                     if (match != null) {
                         descr.setMatchingTag(match);
                     }
-                    addDescriptorWithPattern(machine.getPattern(), descr, part);
+                    addDescriptorWithPattern(pattern, descr, part);
                 } else if (partElement.isJsonArray()) {
                     JsonArray elementArray = partElement.getAsJsonArray();
                     List<IBlockStateDescriptor> descriptors = Lists.newArrayList();
@@ -377,28 +587,11 @@ public class DynamicMachine extends AbstractMachine {
                     if (match != null) {
                         bi.setMatchingTag(match);
                     }
-                    addDescriptorWithPattern(machine.getPattern(), bi, part);
+                    addDescriptorWithPattern(pattern, bi, part);
                 } else {
                     throw new JsonParseException("'elements' has to either be a blockstate description, variable or array of blockstate descriptions!");
                 }
             }
-
-            //Modifiers
-            if (root.has("modifiers")) {
-                JsonElement partModifiers = root.get("modifiers");
-                if (!partModifiers.isJsonArray()) {
-                    throw new JsonParseException("'modifiers' has to be an array of modifiers!");
-                }
-                JsonArray modifiersArray = partModifiers.getAsJsonArray();
-                for (int j = 0; j < modifiersArray.size(); j++) {
-                    JsonElement modifier = modifiersArray.get(j);
-                    if (!modifier.isJsonObject()) {
-                        throw new JsonParseException("Elements of 'modifiers' have to be objects!");
-                    }
-                    addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), SingleBlockModifierReplacement.class), modifier.getAsJsonObject());
-                }
-            }
-            return machine;
         }
     }
 

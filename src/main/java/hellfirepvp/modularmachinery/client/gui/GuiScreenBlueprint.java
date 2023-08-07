@@ -76,9 +76,11 @@ public class GuiScreenBlueprint extends GuiScreen {
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
 
     private final DynamicMachine machine;
-    private final DynamicMachineRenderContext renderContext;
+
     protected int guiLeft;
     protected int guiTop;
+
+    private DynamicMachineRenderContext renderContext;
     private GuiScrollbar ingredientListScrollbar;
     private int frameCount = 0;
 
@@ -90,7 +92,7 @@ public class GuiScreenBlueprint extends GuiScreen {
     public static void renderIngredientList(final GuiScreen g, final Minecraft mc, final RenderItem ri,
                                             final GuiScrollbar scrollbar, final DynamicMachineRenderContext dynamicContext,
                                             final int mouseX, final int mouseY, final int screenX, final int screenY) {
-        List<ItemStack> ingredientList = dynamicContext.getDisplayedMachine().getPattern().getDescriptiveStackList(dynamicContext.getShiftSnap());
+        List<ItemStack> ingredientList = dynamicContext.getPattern().getDescriptiveStackList(dynamicContext.getShiftSnap());
         scrollbar.setRange(0, Math.max(0, (ingredientList.size() - 8) / 8), 1);
         scrollbar.draw(g, mc);
 
@@ -202,7 +204,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
         GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
         x = 88;
-        z = 66;
+        z = 62;
         renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
         GL11.glDisable(GL11.GL_SCISSOR_TEST);
 
@@ -240,13 +242,13 @@ public class GuiScreenBlueprint extends GuiScreen {
     private void renderUpgradeInfo(int mouseX, int mouseY) {
         if (!machine.getModifiers().isEmpty()) {
             this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
-            this.drawTexturedModalRect(guiLeft + 5, guiTop + 124, 0, 185, 100, 15);
+            this.drawTexturedModalRect(guiLeft + 7, guiTop + 124, 0, 185, 80, 14);
 
             String reqBlueprint = I18n.format("tooltip.machinery.blueprint.upgrades");
             fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 127, 0xFFFFFF);
 
-            if (mouseX >= guiLeft + 5 && mouseX <= guiLeft + 105 &&
-                    mouseY >= guiTop + 124 && mouseY <= guiTop + 139) {
+            if (mouseX >= guiLeft + 7 && mouseX <= guiLeft + 87 &&
+                    mouseY >= guiTop + 124 && mouseY <= guiTop + 138) {
                 renderUpgradeTip(mouseX, mouseY);
             }
         }
@@ -303,7 +305,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         Vec2f offset = renderContext.getCurrentRenderOffset(guiLeft + x, guiTop + z);
         int jumpWidth = 14;
         double scaleJump = jumpWidth * scale;
-        Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(renderContext.getRenderSlice());
+        Map<BlockPos, BlockArray.BlockInformation> slice = renderContext.getPattern().getPatternSlice(renderContext.getRenderSlice());
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
         if (renderContext.getRenderSlice() == 0) {
@@ -366,7 +368,7 @@ public class GuiScreenBlueprint extends GuiScreen {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
 
-        boolean drawPopoutInfo = false, drawContents = false;
+        boolean drawPopoutInfo = false, drawContents = false, drawSmallerPatternTip = false, drawLargerPatternTip = false;
 
         //3D view
         int add = 0;
@@ -412,6 +414,26 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
         this.drawTexturedModalRect(guiLeft + 116, guiTop + 122, 176 + add, 64, 16, 16);
 
+        if (!machine.getDynamicPatterns().isEmpty()) {
+            // DynamicPattern Size Smaller
+            add = 0;
+            if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+                    mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
+                add = 16;
+                drawSmallerPatternTip = true;
+            }
+            this.drawTexturedModalRect(guiLeft + 100, guiTop + 106, 176 + add, 80, 16, 16);
+
+            // DynamicPattern Size Larger
+            add = 0;
+            if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+                    mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
+                add = 16;
+                drawLargerPatternTip = true;
+            }
+            this.drawTexturedModalRect(guiLeft + 100, guiTop + 122, 176 + add, 96, 16, 16);
+        }
+
         if (renderContext.doesRenderIn3D()) {
             GlStateManager.color(0.3F, 0.3F, 0.3F, 1.0F);
         } else {
@@ -438,11 +460,15 @@ public class GuiScreenBlueprint extends GuiScreen {
         int width = fontRenderer.getStringWidth(String.valueOf(renderContext.getRenderSlice()));
         fontRenderer.drawStringWithShadow(String.valueOf(renderContext.getRenderSlice()), guiLeft + 159 - (width / 2), guiTop + 118, 0x222222);
         if (drawPopoutInfo) {
-            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
-            List<String> out = fontRenderer.listFormattedStringToWidth(
-                    I18n.format("gui.blueprint.popout.info"),
-                    Math.min(res.getScaledWidth() - mouseX, 200));
-            RenderingUtils.renderBlueTooltip(mouseX, mouseY, out, fontRenderer);
+            drawHoveringText(I18n.format("gui.blueprint.popout.info"), mouseX, mouseY);
+        }
+        if (drawSmallerPatternTip) {
+            drawHoveringText(I18n.format(
+                    "gui.blueprint.smaller.info", renderContext.getDynamicPatternSize()), mouseX, mouseY);
+        }
+        if (drawLargerPatternTip) {
+            drawHoveringText(I18n.format(
+                    "gui.blueprint.larger.info", renderContext.getDynamicPatternSize()), mouseX, mouseY);
         }
         if (drawContents) {
             List<ItemStack> contents = this.renderContext.getDescriptiveStacks();
@@ -487,6 +513,20 @@ public class GuiScreenBlueprint extends GuiScreen {
                 if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
                         mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
                     renderContext.setTo2D();
+                }
+
+                // DynamicPattern Size Smaller
+                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+                        mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
+                    renderContext = DynamicMachineRenderContext.createContext(
+                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() - 1);
+                }
+
+                // DynamicPattern Size Larger
+                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+                        mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
+                    renderContext = DynamicMachineRenderContext.createContext(
+                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() + 1);
                 }
             }
             if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&

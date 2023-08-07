@@ -86,11 +86,6 @@ public class ModIntegrationCrafttweaker {
         boolean isServer = server != null && server.isDedicatedServer();
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
-        // Flush the context to preview the changed structure.
-        if (!isServer) {
-            ModIntegrationJEI.reloadPreviewWrappers();
-        }
-
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
                 BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
 
@@ -108,6 +103,11 @@ public class ModIntegrationCrafttweaker {
         }
 
         future.join();
+
+        // Flush the context to preview the changed structure.
+        if (!isServer) {
+            ModIntegrationJEI.reloadPreviewWrappers();
+        }
 
         sender.sendMessage(new TextComponentTranslation(
                 "message.reloaded.recipes", RecipeRegistry.registeredRecipeCount()));

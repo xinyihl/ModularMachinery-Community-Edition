@@ -64,7 +64,7 @@ public abstract class MachineUpgrade {
 
     @ZenGetter("stackSize")
     public int getStackSize() {
-        return Math.min(type.getMaxStackSize(), stackSize);
+        return stackSize;
     }
 
     public UpgradeType getType() {

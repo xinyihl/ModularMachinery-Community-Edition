@@ -10,9 +10,11 @@ import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
+import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
+import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -79,6 +81,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected NBTTagCompound customData = new NBTTagCompound();
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
+    protected Map<String, DynamicPattern.Status> foundDynamicPatterns = new HashMap<>();
     protected TaggedPositionBlockArray foundPattern = null;
     protected ActionExecutor tickExecutor = null;
     protected LinkedList<Integer> usedTimeList = new LinkedList<>();
@@ -260,6 +263,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         foundMachine = null;
         foundPattern = null;
         foundReplacements = null;
+        foundDynamicPatterns.clear();
     }
 
     public void resetRecipeSearchRetryCount() {
@@ -287,7 +291,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             replacements = replacements.rotateYCCW();
         }
 
-        if (pattern.matches(getWorld(), getPos(), false, replacements)) {
+        if (pattern.matches(getWorld(), getPos(), false, replacements) && matchesDynamicPattern(machine, rotation)) {
             this.foundPattern = pattern;
             this.foundMachine = machine;
             this.foundReplacements = replacements;
@@ -295,6 +299,32 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         resetMachine(false);
         return false;
+    }
+
+    protected boolean matchesDynamicPattern(final DynamicMachine machine, final EnumFacing rotation) {
+        this.foundDynamicPatterns.clear();
+
+        Map<String, DynamicPattern> dynamicPatterns = machine.getDynamicPatterns();
+        if (dynamicPatterns.isEmpty()) {
+            return true;
+        }
+
+        List<DynamicPattern.Status> foundDynamicPatterns = new ArrayList<>();
+        for (final DynamicPattern dynamicPattern : dynamicPatterns.values()) {
+            DynamicPattern.MatchResult matchResult = dynamicPattern.matches(this, false, rotation);
+            if (matchResult.isMatched()) {
+                foundDynamicPatterns.add(new DynamicPattern.Status(
+                        dynamicPattern, matchResult.getMatchFacing(), matchResult.getSize())
+                );
+            } else {
+                return false;
+            }
+        }
+
+        for (final DynamicPattern.Status pattern : foundDynamicPatterns) {
+            this.foundDynamicPatterns.put(pattern.getPattern().getName(), pattern);
+        }
+        return true;
     }
 
     protected void distributeCasingColor() {
@@ -409,6 +439,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
         }
 
+        this.foundPattern = new TaggedPositionBlockArray(foundPattern);
+        for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
+            DynamicPattern pattern = status.getPattern();
+            EnumFacing matchFacing = status.getMatchFacing();
+            int size = status.getSize();
+
+            pattern.addPatternToBlockArray(foundPattern, size, matchFacing, controllerRotation);
+        }
+        this.foundPattern.flushTileBlocksCache();
+
         resetStructureCheckCounter();
         markForUpdateSync();
     }
@@ -432,7 +472,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
             if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
-            } else if (!foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements)) {
+            } else if (
+                    !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
+                    !matchesDynamicPattern(foundMachine, controllerRotation))
+            {
                 resetMachine(true);
             }
         }
@@ -511,38 +554,42 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
         List<ProcessingComponent<?>> found = new ArrayList<>();
-        this.foundPattern.getTileBlocksArray().forEach((pos, info) -> {
-            BlockPos realPos = getPos().add(pos);
-            if (!getWorld().isBlockLoaded(realPos)) {
-                return;
-            }
-            TileEntity te = getWorld().getTileEntity(realPos);
-            if (!(te instanceof MachineComponentTile)) {
-                return;
-            }
 
-            ComponentSelectorTag tag = this.foundPattern.getTag(pos);
-            MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
-            if (component == null) {
-                return;
-            }
+        this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
 
-            addComponent(component, tag, found);
-            if (component instanceof TileParallelController.ParallelControllerProvider) {
-                this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
-                return;
-            }
-            checkAndAddUpgrades(component);
-            checkAndAddSmartInterface(component, realPos);
-        });
         this.foundComponents.addAll(found);
-
         foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
     }
 
-    private void checkAndAddUpgrades(final MachineComponent<?> component) {
+    private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final List<ProcessingComponent<?>> found) {
+        BlockPos realPos = ctrlPos.add(pos);
+
+        if (!getWorld().isBlockLoaded(realPos)) {
+            return;
+        }
+        TileEntity te = getWorld().getTileEntity(realPos);
+        if (!(te instanceof MachineComponentTile)) {
+            return;
+        }
+
+        ComponentSelectorTag tag = this.foundPattern.getTag(pos);
+        MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
+        if (component == null) {
+            return;
+        }
+
+        addComponent(component, tag, found);
+        if (component instanceof TileParallelController.ParallelControllerProvider) {
+            this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
+            return;
+        }
+        checkAndAddUpgradeBus(component);
+        checkAndAddSmartInterface(component, realPos);
+    }
+
+    public void checkAndAddUpgradeBus(final MachineComponent<?> component) {
         if (!(component instanceof TileUpgradeBus.UpgradeBusProvider)) {
             return;
         }
@@ -557,6 +604,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             for (final MachineUpgrade newUpgrade : newUpgrades) {
                 for (final MachineUpgrade u : upgrades) {
                     if (newUpgrade.equals(u)) {
+                        if (u.getStackSize() >= u.getType().getMaxStackSize()) {
+                            continue add;
+                        }
                         newUpgrade.incrementStackSize(u.getStackSize());
                         continue add;
                     }
@@ -602,7 +652,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
     }
 
-    protected void checkAndAddSmartInterface(MachineComponent<?> component, BlockPos realPos) {
+    public void checkAndAddSmartInterface(MachineComponent<?> component, BlockPos realPos) {
         if (!(component instanceof TileSmartInterface.SmartInterfaceProvider) || foundMachine.smartInterfaceTypesIsEmpty()) {
             return;
         }
@@ -807,6 +857,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         return filtered.toArray(new MachineUpgrade[0]);
+    }
+
+    @Nullable
+    @Override
+    public IDynamicPatternInfo getDynamicPattern(final String patternName) {
+        return foundDynamicPatterns.get(patternName);
     }
 
     public TileMultiblockMachineController getController() {

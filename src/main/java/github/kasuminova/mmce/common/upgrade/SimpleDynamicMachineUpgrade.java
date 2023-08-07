@@ -122,16 +122,15 @@ public class SimpleDynamicMachineUpgrade extends DynamicMachineUpgrade {
         return upgrade;
     }
 
-    @Override
-    public boolean equals(final Object obj) {
+    public boolean upgradeEquals(final Object obj) {
         if (!(obj instanceof SimpleDynamicMachineUpgrade)) {
             return false;
         }
-        SimpleDynamicMachineUpgrade another = (SimpleDynamicMachineUpgrade) obj;
-        if (!type.equals(((SimpleDynamicMachineUpgrade) obj).type)) {
-            return false;
-        }
+        return type.equals(((SimpleDynamicMachineUpgrade) obj).type);
+    }
 
-        return itemData.equals(another.itemData);
+    @Override
+    public boolean equals(final Object obj) {
+        return false;
     }
 }

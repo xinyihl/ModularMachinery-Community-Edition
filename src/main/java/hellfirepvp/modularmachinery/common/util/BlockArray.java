@@ -352,6 +352,30 @@ public class BlockArray {
         return out;
     }
 
+    public BlockArray rotateUp() {
+        BlockArray out = new BlockArray(traitNum);
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
+
+        for (BlockPos pos : pattern.keySet()) {
+            BlockInformation info = pattern.get(pos);
+            outPattern.put(MiscUtils.rotateUp(pos), info.copy());
+        }
+
+        return out;
+    }
+
+    public BlockArray rotateDown() {
+        BlockArray out = new BlockArray(traitNum);
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
+
+        for (BlockPos pos : pattern.keySet()) {
+            BlockInformation info = pattern.get(pos);
+            outPattern.put(MiscUtils.rotateDown(pos), info.copy());
+        }
+
+        return out;
+    }
+
     public String serializeAsMachineJson() {
         String newline = System.getProperty("line.separator");
         String move = "    ";

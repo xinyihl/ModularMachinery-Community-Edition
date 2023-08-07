@@ -193,9 +193,13 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
                     List<MachineUpgrade> upgrades = found.computeIfAbsent(upgrade.getType(), v -> new ArrayList<>());
                     for (final MachineUpgrade u : upgrades) {
                         if (u.equals(upgrade)) {
+                            if (u.getStackSize() >= u.getType().getMaxStackSize()) {
+                                continue add;
+                            }
+
                             u.incrementStackSize(stack.getCount());
+                            continue add;
                         }
-                        continue add;
                     }
                     upgrades.add(upgrade.copy().setParentBus(TileUpgradeBus.this));
                 }

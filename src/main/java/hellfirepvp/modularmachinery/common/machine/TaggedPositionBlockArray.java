@@ -29,13 +29,19 @@ import java.util.Map;
 @ZenRegister
 @ZenClass("mods.modularmachinery.TaggedPositionBlockArray")
 public class TaggedPositionBlockArray extends BlockArray {
+    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
+
     public TaggedPositionBlockArray() {
     }
+
     public TaggedPositionBlockArray(long traitNum) {
         super(traitNum);
     }
 
-    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
+    public TaggedPositionBlockArray(TaggedPositionBlockArray another) {
+        super(another);
+        taggedPositions.putAll(another.taggedPositions);
+    }
 
     public void setTag(BlockPos pos, ComponentSelectorTag tag) {
         this.taggedPositions.put(pos, tag);
@@ -44,6 +50,10 @@ public class TaggedPositionBlockArray extends BlockArray {
     @Nullable
     public ComponentSelectorTag getTag(BlockPos pos) {
         return this.taggedPositions.get(pos);
+    }
+
+    public Map<BlockPos, ComponentSelectorTag> getTaggedPositions() {
+        return taggedPositions;
     }
 
     @Override
@@ -56,6 +66,36 @@ public class TaggedPositionBlockArray extends BlockArray {
         }
         for (BlockPos pos : taggedPositions.keySet()) {
             out.taggedPositions.put(MiscUtils.rotateYCCW(pos), taggedPositions.get(pos));
+        }
+
+        return out;
+    }
+
+    @Override
+    public TaggedPositionBlockArray rotateUp() {
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
+
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
+        for (BlockPos pos : pattern.keySet()) {
+            outPattern.put(MiscUtils.rotateUp(pos), pattern.get(pos).copy());
+        }
+        for (BlockPos pos : taggedPositions.keySet()) {
+            out.taggedPositions.put(MiscUtils.rotateUp(pos), taggedPositions.get(pos));
+        }
+
+        return out;
+    }
+
+    @Override
+    public TaggedPositionBlockArray rotateDown() {
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
+
+        Map<BlockPos, BlockInformation> outPattern = out.pattern;
+        for (BlockPos pos : pattern.keySet()) {
+            outPattern.put(MiscUtils.rotateDown(pos), pattern.get(pos).copy());
+        }
+        for (BlockPos pos : taggedPositions.keySet()) {
+            out.taggedPositions.put(MiscUtils.rotateDown(pos), taggedPositions.get(pos));
         }
 
         return out;

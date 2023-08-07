@@ -43,7 +43,7 @@ public class MachineEvent extends Event {
         if (foundMachine == null) {
             return;
         }
-        List<IEventHandler<MachineEvent>> handlers = foundMachine.getMachineEventHandlers().get(getClass());
+        List<IEventHandler<MachineEvent>> handlers = foundMachine.getMachineEventHandlers(getClass());
         if (handlers == null) {
             return;
         }
