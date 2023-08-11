@@ -53,6 +53,7 @@ import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.IFluidBlock;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -152,12 +153,15 @@ public class GuiScreenBlueprint extends GuiScreen {
     }
 
     public static void showJEIRecipeFocus(final ItemStack stack) {
-        if (KeyBindings.showRecipe.isKeyDown() || Mouse.isButtonDown(0)) {
+        int showRecipeKeyCode = KeyBindings.showRecipe.getKeyCode();
+        int showUsesKeyCode = KeyBindings.showUses.getKeyCode();
+
+        if ((showRecipeKeyCode != 0 && Keyboard.isKeyDown(showRecipeKeyCode)) || Mouse.isButtonDown(0)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
             }, 0);
-        } else if (KeyBindings.showUses.isKeyDown() || Mouse.isButtonDown(1)) {
+        } else if ((showUsesKeyCode != 0 && Keyboard.isKeyDown(showUsesKeyCode)) || Mouse.isButtonDown(1)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.INPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
