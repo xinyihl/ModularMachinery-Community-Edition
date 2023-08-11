@@ -20,7 +20,7 @@ public class UpgradeInfo {
 
     public boolean matches(ItemStack stack) {
         for (final ItemStack match : matches) {
-            if (ItemStack.areItemStacksEqual(match, stack)) {
+            if (ItemStack.areItemsEqual(match, stack)) {
                 return true;
             }
         }

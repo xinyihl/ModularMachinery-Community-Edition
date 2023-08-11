@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.tile.base;
 
+import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -32,6 +33,8 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
 
     public MEMachineComponent() {
         this.source = new MachineSource(this);
+        this.proxy.setIdlePowerUsage(1.0D);
+        this.proxy.setFlags(GridFlags.REQUIRE_CHANNEL);
     }
 
     public abstract ItemStack getVisualItemStack();

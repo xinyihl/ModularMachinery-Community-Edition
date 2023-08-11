@@ -157,6 +157,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         new FactoryRecipeTickEvent(thread, this, Phase.START).postEvent();
 
         if (status != thread.getStatus()) {
+            status = thread.getStatus();
             thread.onTick();
             thread.setStatus(status);
         } else {

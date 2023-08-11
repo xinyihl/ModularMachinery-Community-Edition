@@ -1,7 +1,6 @@
 package github.kasuminova.mmce.common.tile.base;
 
 import appeng.api.AEApi;
-import appeng.api.networking.GridFlags;
 import appeng.api.storage.channels.IItemStorageChannel;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.nbt.NBTTagCompound;
@@ -17,11 +16,6 @@ public abstract class MEItemBus extends MEMachineComponent {
 
     protected final IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
     protected IOInventory inventory = buildInventory();
-
-    public MEItemBus() {
-        proxy.setIdlePowerUsage(1.0D);
-        proxy.setFlags(GridFlags.REQUIRE_CHANNEL);
-    }
 
     public abstract IOInventory buildInventory();
 

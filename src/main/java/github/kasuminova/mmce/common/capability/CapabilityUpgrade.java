@@ -37,6 +37,7 @@ public class CapabilityUpgrade {
 
             @Override
             public void readNBT(final Capability<CapabilityUpgrade> capability, final CapabilityUpgrade instance, final EnumFacing side, final NBTBase nbt) {
+
                 instance.readNBT((NBTTagCompound) nbt);
             }
         }, CapabilityUpgrade::new);
@@ -55,8 +56,7 @@ public class CapabilityUpgrade {
             if (upgrade == null) {
                 continue;
             }
-            upgrade = upgrade.copy();
-
+            upgrade = upgrade.copy(upgrade.getParentStack());
             upgrades.add(upgrade);
             if (upgrade instanceof DynamicMachineUpgrade) {
                 ((DynamicMachineUpgrade) upgrade).readItemNBT(upgradeTag);

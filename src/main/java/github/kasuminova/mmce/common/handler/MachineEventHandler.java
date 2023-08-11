@@ -71,7 +71,7 @@ public class MachineEventHandler {
 
         List<MachineUpgrade> upgradeList = RegistryUpgrade.getItemUpgradeList(stack);
         if (upgradeList != null) {
-            upgrade.getUpgrades().addAll(upgradeList);
+            upgradeList.forEach(u -> upgrade.getUpgrades().add(u.copy(stack)));
         }
 
         event.addCapability(CapabilityUpgrade.CAPABILITY_NAME, provider);

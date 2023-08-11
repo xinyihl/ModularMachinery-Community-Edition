@@ -201,7 +201,7 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
                             continue add;
                         }
                     }
-                    upgrades.add(upgrade.copy().setParentBus(TileUpgradeBus.this));
+                    upgrades.add(upgrade.copy(stack).setParentBus(TileUpgradeBus.this));
                 }
             }
             return found;

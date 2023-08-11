@@ -7,6 +7,7 @@ import net.minecraft.item.ItemStack;
 import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class RegistryUpgrade {
     }
 
     public static void addFixedUpgrade(ItemStack stack, MachineUpgrade upgrade) {
-        ITEM_UPGRADES.computeIfAbsent(stack.getItem(), v -> new UpgradeInfo()).addMatch(stack).addUpgrade(upgrade);
+        ITEM_UPGRADES.computeIfAbsent(stack.getItem(), v -> new UpgradeInfo(Collections.singletonList(stack))).addUpgrade(upgrade);
     }
 
     public static void addSupportedItem(ItemStack stack) {

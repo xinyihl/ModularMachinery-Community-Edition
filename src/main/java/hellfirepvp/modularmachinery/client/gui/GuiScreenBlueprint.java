@@ -473,12 +473,6 @@ public class GuiScreenBlueprint extends GuiScreen {
         if (drawContents) {
             List<ItemStack> contents = this.renderContext.getDescriptiveStacks();
             List<Tuple<ItemStack, String>> contentMap = Lists.newArrayList();
-
-            BlockController ctrl = BlockController.getControllerWithMachine(machine);
-            if (ctrl == null) ctrl = BlocksMM.blockController;
-            ItemStack ctrlStack = new ItemStack(ctrl);
-            contentMap.add(new Tuple<>(ctrlStack, "1x " + Iterables.getFirst(ctrlStack.getTooltip(Minecraft.getMinecraft().player,
-                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));
             for (ItemStack stack : contents) {
                 contentMap.add(new Tuple<>(stack, stack.getCount() + "x " + Iterables.getFirst(stack.getTooltip(Minecraft.getMinecraft().player,
                         Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));

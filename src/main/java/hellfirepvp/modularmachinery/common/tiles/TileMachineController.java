@@ -119,6 +119,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         new RecipeTickEvent(this, thread, Phase.START).postEvent();
 
         if (status != thread.getStatus()) {
+            status = thread.getStatus();
             thread.onTick();
             thread.setStatus(status);
         } else {

@@ -38,7 +38,7 @@ public class MachineUpgradeBuilder {
      * @return 构建器
      */
     @ZenMethod
-    public static MachineUpgradeBuilder newBuilder(String name, String localizedName, int level, int maxStack) {
+    public static MachineUpgradeBuilder newBuilder(String name, String localizedName, float level, int maxStack) {
         if (RegistryUpgrade.getUpgrade(name) != null) {
             CraftTweakerAPI.logError("[ModularMachinery] Already registered SimpleMachineUpgrade " + name + '!');
             return null;

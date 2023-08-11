@@ -4,6 +4,7 @@ import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.IFunction;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
@@ -26,11 +27,12 @@ public class SimpleMachineUpgrade extends MachineUpgrade {
     }
 
     @Override
-    public SimpleMachineUpgrade copy() {
+    public SimpleMachineUpgrade copy(ItemStack owner) {
         SimpleMachineUpgrade upgrade = new SimpleMachineUpgrade(getType());
         upgrade.descriptions.addAll(descriptions);
         upgrade.busGuiDescriptionHandler = busGuiDescriptionHandler;
         upgrade.eventProcessor.putAll(eventProcessor);
+        upgrade.parentStack = owner;
         return upgrade;
     }
 

@@ -230,7 +230,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
                 }
 
                 // DynamicPattern Size Smaller
-                if (mouseX >= 100 && mouseX <= +100 + 16 &&
+                if (mouseX >= 100 && mouseX <= 100 + 16 &&
                         mouseY >= 106 && mouseY <= 106 + 16) {
                     dynamnicContext = DynamicMachineRenderContext.createContext(
                             dynamnicContext.getDisplayedMachine(), dynamnicContext.getDynamicPatternSize() - 1);
@@ -573,11 +573,6 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         if (drawContents) {
             java.util.List<ItemStack> contents = dynamnicContext.getDescriptiveStacks();
             java.util.List<Tuple<ItemStack, String>> contentMap = Lists.newArrayList();
-            BlockController ctrl = BlockController.getControllerWithMachine(machine);
-            if (ctrl == null) ctrl = BlocksMM.blockController;
-            ItemStack ctrlStack = new ItemStack(ctrl);
-            contentMap.add(new Tuple<>(ctrlStack, "1x " + Iterables.getFirst(ctrlStack.getTooltip(Minecraft.getMinecraft().player,
-                    Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));
             for (ItemStack stack : contents) {
                 contentMap.add(new Tuple<>(stack, stack.getCount() + "x " + Iterables.getFirst(stack.getTooltip(Minecraft.getMinecraft().player,
                         Minecraft.getMinecraft().gameSettings.advancedItemTooltips ? ITooltipFlag.TooltipFlags.ADVANCED : ITooltipFlag.TooltipFlags.NORMAL), "")));

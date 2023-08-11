@@ -110,6 +110,10 @@ public class DynamicPattern {
                             final TaggedPositionBlockArray pattern,
                             @Nullable final TaggedPositionBlockArray patternEnd)
     {
+        if (pattern == null) {
+            return 0;
+        }
+
         BlockPos offset = facingOffset;
         boolean first = true;
         int size = 0;

@@ -14,10 +14,10 @@ public class UpgradeType {
     private final Set<DynamicMachine> incompatibleMachines = new HashSet<>();
     private final String name;
     private final String localizedName;
-    private final int level;
+    private final float level;
     private final int maxStackSize;
 
-    public UpgradeType(final String name, final String localizedName, final int level, final int maxStackSize) {
+    public UpgradeType(final String name, final String localizedName, final float level, final int maxStackSize) {
         this.name = name;
         this.localizedName = localizedName;
         this.level = level;
@@ -65,7 +65,7 @@ public class UpgradeType {
         return I18n.hasKey(localizedName) ? I18n.format(localizedName) : localizedName;
     }
 
-    public int getLevel() {
+    public float getLevel() {
         return level;
     }
 

@@ -162,8 +162,10 @@ public abstract class RecipeThread {
      */
     @ZenMethod
     public void removeModifier(String name) {
-        semiPermanentModifiers.remove(name);
-        flushContextModifier();
+        RecipeModifier removed = semiPermanentModifiers.remove(name);
+        if (removed != null) {
+            flushContextModifier();
+        }
     }
 
     /**
@@ -204,8 +206,10 @@ public abstract class RecipeThread {
      */
     @ZenMethod
     public void removePermanentModifier(String name) {
-        permanentModifiers.remove(name);
-        flushContextModifier();
+        RecipeModifier removed = permanentModifiers.remove(name);
+        if ( removed!= null) {
+            flushContextModifier();
+        }
     }
 
     /**
