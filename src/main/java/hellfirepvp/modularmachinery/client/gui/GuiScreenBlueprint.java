@@ -145,27 +145,35 @@ public class GuiScreenBlueprint extends GuiScreen {
         if ((mouseX >= x && mouseX <= x + 16) && (mouseY >= y && mouseY <= y + 16)) {
             renderHoveredForeground(x, y);
             if (Mods.JEI.isPresent()) {
-                showJEIRecipeFocus(stack);
+                handleJEIInput(stack);
             }
             return stack;
         }
         return null;
     }
 
-    public static void showJEIRecipeFocus(final ItemStack stack) {
+    public static void handleJEIInput(final ItemStack stack) {
         int showRecipeKeyCode = KeyBindings.showRecipe.getKeyCode();
         int showUsesKeyCode = KeyBindings.showUses.getKeyCode();
+        int bookmarkKeyCode = KeyBindings.bookmark.getKeyCode();
 
         if ((showRecipeKeyCode != 0 && Keyboard.isKeyDown(showRecipeKeyCode)) || Mouse.isButtonDown(0)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
             }, 0);
-        } else if ((showUsesKeyCode != 0 && Keyboard.isKeyDown(showUsesKeyCode)) || Mouse.isButtonDown(1)) {
+            return;
+        }
+        if ((showUsesKeyCode != 0 && Keyboard.isKeyDown(showUsesKeyCode)) || Mouse.isButtonDown(1)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.INPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
             }, 0);
+            return;
+        }
+
+        if (Keyboard.isKeyDown(bookmarkKeyCode)) {
+            ModIntegrationJEI.addItemStackToBookmarkList(stack);
         }
     }
 

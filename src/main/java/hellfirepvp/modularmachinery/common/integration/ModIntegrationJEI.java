@@ -29,15 +29,20 @@ import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import mezz.jei.Internal;
 import mezz.jei.api.*;
 import mezz.jei.api.ingredients.IIngredientRegistry;
 import mezz.jei.api.ingredients.IModIngredientRegistration;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
 import mezz.jei.api.recipe.IStackHelper;
+import mezz.jei.bookmarks.BookmarkList;
+import mezz.jei.config.Config;
+import mezz.jei.input.InputHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Optional;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,16 +57,34 @@ import java.util.Map;
  */
 @JEIPlugin
 public class ModIntegrationJEI implements IModPlugin {
-
     public static final String CATEGORY_PREVIEW = "modularmachinery.preview";
     public static final List<StructurePreviewWrapper> PREVIEW_WRAPPERS = Lists.newArrayList();
     private static final Map<DynamicMachine, CategoryDynamicRecipe> RECIPE_CATEGORIES = new HashMap<>();
     private static final Map<DynamicMachine, Map<ResourceLocation, DynamicRecipeWrapper>> MACHINE_RECIPE_WRAPPERS = new HashMap<>();
+
+    public static Field inputHandler = null;
+    public static Field bookmarkList = null;
+
     public static IStackHelper stackHelper;
     public static IJeiHelpers jeiHelpers;
     public static IIngredientRegistry ingredientRegistry;
     public static IRecipeRegistry recipeRegistry;
     public static IJeiRuntime jeiRuntime;
+
+    static {
+        // I Just want to get the BookmarkList...
+        try {
+            Field inputHandler = Internal.class.getDeclaredField("inputHandler");
+            inputHandler.setAccessible(true);
+            ModIntegrationJEI.inputHandler = inputHandler;
+
+            Field bookmarkList = InputHandler.class.getDeclaredField("bookmarkList");
+            bookmarkList.setAccessible(true);
+            ModIntegrationJEI.bookmarkList = bookmarkList;
+        } catch (NoSuchFieldException e) {
+            ModularMachinery.log.warn(e);
+        }
+    }
 
     public static String getCategoryStringFor(DynamicMachine machine) {
         return "modularmachinery.recipes." + machine.getRegistryName().getPath();
@@ -88,6 +111,24 @@ public class ModIntegrationJEI implements IModPlugin {
 
     public static void reloadPreviewWrappers() {
         PREVIEW_WRAPPERS.forEach(StructurePreviewWrapper::flushContext);
+    }
+
+    public static void addItemStackToBookmarkList(ItemStack stack) {
+        if (inputHandler == null || bookmarkList == null || stack.isEmpty()) {
+            return;
+        }
+
+        try {
+            InputHandler handler = (InputHandler) inputHandler.get(null);
+            BookmarkList bookmark = (BookmarkList) bookmarkList.get(handler);
+
+            if (!Config.isBookmarkOverlayEnabled()) {
+                Config.toggleBookmarkEnabled();
+            }
+            bookmark.add(stack);
+        } catch (IllegalAccessException e) {
+            ModularMachinery.log.warn(e);
+        }
     }
 
     @Override
