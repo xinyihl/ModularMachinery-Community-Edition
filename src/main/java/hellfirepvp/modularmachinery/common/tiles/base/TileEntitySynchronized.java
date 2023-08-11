@@ -26,7 +26,6 @@ import javax.annotation.Nonnull;
  */
 public class TileEntitySynchronized extends TileEntity {
     private boolean isInUpdateTask = false;
-    private IBlockState lastState = null;
 
     public final void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
@@ -78,10 +77,7 @@ public class TileEntitySynchronized extends TileEntity {
 
     public void markForUpdate() {
         IBlockState state = world.getBlockState(pos);
-        if (lastState == null || lastState.getBlock() != state.getBlock()) {
-            world.notifyBlockUpdate(pos, state, state, 3);
-            lastState = state;
-        }
+        world.notifyBlockUpdate(pos, state, state, 3);
         markDirty();
 
         isInUpdateTask = false;

@@ -29,6 +29,10 @@ public class TileColorableMachineComponent extends TileEntitySynchronized implem
 
     @Override
     public void setMachineColor(int newColor) {
+        if (definedColor == newColor) {
+            return;
+        }
+
         this.definedColor = newColor;
         this.markForUpdate();
     }

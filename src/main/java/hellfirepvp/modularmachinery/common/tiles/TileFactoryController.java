@@ -83,6 +83,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
                 searchAndStartRecipe();
             }
 
+            updateCoreThread();
+
             if (!coreRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
                 doRecipeTick();
                 markForUpdateSync();
@@ -111,7 +113,6 @@ public class TileFactoryController extends TileMultiblockMachineController {
      * 工厂开始运行队列中的配方。
      */
     protected void doRecipeTick() {
-        updateCoreThread();
         cleanIdleTimeoutThread();
 
         for (FactoryRecipeThread thread : coreRecipeThreads.values()) {
@@ -395,20 +396,19 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        List<String> invalidThreads = new ArrayList<>();
-
-        for (Map.Entry<String, FactoryRecipeThread> threadEntry : threads.entrySet()) {
-            String name = threadEntry.getKey();
+        threads.forEach((name, thread) -> {
             if (!coreRecipeThreads.containsKey(name)) {
-                coreRecipeThreads.put(name, threadEntry.getValue().copyCoreThread(this));
+                coreRecipeThreads.put(name, thread.copyCoreThread(this));
             }
-        }
+        });
 
-        for (Map.Entry<String, FactoryRecipeThread> threadEntry : coreRecipeThreads.entrySet()) {
+        Iterator<Map.Entry<String, FactoryRecipeThread>> it = coreRecipeThreads.entrySet().iterator();
+        while (it.hasNext()) {
+            final Map.Entry<String, FactoryRecipeThread> threadEntry = it.next();
             String name = threadEntry.getKey();
             FactoryRecipeThread thread = threads.get(name);
             if (thread == null) {
-                invalidThreads.add(name);
+                it.remove();
                 continue;
             }
 
@@ -416,10 +416,6 @@ public class TileFactoryController extends TileMultiblockMachineController {
             Set<MachineRecipe> recipeSet = factoryThread.getRecipeSet();
             recipeSet.clear();
             recipeSet.addAll(thread.getRecipeSet());
-        }
-
-        for (String name : invalidThreads) {
-            coreRecipeThreads.remove(name);
         }
     }
 

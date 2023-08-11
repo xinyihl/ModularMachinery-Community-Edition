@@ -53,6 +53,7 @@ import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fml.client.config.GuiUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -127,9 +128,9 @@ public class GuiScreenBlueprint extends GuiScreen {
         }
 
         if (tooltipStack != null) {
-            net.minecraftforge.fml.client.config.GuiUtils.preItemToolTip(tooltipStack);
+            GuiUtils.preItemToolTip(tooltipStack);
             g.drawHoveringText(g.getItemToolTip(tooltipStack), mouseX, mouseY);
-            net.minecraftforge.fml.client.config.GuiUtils.postItemToolTip();
+            GuiUtils.postItemToolTip();
         }
 
         GlStateManager.disableLighting();
