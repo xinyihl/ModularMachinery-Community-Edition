@@ -15,7 +15,9 @@ import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
 import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
 import hellfirepvp.modularmachinery.client.util.RenderingUtils;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
+import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
@@ -23,6 +25,8 @@ import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplaceme
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
+import mezz.jei.api.recipe.IFocus;
+import mezz.jei.config.KeyBindings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -139,9 +143,26 @@ public class GuiScreenBlueprint extends GuiScreen {
 
         if ((mouseX >= x && mouseX <= x + 16) && (mouseY >= y && mouseY <= y + 16)) {
             renderHoveredForeground(x, y);
+            if (Mods.JEI.isPresent()) {
+                showJEIRecipeFocus(stack);
+            }
             return stack;
         }
         return null;
+    }
+
+    public static void showJEIRecipeFocus(final ItemStack stack) {
+        if (KeyBindings.showRecipe.isKeyDown() || Mouse.isButtonDown(0)) {
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack);
+                ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
+            }, 0);
+        } else if (KeyBindings.showUses.isKeyDown() || Mouse.isButtonDown(1)) {
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.INPUT, stack);
+                ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
+            }, 0);
+        }
     }
 
     private static void renderHoveredForeground(final int x, final int y) {

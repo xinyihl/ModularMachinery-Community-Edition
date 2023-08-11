@@ -61,6 +61,7 @@ public class ModIntegrationJEI implements IModPlugin {
     public static IJeiHelpers jeiHelpers;
     public static IIngredientRegistry ingredientRegistry;
     public static IRecipeRegistry recipeRegistry;
+    public static IJeiRuntime jeiRuntime;
 
     public static String getCategoryStringFor(DynamicMachine machine) {
         return "modularmachinery.recipes." + machine.getRegistryName().getPath();
@@ -180,6 +181,7 @@ public class ModIntegrationJEI implements IModPlugin {
     @Override
     public void onRuntimeAvailable(IJeiRuntime jeiRuntime) {
         recipeRegistry = jeiRuntime.getRecipeRegistry();
+        ModIntegrationJEI.jeiRuntime = jeiRuntime;
     }
 
 }

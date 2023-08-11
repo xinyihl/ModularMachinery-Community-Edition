@@ -342,6 +342,8 @@ public class DynamicMachine extends AbstractMachine {
 
             // Parts
             addParts(parts, machine.pattern);
+            // Remove Controller Position
+            machine.pattern.getPattern().remove(new BlockPos(0, 0, 0));
 
             // Modifiers
             if (root.has("modifiers")) {
