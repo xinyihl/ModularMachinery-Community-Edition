@@ -11,7 +11,6 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
-import hellfirepvp.modularmachinery.common.util.HybridTank;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.nbt.NBTTagCompound;
@@ -200,7 +199,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
         if (parallelizeUnaffected) {
             return maxParallelism;
         }
-        HybridTank handler = (HybridTank) component.providedComponent;
+        IFluidHandler handler = (IFluidHandler) component.providedComponent;
         switch (actionType) {
             case INPUT: {
                 FluidStack fluid = requirementCheck.asFluidStack().copy();

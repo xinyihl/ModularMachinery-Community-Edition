@@ -38,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
  * Created by HellFirePvP
  * Date: 18.08.2017 / 10:44
  */
+@SuppressWarnings("MethodMayBeStatic")
 public class ModIntegrationCrafttweaker {
     @SubscribeEvent
     public void onScriptsLoading(ScriptRunEvent.Pre event) {
@@ -69,6 +70,7 @@ public class ModIntegrationCrafttweaker {
         for (DynamicMachine loadedMachine : MachineRegistry.getLoadedMachines()) {
             loadedMachine.getMachineEventHandlers().clear();
             loadedMachine.getSmartInterfaceTypes().clear();
+            loadedMachine.getCoreThreadPreset().clear();
         }
         // Reload JSON Machine
         MachineRegistry.preloadMachines();
