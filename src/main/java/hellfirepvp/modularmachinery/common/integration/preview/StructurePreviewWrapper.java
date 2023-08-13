@@ -381,7 +381,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         double scaleJump = jumpWidth * scale;
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
-        Map<BlockPos, BlockArray.BlockInformation> slice = dynamnicContext.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
+        Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(dynamnicContext.getRenderSlice());
         if (dynamnicContext.getRenderSlice() == 0) {
             slice.put(BlockPos.ORIGIN, new BlockArray.BlockInformation(Lists.newArrayList(new IBlockStateDescriptor(ctrl.getDefaultState()))));
         }

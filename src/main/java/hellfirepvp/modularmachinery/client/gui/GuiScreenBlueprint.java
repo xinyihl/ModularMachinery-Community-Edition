@@ -339,7 +339,8 @@ public class GuiScreenBlueprint extends GuiScreen {
         Vec2f offset = renderContext.getCurrentRenderOffset(guiLeft + x, guiTop + z);
         int jumpWidth = 14;
         double scaleJump = jumpWidth * scale;
-        Map<BlockPos, BlockArray.BlockInformation> slice = renderContext.getPattern().getPatternSlice(renderContext.getRenderSlice());
+        // TODO: Dynamic Pattern Slice.
+        Map<BlockPos, BlockArray.BlockInformation> slice = machine.getPattern().getPatternSlice(renderContext.getRenderSlice());
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
         if (ctrl == null) ctrl = BlocksMM.blockController;
         if (renderContext.getRenderSlice() == 0) {

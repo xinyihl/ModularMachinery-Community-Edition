@@ -30,10 +30,7 @@ public abstract class BlockMEMachineComponent extends BlockMachineComponent {
     }
 
     @Override
-    public abstract boolean onBlockActivated(
-            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer playerIn,
-            @Nonnull EnumHand hand, @Nonnull EnumFacing facing,
-            float hitX, float hitY, float hitZ);
+    public abstract boolean onBlockActivated(@Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY, float hitZ);
 
     @Nullable
     @Override

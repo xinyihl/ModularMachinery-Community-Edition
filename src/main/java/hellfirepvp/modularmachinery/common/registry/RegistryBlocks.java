@@ -8,10 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.registry;
 
-import github.kasuminova.mmce.common.block.appeng.BlockMEFluidInputBus;
-import github.kasuminova.mmce.common.block.appeng.BlockMEFluidOutputBus;
-import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
-import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
+import github.kasuminova.mmce.common.block.appeng.*;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
@@ -23,6 +20,7 @@ import hellfirepvp.modularmachinery.common.block.*;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
 import hellfirepvp.modularmachinery.common.item.ItemBlockCustomName;
+import hellfirepvp.modularmachinery.common.item.ItemBlockMEMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
 import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
@@ -268,7 +266,9 @@ public class RegistryBlocks {
 
     private static ItemBlock prepareItemBlockRegister(Block block) {
         if (block instanceof BlockMachineComponent) {
-            if (block instanceof BlockCustomName) {
+            if (block instanceof BlockMEMachineComponent) {
+                return prepareItemBlockRegister(new ItemBlockMEMachineComponent(block));
+            } else if (block instanceof BlockCustomName) {
                 return prepareItemBlockRegister(new ItemBlockMachineComponentCustomName(block));
             } else {
                 return prepareItemBlockRegister(new ItemBlockMachineComponent(block));

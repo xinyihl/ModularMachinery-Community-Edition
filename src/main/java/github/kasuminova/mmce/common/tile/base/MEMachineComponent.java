@@ -16,6 +16,7 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
 import appeng.me.helpers.MachineSource;
 import appeng.util.Platform;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
@@ -138,6 +139,6 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void validate() {
         super.validate();
-        proxy.onReady();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(proxy::onReady);
     }
 }
