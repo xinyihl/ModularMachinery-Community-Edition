@@ -52,7 +52,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     public static final Map<DynamicMachine, BlockController> MACHINE_CONTROLLERS = new HashMap<>();
     public static final Map<DynamicMachine, BlockController> MOC_MACHINE_CONTROLLERS = new HashMap<>();
 
-    private DynamicMachine parentMachine = null;
+    protected DynamicMachine parentMachine = null;
 
     public BlockController() {
         super(Material.IRON);

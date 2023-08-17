@@ -18,22 +18,7 @@ import static youyihj.zenutils.impl.reload.ReloadCommand.RELOADABLE_LOADER;
  * Similar to /ct reload, but can be executed by the server.
  */
 public class CommandCTReload extends CommandBase {
-    @Override
-    public String getName() {
-        return "mm-reload";
-    }
-
-    @Override
-    public String getUsage(ICommandSender sender) {
-        return "command.modularmachinery.reload";
-    }
-
-    @Override
-    public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if (server.isDedicatedServer()) {
-            sender.sendMessage(getNormalMessage(TextFormatting.RED + "DedicatedServer detected! May be cause issues!"));
-        }
-
+    public static void reload(final ICommandSender sender) {
         sender.sendMessage(getNormalMessage(TextFormatting.AQUA + "Beginning reload scripts"));
         sender.sendMessage(getNormalMessage("Only scripts that marked " + TextFormatting.GRAY + "#loader reloadable " + TextFormatting.RESET + "can be reloaded."));
         sender.sendMessage(getNormalMessage(TextFormatting.YELLOW + "Most recipe modifications are not reloadable, they will be ignored."));
@@ -50,5 +35,24 @@ public class CommandCTReload extends CommandBase {
             sender.sendMessage(getNormalMessage("Reloaded successfully"));
         }
         MinecraftForge.EVENT_BUS.post(new ScriptReloadEvent.Post(sender));
+    }
+
+    @Override
+    public String getName() {
+        return "mm-reload";
+    }
+
+    @Override
+    public String getUsage(ICommandSender sender) {
+        return "command.modularmachinery.reload";
+    }
+
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
+        if (server.isDedicatedServer()) {
+            sender.sendMessage(getNormalMessage(TextFormatting.RED + "DedicatedServer detected! May be cause issues!"));
+        }
+
+        reload(sender);
     }
 }

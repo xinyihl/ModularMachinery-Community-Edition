@@ -33,7 +33,7 @@ import static hellfirepvp.modularmachinery.common.block.BlockController.FACING;
 public class BlockFactoryController extends BlockMachineComponent implements ItemDynamicColor {
     public static final Map<DynamicMachine, BlockFactoryController> FACOTRY_CONTROLLERS = new HashMap<>();
 
-    private DynamicMachine parentMachine = null;
+    protected DynamicMachine parentMachine = null;
 
     public BlockFactoryController() {
         super(Material.IRON);
