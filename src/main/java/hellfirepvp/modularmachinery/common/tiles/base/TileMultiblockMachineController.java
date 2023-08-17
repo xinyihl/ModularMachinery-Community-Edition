@@ -744,6 +744,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+        if (result.isFailure()) {
+            return result;
+        }
+
         RecipeCheckEvent event = new RecipeCheckEvent(this, context);
         event.postEvent();
 

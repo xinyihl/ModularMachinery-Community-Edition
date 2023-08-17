@@ -116,7 +116,7 @@ message.assembly.tip.or=or
 message.assembly.tip.partial_assembly=Modular Assembly: despite the absence of some materials, the assembly §cwill continue using the existing materials!
 
 message.reloading=Modular Machinery: Reloading!
-message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client!
+message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client! Machinery upgrades in the upgrade bus need to be repositioned to refresh their effects!
 message.cleared.recipes=Modular Machinery: Cleared %s recipes.
 message.reloaded.recipes=Modular Machinery: Reloaded %s recipes.
 message.reloaded.machines=Modular Machinery: Reloaded %s machines.
