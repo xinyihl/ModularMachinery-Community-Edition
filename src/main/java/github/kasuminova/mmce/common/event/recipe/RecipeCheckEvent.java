@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
+import stanhebben.zenscript.annotations.ZenSetter;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeCheckEvent")
@@ -21,6 +22,12 @@ public class RecipeCheckEvent extends RecipeEvent {
         this.isFailure = true;
         this.failureReason = reason;
         setCanceled(true);
+    }
+
+    @ZenMethod
+    @ZenSetter("parallelism")
+    public void setParallelism(int parallelism) {
+        getContext().setParallelism(Math.min(getActiveRecipe().getParallelism(), parallelism));
     }
 
     public boolean isFailure() {

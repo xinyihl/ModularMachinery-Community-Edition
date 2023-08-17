@@ -187,9 +187,9 @@ public class RecipeCraftingContext {
         event.postEvent();
         ResultChance chance = event.getResultChance();
 
-        for (ComponentRequirement<?, ?> requirement : requirements) {
-            startCrafting(chance, requirement);
-        }
+        requirements.stream()
+                .filter(requirement -> requirement.getTriggerTime() <= 0)
+                .forEach(requirement -> startCrafting(chance, requirement));
 
         this.getParentRecipe().getCommandContainer().runStartCommands(this.commandSender);
     }

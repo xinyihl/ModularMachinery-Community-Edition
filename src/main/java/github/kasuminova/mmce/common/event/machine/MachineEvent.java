@@ -3,6 +3,7 @@ package github.kasuminova.mmce.common.event.machine;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.helper.IMachineController;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraftforge.common.MinecraftForge;
@@ -32,9 +33,13 @@ public class MachineEvent extends Event {
     }
 
     public void postEvent() {
-        MinecraftForge.EVENT_BUS.post(this);
-        if (!isCanceled()) {
-            postCrTEvent();
+        try {
+            MinecraftForge.EVENT_BUS.post(this);
+            if (!isCanceled()) {
+                postCrTEvent();
+            }
+        } catch (Exception e) {
+            ModularMachinery.log.warn("Caught an exception when post event!", e);
         }
     }
 

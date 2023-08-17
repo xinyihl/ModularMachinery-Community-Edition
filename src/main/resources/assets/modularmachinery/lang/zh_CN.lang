@@ -116,7 +116,7 @@ message.assembly.tip.or=或
 message.assembly.tip.partial_assembly=模块化组装：尽管缺失部分材料，组装§c依然会使用现有的材料继续组装！
 
 message.reloading=模块化机械：重载中！
-message.reloaded=模块化机械：已完成重载！JEI 中的配方变化需要重启客户端！
+message.reloaded=模块化机械：已完成重载！JEI 中的配方变化需要重启客户端！升级总线中的机械升级需要重新放置才能刷新效果！
 message.cleared.recipes=模块化机械：已清理 %s 个旧配方。
 message.reloaded.recipes=模块化机械：已重载 %s 个配方。
 message.reloaded.machines=模块化机械：已重载 %s 个机械结构。

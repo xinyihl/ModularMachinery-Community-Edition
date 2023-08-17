@@ -29,7 +29,7 @@ public class GuiContainerUpgradeBus extends GuiContainerBase<ContainerUpgradeBus
     private static final int SCROLLBAR_LEFT = 156;
     private static final int SCROLLBAR_HEIGHT = 106;
     private static final int TEXT_DRAW_OFFSET_X = 92;
-    private static final int TEXT_DRAW_OFFSET_Y = 24;
+    private static final int TEXT_DRAW_OFFSET_Y = 23;
 
     public static final double FONT_SCALE = 0.72;
     public static final int SLOT_START_X = 8;

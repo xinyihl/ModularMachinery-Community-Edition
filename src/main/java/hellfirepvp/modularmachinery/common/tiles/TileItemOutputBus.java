@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import github.kasuminova.mmce.common.tile.base.MEItemBus;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.ItemBusSize;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -69,7 +70,11 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                 continue;
             }
 
-            outputToExternal(itemHandler);
+            try {
+                outputToExternal(itemHandler);
+            } catch (Exception e) {
+                ModularMachinery.log.error("Exception when insert item: ", e);
+            }
         }
     }
 
@@ -78,7 +83,8 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
         for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
             ItemStack externalStack = external.getStackInSlot(externalSlotId);
-            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= external.getSlotLimit(externalSlotId)) {
+            int slotLimit = external.getSlotLimit(externalSlotId);
+            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= slotLimit) {
                 continue;
             }
 
