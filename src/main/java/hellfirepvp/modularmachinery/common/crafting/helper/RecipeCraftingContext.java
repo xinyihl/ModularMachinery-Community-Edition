@@ -164,6 +164,12 @@ public class RecipeCraftingContext {
         return CraftingCheckResult.SUCCESS;
     }
 
+    public List<ComponentRequirement<?, ?>> getRequirementBy(RequirementType<?, ?> type) {
+        return requirements.stream()
+                .filter(req -> req.getRequirementType().equals(type))
+                .collect(Collectors.toList());
+    }
+
     private void checkAndTriggerRequirement(final CraftingCheckResult res, final int currentTick, final ResultChance chance, final ComponentRequirement<?, ?> req) {
         int triggerTime = req.getTriggerTime() * Math.round(RecipeModifier.applyModifiers(
                 this, RequirementTypesMM.REQUIREMENT_DURATION, null, 1, false));

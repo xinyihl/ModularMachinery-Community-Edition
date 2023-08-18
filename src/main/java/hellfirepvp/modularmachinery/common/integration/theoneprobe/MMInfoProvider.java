@@ -1,13 +1,21 @@
 package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.integration.ModIntegrationTOP;
+import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
+import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import mcjty.theoneprobe.api.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -19,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MMInfoProvider implements IProbeInfoProvider {
     @Override
@@ -77,6 +86,31 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         List<FactoryRecipeThread> recipeThreads = factory.getFactoryRecipeThreadList();
+
+        final AtomicLong energyConsumeTotal = new AtomicLong();
+        final AtomicLong energyGenerateTotal = new AtomicLong();
+        for (final FactoryRecipeThread thread : recipeThreads) {
+            if (thread.isIdle()) {
+                continue;
+            }
+            RequirementEnergy req = getRequirementEnergy(thread);
+            if (req == null) {
+                continue;
+            }
+            long required = getEnergyRequired(thread, req);
+            IOType ioType = req.getActionType();
+            if (ioType == IOType.INPUT) {
+                energyConsumeTotal.addAndGet(required);
+            } else if (ioType == IOType.OUTPUT) {
+                energyGenerateTotal.addAndGet(required);
+            }
+        }
+        if (energyConsumeTotal.get() > 0) {
+            addEnergyUsageText(probeInfo, IOType.INPUT, energyConsumeTotal.get());
+        }
+        if (energyGenerateTotal.get() > 0) {
+            addEnergyUsageText(probeInfo, IOType.OUTPUT, energyConsumeTotal.get());
+        }
 
         probeInfo.text(
                 TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
@@ -178,6 +212,13 @@ public class MMInfoProvider implements IProbeInfoProvider {
             progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
         }
 
+        RecipeThread thread = machine.getRecipeThreadList()[0];
+        RequirementEnergy req = getRequirementEnergy(thread);
+        if (req != null) {
+            long energyUsage = getEnergyRequired(thread, req);
+            addEnergyUsageText(probeInfo, req.getActionType(), energyUsage);
+        }
+
         ActiveMachineRecipe activeRecipe = machine.getActiveRecipe();
         int tick = activeRecipe.getTick();
         int totalTick = activeRecipe.getTotalTick();
@@ -210,6 +251,42 @@ public class MMInfoProvider implements IProbeInfoProvider {
                 .backgroundColor(ModIntegrationTOP.recipeProgressBarBackgroundColor)
                 .numberFormat(NumberFormat.NONE)
         );
+    }
+
+    private static long getEnergyRequired(RecipeThread thread, RequirementEnergy energy) {
+        RecipeCraftingContext context = thread.getContext();
+        if (context == null) {
+            return 0;
+        }
+
+        long reqPerTick = energy.getRequiredEnergyPerTick();
+        int parallelism = energy.getParallelism();
+        float durationMul = context.getDurationMultiplier();
+
+        return Math.round(((double)
+                RecipeModifier.applyModifiers(context, energy, reqPerTick, false) *
+                durationMul *
+                parallelism)
+        );
+    }
+
+    private static RequirementEnergy getRequirementEnergy(RecipeThread thread) {
+        List<ComponentRequirement<?, ?>> energyRequirements = thread.getContext().getRequirementBy(RequirementTypesMM.REQUIREMENT_ENERGY);
+        if (energyRequirements.isEmpty()) {
+            return null;
+        }
+
+        return (RequirementEnergy) energyRequirements.get(0);
+    }
+
+    private static void addEnergyUsageText(final IProbeInfo probe, final IOType ioType, final long usagePerTick) {
+        if (ioType == IOType.INPUT) {
+            probe.text(TextFormatting.GOLD + "{*top.energy.input*}" + TextFormatting.RED +
+                    MiscUtils.formatNumber(usagePerTick) + " RF/t");
+        } else if (ioType == IOType.OUTPUT) {
+            probe.text(TextFormatting.GREEN + "{*top.energy.output*}" + TextFormatting.RED +
+                    MiscUtils.formatNumber(usagePerTick) + " RF/t");
+        }
     }
 
 }

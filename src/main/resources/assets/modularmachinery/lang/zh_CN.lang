@@ -70,6 +70,8 @@ top.parallelism=并行数：
 top.factory.thread=线程 #
 top.factory.thread.running=线程运行中
 top.factory.thread.max=最大线程数
+top.energy.input=总能量消耗：
+top.energy.output=总能量产出：
 
 craftcheck.failure.item.input=缺少物品输入！
 craftcheck.failure.item.output.space=没有足够的库存空间用于物品输出！

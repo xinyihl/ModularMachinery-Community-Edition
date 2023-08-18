@@ -70,6 +70,8 @@ top.parallelism=Parallelism：
 top.factory.thread=Thread #
 top.factory.thread.running=Threads Running
 top.factory.thread.max=Threads max
+top.energy.input=Total Energy Consumption:
+top.energy.output=Total Energy Generation:
 
 craftcheck.failure.item.input=Missing input item!
 craftcheck.failure.item.output.space=Not enough inventory space for item output(s)!

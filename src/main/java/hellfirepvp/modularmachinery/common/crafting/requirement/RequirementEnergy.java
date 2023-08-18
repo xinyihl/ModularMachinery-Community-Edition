@@ -246,4 +246,8 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
             this.parallelMultiplier = 1;
         }
     }
+
+    public int getParallelism() {
+        return parallelism;
+    }
 }
