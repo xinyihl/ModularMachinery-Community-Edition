@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementCatalyst extends RequirementItem {
@@ -59,38 +60,7 @@ public class RequirementCatalyst extends RequirementItem {
 
     @Override
     public RequirementCatalyst deepCopy() {
-        RequirementCatalyst catalyst;
-        switch (this.requirementType) {
-            case OREDICT:
-                catalyst = new RequirementCatalyst(this.oreDictName, this.oreDictItemAmount);
-                break;
-            case FUEL:
-                catalyst = new RequirementCatalyst(this.fuelBurntime);
-                break;
-            default:
-            case ITEMSTACKS:
-                catalyst = new RequirementCatalyst(this.required.copy());
-                break;
-        }
-        catalyst.setTag(getTag());
-        catalyst.triggerTime = this.triggerTime;
-        catalyst.triggerRepeatable = this.triggerRepeatable;
-        catalyst.chance = this.chance;
-        catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
-        if (this.itemChecker != null) {
-            catalyst.itemChecker = this.itemChecker;
-        } else if (this.tag != null) {
-            catalyst.tag = this.tag.copy();
-        }
-        if (!this.itemModifierList.isEmpty()) {
-            catalyst.itemModifierList.addAll(this.itemModifierList);
-        }
-        if (this.previewDisplayTag != null) {
-            catalyst.previewDisplayTag = this.previewDisplayTag.copy();
-        }
-        catalyst.modifierList.addAll(this.modifierList);
-        catalyst.toolTipList.addAll(toolTipList);
-        return catalyst;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
@@ -114,10 +84,18 @@ public class RequirementCatalyst extends RequirementItem {
                 break;
         }
         catalyst.setTag(getTag());
-        catalyst.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
+        catalyst.triggerTime = this.triggerTime;
+        catalyst.triggerRepeatable = this.triggerRepeatable;
+        catalyst.chance = this.chance;
         catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
-        if (this.tag != null) {
+        catalyst.ignoreOutputCheck = this.ignoreOutputCheck;
+        if (this.itemChecker != null) {
+            catalyst.itemChecker = this.itemChecker;
+        } else if (this.tag != null) {
             catalyst.tag = this.tag.copy();
+        }
+        if (!this.itemModifierList.isEmpty()) {
+            catalyst.itemModifierList.addAll(this.itemModifierList);
         }
         if (this.previewDisplayTag != null) {
             catalyst.previewDisplayTag = this.previewDisplayTag.copy();

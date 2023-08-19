@@ -20,10 +20,12 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick>
         implements ComponentRequirement.Parallelizable {
+
     public final HybridFluid required;
     protected final HybridFluid requirementCheck;
     protected NBTTagCompound tagMatch = null, tagDisplay = null;
@@ -76,6 +78,9 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
+                if (ignoreOutputCheck) {
+                    return CraftCheck.success();
+                }
                 handler = new MultiFluidTank(handler);
 
                 for (ComponentOutputRestrictor restrictor : restrictions) {
@@ -118,7 +123,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
             case OUTPUT:
                 int filled = handler.fill(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
 
-                return filled >= this.requirementCheck.getAmount()
+                return filled >= this.requirementCheck.getAmount() || ignoreOutputCheck
                         ? CraftCheck.success()
                         : CraftCheck.failure("craftcheck.failure.fluid.output.space");
         }
@@ -127,28 +132,25 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
 
     @Override
     public RequirementFluidPerTick deepCopy() {
-        RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, required.asFluidStack());
-        fluid.setTag(getTag());
-        fluid.tagMatch = tagMatch;
-        fluid.tagDisplay = tagDisplay;
-        return fluid;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
     public RequirementFluidPerTick deepCopyModified(List<RecipeModifier> modifiers) {
         HybridFluid hybrid = this.required.copy();
-        hybrid.setAmount(Math.round(RecipeModifier.applyModifiers(modifiers, this, hybrid.getAmount(), false)));
+        hybrid.setAmount((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) hybrid.getAmount(), false)));
         RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, hybrid.asFluidStack());
         fluid.setTag(getTag());
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
         fluid.parallelizeUnaffected = parallelizeUnaffected;
+        fluid.ignoreOutputCheck = ignoreOutputCheck;
         return fluid;
     }
 
     @Override
     public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false)) * parallelism);
+        this.requirementCheck.setAmount((int) (Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.getAmount(), false)) * parallelism));
     }
 
     @Override
@@ -170,7 +172,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.required.getAmount(), false) * durationMultiplier * parallelism));
+        this.requirementCheck.setAmount((int) Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.getAmount(), false) * durationMultiplier * parallelism));
     }
 
     @Nonnull
@@ -180,7 +182,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
             case INPUT:
                 return isSuccess ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
-                return isSuccess ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.fluid.output.space");
+                return isSuccess || ignoreOutputCheck ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.fluid.output.space");
         }
         return CraftCheck.skipComponent();
     }

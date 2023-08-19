@@ -41,6 +41,8 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     protected boolean triggerRepeatable = false;
     protected int triggerTime = 0;
 
+    protected boolean ignoreOutputCheck = false;
+
     public ComponentRequirement(V requirementType, IOType actionType) {
         this.requirementType = requirementType;
         this.actionType = actionType;
@@ -136,6 +138,14 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     //in the JEI Integration! Otherwise JEI will complain about not having proper handling for this
     //Also, be sure that this generic T is the *only one* with that type otherwise internally stuff might break...
     public abstract JEIComponent<T> provideJEIComponent();
+
+    public boolean isIgnoreOutputCheck() {
+        return ignoreOutputCheck;
+    }
+
+    public void setIgnoreOutputCheck(final boolean ignoreOutputCheck) {
+        this.ignoreOutputCheck = ignoreOutputCheck;
+    }
 
     public interface ChancedRequirement {
 

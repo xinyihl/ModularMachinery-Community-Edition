@@ -24,6 +24,7 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -56,20 +57,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopy() {
-        RequirementEnergy energy = new RequirementEnergy(this.actionType, this.requirementPerTick);
-        energy.setTag(getTag());
-        energy.activeIO = this.activeIO;
-        energy.parallelizeUnaffected = this.parallelizeUnaffected;
-        return energy;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopyModified(List<RecipeModifier> modifiers) {
-        long requirement = Math.round((double) RecipeModifier.applyModifiers(modifiers, this, this.requirementPerTick, false));
+        long requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) this.requirementPerTick, false));
         RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
         energy.setTag(getTag());
         energy.activeIO = this.activeIO;
         energy.parallelizeUnaffected = this.parallelizeUnaffected;
+        energy.ignoreOutputCheck = this.ignoreOutputCheck;
         return energy;
     }
 
@@ -112,12 +110,12 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
-                if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelism * parallelMultiplier) {
+                if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelism * parallelMultiplier) {
                     return CraftCheck.success();
                 }
                 return CraftCheck.failure("craftcheck.failure.energy.input");
             case OUTPUT:
-                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelism * parallelMultiplier < 0) {
+                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelism * parallelMultiplier < 0) {
                     return CraftCheck.failure("craftcheck.failure.energy.output.space");
                 }
                 return CraftCheck.success();
@@ -139,7 +137,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.activeIO = Math.round(((double) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * durationMultiplier * parallelism * parallelMultiplier));
+        this.activeIO = Math.round((RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * durationMultiplier * parallelism * parallelMultiplier));
     }
 
     @Nonnull
@@ -221,10 +219,10 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
         switch (actionType) {
             case INPUT:
-                long inTick = (long) ((long) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelMultiplier);
+                long inTick = (long) (RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelMultiplier);
                 return (int) Math.min(handler.getCurrentEnergy() / inTick, maxParallelism);
             case OUTPUT:
-                long outTick = (long) ((long) RecipeModifier.applyModifiers(context, this, this.requirementPerTick, false) * parallelMultiplier);
+                long outTick = (long) (RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelMultiplier);
                 return (int) Math.min(handler.getRemainingCapacity() / outTick, maxParallelism);
         }
 

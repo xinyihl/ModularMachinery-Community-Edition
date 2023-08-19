@@ -84,19 +84,45 @@ public class RecipeModifier {
         return null;
     }
 
+    // Apply Context's ModifierList to value.
+
+    public static double applyModifiers(RecipeCraftingContext context, ComponentRequirement<?, ?> in, double value, boolean isChance) {
+        return applyModifiers(context, in.requirementType, in.getActionType(), value, isChance);
+    }
+
+    public static double applyModifiers(RecipeCraftingContext context, RequirementType<?, ?> target, IOType ioType, double value, boolean isChance) {
+        return context.getModifierApplier(target, isChance).apply(value, ioType);
+    }
+
     public static float applyModifiers(RecipeCraftingContext context, ComponentRequirement<?, ?> in, float value, boolean isChance) {
         return applyModifiers(context, in.requirementType, in.getActionType(), value, isChance);
     }
 
     public static float applyModifiers(RecipeCraftingContext context, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
-        return context.getModifierApplier(target, isChance).apply(value, ioType);
+        return (float) context.getModifierApplier(target, isChance).apply(value, ioType);
+    }
+
+    // Apply ModifierList to value.
+
+    public static double applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, double value, boolean isChance) {
+        return applyModifiers(modifiers, in.requirementType, in.getActionType(), value, isChance);
     }
 
     public static float applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, float value, boolean isChance) {
         return applyModifiers(modifiers, in.requirementType, in.getActionType(), value, isChance);
     }
 
+    // Final Implementation.
+
     public static float applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
+        return (float) applyModifiers(modifiers, target, ioType, (double) value, isChance);
+    }
+
+    public static double applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, double value, boolean isChance) {
+        if (modifiers.isEmpty()) {
+            return value;
+        }
+
         List<RecipeModifier> applicable = new ArrayList<>();
         for (RecipeModifier recipeModifier : modifiers) {
             if (recipeModifier.target != null && recipeModifier.target.equals(target)) {
@@ -150,7 +176,7 @@ public class RecipeModifier {
         public float outputAdd = 0;
         public float outputMul = 1;
 
-        public float apply(final float value, final IOType ioType) {
+        public double apply(final double value, final IOType ioType) {
             return ioType == null || ioType == IOType.INPUT
                     ? (value + inputAdd) * inputMul
                     : (value + outputAdd) * outputMul;

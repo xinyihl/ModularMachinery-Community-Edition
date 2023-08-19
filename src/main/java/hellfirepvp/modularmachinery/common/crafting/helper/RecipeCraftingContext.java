@@ -170,6 +170,12 @@ public class RecipeCraftingContext {
                 .collect(Collectors.toList());
     }
 
+    public List<ComponentRequirement<?, ?>> getRequirementBy(RequirementType<?, ?> type, IOType ioType) {
+        return requirements.stream()
+                .filter(req -> req.getRequirementType().equals(type) && req.getActionType() == ioType)
+                .collect(Collectors.toList());
+    }
+
     private void checkAndTriggerRequirement(final CraftingCheckResult res, final int currentTick, final ResultChance chance, final ComponentRequirement<?, ?> req) {
         int triggerTime = req.getTriggerTime() * Math.round(RecipeModifier.applyModifiers(
                 this, RequirementTypesMM.REQUIREMENT_DURATION, null, 1, false));

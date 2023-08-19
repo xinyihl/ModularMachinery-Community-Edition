@@ -158,9 +158,10 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     /**
-     * 为某个输入或输出设置特定触发时间。
+     * <p>为某个输入或输出设置特定触发时间。</p>
+     * <p>注意：如果设置了触发时间，则配方在其他时间不会触发任何消耗或产出动作。</p>
      *
-     * @param tickTime 触发时间，实际触发时间受到配方修改器影响
+     * @param tickTime 触发的配方时间，实际触发时间受到配方修改器影响
      */
     @ZenMethod
     public RecipePrimer setTriggerTime(int tickTime) {
@@ -179,6 +180,20 @@ public class RecipePrimer implements PreparedRecipe {
     public RecipePrimer setTriggerRepeatable(boolean repeatable) {
         if (lastComponent != null) {
             lastComponent.setTriggerRepeatable(repeatable);
+        }
+        return this;
+    }
+
+    /**
+     * <p>使一个物品/流体等需求忽略输出检测，对一些大量输出不同种类物品等需求非常有用。</p>
+     * <p>警告：如果忽略输出则有时可能会导致输出吞物品行为。</p>
+     *
+     * @param ignoreOutputCheck true 为忽略，默认为 false 不忽略。
+     */
+    @ZenMethod
+    public RecipePrimer setIgnoreOutputCheck(boolean ignoreOutputCheck) {
+        if (lastComponent != null) {
+            lastComponent.setIgnoreOutputCheck(ignoreOutputCheck);
         }
         return this;
     }

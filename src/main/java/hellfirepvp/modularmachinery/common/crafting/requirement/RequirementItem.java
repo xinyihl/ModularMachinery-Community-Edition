@@ -27,6 +27,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,10 +52,13 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     public final List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
     public int countIOBuffer = 0;
+
     public NBTTagCompound tag = null;
     public NBTTagCompound previewDisplayTag = null;
+
     public AdvancedItemChecker itemChecker = null;
     public float chance = 1F;
+
     protected int parallelism = 1;
     protected boolean parallelizeUnaffected = false;
 
@@ -100,39 +104,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public ComponentRequirement<ItemStack, RequirementTypeItem> deepCopy() {
-        RequirementItem item;
-        switch (this.requirementType) {
-            case OREDICT:
-                item = new RequirementItem(this.actionType, this.oreDictName, this.oreDictItemAmount);
-                break;
-
-            case FUEL:
-                item = new RequirementItem(this.actionType, this.fuelBurntime);
-                break;
-
-            default:
-            case ITEMSTACKS:
-                item = new RequirementItem(this.actionType, this.required.copy());
-                break;
-        }
-        // ComponentSelectorTag
-        item.setTag(getTag());
-        item.triggerTime = this.triggerTime;
-        item.triggerRepeatable = this.triggerRepeatable;
-        item.chance = this.chance;
-        item.parallelizeUnaffected = this.parallelizeUnaffected;
-        if (this.itemChecker != null) {
-            item.itemChecker = this.itemChecker;
-        } else if (this.tag != null) {
-            item.tag = this.tag.copy();
-        }
-        if (!this.itemModifierList.isEmpty()) {
-            item.itemModifierList.addAll(this.itemModifierList);
-        }
-        if (this.previewDisplayTag != null) {
-            item.previewDisplayTag = this.previewDisplayTag.copy();
-        }
-        return item;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
@@ -156,10 +128,19 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 break;
         }
 
-        item.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
+        item.setTag(getTag());
+        item.triggerTime = this.triggerTime;
+        item.triggerRepeatable = this.triggerRepeatable;
+        item.chance = this.chance;
         item.parallelizeUnaffected = this.parallelizeUnaffected;
-        if (this.tag != null) {
+        item.ignoreOutputCheck = this.ignoreOutputCheck;
+        if (this.itemChecker != null) {
+            item.itemChecker = this.itemChecker;
+        } else if (this.tag != null) {
             item.tag = this.tag.copy();
+        }
+        if (!this.itemModifierList.isEmpty()) {
+            item.itemModifierList.addAll(this.itemModifierList);
         }
         if (this.previewDisplayTag != null) {
             item.previewDisplayTag = this.previewDisplayTag.copy();
@@ -253,6 +234,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             }
             return CraftCheck.failure("craftcheck.failure.item.input");
         } else if (actionType == IOType.OUTPUT) {
+            if (isIgnoreOutputCheck()) {
+                return CraftCheck.success();
+            }
+
             handler = handler.copy();
             for (ComponentOutputRestrictor restrictor : restrictions) {
                 if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
@@ -302,48 +287,50 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        if (actionType != IOType.INPUT) {
+            return true;
+        }
+
         IOInventory handler = (IOInventory) component.providedComponent;
         float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
-        if (actionType == IOType.INPUT) {
-            switch (this.requirementType) {
-                case ITEMSTACKS:
-                    ItemStack stackRequired = this.required.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false) * parallelism);
-                    stackRequired.setCount(amt);
-                    if (!itemModifierList.isEmpty()) {
-                        for (AdvancedItemModifier modifier : itemModifierList) {
-                            stackRequired = modifier.apply(context.getMachineController(), stackRequired);
-                        }
+        switch (this.requirementType) {
+            case ITEMSTACKS:
+                ItemStack stackRequired = this.required.copy();
+                int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false) * parallelism);
+                stackRequired.setCount(amt);
+                if (!itemModifierList.isEmpty()) {
+                    for (AdvancedItemModifier modifier : itemModifierList) {
+                        stackRequired = modifier.apply(context.getMachineController(), stackRequired);
                     }
+                }
 
-                    if (chance.canProduce(productionChance)) {
-                        return (this.itemChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.itemChecker, context.getMachineController())
-                                : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
-                    } else {
-                        return (this.itemChecker != null)
-                                ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.itemChecker, context.getMachineController())
-                                : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
-                    }
-                case OREDICT:
-                    int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
-                    if (chance.canProduce(productionChance)) {
-                        return (this.itemChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, itemChecker, context.getMachineController())
-                                : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
-                    } else {
-                        return (this.itemChecker != null)
-                                ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, itemChecker, context.getMachineController())
-                                : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
-                    }
-                case FUEL:
-                    int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                    boolean can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
-                    if (chance.canProduce(productionChance)) {
-                        return can;
-                    }
-                    return can && ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
-            }
+                if (chance.canProduce(productionChance)) {
+                    return (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.itemChecker, context.getMachineController())
+                            : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
+                } else {
+                    return (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.itemChecker, context.getMachineController())
+                            : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
+                }
+            case OREDICT:
+                int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
+                if (chance.canProduce(productionChance)) {
+                    return (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, itemChecker, context.getMachineController())
+                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
+                } else {
+                    return (this.itemChecker != null)
+                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, itemChecker, context.getMachineController())
+                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
+                }
+            case FUEL:
+                int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
+                boolean can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
+                if (chance.canProduce(productionChance)) {
+                    return can;
+                }
+                return can && ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
         }
         return false;
     }
@@ -427,12 +414,18 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             case OUTPUT:
                 switch (this.requirementType) {
                     case ITEMSTACKS: {
+                        if (isIgnoreOutputCheck()) {
+                            return maxParallelism;
+                        }
                         ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
                                 RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
                                                                                 parallelism);
                         return ItemUtils.maxOutputParallelism(stack, handler, maxParallelism);
                     }
                     case OREDICT: {
+                        if (isIgnoreOutputCheck()) {
+                            return maxParallelism;
+                        }
                         ItemStack stack = ItemStack.EMPTY;
                         for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
                             if (oreInstance.isEmpty()) {

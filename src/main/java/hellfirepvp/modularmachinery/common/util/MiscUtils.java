@@ -108,17 +108,17 @@ public class MiscUtils {
         if (value < 1_000L) {
             return String.valueOf(value);
         } else if (value < 1_000_000L) {
-            return (double) Math.round((float) value) / 1000.0 + "K";
+            return (double) Math.round((double) value) / 1000.0 + "K";
         } else if (value < 1_000_000_000L) {
-            return (double) Math.round((float) (value / 1_000L)) / 1000.0 + "M";
+            return (double) Math.round((double) (value / 1_000L)) / 1000.0 + "M";
         } else if (value < 1_000_000_000_000L) {
-            return (double) Math.round((float) (value / 1_000_000L)) / 1000.0 + "G";
+            return (double) Math.round((double) (value / 1_000_000L)) / 1000.0 + "G";
         } else if (value < 1_000_000_000_000_000L) {
-            return (double) Math.round((float) (value / 1_000_000_000L)) / 1000.0 + "T";
+            return (double) Math.round((double) (value / 1_000_000_000L)) / 1000.0 + "T";
         } else if (value < 1_000_000_000_000_000_000L) {
-            return (double) Math.round((float) (value / 1_000_000_000_000L)) / 1000.0 + "P";
+            return (double) Math.round((double) (value / 1_000_000_000_000L)) / 1000.0 + "P";
         } else {
-            return (double) Math.round((float) (value / 1_000_000_000_000_000L)) / 1000.0 + "E";
+            return (double) Math.round((double) (value / 1_000_000_000_000_000L)) / 1000.0 + "E";
         }
     }
 

@@ -86,30 +86,17 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         List<FactoryRecipeThread> recipeThreads = factory.getFactoryRecipeThreadList();
+        Collection<FactoryRecipeThread> coreRecipeThreads = factory.getCoreRecipeThreads().values();
 
         final AtomicLong energyConsumeTotal = new AtomicLong();
         final AtomicLong energyGenerateTotal = new AtomicLong();
-        for (final FactoryRecipeThread thread : recipeThreads) {
-            if (thread.isIdle()) {
-                continue;
-            }
-            RequirementEnergy req = getRequirementEnergy(thread);
-            if (req == null) {
-                continue;
-            }
-            long required = getEnergyRequired(thread, req);
-            IOType ioType = req.getActionType();
-            if (ioType == IOType.INPUT) {
-                energyConsumeTotal.addAndGet(required);
-            } else if (ioType == IOType.OUTPUT) {
-                energyGenerateTotal.addAndGet(required);
-            }
-        }
+        collectRequirementEnergy(coreRecipeThreads, energyConsumeTotal, energyGenerateTotal);
+        collectRequirementEnergy(recipeThreads, energyConsumeTotal, energyGenerateTotal);
         if (energyConsumeTotal.get() > 0) {
-            addEnergyUsageText(probeInfo, IOType.INPUT, energyConsumeTotal.get());
+            addEnergyUsageText(probeInfo, player, IOType.INPUT, energyConsumeTotal.get());
         }
         if (energyGenerateTotal.get() > 0) {
-            addEnergyUsageText(probeInfo, IOType.OUTPUT, energyConsumeTotal.get());
+            addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyGenerateTotal.get());
         }
 
         probeInfo.text(
@@ -129,7 +116,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         AtomicInteger i = new AtomicInteger();
-        Collection<FactoryRecipeThread> coreThreadList = factory.getCoreRecipeThreads().values();
+        Collection<FactoryRecipeThread> coreThreadList = coreRecipeThreads;
         List<FactoryRecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + recipeThreads.size()) * 1.5));
         recipeThreadList.addAll(coreThreadList);
         recipeThreadList.addAll(recipeThreads);
@@ -191,6 +178,24 @@ public class MMInfoProvider implements IProbeInfoProvider {
         });
     }
 
+    private static void collectRequirementEnergy(final Collection<FactoryRecipeThread> recipeThreads, final AtomicLong energyConsumeTotal, final AtomicLong energyGenerateTotal) {
+        for (final FactoryRecipeThread thread : recipeThreads) {
+            if (thread.isIdle()) {
+                continue;
+            }
+            RequirementEnergy req = getRequirementEnergy(thread, IOType.INPUT);
+            if (req != null) {
+                long required = getEnergyRequired(thread, req);
+                energyConsumeTotal.addAndGet(required);
+            }
+            req = getRequirementEnergy(thread, IOType.OUTPUT);
+            if (req != null) {
+                long required = getEnergyRequired(thread, req);
+                energyGenerateTotal.addAndGet(required);
+            }
+        }
+    }
+
     // TODO: Really long...
     private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
         //是否在工作
@@ -213,10 +218,15 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         RecipeThread thread = machine.getRecipeThreadList()[0];
-        RequirementEnergy req = getRequirementEnergy(thread);
+        RequirementEnergy req = getRequirementEnergy(thread, IOType.INPUT);
         if (req != null) {
             long energyUsage = getEnergyRequired(thread, req);
-            addEnergyUsageText(probeInfo, req.getActionType(), energyUsage);
+            addEnergyUsageText(probeInfo, player, IOType.INPUT, energyUsage);
+        }
+        req = getRequirementEnergy(thread, IOType.OUTPUT);
+        if (req != null) {
+            long energyUsage = getEnergyRequired(thread, req);
+            addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyUsage);
         }
 
         ActiveMachineRecipe activeRecipe = machine.getActiveRecipe();
@@ -263,15 +273,14 @@ public class MMInfoProvider implements IProbeInfoProvider {
         int parallelism = energy.getParallelism();
         float durationMul = context.getDurationMultiplier();
 
-        return Math.round(((double)
-                RecipeModifier.applyModifiers(context, energy, reqPerTick, false) *
+        return Math.round((RecipeModifier.applyModifiers(context, energy, (double) reqPerTick, false) *
                 durationMul *
                 parallelism)
         );
     }
 
-    private static RequirementEnergy getRequirementEnergy(RecipeThread thread) {
-        List<ComponentRequirement<?, ?>> energyRequirements = thread.getContext().getRequirementBy(RequirementTypesMM.REQUIREMENT_ENERGY);
+    private static RequirementEnergy getRequirementEnergy(RecipeThread thread, IOType ioType) {
+        List<ComponentRequirement<?, ?>> energyRequirements = thread.getContext().getRequirementBy(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
         if (energyRequirements.isEmpty()) {
             return null;
         }
@@ -279,13 +288,23 @@ public class MMInfoProvider implements IProbeInfoProvider {
         return (RequirementEnergy) energyRequirements.get(0);
     }
 
-    private static void addEnergyUsageText(final IProbeInfo probe, final IOType ioType, final long usagePerTick) {
+    private static void addEnergyUsageText(final IProbeInfo probe, final EntityPlayer player, final IOType ioType, final long usagePerTick) {
         if (ioType == IOType.INPUT) {
-            probe.text(TextFormatting.GOLD + "{*top.energy.input*}" + TextFormatting.RED +
-                    MiscUtils.formatNumber(usagePerTick) + " RF/t");
+            if (player.isSneaking()) {
+                probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
+                        MiscUtils.formatNumber(usagePerTick) + " RF/t");
+            } else {
+                probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
+                        MiscUtils.formatDecimal(usagePerTick) + " RF/t");
+            }
         } else if (ioType == IOType.OUTPUT) {
-            probe.text(TextFormatting.GREEN + "{*top.energy.output*}" + TextFormatting.RED +
-                    MiscUtils.formatNumber(usagePerTick) + " RF/t");
+            if (player.isSneaking()) {
+                probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
+                        MiscUtils.formatNumber(usagePerTick) + " RF/t");
+            } else {
+                probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
+                        MiscUtils.formatDecimal(usagePerTick) + " RF/t");
+            }
         }
     }
 

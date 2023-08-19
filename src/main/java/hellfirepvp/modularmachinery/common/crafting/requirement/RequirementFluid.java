@@ -85,19 +85,21 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
         fluid.parallelizeUnaffected = this.parallelizeUnaffected;
+        fluid.ignoreOutputCheck = this.ignoreOutputCheck;
         return fluid;
     }
 
     @Override
     public ComponentRequirement<HybridFluid, RequirementTypeFluid> deepCopyModified(List<RecipeModifier> modifiers) {
         HybridFluid hybrid = this.required.copy();
-        hybrid.setAmount(Math.round(RecipeModifier.applyModifiers(modifiers, this, hybrid.getAmount(), false)));
+        hybrid.setAmount((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) hybrid.getAmount(), false)));
         RequirementFluid fluid = new RequirementFluid(this.requirementType, this.actionType, hybrid);
         fluid.setTag(getTag());
         fluid.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
         fluid.parallelizeUnaffected = this.parallelizeUnaffected;
+        fluid.ignoreOutputCheck = this.ignoreOutputCheck;
         return fluid;
     }
 
@@ -138,7 +140,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     @Override
     public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
         this.requirementCheck = this.required.copy();
-        this.requirementCheck.setAmount(Math.round(RecipeModifier.applyModifiers(context, this, this.requirementCheck.getAmount(), false) * parallelism));
+        this.requirementCheck.setAmount((int) Math.round(RecipeModifier.applyModifiers(context, this, (double) this.requirementCheck.getAmount(), false) * parallelism));
         this.doesntConsumeInput = contextChance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true));
     }
 
@@ -202,6 +204,9 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                 }
                 return CraftCheck.failure("craftcheck.failure.fluid.input");
             case OUTPUT:
+                if (ignoreOutputCheck) {
+                    return CraftCheck.success();
+                }
                 handler = new MultiFluidTank(handler);
 
                 for (ComponentOutputRestrictor restrictor : restrictions) {
@@ -247,6 +252,9 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
                 }
                 return Optional.of(CraftCheck.failure("craftcheck.failure.gas.input"));
             case OUTPUT:
+                if (ignoreOutputCheck) {
+                    return Optional.of(CraftCheck.success());
+                }
                 gasTank = (HybridGasTank) CopyHandlerHelper.copyTank(gasTank);
 
                 for (ComponentOutputRestrictor restrictor : restrictions) {
