@@ -56,6 +56,7 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
         List<MachineRecipe> smeltingRecipes = new ArrayList<>(inputOutputMap.size());
         for (Map.Entry<ItemStack, ItemStack> smelting : inputOutputMap.entrySet()) {
             ItemStack input = smelting.getKey();
+            ItemStack output = smelting.getValue();
             int tickTime = Math.round(Math.max(1, RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, 120, false)));
             float experience = furnaceRecipes.getSmeltingExperience(input);
 
@@ -74,9 +75,9 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
                 recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(input, inAmount)));
             }
 
-            int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, input.getCount(), false));
+            int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, output.getCount(), false));
             if (outAmount > 0) {
-                recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(smelting.getValue(), outAmount)));
+                recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(output, outAmount)));
             }
 
             int inEnergy = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ENERGY, IOType.INPUT, 20, false));

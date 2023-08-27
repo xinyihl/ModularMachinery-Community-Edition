@@ -25,7 +25,8 @@ import javax.annotation.Nonnull;
  * Date: 28.06.2017 / 17:15
  */
 public class TileEntitySynchronized extends TileEntity {
-    private boolean isInUpdateTask = false;
+    private boolean inUpdateTask = false;
+    private long lastUpdateTick = 0;
 
     public final void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);
@@ -80,7 +81,8 @@ public class TileEntitySynchronized extends TileEntity {
         world.notifyBlockUpdate(pos, state, state, 3);
         markDirty();
 
-        isInUpdateTask = false;
+        inUpdateTask = false;
+        lastUpdateTick = getWorld().getTotalWorldTime();
     }
 
     /**
@@ -88,10 +90,18 @@ public class TileEntitySynchronized extends TileEntity {
      * <p>*** 只能保证 MMCE 自身对世界的线程安全 ***</p>
      */
     public void markForUpdateSync() {
-        if (isInUpdateTask) {
+        if (inUpdateTask) {
             return;
         }
         ModularMachinery.EXECUTE_MANAGER.addTEUpdateTask(this);
-        isInUpdateTask = true;
+        inUpdateTask = true;
+    }
+
+    public boolean isInUpdateTask() {
+        return inUpdateTask;
+    }
+
+    public long getLastUpdateTick() {
+        return lastUpdateTick;
     }
 }

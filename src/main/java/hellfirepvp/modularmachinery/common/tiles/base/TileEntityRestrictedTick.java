@@ -24,6 +24,7 @@ public abstract class TileEntityRestrictedTick extends TileColorableMachineCompo
 
     @Override
     public final void update() {
+        // Don't bother modifying this method unless you know what you're doing.
         long currentTick = getWorld().getTotalWorldTime();
         if (lastUpdateWorldTick == currentTick) {
             return;

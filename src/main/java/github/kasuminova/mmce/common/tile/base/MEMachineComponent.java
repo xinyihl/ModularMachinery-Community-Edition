@@ -23,6 +23,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineCompon
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -43,7 +44,9 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        proxy.readFromNBT(compound);
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            proxy.readFromNBT(compound);
+        }
     }
 
     @Override
@@ -96,6 +99,7 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
         return proxy.getNode();
     }
 
+    @Nonnull
     @Override
     public AENetworkProxy getProxy() {
         return proxy;

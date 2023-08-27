@@ -199,10 +199,13 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
         offsetY += 15;
 
+        int tmp = offsetY;
         offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
+            if (tmp != offsetY) {
+                offsetY += 5;
+            }
 
-        offsetY += 5;
         fr.drawStringWithShadow(String.format("Avg: %sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);

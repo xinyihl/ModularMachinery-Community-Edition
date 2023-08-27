@@ -10,9 +10,9 @@ import net.minecraft.item.ItemStack;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementRandomItemArray extends ComponentRequirement<ItemStack, RequirementTypeRandomItemArray> implements ComponentRequirement.ChancedRequirement {
+public class RequirementRandomItem extends ComponentRequirement<ItemStack, RequirementTypeRandomItemArray> implements ComponentRequirement.ChancedRequirement {
 
-    public RequirementRandomItemArray(RequirementTypeRandomItemArray requirementType, IOType actionType) {
+    public RequirementRandomItem(RequirementTypeRandomItemArray requirementType, IOType actionType) {
         super(requirementType, actionType);
     }
 

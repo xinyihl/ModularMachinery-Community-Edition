@@ -14,11 +14,11 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -109,12 +109,12 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
             String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
             String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
 
-            String chanceStr = String.valueOf(MathHelper.floor(chance * 100F));
+            String chanceStr = MiscUtils.formatFloat(chance * 100F, 2);
             if (chance == 0F) {
                 tooltip.add(I18n.format(keyNever));
             } else {
-                if (chance < 0.01F) {
-                    chanceStr = "< 1";
+                if (chance < 0.0001F) {
+                    chanceStr = "< 0.01";
                 }
                 chanceStr += "%";
                 tooltip.add(I18n.format(keyChance, chanceStr));

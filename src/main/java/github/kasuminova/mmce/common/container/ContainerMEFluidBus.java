@@ -1,14 +1,17 @@
 package github.kasuminova.mmce.common.container;
 
 import appeng.api.config.SecurityPermissions;
+import appeng.api.config.Upgrades;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.util.IConfigManager;
+import appeng.container.guisync.GuiSync;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.fluids.container.IFluidSyncContainer;
 import appeng.fluids.helper.FluidSyncHelper;
 import appeng.util.Platform;
 import github.kasuminova.mmce.common.tile.base.MEFluidBus;
+import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IContainerListener;
 import net.minecraftforge.items.IItemHandler;
@@ -18,9 +21,10 @@ import java.util.Collections;
 import java.util.Map;
 
 public abstract class ContainerMEFluidBus extends ContainerUpgradeable implements IFluidSyncContainer {
-    private final MEFluidBus owner;
-
     protected final FluidSyncHelper tankSync;
+    private final MEFluidBus owner;
+    @GuiSync(7)
+    public int capacityUpgrades = 0;
 
     public ContainerMEFluidBus(final InventoryPlayer ip, final MEFluidBus te) {
         super(ip, te);
@@ -64,9 +68,24 @@ public abstract class ContainerMEFluidBus extends ContainerUpgradeable implement
 
         if (Platform.isServer()) {
             this.tankSync.sendDiff(this.listeners);
+
+            int installedUpgrades = getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+            if (capacityUpgrades != installedUpgrades) {
+                capacityUpgrades = installedUpgrades;
+            }
         }
 
         super.detectAndSendChanges();
+    }
+
+    @Override
+    public void onUpdate(final String field, final Object oldValue, final Object newValue) {
+        super.onUpdate(field, oldValue, newValue);
+        if (Platform.isClient() && field.equals("capacityUpgrades")) {
+            this.capacityUpgrades = (int) newValue;
+            ((AEFluidInventoryUpgradeable) this.owner.getTanks()).setCapacity(
+                    (int) (Math.pow(4, this.capacityUpgrades + 1) * (MEFluidBus.TANK_DEFAULT_CAPACITY / 4)));
+        }
     }
 
     @Override

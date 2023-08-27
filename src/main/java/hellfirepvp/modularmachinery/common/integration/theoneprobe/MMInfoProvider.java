@@ -99,13 +99,16 @@ public class MMInfoProvider implements IProbeInfoProvider {
             addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyGenerateTotal.get());
         }
 
-        probeInfo.text(
-                TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
-                TextFormatting.AQUA + " {*top.factory.thread.running*}" +
-                TextFormatting.RESET + " / " +
-                TextFormatting.YELLOW + factory.getFoundMachine().getMaxThreads() +
-                TextFormatting.GOLD + " {*top.factory.thread.max*}"
-        );
+        int maxThreads = factory.getFoundMachine().getMaxThreads();
+        if (maxThreads > 0) {
+            probeInfo.text(
+                    TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
+                            TextFormatting.AQUA + " {*top.factory.thread.running*}" +
+                            TextFormatting.RESET + " / " +
+                            TextFormatting.YELLOW + maxThreads +
+                            TextFormatting.GOLD + " {*top.factory.thread.max*}"
+            );
+        }
 
         int trueMaxParallelism = factory.getMaxParallelism();
         if (factory.getAvailableParallelism() != trueMaxParallelism) {
@@ -116,9 +119,8 @@ public class MMInfoProvider implements IProbeInfoProvider {
         }
 
         AtomicInteger i = new AtomicInteger();
-        Collection<FactoryRecipeThread> coreThreadList = coreRecipeThreads;
-        List<FactoryRecipeThread> recipeThreadList = new ArrayList<>((int) ((coreThreadList.size() + recipeThreads.size()) * 1.5));
-        recipeThreadList.addAll(coreThreadList);
+        List<FactoryRecipeThread> recipeThreadList = new ArrayList<>();
+        recipeThreadList.addAll(coreRecipeThreads);
         recipeThreadList.addAll(recipeThreads);
 
         recipeThreadList.stream().limit(6).forEach(thread -> {

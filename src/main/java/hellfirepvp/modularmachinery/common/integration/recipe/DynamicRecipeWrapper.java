@@ -116,7 +116,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             }
         }
 
-        tooltips.add(recipe.getTooltipList());
+        tooltips.add(recipe.getFormattedTooltip());
 
         for (List<String> tTip : tooltips) {
             offsetY -= lineHeight * tTip.size();

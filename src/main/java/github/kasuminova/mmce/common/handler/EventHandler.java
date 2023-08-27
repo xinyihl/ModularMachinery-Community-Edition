@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
+import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -67,7 +68,7 @@ public class EventHandler {
             }
         }
 
-        if (!(te instanceof SelectiveUpdateTileEntity)) {
+        if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof TileEntitySynchronized)) {
             return;
         }
 
@@ -77,11 +78,12 @@ public class EventHandler {
         }
 
         ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-            SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
-
             if (event.player instanceof EntityPlayerMP) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) player;
-                playerMP.connection.sendPacket(packet);
+                TileEntitySynchronized teSynchronized = (TileEntitySynchronized) te;
+                if (teSynchronized.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
+                    playerMP.connection.sendPacket(((SelectiveUpdateTileEntity) te).getTrueUpdatePacket());
+                }
 
                 World world = event.player.getEntityWorld();
                 if (world.getWorldTime() % 15 == 0 && te instanceof TileMultiblockMachineController) {
@@ -96,7 +98,6 @@ public class EventHandler {
     private static boolean checkTERange(final EntityPlayer player, final TileEntity te) {
         BlockPos tePos = te.getPos();
         BlockPos playerPos = player.getPosition();
-        double distance = tePos.getDistance(playerPos.getX(), playerPos.getY(), playerPos.getZ());
-        return distance >= 6.0D;
+        return tePos.getDistance(playerPos.getX(), playerPos.getY(), playerPos.getZ()) >= 6.0D;
     }
 }

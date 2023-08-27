@@ -22,6 +22,7 @@ import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
+import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;
@@ -199,28 +200,36 @@ public class CommonProxy implements IGuiHandler {
             case BLUEPRINT_PREVIEW:
                 break;
             case ME_ITEM_OUTPUT_BUS:
-                if (!Mods.AE2.isPresent()) {
+                if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEItemOutputBus((MEItemOutputBus) present, player);
             case ME_ITEM_INPUT_BUS:
-                if (!Mods.AE2.isPresent()) {
+                if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEItemInputBus((MEItemInputBus) present, player);
             case ME_FLUID_OUTPUT_BUS:
-                if (!Mods.AE2.isPresent()) {
+                if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEFluidOutputBus((MEFluidOutputBus) present, player);
             case ME_FLUID_INPUT_BUS:
-                if (!Mods.AE2.isPresent()) {
+                if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEFluidInputBus((MEFluidInputBus) present, player);
         }
 
         return null;
+    }
+
+    private static boolean aeSecurityCheck(EntityPlayer player, TileEntity te) {
+        if (!Mods.AE2.isPresent() || !(te instanceof MEMachineComponent)) {
+            return true;
+        }
+
+        return ModIntegrationAE2.securityCheck(player, ((MEMachineComponent) te).getProxy());
     }
 
     @Nullable

@@ -233,6 +233,17 @@ public class MachineBuilder {
     }
 
     /**
+     * 设置此机械的内置并行数。
+     *
+     * @param parallelism 内置并行数
+     */
+    @ZenMethod
+    public MachineBuilder setInternalParallelism(int parallelism) {
+        machine.setInternalParallelism(parallelism);
+        return this;
+    }
+
+    /**
      * 添加单方块配方修改器。
      *
      * @param x            X

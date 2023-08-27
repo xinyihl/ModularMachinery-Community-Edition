@@ -27,13 +27,17 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -118,6 +122,13 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
     public List<String> getTooltipList() {
         return tooltipList;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public List<String> getFormattedTooltip() {
+        return tooltipList.stream()
+                .map(tip -> I18n.hasKey(tip) ? I18n.format(tip) : tip)
+                .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")

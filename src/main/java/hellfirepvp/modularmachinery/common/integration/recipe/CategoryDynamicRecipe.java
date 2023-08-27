@@ -25,6 +25,7 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeCategory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.resources.I18n;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -128,8 +129,9 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 tipLength += RequirementTip.LINE_HEIGHT * tooltip.size();
                 tipLength += RequirementTip.SPLIT_HEIGHT;
             }
-            for (String tipString : recipe.getTooltipList()) {
-                int length = fr.getStringWidth(tipString);
+            for (String tipString : recipe.getFormattedTooltip()) {
+                String str = I18n.hasKey(tipString) ? I18n.format(tipString) : tipString;
+                int length = fr.getStringWidth(str);
                 if (length > widestTooltip) {
                     widestTooltip = length;
                 }

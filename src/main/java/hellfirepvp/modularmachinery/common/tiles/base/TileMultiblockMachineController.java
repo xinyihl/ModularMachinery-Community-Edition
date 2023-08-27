@@ -3,6 +3,7 @@ package hellfirepvp.modularmachinery.common.tiles.base;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
+import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
 import github.kasuminova.mmce.common.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.event.Phase;
@@ -180,7 +181,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public int getMaxParallelism() {
-        int parallelism = 0;
+        int parallelism = foundMachine.getInternalParallelism();
         int maxParallelism = foundMachine.getMaxParallelism();
         for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
             parallelism += provider.getParallelism();
@@ -706,6 +707,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public crafttweaker.api.block.IBlockState getIBlockState() {
         return CraftTweakerMC.getBlockState(getWorld().getBlockState(getPos()));
+    }
+
+    @Override
+    public IFacing getFacing() {
+        return CraftTweakerMC.getIFacing(controllerRotation);
     }
 
     public IBlockPos getIPos() {

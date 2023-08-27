@@ -30,7 +30,7 @@ public class HybridTank extends FluidTank {
 
     @Nullable
     @Override
-    public FluidStack getFluid() {
+    public synchronized FluidStack getFluid() {
         return super.getFluid();
     }
 
@@ -40,7 +40,7 @@ public class HybridTank extends FluidTank {
     }
 
     @Override
-    public int getFluidAmount() {
+    public synchronized int getFluidAmount() {
         return super.getFluidAmount();
     }
 

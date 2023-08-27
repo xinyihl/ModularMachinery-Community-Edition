@@ -309,7 +309,7 @@ public class ItemUtils {
             ItemStack in = handler.getStackInSlot(i);
             if (in.isEmpty()) {
                 int added = Math.min(stack.getCount(), max);
-                stack.setCount(stack.getCount() - added);
+                stack.shrink(added);
                 if (!simulate) {
                     handler.setStackInSlot(i, copyStackWithSize(toAdd, added));
                 }
@@ -323,7 +323,7 @@ public class ItemUtils {
                     insertedAmt += added;
                     stack.setCount(stack.getCount() - added);
                     if (!simulate) {
-                        handler.getStackInSlot(i).setCount(handler.getStackInSlot(i).getCount() + added);
+                        in.setCount(in.getCount() + added);
                     }
                     if (stack.getCount() <= 0)
                         return insertedAmt;

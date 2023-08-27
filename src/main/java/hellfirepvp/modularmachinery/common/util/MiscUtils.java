@@ -16,6 +16,7 @@ import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -124,6 +125,12 @@ public class MiscUtils {
 
     public static String formatDecimal(float value) {
         return DECIMAL_FORMAT.format(value);
+    }
+
+    public static String formatFloat(float value, int decimalFraction) {
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        nf.setMaximumFractionDigits(decimalFraction);
+        return nf.format(value);
     }
 
     public static boolean isTextBoxKey(int i) {

@@ -286,7 +286,7 @@ public class BlockArrayBuilder {
     }
 
     /**
-     * 设置方块高级检查器，由魔改员自行编写逻辑（非异步）。
+     * 设置方块高级检查器，由魔改员自行编写逻辑（非同步）。
      *
      * @param checker 函数
      */

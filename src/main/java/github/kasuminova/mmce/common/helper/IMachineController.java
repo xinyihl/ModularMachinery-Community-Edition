@@ -5,6 +5,7 @@ import crafttweaker.api.block.IBlockState;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
+import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -75,10 +76,18 @@ public interface IMachineController {
     /**
      * 获取控制器方块。
      *
-     * @return 方块
+     * @return IBlockState
      */
     @ZenGetter("blockState")
     IBlockState getIBlockState();
+
+    /**
+     * 获取控制器处于世界中的朝向。
+     *
+     * @return IFacing
+     */
+    @ZenGetter("facing")
+    IFacing getFacing();
 
     /**
      * 获取控制器所在的坐标

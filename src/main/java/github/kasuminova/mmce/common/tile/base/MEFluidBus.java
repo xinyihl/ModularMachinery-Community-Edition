@@ -118,13 +118,8 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     }
 
     private void updateTankCapacity() {
-        int installedCapacityUpgrades = getInstalledUpgrades(Upgrades.CAPACITY);
-        int capacity = TANK_DEFAULT_CAPACITY;
-        for (int i = 0; i < installedCapacityUpgrades; i++) {
-            capacity *= 4;
-        }
-
-        tanks.setCapacity(capacity);
+        tanks.setCapacity(
+                (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEFluidBus.TANK_DEFAULT_CAPACITY / 4)));
     }
 
     @Override

@@ -52,6 +52,21 @@ public class MachineModifier {
     }
 
     @ZenMethod
+    public static void setInternalParallelism(String machineName, int parallelism) {
+        if (parallelism < 0) {
+            CraftTweakerAPI.logError("Max Parallelism must larger than 0!");
+        }
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+            if (machine == null) {
+                CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
+                return;
+            }
+            machine.setInternalParallelism(parallelism);
+        });
+    }
+
+    @ZenMethod
     public static void setMaxThreads(String machineName, int maxThreads) {
         // Maybe the author only wanted to use the core thread?
         if (maxThreads < 0) {
