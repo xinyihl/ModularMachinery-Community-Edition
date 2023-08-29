@@ -471,7 +471,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             this.parentMachine = parentController.getParentMachine();
             this.controllerRotation = state.getValue(BlockController.FACING);
         } else {
-            ModularMachinery.log.warn("Invalid controller block at " + getPos() + " !");
+            ModularMachinery.log.warn("Invalid factory controller block at " + getPos() + " !");
             controllerRotation = EnumFacing.NORTH;
         }
     }

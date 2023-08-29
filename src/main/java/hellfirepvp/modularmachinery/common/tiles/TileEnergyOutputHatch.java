@@ -17,12 +17,12 @@ import gregtech.api.capability.IEnergyContainer;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
 import hellfirepvp.modularmachinery.common.data.Config;
-import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import ic2.api.energy.event.EnergyTileLoadEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergyAcceptor;
 import ic2.api.energy.tile.IEnergySource;
@@ -70,6 +70,13 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     public void update() {
         if (world.isRemote) {
             return;
+        }
+
+        if (!tickedOnce) {
+            if (Mods.IC2.isPresent()) {
+                MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
+            }
+            tickedOnce = true;
         }
 
         long prevEnergy = this.energy.get();
@@ -233,7 +240,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     @Optional.Method(modid = "ic2")
     public void onLoad() {
         super.onLoad();
-        IntegrationIC2EventHandlerHelper.fireLoadEvent(world, this);
+//        IntegrationIC2EventHandlerHelper.fireLoadEvent(world, this);
     }
 
     @Override

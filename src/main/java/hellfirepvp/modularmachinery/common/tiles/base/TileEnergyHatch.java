@@ -60,6 +60,8 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
     protected int energyCoreSearchFailedCount = 0;
     private GTEnergyContainer energyContainer;
 
+    protected boolean tickedOnce = false;
+
     public TileEnergyHatch() {
     }
 
