@@ -99,17 +99,17 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     }
 
     @Override
-    @Optional.Method(modid = "ic2")
-    public void onLoad() {
-        super.onLoad();
-//        IntegrationIC2EventHandlerHelper.fireLoadEvent(world, this);
+    public void invalidate() {
+        super.invalidate();
+        if (Mods.IC2.isPresent() && tickedOnce && !world.isRemote) {
+            MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
+        }
     }
 
     @Override
-    @Optional.Method(modid = "ic2")
-    public void invalidate() {
-        super.invalidate();
-        if (!world.isRemote) {
+    public void onChunkUnload() {
+        super.onChunkUnload();
+        if (Mods.IC2.isPresent() && tickedOnce && !world.isRemote) {
             MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
         }
     }

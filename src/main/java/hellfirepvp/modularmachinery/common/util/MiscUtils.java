@@ -123,7 +123,7 @@ public class MiscUtils {
         }
     }
 
-    public static String formatDecimal(float value) {
+    public static String formatDecimal(double value) {
         return DECIMAL_FORMAT.format(value);
     }
 

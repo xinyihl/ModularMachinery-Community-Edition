@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
+import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
@@ -292,22 +293,18 @@ public class MMInfoProvider implements IProbeInfoProvider {
 
     private static void addEnergyUsageText(final IProbeInfo probe, final EntityPlayer player, final IOType ioType, final long usagePerTick) {
         if (ioType == IOType.INPUT) {
-            if (player.isSneaking()) {
-                probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
-                        MiscUtils.formatNumber(usagePerTick) + " RF/t");
-            } else {
-                probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
-                        MiscUtils.formatDecimal(usagePerTick) + " RF/t");
-            }
+            probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
+                    formatEnergyUsage(player, usagePerTick) + "{*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}");
         } else if (ioType == IOType.OUTPUT) {
-            if (player.isSneaking()) {
-                probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
-                        MiscUtils.formatNumber(usagePerTick) + " RF/t");
-            } else {
-                probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
-                        MiscUtils.formatDecimal(usagePerTick) + " RF/t");
-            }
+            probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
+                    formatEnergyUsage(player, usagePerTick) + "{*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}");
         }
+    }
+
+    private static String formatEnergyUsage(final EntityPlayer player, final long usagePerTick) {
+        return player.isSneaking()
+                ? MiscUtils.formatNumber(EnergyDisplayUtil.type.formatEnergyForDisplay(usagePerTick))
+                : MiscUtils.formatDecimal(EnergyDisplayUtil.type.formatEnergyForDisplay(usagePerTick));
     }
 
 }
