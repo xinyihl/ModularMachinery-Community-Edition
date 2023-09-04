@@ -91,14 +91,14 @@ public class MEItemInputBus extends MEItemBus {
             ItemStack cfgStack = configInventory.getStackInSlot(slot);
             ItemStack invStack = inventory.getStackInSlot(slot);
 
-            if (cfgStack == ItemStack.EMPTY) {
-                if (invStack != ItemStack.EMPTY) {
+            if (cfgStack.isEmpty()) {
+                if (!invStack.isEmpty()) {
                     return true;
                 }
                 continue;
             }
 
-            if (invStack == ItemStack.EMPTY) {
+            if (invStack.isEmpty()) {
                 return true;
             }
 
@@ -125,8 +125,8 @@ public class MEItemInputBus extends MEItemBus {
                 ItemStack cfgStack = configInventory.getStackInSlot(slot);
                 ItemStack invStack = inventory.getStackInSlot(slot);
 
-                if (cfgStack == ItemStack.EMPTY) {
-                    if (invStack == ItemStack.EMPTY) {
+                if (cfgStack.isEmpty()) {
+                    if (invStack.isEmpty()) {
                         continue;
                     }
                     inventory.setStackInSlot(slot, insertStackToAE(inv, invStack));
@@ -134,10 +134,10 @@ public class MEItemInputBus extends MEItemBus {
                 }
 
                 if (!ItemUtils.matchStacks(cfgStack, invStack)) {
-                    if (insertStackToAE(inv, invStack) == ItemStack.EMPTY) {
+                    if (invStack.isEmpty() || insertStackToAE(inv, invStack).isEmpty()) {
                         ItemStack stack = extractStackFromAE(inv, cfgStack);
                         inventory.setStackInSlot(slot, stack);
-                        if (stack != ItemStack.EMPTY) {
+                        if (!stack.isEmpty()) {
                             successAtLeastOnce = true;
                         }
                     }
@@ -151,7 +151,7 @@ public class MEItemInputBus extends MEItemBus {
                 if (cfgStack.getCount() > invStack.getCount()) {
                     int countToReceive = cfgStack.getCount() - invStack.getCount();
                     ItemStack stack = extractStackFromAE(inv, ItemUtils.copyStackWithSize(invStack, countToReceive));
-                    if (stack != ItemStack.EMPTY) {
+                    if (!stack.isEmpty()) {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
                                 invStack, invStack.getCount() + stack.getCount())
                         );
@@ -160,7 +160,7 @@ public class MEItemInputBus extends MEItemBus {
                 } else {
                     int countToExtract = invStack.getCount() - cfgStack.getCount();
                     ItemStack stack = insertStackToAE(inv, ItemUtils.copyStackWithSize(invStack, countToExtract));
-                    if (stack == ItemStack.EMPTY) {
+                    if (stack.isEmpty()) {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
                                 invStack, invStack.getCount() - countToExtract)
                         );

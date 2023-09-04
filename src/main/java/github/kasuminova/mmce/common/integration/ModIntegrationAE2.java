@@ -27,7 +27,7 @@ public class ModIntegrationAE2 {
             }
 
             final ISecurityGrid sg = g.getCache(ISecurityGrid.class);
-            return sg.hasPermission(player, SecurityPermissions.BUILD);
+            return !sg.hasPermission(player, SecurityPermissions.BUILD);
         }
         return false;
     }

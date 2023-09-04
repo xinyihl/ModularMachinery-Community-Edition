@@ -9,6 +9,9 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import io.netty.util.collection.IntObjectHashMap;
@@ -24,6 +27,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -151,78 +155,92 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
+    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, itemChecker, controller);
-        int canConsumed = maxCanConsumedInternal(contents);
-        if (toConsume.getCount() <= 0 || toConsume.getCount() > canConsumed) {
+        if (toConsume.getCount() <= 0) {
             return 0;
         }
-        return Math.min(canConsumed / toConsume.getCount(), parallelism);
+        return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, ItemStack toConsume, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
-        int canConsumed = maxCanConsumedInternal(contents);
-        if (toConsume.getCount() <= 0 || toConsume.getCount() > canConsumed) {
+        if (toConsume.getCount() <= 0) {
             return 0;
         }
-        return Math.min(canConsumed / toConsume.getCount(), parallelism);
+        return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
+    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, itemChecker, controller);
-        int canConsumed = maxCanConsumedInternal(contents);
-        if (amount <= 0 || amount > canConsumed) {
+        if (amount <= 0) {
             return 0;
         }
-        return Math.min(canConsumed / amount, parallelism);
+        return consumeAllInternal(handler, contents, maxMultiplier * amount);
     }
 
-    public static int maxInputParallelism(IItemHandlerModifiable handler, String oreName, int amount, int parallelism, @Nullable NBTTagCompound matchNBTTag) {
+    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
-        int canConsumed = maxCanConsumedInternal(contents);
-        if (amount <= 0 || amount > canConsumed) {
+        if (amount <= 0) {
             return 0;
         }
-        return Math.min(canConsumed / amount, parallelism);
+        return consumeAllInternal(handler, contents, maxMultiplier * amount);
     }
 
-    public static int maxOutputParallelism(@Nonnull ItemStack stack, IItemHandler handler, int maxParallelism) {
+    public static int insertAll(@Nonnull ItemStack stack, IItemHandlerModifiable handler, int maxInsert) {
+        if (stack.getCount() <= 0) {
+            return 0;
+        }
+
         int inserted = 0;
-        int maxStackSize = stack.getMaxStackSize();
         for (int i = 0; i < handler.getSlots() && stack.getCount() > 0; i++) {
+            int maxStackSize = handler.getSlotLimit(i);
             ItemStack in = handler.getStackInSlot(i);
+            int count = in.getCount();
+            if (count >= maxStackSize) {
+                continue;
+            }
+
             if (in.isEmpty()) {
-                inserted += maxStackSize;
+                int toInsert = Math.min(maxInsert - inserted, maxStackSize);
+                handler.setStackInSlot(i, copyStackWithSize(stack, toInsert));
+                inserted += toInsert;
             } else {
                 if (stackEqualsNonNBT(stack, in) && matchTags(stack, in)) {
-                    int space = maxStackSize - in.getCount();
-                    inserted += space;
+                    int toInsert = Math.min(maxInsert - inserted, maxStackSize - count);
+                    handler.setStackInSlot(i, copyStackWithSize(stack, toInsert + count));
+                    inserted += toInsert;
                 }
             }
 
-            if (inserted / stack.getCount() >= maxParallelism) {
+            if (inserted >= maxInsert) {
                 break;
             }
         }
-        if (stack.getCount() <= 0 || inserted < stack.getCount()) {
-            return 0;
-        }
-        return Math.min(inserted / stack.getCount(), maxParallelism);
+
+        return inserted;
     }
 
-    private static int maxCanConsumedInternal(Map<Integer, ItemStack> contents) {
+    private static int consumeAllInternal(IItemHandlerModifiable handler, Map<Integer, ItemStack> contents, int maxConsume) {
         int cAmt = 0;
-        for (int slot : contents.keySet()) {
-            ItemStack stack = contents.get(slot);
+        for (Map.Entry<Integer, ItemStack> content : contents.entrySet()) {
+            int slot = content.getKey();
+            ItemStack stack = content.getValue();
+            int count = stack.getCount();
+
             if (stack.getItem().hasContainerItem(stack)) {
-                if (stack.getCount() > 1) {
+                if (count > 1) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
-                cAmt++;
-                continue;
             }
-            cAmt += stack.getCount();
+
+            int toConsume = Math.min(maxConsume - cAmt, count);
+            handler.setStackInSlot(slot, copyStackWithSize(stack, count - toConsume));
+            cAmt += toConsume;
+
+            if (cAmt >= maxConsume) {
+                break;
+            }
         }
 
         return cAmt;
@@ -391,9 +409,9 @@ public class ItemUtils {
         for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
             ItemStack stackInSlot = external.getStackInSlot(externalSlotId);
 
-            if (stackInSlot == ItemStack.EMPTY) {
+            if (stackInSlot.isEmpty()) {
                 ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
-                if (notInserted == ItemStack.EMPTY) {
+                if (notInserted.isEmpty()) {
                     return ItemStack.EMPTY;
                 } else {
                     beInserted = notInserted;
@@ -403,7 +421,7 @@ public class ItemUtils {
 
             if (matchStacks(stackInSlot, willBeInserted)) {
                 ItemStack notInserted = external.insertItem(externalSlotId, beInserted, false);
-                if (notInserted == ItemStack.EMPTY) {
+                if (notInserted.isEmpty()) {
                     return ItemStack.EMPTY;
                 } else {
                     beInserted = notInserted;
@@ -494,5 +512,42 @@ public class ItemUtils {
             }
         }
         return true;
+    }
+
+    public static ItemStack getOredictItem(final RecipeCraftingContext context, final String oreDictName, final NBTTagCompound tag) {
+        ItemStack stack = ItemStack.EMPTY;
+        for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
+            if (oreInstance.isEmpty()) {
+                continue;
+            }
+            stack = copyStackWithSize(oreInstance, 1);
+
+            if (!stack.isEmpty()) { //Try all options first..
+                break;
+            }
+        }
+
+        if (stack.isEmpty()) {
+            throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
+        }
+
+        if (tag != null) {
+            stack.setTagCompound(tag.copy());
+        }
+        return stack;
+    }
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static List<ProcessingComponent<?>> copyItemHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                    (MachineComponent<Object>) component.component,
+                    ((IItemHandlerImpl) component.providedComponent).copy(),
+                    component.getTag());
+            list.add(objectProcessingComponent);
+        }
+        return list;
     }
 }

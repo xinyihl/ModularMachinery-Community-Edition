@@ -187,7 +187,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
 
         DynamicMachine machine = factory.getBlueprintMachine();
-        offsetY = drawBlueprintInfo(offsetX, offsetY, fr, machine);
+        offsetY = drawBlueprintInfo(offsetX, offsetY, fr, machine, factory.isStructureFormed());
 
         DynamicMachine found = factory.getFoundMachine();
         offsetY = drawStructureInfo(offsetX, offsetY, fr, found);
@@ -269,7 +269,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
                 fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
 
-            offsetY = drawExtraInfo(offsetX, offsetY, fr, found);
+            offsetY = drawExtraInfo(offsetX, offsetY, fr);
         } else {
             drawnHead = I18n.format("gui.controller.structure", I18n.format("gui.controller.structure.none"));
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
@@ -279,14 +279,14 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         return offsetY;
     }
 
-    private int drawExtraInfo(int offsetX, int y, FontRenderer fr, DynamicMachine found) {
+    private int drawExtraInfo(int offsetX, int y, FontRenderer fr) {
         int offsetY = y;
         ControllerGUIRenderEvent event = new ControllerGUIRenderEvent(factory);
         event.postEvent();
 
         String[] extraInfo = event.getExtraInfo();
-        List<String> waitForDraw = new ArrayList<>();
         if (extraInfo.length != 0) {
+            List<String> waitForDraw = new ArrayList<>();
             for (String s : extraInfo) {
                 waitForDraw.addAll(fr.listFormattedStringToWidth(s, MathHelper.floor(135 * (1 / GuiFactoryController.FONT_SCALE))));
             }
@@ -299,7 +299,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         return offsetY;
     }
 
-    private static int drawBlueprintInfo(int offsetX, int y, FontRenderer fr, DynamicMachine machine) {
+    private static int drawBlueprintInfo(int offsetX, int y, FontRenderer fr, DynamicMachine machine, boolean formed) {
         String drawnHead;
         int offsetY = y;
 
@@ -311,11 +311,13 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
                 offsetY += 10;
                 fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
-        } else {
+            offsetY += 15;
+        } else if (!formed) {
             drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            offsetY += 15;
         }
-        offsetY += 15;
+
         return offsetY;
     }
 

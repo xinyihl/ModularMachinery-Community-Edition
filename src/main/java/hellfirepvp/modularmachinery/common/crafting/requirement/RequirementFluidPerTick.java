@@ -1,6 +1,5 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import github.kasuminova.mmce.common.util.MultiFluidTank;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentHybridFluidPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeFluidPerTick;
@@ -12,31 +11,32 @@ import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
-import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick>
-        implements ComponentRequirement.Parallelizable {
+public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick> implements
+        ComponentRequirement.Parallelizable,
+        ComponentRequirement.MultiComponent {
 
-    public final HybridFluid required;
+    public final FluidStack required;
+
     protected final HybridFluid requirementCheck;
     protected NBTTagCompound tagMatch = null, tagDisplay = null;
     protected boolean isSuccess = false;
+
     private int parallelism = 1;
     private boolean parallelizeUnaffected = false;
 
     public RequirementFluidPerTick(IOType actionType, FluidStack required) {
         super(RequirementTypesMM.REQUIREMENT_FLUID_PERTICK, actionType);
-        this.required = new HybridFluid(required);
-        this.requirementCheck = this.required.copy();
+        this.required = required;
+        this.requirementCheck = new HybridFluid(required);
     }
 
     @Override
@@ -48,113 +48,21 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return canStartCrafting(component, context, new ArrayList<>(0)).isSuccess();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IFluidHandler handler = (IFluidHandler) component.providedComponent;
-        switch (actionType) {
-            case INPUT:
-                //If it doesn't consume the item, we only need to see if it's actually there.
-                FluidStack drained = handler.drain(this.requirementCheck.copy().asFluidStack(), false);
-                if (drained == null) {
-                    return CraftCheck.failure("craftcheck.failure.fluid.input");
-                }
-                if (!NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
-                    return CraftCheck.failure("craftcheck.failure.fluid.input");
-                }
-                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
-                if (this.requirementCheck.getAmount() <= 0) {
-                    return CraftCheck.success();
-                }
-                return CraftCheck.failure("craftcheck.failure.fluid.input");
-            case OUTPUT:
-                if (ignoreOutputCheck) {
-                    return CraftCheck.success();
-                }
-                handler = new MultiFluidTank(handler);
-
-                for (ComponentOutputRestrictor restrictor : restrictions) {
-                    if (restrictor instanceof ComponentOutputRestrictor.RestrictionTank) {
-                        ComponentOutputRestrictor.RestrictionTank tank = (ComponentOutputRestrictor.RestrictionTank) restrictor;
-
-                        if (tank.exactComponent.equals(component)) {
-                            handler.fill(tank.inserted == null ? null : tank.inserted.copy().asFluidStack(), true);
-                        }
-                    }
-                }
-                int filled = handler.fill(this.requirementCheck.copy().asFluidStack(), false); //True or false doesn't really matter tbh
-                boolean didFill = filled >= this.requirementCheck.getAmount();
-                if (didFill) {
-                    context.addRestriction(new ComponentOutputRestrictor.RestrictionTank(this.requirementCheck.copy(), component));
-                }
-                if (didFill) {
-                    return CraftCheck.success();
-                }
-                return CraftCheck.failure("craftcheck.failure.fluid.output.space");
-        }
-        return CraftCheck.skipComponent();
-    }
-
-    public CraftCheck doFluidIO(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions, boolean doFillOrDrain) {
-        IFluidHandler handler = (IFluidHandler) component.providedComponent;
-
-        switch (actionType) {
-            case INPUT:
-                //If it doesn't consume the fluid, we only need to see if it's actually there.
-                FluidStack drained = handler.drain(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
-                if (drained == null || !NBTMatchingHelper.matchNBTCompound(this.tagMatch, drained.tag)) {
-                    return CraftCheck.failure("craftcheck.failure.fluid.input");
-                }
-                this.requirementCheck.setAmount(Math.max(this.requirementCheck.getAmount() - drained.amount, 0));
-
-                return this.requirementCheck.getAmount() <= 0
-                        ? CraftCheck.success()
-                        : CraftCheck.failure("craftcheck.failure.fluid.input");
-            case OUTPUT:
-                int filled = handler.fill(this.requirementCheck.asFluidStack().copy(), doFillOrDrain);
-
-                return filled >= this.requirementCheck.getAmount() || ignoreOutputCheck
-                        ? CraftCheck.success()
-                        : CraftCheck.failure("craftcheck.failure.fluid.output.space");
-        }
-        return CraftCheck.skipComponent();
-    }
-
-    @Override
     public RequirementFluidPerTick deepCopy() {
         return deepCopyModified(Collections.emptyList());
     }
 
     @Override
     public RequirementFluidPerTick deepCopyModified(List<RecipeModifier> modifiers) {
-        HybridFluid hybrid = this.required.copy();
-        hybrid.setAmount((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) hybrid.getAmount(), false)));
-        RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, hybrid.asFluidStack());
+        FluidStack stack = this.required.copy();
+        stack.amount = ((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) stack.amount, false)));
+        RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, stack);
         fluid.setTag(getTag());
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
         fluid.parallelizeUnaffected = parallelizeUnaffected;
         fluid.ignoreOutputCheck = ignoreOutputCheck;
         return fluid;
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-        this.requirementCheck.setAmount((int) (Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.getAmount(), false)) * parallelism));
-    }
-
-    @Override
-    public void endRequirementCheck() {
     }
 
     @Nonnull
@@ -171,51 +79,75 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     }
 
     @Override
-    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.requirementCheck.setAmount((int) Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.getAmount(), false) * durationMultiplier * parallelism));
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        switch (actionType) {
-            case INPUT:
-                return isSuccess ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.fluid.input");
-            case OUTPUT:
-                return isSuccess || ignoreOutputCheck ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.fluid.output.space");
-        }
-        return CraftCheck.skipComponent();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        CraftCheck craftCheck = doFluidIO(component, context, new ArrayList<>(0), true);
-        this.isSuccess = craftCheck.isSuccess();
-
-        return craftCheck;
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        super.startCrafting(components, context, chance);
     }
 
     @Override
-    public int maxParallelism(final ProcessingComponent<?> component, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected) {
+    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        return doFluidIO(components, context);
+    }
+
+    @Override
+    public CraftCheck doIOTick(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final float durationMultiplier) {
+        return doFluidIO(components, context);
+    }
+
+    @Override
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return HybridFluidUtils.copyFluidHandlerComponents(components);
+    }
+
+    @Override
+    public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
             return maxParallelism;
         }
-        IFluidHandler handler = (IFluidHandler) component.providedComponent;
-        switch (actionType) {
-            case INPUT: {
-                FluidStack fluid = requirementCheck.asFluidStack().copy();
-                return HybridFluidUtils.maxFluidInputParallelism(
-                        handler, fluid, maxParallelism);
 
-            }
-            case OUTPUT: {
-                FluidStack fluid = requirementCheck.asFluidStack().copy();
-                return HybridFluidUtils.maxFluidOutputParallelism(
-                        handler, fluid, maxParallelism);
+        return doFluidIOInternal(components, context, maxParallelism);
+    }
+
+    private CraftCheck doFluidIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        int mul = doFluidIOInternal(components, context, parallelism);
+        if (mul < parallelism) {
+            switch (actionType) {
+                case INPUT:
+                    return CraftCheck.failure("craftcheck.failure.fluid.input");
+                case OUTPUT:
+                    if (ignoreOutputCheck) {
+                        return CraftCheck.success();
+                    }
+                    return CraftCheck.failure("craftcheck.failure.fluid.output.space");
             }
         }
-        return maxParallelism;
+        return CraftCheck.success();
+    }
+
+    public int doFluidIOInternal(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxMultiplier) {
+        List<IFluidHandler> fluidHandlers = HybridFluidUtils.castFluidHandlerComponents(components);
+
+        long required = Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.amount, false));
+        if (required <= 0) {
+            return maxMultiplier;
+        }
+
+        long maxRequired = required * maxMultiplier;
+
+        FluidStack stack = this.required.copy();
+        long totalIO = HybridFluidUtils.doSimulateDrainOrFill(stack, fluidHandlers, maxRequired, actionType);
+
+        if (totalIO < required) {
+            return 0;
+        }
+
+        HybridFluidUtils.doDrainOrFill(stack, totalIO, fluidHandlers, actionType);
+
+        return (int) (totalIO / required);
     }
 
     @Override
@@ -231,5 +163,49 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
+    }
+
+    // Noop
+
+    @Override
+    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
+
+    }
+
+    @Override
+    public void endRequirementCheck() {
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return true;
+    }
+
+    @Override
+    @Nonnull
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck resetIOTick(RecipeCraftingContext context) {
+        return CraftCheck.skipComponent();
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
+        return CraftCheck.skipComponent();
     }
 }

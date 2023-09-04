@@ -1,7 +1,6 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import io.netty.util.collection.IntObjectHashMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -13,13 +12,16 @@ import java.util.List;
 import java.util.Map;
 
 public class IItemHandlerImpl implements IItemHandlerModifiable {
-    protected final Map<Integer, Integer> slotLimits = new Int2IntOpenHashMap(); // Value not present means default, aka 64.
-    protected final Map<Integer, SlotStackHolder> inventory = new IntObjectHashMap<>();
+    protected final Map<Integer, Integer> slotLimits; // Value not present means default, aka 64.
+    protected final Map<Integer, SlotStackHolder> inventory;
+
     public boolean allowAnySlots = false;
     public List<EnumFacing> accessibleSides = new ArrayList<>();
     protected int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
 
     protected IItemHandlerImpl() {
+        this.inventory = new IntObjectHashMap<>();
+        this.slotLimits = new IntObjectHashMap<>();
     }
 
     public IItemHandlerImpl(int[] inSlots, int[] outSlots) {
@@ -29,6 +31,9 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
     public IItemHandlerImpl(int[] inSlots, int[] outSlots, EnumFacing... accessibleFrom) {
         this.inSlots = inSlots;
         this.outSlots = outSlots;
+
+        this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
+        this.slotLimits = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
         for (int slot : inSlots) {
             this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
         }
@@ -41,6 +46,9 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
     public IItemHandlerImpl(int[] inSlots, int[] outSlots, List<EnumFacing> accessibleFrom) {
         this.inSlots = inSlots;
         this.outSlots = outSlots;
+
+        this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
+        this.slotLimits = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
         for (int slot : inSlots) {
             this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
         }
@@ -53,7 +61,11 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
     public IItemHandlerImpl copy() {
         IItemHandlerImpl copy = new IItemHandlerImpl(inSlots, outSlots, accessibleSides);
-        inventory.forEach((slot, holder) -> copy.inventory.put(slot, holder.copy()));
+        for (Map.Entry<Integer, SlotStackHolder> entry : inventory.entrySet()) {
+            Integer slot = entry.getKey();
+            SlotStackHolder holder = entry.getValue();
+            copy.inventory.put(slot, holder.copy());
+        }
         return copy;
     }
 
@@ -219,7 +231,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
         public SlotStackHolder copy() {
             SlotStackHolder copied = new SlotStackHolder(slotId);
-            if (itemStack != ItemStack.EMPTY) {
+            if (!itemStack.isEmpty()) {
                 copied.itemStack = itemStack.copy();
             }
             return copied;

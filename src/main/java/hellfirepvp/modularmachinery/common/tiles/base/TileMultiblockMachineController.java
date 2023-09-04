@@ -242,7 +242,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public int currentRecipeSearchDelay() {
-        return Math.min(20 + this.recipeResearchRetryCounter * 5, 100);
+        return Math.min(20 + this.recipeResearchRetryCounter * 10, 150);
     }
 
     public boolean isStructureFormed() {
@@ -434,13 +434,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        RecipeCraftingContext context = foundMachine.createContext(
-                activeRecipe,
-                this,
-                Collections.unmodifiableList(foundComponents),
-                MiscUtils.flatten(this.foundModifiers.values())
-        );
-
+        RecipeCraftingContext context = foundMachine.createContext(activeRecipe, this);
+        context.addModifier(MiscUtils.flatten(this.foundModifiers.values()));
         context.addModifier(customModifiers.values());
         return context;
     }
@@ -749,7 +744,17 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      * @return CraftingCheckResult
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
-        RecipeCraftingContext.CraftingCheckResult result = context.canStartCrafting();
+        RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canStartCrafting(context);
+        return checkStartResult(context, result);
+    }
+
+    public RecipeCraftingContext.CraftingCheckResult onRestartCheck(RecipeCraftingContext context) {
+        RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canRestartCrafting(context);
+        return checkStartResult(context, result);
+    }
+
+    @Nonnull
+    public RecipeCraftingContext.CraftingCheckResult checkStartResult(final RecipeCraftingContext context, final RecipeCraftingContext.CraftingCheckResult result) {
         if (result.isFailure()) {
             return result;
         }
@@ -759,7 +764,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         if (event.isFailure()) {
             result.overrideError(event.getFailureReason());
-            return result;
         }
 
         return result;
@@ -889,6 +893,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public IDynamicPatternInfo getDynamicPattern(final String patternName) {
         return foundDynamicPatterns.get(patternName);
+    }
+
+    public Map<String, DynamicPattern.Status> getDynamicPatterns() {
+        return foundDynamicPatterns;
     }
 
     public TileMultiblockMachineController getController() {

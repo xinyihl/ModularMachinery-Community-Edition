@@ -18,7 +18,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
-import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerImpl;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.util.ResourceLocation;
 
@@ -34,20 +34,19 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements Asyncable, ComponentRequirement.Parallelizable {
+public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements
+        ComponentRequirement.Parallelizable,
+        ComponentRequirement.MultiComponent,
+        Asyncable {
 
     public final long requirementPerTick;
-    public float parallelMultiplier = 1F;
-    protected long activeIO;
-    protected long remaining;
+
     protected int parallelism = 1;
     protected boolean parallelizeUnaffected = false;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
         this.requirementPerTick = requirementPerTick;
-        this.activeIO = this.requirementPerTick;
-        this.remaining = this.activeIO;
     }
 
     @Override
@@ -65,7 +64,6 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         long requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) this.requirementPerTick, false));
         RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
         energy.setTag(getTag());
-        energy.activeIO = this.activeIO;
         energy.parallelizeUnaffected = this.parallelizeUnaffected;
         energy.ignoreOutputCheck = this.ignoreOutputCheck;
         return energy;
@@ -100,33 +98,142 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component;
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ENERGY) &&
-               cmp instanceof MachineComponent.EnergyHatch &&
-               cmp.ioType == this.actionType;
+                cmp.getContainerProvider() instanceof IEnergyHandler &&
+                cmp instanceof MachineComponent.EnergyHatch &&
+                cmp.ioType == this.actionType;
     }
+
+    @Override
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        super.startCrafting(components, context, chance);
+    }
+
+    @Override
+    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        return doEnergyIO(components, context, 1F);
+    }
+
+    public CraftCheck doIOTick(List<ProcessingComponent<?>> components, RecipeCraftingContext context, final float durationMultiplier) {
+        return doEnergyIO(components, context, durationMultiplier);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                    (MachineComponent<Object>) component.component,
+                    new IEnergyHandlerImpl((IEnergyHandler) component.providedComponent),
+                    component.getTag());
+            list.add(objectProcessingComponent);
+        }
+        return list;
+    }
+
+    @Override
+    public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int max) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+            return max;
+        }
+
+        return (int) doEnergyIOInternal(components, context, max);
+    }
+
+    @Override
+    public void setParallelism(int parallelism) {
+        if (!parallelizeUnaffected) {
+            this.parallelism = parallelism;
+        }
+    }
+
+    private CraftCheck doEnergyIO(final List<ProcessingComponent<?>> components,
+                                  final RecipeCraftingContext context,
+                                  final float durationMultiplier)
+    {
+        float mul = doEnergyIOInternal(components, context, parallelism * durationMultiplier);
+        if (mul < parallelism) {
+            switch (actionType) {
+                case INPUT:
+                    return CraftCheck.failure("craftcheck.failure.energy.input");
+                case OUTPUT:
+                    return CraftCheck.failure("craftcheck.failure.energy.output.space");
+            }
+        }
+        return CraftCheck.success();
+    }
+
+    private float doEnergyIOInternal(final List<ProcessingComponent<?>> components,
+                                   final RecipeCraftingContext context,
+                                   final float maxMultiplier)
+    {
+        long required = (long) RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false);
+        long maxRequired = (long) (required * maxMultiplier);
+
+        List<IEnergyHandler> handlers = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            IEnergyHandler providedComponent = (IEnergyHandler) component.providedComponent;
+            handlers.add(providedComponent);
+        }
+
+        return consumeOrInsertEnergy(handlers, maxRequired, required, maxMultiplier);
+    }
+
+    private float consumeOrInsertEnergy(final List<IEnergyHandler> handlers, double total, final long required, final float multiplier) {
+        double maxRequired = total;
+        switch (actionType) {
+            case INPUT:
+                for (final IEnergyHandler handler : handlers) {
+                    long current = handler.getCurrentEnergy();
+                    long toConsume = (long) Math.min(current, maxRequired);
+                    handler.setCurrentEnergy(current - toConsume);
+                    maxRequired -= toConsume;
+                }
+                break;
+            case OUTPUT:
+                for (final IEnergyHandler handler : handlers) {
+                    long remaining = handler.getRemainingCapacity();
+                    long toReceive = (long) Math.min(remaining, maxRequired);
+                    handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
+                    maxRequired -= toReceive;
+                }
+                break;
+        }
+
+        if (maxRequired > 0) {
+            return (int) Math.round((total - maxRequired) / required);
+        }
+        return multiplier;
+    }
+
+    @Override
+    public void setParallelizeUnaffected(boolean unaffected) {
+        this.parallelizeUnaffected = unaffected;
+        if (parallelizeUnaffected) {
+            this.parallelism = 1;
+        }
+    }
+
+    public int getParallelism() {
+        return parallelism;
+    }
+
+    // Noop
 
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
-        switch (actionType) {
-            case INPUT:
-                if (handler.getCurrentEnergy() >= RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelism * parallelMultiplier) {
-                    return CraftCheck.success();
-                }
-                return CraftCheck.failure("craftcheck.failure.energy.input");
-            case OUTPUT:
-                if (handler.getRemainingCapacity() - RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelism * parallelMultiplier < 0) {
-                    return CraftCheck.failure("craftcheck.failure.energy.output.space");
-                }
-                return CraftCheck.success();
-        }
-
-        return CraftCheck.skipComponent();
+        return CraftCheck.success();
     }
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return canStartCrafting(component, context, new ArrayList<>(0)).isSuccess();
+        return true;
     }
 
     @Override
@@ -137,115 +244,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        this.activeIO = Math.round((RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * durationMultiplier * parallelism * parallelMultiplier));
     }
 
     @Nonnull
     @Override
     public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        boolean enough = this.activeIO <= 0;
-        this.activeIO = this.requirementPerTick;
-
-        switch (actionType) {
-            case INPUT:
-                return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.input");
-            case OUTPUT:
-                return enough ? CraftCheck.success() : CraftCheck.failure("craftcheck.failure.energy.output.space");
-        }
         return CraftCheck.skipComponent();
     }
 
     @Nonnull
     @Override
     public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
-        switch (actionType) {
-            case INPUT:
-                long currentEnergy = handler.getCurrentEnergy();
-                if (handler instanceof IEnergyHandlerAsync) {
-                    IEnergyHandlerAsync asyncHandler = (IEnergyHandlerAsync) handler;
-                    if (currentEnergy >= this.activeIO) {
-                        if (asyncHandler.extractEnergy(this.activeIO)) {
-                            this.activeIO = 0;
-                            return CraftCheck.success();
-                        } else {
-                            return CraftCheck.partialSuccess();
-                        }
-                    } else {
-                        return CraftCheck.partialSuccess();
-                    }
-                } else {
-                    if (currentEnergy >= this.activeIO) {
-                        handler.setCurrentEnergy(currentEnergy - this.activeIO);
-                        this.activeIO = 0;
-                        return CraftCheck.success();
-                    } else {
-                        return CraftCheck.partialSuccess();
-                    }
-                }
-            case OUTPUT:
-                currentEnergy = handler.getCurrentEnergy();
-                this.remaining = handler.getRemainingCapacity();
-                if (handler instanceof IEnergyHandlerAsync) {
-                    IEnergyHandlerAsync asyncHandler = (IEnergyHandlerAsync) handler;
-                    if (remaining < this.activeIO) {
-                        return CraftCheck.partialSuccess();
-                    } else {
-                        if (asyncHandler.receiveEnergy(this.activeIO)) {
-                            this.activeIO = 0;
-                            return CraftCheck.success();
-                        } else {
-                            return CraftCheck.partialSuccess();
-                        }
-                    }
-                } else {
-                    if (remaining < this.activeIO) {
-                        return CraftCheck.partialSuccess();
-                    }
-                    handler.setCurrentEnergy(Math.min(currentEnergy + this.activeIO, handler.getMaxEnergy()));
-                    this.activeIO = 0;
-                    return CraftCheck.success();
-                }
-        }
-        //This is neither input nor output? when do we actually end up in this case down here?
         return CraftCheck.skipComponent();
-    }
-
-    @Override
-    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
-        if (parallelizeUnaffected) {
-            return maxParallelism;
-        }
-        IEnergyHandler handler = (IEnergyHandler) component.providedComponent;
-        switch (actionType) {
-            case INPUT:
-                long inTick = (long) (RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelMultiplier);
-                return (int) Math.min(handler.getCurrentEnergy() / inTick, maxParallelism);
-            case OUTPUT:
-                long outTick = (long) (RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false) * parallelMultiplier);
-                return (int) Math.min(handler.getRemainingCapacity() / outTick, maxParallelism);
-        }
-
-        return maxParallelism;
-    }
-
-    @Override
-    public void setParallelism(int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
-    }
-
-    @Override
-    public void setParallelizeUnaffected(boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-            this.parallelMultiplier = 1;
-        }
-    }
-
-    public int getParallelism() {
-        return parallelism;
     }
 }

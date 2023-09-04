@@ -14,7 +14,7 @@ public class RecipeCheckEvent extends RecipeEvent {
     private String failureReason = null;
 
     public RecipeCheckEvent(TileMultiblockMachineController controller, RecipeCraftingContext context) {
-        super(controller, context);
+        super(controller, null, context);
     }
 
     @ZenMethod

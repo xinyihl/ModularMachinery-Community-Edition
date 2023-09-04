@@ -60,15 +60,24 @@ public class RecipeModifier {
         this.chance = affectsChance;
     }
 
-    public NBTTagCompound serialize() {
-        NBTTagCompound compound = new NBTTagCompound();
-        compound.setString("target", (target == null || target.getRegistryName() == null) ? "" : target.getRegistryName().toString());
-        compound.setInteger("ioTarget", ioTarget == IOType.INPUT ? 0 : 1);
-        compound.setInteger("operation", operation);
-        compound.setFloat("value", modifier);
-        compound.setBoolean("chance", chance);
-
-        return compound;
+    public static void applyValueToApplier(final ModifierApplier applier, final RecipeModifier mod) {
+        if (mod.operation == OPERATION_ADD) {
+            IOType ioTarget = mod.ioTarget;
+            if (ioTarget == null || ioTarget == IOType.INPUT) {
+                applier.inputAdd += mod.modifier;
+            } else {
+                applier.outputAdd += mod.modifier;
+            }
+        } else if (mod.operation == OPERATION_MULTIPLY) {
+            IOType ioTarget = mod.ioTarget;
+            if (ioTarget == null || ioTarget == IOType.INPUT) {
+                applier.inputMul *= mod.modifier;
+            } else {
+                applier.outputMul *= mod.modifier;
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown modifier operation: " + mod.operation);
+        }
     }
 
     public static RecipeModifier deserialize(NBTTagCompound compound) {
@@ -102,21 +111,21 @@ public class RecipeModifier {
         return (float) context.getModifierApplier(target, isChance).apply(value, ioType);
     }
 
-    // Apply ModifierList to value.
-
     public static double applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, double value, boolean isChance) {
         return applyModifiers(modifiers, in.requirementType, in.getActionType(), value, isChance);
     }
+
+    // Apply ModifierList to value.
 
     public static float applyModifiers(Collection<RecipeModifier> modifiers, ComponentRequirement<?, ?> in, float value, boolean isChance) {
         return applyModifiers(modifiers, in.requirementType, in.getActionType(), value, isChance);
     }
 
-    // Final Implementation.
-
     public static float applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, float value, boolean isChance) {
         return (float) applyModifiers(modifiers, target, ioType, (double) value, isChance);
     }
+
+    // Final Implementation.
 
     public static double applyModifiers(Collection<RecipeModifier> modifiers, RequirementType<?, ?> target, IOType ioType, double value, boolean isChance) {
         if (modifiers.isEmpty()) {
@@ -145,6 +154,17 @@ public class RecipeModifier {
             }
         }
         return (value + add) * mul;
+    }
+
+    public NBTTagCompound serialize() {
+        NBTTagCompound compound = new NBTTagCompound();
+        compound.setString("target", (target == null || target.getRegistryName() == null) ? "" : target.getRegistryName().toString());
+        compound.setInteger("ioTarget", ioTarget == IOType.INPUT ? 0 : 1);
+        compound.setInteger("operation", operation);
+        compound.setFloat("value", modifier);
+        compound.setBoolean("chance", chance);
+
+        return compound;
     }
 
     @Nullable

@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.integration;
 
 import crafttweaker.mc1120.events.ScriptRunEvent;
 import github.kasuminova.mmce.common.concurrent.Action;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
@@ -94,6 +95,7 @@ public class ModIntegrationCrafttweaker {
         MachineModifier.loadAll();
         MMEvents.registryAll();
 
+        RecipeCraftingContextPool.clear();
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
         for (Action action : FactoryRecipeThread.WAIT_FOR_ADD) {
             action.doAction();

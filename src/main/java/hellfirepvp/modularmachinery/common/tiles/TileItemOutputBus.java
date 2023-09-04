@@ -84,17 +84,17 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
         for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
             ItemStack externalStack = external.getStackInSlot(externalSlotId);
             int slotLimit = external.getSlotLimit(externalSlotId);
-            if (externalStack != ItemStack.EMPTY && externalStack.getCount() >= slotLimit) {
+            if (!externalStack.isEmpty() && externalStack.getCount() >= slotLimit) {
                 continue;
             }
 
             for (int internalSlotId = 0; internalSlotId < inventory.getSlots(); internalSlotId++) {
                 ItemStack internalStack = inventory.getStackInSlot(internalSlotId);
-                if (internalStack == ItemStack.EMPTY) {
+                if (internalStack.isEmpty()) {
                     continue;
                 }
 
-                if (externalStack == ItemStack.EMPTY) {
+                if (externalStack.isEmpty()) {
                     ItemStack notInserted = external.insertItem(externalSlotId, internalStack, false);
                     // Safeguard against Storage Drawers virtual slot
                     if (notInserted.getCount() == internalStack.getCount()) {
@@ -102,7 +102,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                     }
                     inventory.setStackInSlot(internalSlotId, notInserted);
                     successAtLeastOnce = true;
-                    if (notInserted == ItemStack.EMPTY) {
+                    if (notInserted.isEmpty()) {
                         break;
                     }
                     continue;
@@ -117,7 +117,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
                 inventory.setStackInSlot(internalSlotId, notInserted);
 
                 successAtLeastOnce = true;
-                if (notInserted == ItemStack.EMPTY) {
+                if (notInserted.isEmpty()) {
                     break;
                 }
             }

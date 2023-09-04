@@ -54,6 +54,10 @@ public abstract class RecipeLayoutPart<T> {
     //a new 'line' is used for more.
     public abstract int getMaxHorizontalCount();
 
+    public int getMaxHorizontalCount(int partAmount) {
+        return getMaxHorizontalCount();
+    }
+
     public abstract int getComponentHorizontalGap();
 
     public abstract int getComponentVerticalGap();
@@ -254,6 +258,27 @@ public abstract class RecipeLayoutPart<T> {
         @Override
         public int getMaxHorizontalCount() {
             return 4;
+        }
+
+        @Override
+        public int getMaxHorizontalCount(final int partAmount) {
+            if (partAmount <= 3) {
+                return 1;
+            }
+
+            if (partAmount == 4) {
+                return 2;
+            }
+
+            if (partAmount <= 9) {
+                return 3;
+            }
+
+            if (partAmount == 12) {
+                return 4;
+            }
+
+            return (int) Math.round(Math.sqrt(partAmount));
         }
 
         @Override

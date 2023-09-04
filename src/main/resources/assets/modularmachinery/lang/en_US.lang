@@ -14,6 +14,8 @@ command.modularmachinery.performance_report.title=Modular Machinery - Concurrent
 command.modularmachinery.performance_report.reset=Performance report has been reset.
 command.modularmachinery.performance_report.total_executed=Total executed: %s
 command.modularmachinery.performance_report.tasks_avg_per_execution=Avg of tasks per execution: %s
+command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext Total pool size: %s, Number of pools: %s
+command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext Maximum recipe Pool Size: %s
 
 command.modularmachinery.performance_report.total_used_time=Total used time: %s ms
 command.modularmachinery.performance_report.used_time_avg_per_execution=Avg spent per execution: %.2f ms

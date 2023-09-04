@@ -26,7 +26,8 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
             int maxParallelism,
             Iterable<MachineRecipe> recipeList,
             FactoryRecipeThread thread,
-            ActiveMachineRecipe[] running) {
+            ActiveMachineRecipe[] running)
+    {
         super(controller, currentMachine, maxParallelism, recipeList);
         this.factory = controller;
         this.running = running;
@@ -53,22 +54,19 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
             if (result.isSuccess()) {
                 //并发检查
                 foundMachine = factory.getFoundMachine();
-                if (foundMachine == null || !foundMachine.equals(currentMachine))
+                if (foundMachine == null || !foundMachine.equals(currentMachine)) {
+                    RecipeCraftingContextPool.returnCtx(context);
                     return null;
-
+                }
                 return context;
             } else if (highestValidity == null ||
                     (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
                 highestValidity = recipe;
                 highestValidityResult = result;
                 validity = result.getValidity();
+                RecipeCraftingContextPool.returnCtx(context);
             }
         }
-
-        //并发检查
-        foundMachine = factory.getFoundMachine();
-        if (foundMachine == null || !foundMachine.equals(currentMachine))
-            return null;
 
         if (highestValidity != null) {
             status = CraftingStatus.failure(

@@ -35,7 +35,7 @@ public class TooltipEnergyOutput extends RequirementTip {
     @Override
     public Collection<ComponentRequirement<?, ?>> filterRequirements(MachineRecipe recipe, Collection<ComponentRequirement<?, ?>> requirements) {
         return requirements.stream()
-                .filter(r -> r instanceof RequirementEnergy)
+                .filter(RequirementEnergy.class::isInstance)
                 .filter(r -> r.getActionType() == IOType.OUTPUT)
                 .collect(Collectors.toList());
     }

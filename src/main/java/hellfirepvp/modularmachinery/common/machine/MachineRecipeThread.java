@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.machine;
 
 import crafttweaker.annotations.ZenRegister;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -39,14 +40,15 @@ public class MachineRecipeThread extends RecipeThread {
     public void tryRestartRecipe() {
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(ctrl.getMaxParallelism());
-        context = createContext(activeRecipe);
+        RecipeCraftingContext context = getContext().reset();
+        flushContextModifier();
 
-        RecipeCraftingContext.CraftingCheckResult result = ctrl.onCheck(context);
+        RecipeCraftingContext.CraftingCheckResult result = ctrl.onRestartCheck(context);
         if (result.isSuccess()) {
             controller.onStart();
         } else {
             activeRecipe = null;
-            context = null;
+            setContext(null);
             status = CraftingStatus.failure(result.getFirstErrorMessage(""));
             createRecipeSearchTask();
         }
@@ -78,10 +80,12 @@ public class MachineRecipeThread extends RecipeThread {
             }
 
             if (context.canStartCrafting().isSuccess()) {
-                this.context = context;
+                setContext(context);
                 this.activeRecipe = context.getActiveRecipe();
                 this.status = CraftingStatus.SUCCESS;
                 controller.onStart();
+            } else {
+                RecipeCraftingContextPool.returnCtx(context);
             }
         } else {
             if (ctrl.getTicksExisted() % controller.currentRecipeSearchDelay() == 0) {

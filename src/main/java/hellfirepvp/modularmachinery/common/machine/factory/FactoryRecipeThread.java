@@ -4,6 +4,7 @@ import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -80,20 +81,17 @@ public class FactoryRecipeThread extends RecipeThread {
     }
 
     public void tryRestartRecipe() {
-        ActiveMachineRecipe activeRecipe = this.activeRecipe;
         activeRecipe.reset();
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
-        RecipeCraftingContext context = createContext(activeRecipe);
+        RecipeCraftingContext context = getContext().reset();
+        flushContextModifier();
 
-        this.activeRecipe = null;
-        this.context = null;
-
-        RecipeCraftingContext.CraftingCheckResult result = ctrl.onCheck(context);
+        RecipeCraftingContext.CraftingCheckResult result = factory.onRestartCheck(context);
         if (result.isSuccess()) {
-            this.activeRecipe = activeRecipe;
-            this.context = context;
             factory.onThreadRecipeStart(this);
         } else {
+            activeRecipe = null;
+            setContext(null);
             status = CraftingStatus.failure(result.getFirstErrorMessage(""));
             if (isCoreThread) {
                 createRecipeSearchTask();
@@ -128,10 +126,12 @@ public class FactoryRecipeThread extends RecipeThread {
             }
 
             if (context.canStartCrafting().isSuccess()) {
-                this.context = context;
+                setContext(context);
                 this.activeRecipe = context.getActiveRecipe();
                 this.status = CraftingStatus.SUCCESS;
                 factory.onThreadRecipeStart(this);
+            } else {
+                RecipeCraftingContextPool.returnCtx(context);
             }
         } else {
             if (factory.getTicksExisted() % factory.currentRecipeSearchDelay() == 0) {
@@ -257,7 +257,7 @@ public class FactoryRecipeThread extends RecipeThread {
      */
     @ZenGetter("isIdle")
     public boolean isIdle() {
-        return activeRecipe == null && context == null;
+        return activeRecipe == null && getContext() == null;
     }
 
     /**

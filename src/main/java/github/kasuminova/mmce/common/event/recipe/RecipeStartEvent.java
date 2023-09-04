@@ -9,7 +9,7 @@ import stanhebben.zenscript.annotations.ZenClass;
 @ZenClass("mods.modularmachinery.RecipeStartEvent")
 public class RecipeStartEvent extends RecipeEvent {
     public RecipeStartEvent(TileMultiblockMachineController controller, RecipeThread thread) {
-        super(controller, thread.getContext());
+        super(controller, thread, thread.getContext());
     }
 
 }

@@ -63,7 +63,7 @@ public class MachineUpgradeHelper {
     public static IItemStack addUpgradeToIItemStack(IItemStack stackCT, String upgradeName) {
         ItemStack stack = CraftTweakerMC.getItemStack(stackCT);
         if (!RegistryUpgrade.supportsUpgrade(stack)) {
-            CraftTweakerAPI.logWarning(stackCT.getDefinition().getId() + " does not support upgrade!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] " + stackCT.getDefinition().getId() + " does not support upgrade!");
             return stackCT;
         }
         CapabilityUpgrade capability = stack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
@@ -72,7 +72,7 @@ public class MachineUpgradeHelper {
         }
         MachineUpgrade upgrade = RegistryUpgrade.getUpgrade(upgradeName);
         if (upgrade == null) {
-            CraftTweakerAPI.logWarning("Cloud not found MachineUpgrade " + upgradeName + '!');
+            CraftTweakerAPI.logWarning("[ModularMachinery] Cloud not found MachineUpgrade " + upgradeName + '!');
             return stackCT;
         }
         capability.getUpgrades().add(upgrade);

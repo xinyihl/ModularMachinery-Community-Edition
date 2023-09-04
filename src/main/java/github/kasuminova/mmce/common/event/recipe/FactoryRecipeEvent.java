@@ -11,12 +11,12 @@ import stanhebben.zenscript.annotations.ZenGetter;
 public class FactoryRecipeEvent extends RecipeEvent {
     protected final FactoryRecipeThread recipeThread;
     public FactoryRecipeEvent(FactoryRecipeThread recipeThread, TileMultiblockMachineController controller) {
-        super(controller, recipeThread.getContext());
+        super(controller, recipeThread, recipeThread.getContext());
         this.recipeThread = recipeThread;
     }
 
-    @ZenGetter("recipeThread")
-    public FactoryRecipeThread getRecipeThread() {
+    @ZenGetter("factoryRecipeThread")
+    public FactoryRecipeThread getFactoryRecipeThread() {
         return recipeThread;
     }
 }

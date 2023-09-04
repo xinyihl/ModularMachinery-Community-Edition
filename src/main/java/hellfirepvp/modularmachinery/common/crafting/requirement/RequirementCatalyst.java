@@ -1,6 +1,5 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import hellfirepvp.modularmachinery.common.crafting.helper.ComponentOutputRestrictor;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
@@ -46,9 +45,8 @@ public class RequirementCatalyst extends RequirementItem {
 
     @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        CraftCheck craftCheck = super.canStartCrafting(component, context, restrictions);
-        if (craftCheck.isSuccess()) {
+    public CraftCheck canStartCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
+        if (super.canStartCrafting(components, context).isSuccess()) {
             for (RecipeModifier modifier : modifierList) {
                 context.addPermanentModifier(modifier);
             }
@@ -106,11 +104,9 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
         if (isRequired) {
-            return super.startCrafting(component, context, chance);
-        } else {
-            return true;
+            super.startCrafting(components, context, chance);
         }
     }
 

@@ -18,6 +18,7 @@ import hellfirepvp.modularmachinery.common.integration.ModIntegrationJEI;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiIngredientGroup;
 import mezz.jei.api.gui.IRecipeLayout;
@@ -76,30 +77,28 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         Map<IOType, Map<Class<?>, Integer>> componentCounts = new EnumMap<>(IOType.class);
         Map<Class<?>, ComponentRequirement.JEIComponent<?>> componentsFound = new HashMap<>();
         FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
-        int offsetX = 8;
+        int offsetX = 4;
         int offsetY = 0;
         int highestY = 0;
         int longestTooltip = 0;
         int widestTooltip = 0;
 
         for (MachineRecipe recipe : recipes) {
-            Map<IOType, Map<Class<?>, Integer>> tempComp = new EnumMap<>(IOType.class);
+            Map<IOType, Object2IntOpenHashMap<Class<?>>> tempComp = new EnumMap<>(IOType.class);
             for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
                 ComponentRequirement.JEIComponent<?> jeiComp = req.provideJEIComponent();
                 if (jeiComp == null) {
                     continue;
                 }
-                int amt = tempComp.computeIfAbsent(req.getActionType(), ioType -> new HashMap<>())
-                        .computeIfAbsent(jeiComp.getJEIRequirementClass(), clazz -> 0);
-                amt++;
-                tempComp.get(req.getActionType()).put(jeiComp.getJEIRequirementClass(), amt);
+                Class<?> requirementClass = jeiComp.getJEIRequirementClass();
+                tempComp.computeIfAbsent(req.getActionType(), ioType -> new Object2IntOpenHashMap<>())
+                        .addTo(requirementClass, 1);
 
-
-                if (!componentsFound.containsKey(jeiComp.getJEIRequirementClass())) {
-                    componentsFound.put(jeiComp.getJEIRequirementClass(), jeiComp);
+                if (!componentsFound.containsKey(requirementClass)) {
+                    componentsFound.put(requirementClass, jeiComp);
                 }
             }
-            for (Map.Entry<IOType, Map<Class<?>, Integer>> cmpEntry : tempComp.entrySet()) {
+            for (Map.Entry<IOType, Object2IntOpenHashMap<Class<?>>> cmpEntry : tempComp.entrySet()) {
                 for (Map.Entry<Class<?>, Integer> cntEntry : cmpEntry.getValue().entrySet()) {
                     int current = componentCounts.computeIfAbsent(cmpEntry.getKey(), ioType -> new HashMap<>())
                             .computeIfAbsent(cntEntry.getKey(), clazz -> 0);
@@ -160,7 +159,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 int originalOffsetX = offsetX;
                 int partOffsetY = offsetY;
                 for (int i = 0; i < amt; i++) {
-                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
+                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount(amt) == 0) {
                         partOffsetY += layoutHelper.getComponentHeight() + layoutHelper.getComponentVerticalGap();
                         partOffsetX = originalOffsetX;
                     }
@@ -199,7 +198,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 int originalOffsetX = offsetX;
                 int partOffsetY = offsetY;
                 for (int i = 0; i < amt; i++) {
-                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount() == 0) {
+                    if (i > 0 && i % layoutHelper.getMaxHorizontalCount(amt) == 0) {
                         partOffsetY += layoutHelper.getComponentHeight() + layoutHelper.getComponentVerticalGap();
                         partOffsetX = originalOffsetX;
                     }
@@ -224,7 +223,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         //Texts for input consumed/produced
         highestY += longestTooltip;
 
-        widestTooltip += 8; //Initial offset
+        widestTooltip += 4; //Initial offset
         if (widestTooltip > offsetX) {
             offsetX = widestTooltip;
         }

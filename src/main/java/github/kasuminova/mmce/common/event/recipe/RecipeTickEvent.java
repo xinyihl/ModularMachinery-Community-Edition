@@ -20,7 +20,7 @@ public class RecipeTickEvent extends RecipeEvent {
     private String failureReason = null;
 
     public RecipeTickEvent(TileMultiblockMachineController controller, RecipeThread recipeThread, Phase phase) {
-        super(controller, recipeThread.getContext());
+        super(controller, recipeThread, recipeThread.getContext());
         this.phase = phase;
         this.recipeThread = recipeThread;
     }
@@ -31,7 +31,9 @@ public class RecipeTickEvent extends RecipeEvent {
 
         if (preventProgressing) {
             ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
-            activeRecipe.setTick(activeRecipe.getTick() - 1);
+            if (controller.getFoundMachine() != null) {
+                activeRecipe.doFailureAction(controller.getFoundMachine().getFailureAction());
+            }
             recipeThread.setStatus(CraftingStatus.working(failureReason));
             return;
         }

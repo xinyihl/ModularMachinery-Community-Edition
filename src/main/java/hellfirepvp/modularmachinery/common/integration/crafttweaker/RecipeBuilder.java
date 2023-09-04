@@ -38,15 +38,21 @@ public class RecipeBuilder {
     @ZenMethod
     public static RecipePrimer newBuilder(String recipeRegistryName, String associatedMachineRegistryName, int processingTickTime, int sortingPriority, boolean cancelIfPerTickFails) {
         ResourceLocation recipeLoc = new ResourceLocation(recipeRegistryName);
+        String path = recipeLoc.getPath();
+
         if (recipeLoc.getNamespace().equals("minecraft")) {
-            recipeLoc = new ResourceLocation(ModularMachinery.MODID, recipeLoc.getPath());
+            recipeLoc = new ResourceLocation(ModularMachinery.MODID, path);
         }
         ResourceLocation machineLoc = new ResourceLocation(associatedMachineRegistryName);
         if (machineLoc.getNamespace().equals("minecraft")) {
             machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
         }
+
+        if (!path.matches("[_\\-a-zA-Z][_\\-a-zA-Z0-9]*")) {
+            CraftTweakerAPI.logWarning("[ModularMachinery] Dangerous recipe registry name: " + path);
+        }
         if (processingTickTime <= 0) {
-            CraftTweakerAPI.logWarning("Recipe processing tick time has to be at least 1 tick!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] Recipe processing tick time has to be at least 1 tick!");
             processingTickTime = 1;
         }
 

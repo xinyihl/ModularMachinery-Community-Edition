@@ -20,10 +20,10 @@ import java.util.concurrent.locks.LockSupport;
  * 注意：如果提交了一个会修改世界的引用，请使用锁或同步关键字修饰会修改世界的部分代码操作
  */
 public class TaskExecutor {
-    public static final int THREAD_COUNT = Math.max(Math.max(Runtime.getRuntime().availableProcessors() / 4, 8), 4);
+    public static final int THREAD_COUNT = Math.min(Math.max(Runtime.getRuntime().availableProcessors() / 4, 4), 8);
 
     private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
-            THREAD_COUNT / 4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
+            4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
 

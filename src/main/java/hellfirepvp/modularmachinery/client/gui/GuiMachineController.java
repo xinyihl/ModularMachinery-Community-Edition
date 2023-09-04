@@ -81,11 +81,12 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
                 offsetY += 10;
                 fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
             }
-        } else {
+            offsetY += 15;
+        } else if (!controller.isStructureFormed()) {
             drawnHead = I18n.format("gui.controller.blueprint", I18n.format("gui.controller.blueprint.none"));
             fr.drawStringWithShadow(drawnHead, offsetX, offsetY, 0xFFFFFF);
+            offsetY += 15;
         }
-        offsetY += 15;
 
         DynamicMachine found = controller.getFoundMachine();
 
@@ -103,8 +104,8 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             event.postEvent();
 
             String[] extraInfo = event.getExtraInfo();
-            List<String> waitForDraw = new ArrayList<>();
             if (extraInfo.length != 0) {
+                List<String> waitForDraw = new ArrayList<>();
                 for (String s : extraInfo) {
                     waitForDraw.addAll(fr.listFormattedStringToWidth(s, MathHelper.floor(135 * (1 / GuiFactoryController.FONT_SCALE))));
                 }

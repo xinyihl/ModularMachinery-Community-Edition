@@ -1,69 +1,193 @@
 package hellfirepvp.modularmachinery.common.util;
 
+import github.kasuminova.mmce.common.util.MultiFluidTank;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import mekanism.api.gas.GasStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fml.common.Optional;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HybridFluidUtils {
-    public static int maxGasInputParallelism(HybridGasTank handler, GasStack gas, int parallelism) {
-        GasStack internal = handler.getGas();
-        if (internal == null) {
-            return 0;
+    public static long doSimulateDrainOrFill(final FluidStack drainOrFill, final List<IFluidHandler> fluidHandlers, final long maxDrainOrFill, final IOType actionType) {
+        long totalIO = 0;
+
+        FluidStack stack = drainOrFill.copy();
+        for (final IFluidHandler handler : fluidHandlers) {
+            stack.amount = maxDrainOrFill - totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (maxDrainOrFill - totalIO);
+
+            switch (actionType) {
+                case INPUT:
+                    FluidStack drained = handler.drain(stack, false);
+                    if (drained != null) {
+                        totalIO += drained.amount;
+                    }
+                    break;
+                case OUTPUT:
+                    totalIO += handler.fill(stack, false);
+                    break;
+            }
+
+            if (totalIO >= maxDrainOrFill) {
+                break;
+            }
         }
-        if (!internal.isGasEqual(gas)) {
-            return 0;
-        }
-        if (internal.amount < gas.amount || gas.amount < 0) {
-            return 0;
-        }
-        return Math.min(internal.amount / gas.amount, parallelism);
+
+        return totalIO;
     }
 
-    public static int maxGasOutputParallelism(HybridGasTank handler, GasStack gas, int parallelism) {
-        GasStack internal = handler.getGas();
-        int internalAmount = internal == null ? 0 : internal.amount;
-        if (internal != null && !internal.isGasEqual(gas)) {
-            return 0;
+    public static void doDrainOrFill(final FluidStack drainOrFill, long maxDrainOrFill, final List<IFluidHandler> fluidHandlers, final IOType actionType) {
+        long totalIO = maxDrainOrFill;
+
+        FluidStack stack = drainOrFill.copy();
+        for (final IFluidHandler handler : fluidHandlers) {
+            stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
+
+            switch (actionType) {
+                case INPUT:
+                    FluidStack drained = handler.drain(stack, true);
+                    if (drained != null) {
+                        totalIO -= drained.amount;
+                    }
+                    break;
+                case OUTPUT:
+                    totalIO -= handler.fill(stack, true);
+                    break;
+            }
+
+            if (totalIO <= 0) {
+                break;
+            }
         }
-        if (handler.getCapacity() < gas.amount || internalAmount < gas.amount || gas.amount < 0) {
-            return 0;
-        }
-        int remaining = handler.getCapacity() - internalAmount;
-        return Math.min(remaining / gas.amount, parallelism);
     }
 
-    public static int maxFluidInputParallelism(IFluidHandler handler, FluidStack fluid, int parallelism) {
-        if (fluid == null || fluid.amount <= 0) {
-            return 0;
+    @Optional.Method(modid = "mekanism")
+    public static long doSimulateDrainOrFill(final GasStack drainOrFill, final List<HybridGasTank> gasHandlers, final long maxDrainOrFill, final IOType actionType) {
+        long totalIO = 0;
+
+        GasStack stack = drainOrFill.copy();
+        for (final HybridGasTank handler : gasHandlers) {
+            stack.amount = maxDrainOrFill - totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (maxDrainOrFill - totalIO);
+
+            GasStack gas = handler.getGas();
+            switch (actionType) {
+                case INPUT:
+                    if (!stack.isGasEqual(gas)) {
+                        continue;
+                    }
+                    GasStack drained = handler.drawGas(EnumFacing.UP, stack.amount, false);
+                    if (drained != null) {
+                        totalIO += drained.amount;
+                    }
+                    break;
+                case OUTPUT:
+                    if (gas != null && !stack.isGasEqual(gas)) {
+                        continue;
+                    }
+                    totalIO += handler.receiveGas(EnumFacing.UP, stack, false);
+                    break;
+            }
+
+            if (totalIO >= maxDrainOrFill) {
+                break;
+            }
         }
-        int baseDrain = fluid.amount;
-        int maxParallelism = Math.min(Integer.MAX_VALUE / fluid.amount, parallelism);
 
-        fluid.amount *= maxParallelism;
-
-        FluidStack drained = handler.drain(fluid, false);
-        if (drained == null) {
-            return 0;
-        }
-
-        return drained.amount / baseDrain;
+        return totalIO;
     }
 
-    public static int maxFluidOutputParallelism(IFluidHandler handler, FluidStack fluid, int parallelism) {
-        if (fluid == null) {
-            return 0;
+    @Optional.Method(modid = "mekanism")
+    public static void doDrainOrFill(final GasStack drainOrFill, final long maxDrainOrFill, final List<HybridGasTank> gasHandlers, final IOType actionType) {
+        long totalIO = maxDrainOrFill;
+
+        GasStack stack = drainOrFill.copy();
+
+        for (final HybridGasTank handler : gasHandlers) {
+            stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
+
+            GasStack gas = handler.getGas();
+
+            switch (actionType) {
+                case INPUT:
+                    if (!stack.isGasEqual(gas)) {
+                        continue;
+                    }
+                    GasStack drained = handler.drawGas(EnumFacing.UP, stack.amount, false);
+                    if (drained != null) {
+                        totalIO -= drained.amount;
+                    }
+                    break;
+                case OUTPUT:
+                    if (gas != null && !stack.isGasEqual(gas)) {
+                        continue;
+                    }
+                    totalIO -= handler.receiveGas(EnumFacing.UP, stack, false);
+                    break;
+            }
+
+            if (totalIO <= 0) {
+                break;
+            }
         }
+    }
 
-        if (fluid.amount <= 0) {
-            return parallelism;
+    @Nonnull
+    public static List<IFluidHandler> castFluidHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<IFluidHandler> fluidHandlers = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            IFluidHandler providedComponent = (IFluidHandler) component.providedComponent;
+            fluidHandlers.add(providedComponent);
         }
+        return fluidHandlers;
+    }
 
-        int baseFill = fluid.amount;
-        int maxParallelism = Math.min(Integer.MAX_VALUE / fluid.amount, parallelism);
+    @Nonnull
+    public static List<HybridGasTank> castGasHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<HybridGasTank> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            Object providedComponent = component.providedComponent;
+            if (providedComponent instanceof HybridGasTank) {
+                HybridGasTank hybridGasTank = (HybridGasTank) providedComponent;
+                list.add(hybridGasTank);
+            }
+        }
+        return list;
+    }
 
-        fluid.amount *= maxParallelism;
-        int filled = handler.fill(fluid, false);
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static List<ProcessingComponent<?>> copyFluidHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                    (MachineComponent<Object>) component.component,
+                    new MultiFluidTank((IFluidHandler) component.providedComponent),
+                    component.getTag());
+            list.add(objectProcessingComponent);
+        }
+        return list;
+    }
 
-        return filled / baseFill;
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static List<ProcessingComponent<?>> copyGasHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            if (!(component.providedComponent instanceof HybridGasTank)) {
+                continue;
+            }
+            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                    (MachineComponent<Object>) component.component,
+                    CopyHandlerHelper.copyGasTank((HybridGasTank) component.providedComponent),
+                    component.getTag());
+            list.add(objectProcessingComponent);
+        }
+        return list;
     }
 }

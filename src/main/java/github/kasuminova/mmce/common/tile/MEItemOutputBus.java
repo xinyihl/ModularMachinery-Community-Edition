@@ -65,7 +65,7 @@ public class MEItemOutputBus extends MEItemBus {
             IMEMonitor<IAEItemStack> inv = proxy.getStorage().getInventory(channel);
             for (int i = 0; i < inventory.getSlots(); i++) {
                 ItemStack stack = inventory.getStackInSlot(i);
-                if (stack == ItemStack.EMPTY) {
+                if (stack.isEmpty()) {
                     continue;
                 }
 
@@ -98,7 +98,7 @@ public class MEItemOutputBus extends MEItemBus {
     public boolean hasItem() {
         for (int i = 0; i < inventory.getSlots(); i++) {
             ItemStack stack = inventory.getStackInSlot(i);
-            if (stack != ItemStack.EMPTY) {
+            if (!stack.isEmpty()) {
                 return true;
             }
         }

@@ -84,7 +84,7 @@ public class RecipePrimer implements PreparedRecipe {
         if (lastComponent instanceof ComponentRequirement.Parallelizable) {
             ((ComponentRequirement.Parallelizable) lastComponent).setParallelizeUnaffected(unaffected);
         } else {
-            CraftTweakerAPI.logWarning("Target " + lastComponent.getClass().toString() + " cannot be parallelized!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] Target " + lastComponent.getClass() + " cannot be parallelized!");
         }
         return this;
     }
@@ -101,7 +101,7 @@ public class RecipePrimer implements PreparedRecipe {
             if (lastComponent instanceof ComponentRequirement.ChancedRequirement) {
                 ((ComponentRequirement.ChancedRequirement) lastComponent).setChance(chance);
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] Cannot set chance for not-chance-based Component: " + lastComponent.getClass().toString());
+                CraftTweakerAPI.logWarning("[ModularMachinery] Cannot set chance for not-chance-based Component: " + lastComponent.getClass());
             }
         }
         return this;

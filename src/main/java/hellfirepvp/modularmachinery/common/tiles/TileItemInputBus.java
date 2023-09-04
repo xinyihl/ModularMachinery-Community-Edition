@@ -79,7 +79,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
         external:
         for (int externalSlotId = 0; externalSlotId < external.getSlots(); externalSlotId++) {
             ItemStack externalStack = external.getStackInSlot(externalSlotId);
-            if (externalStack == ItemStack.EMPTY) {
+            if (externalStack.isEmpty()) {
                 continue;
             }
 
@@ -87,13 +87,13 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
                 ItemStack internalStack = inventory.getStackInSlot(internalSlotId);
                 int maxCanExtract = Math.min(externalStack.getCount(), externalStack.getMaxStackSize());
 
-                if (internalStack == ItemStack.EMPTY) {
+                if (internalStack.isEmpty()) {
                     // Extract external item and insert to internal.
                     ItemStack extracted = external.extractItem(externalSlotId, maxCanExtract, false);
                     inventory.setStackInSlot(internalSlotId, extracted);
                     successAtLeastOnce = true;
                     // If there are no more items in the current slot, check the next external slot.
-                    if (external.getStackInSlot(externalSlotId) == ItemStack.EMPTY) {
+                    if (external.getStackInSlot(externalSlotId).isEmpty()) {
                         continue external;
                     }
                     continue;
@@ -114,7 +114,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
                                 extracted, internalStack.getCount() + extracted.getCount()));
                 successAtLeastOnce = true;
                 // If there are no more items in the current slot, check the next external slot.
-                if (external.getStackInSlot(externalSlotId) == ItemStack.EMPTY) {
+                if (external.getStackInSlot(externalSlotId).isEmpty()) {
                     continue external;
                 }
             }

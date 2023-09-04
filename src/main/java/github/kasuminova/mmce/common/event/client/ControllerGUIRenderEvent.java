@@ -7,10 +7,14 @@ import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenSetter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 @ZenRegister
 @ZenClass("mods.modularmachinery.ControllerGUIRenderEvent")
 public class ControllerGUIRenderEvent extends MachineEvent {
-    private String[] extraInfo = {};
+    private final List<String> extraInfo = new ArrayList<>();
 
     public ControllerGUIRenderEvent(TileMultiblockMachineController controller) {
         super(controller);
@@ -18,11 +22,11 @@ public class ControllerGUIRenderEvent extends MachineEvent {
 
     @ZenSetter("extraInfo")
     public void setExtraInfo(String... info) {
-        this.extraInfo = info;
+        this.extraInfo.addAll(Arrays.asList(info));
     }
 
     @ZenGetter("extraInfo")
     public String[] getExtraInfo() {
-        return extraInfo;
+        return extraInfo.toArray(new String[0]);
     }
 }

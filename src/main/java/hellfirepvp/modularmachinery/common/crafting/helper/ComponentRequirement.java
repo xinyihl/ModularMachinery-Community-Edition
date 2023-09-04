@@ -18,6 +18,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -110,11 +111,23 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     //True, if the requirement could be fulfilled by the given component
     public abstract boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance);
 
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+
+    }
+
     @Nonnull
     public abstract CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance);
 
+    public CraftCheck finishCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        return CraftCheck.skipComponent();
+    }
+
     @Nonnull
     public abstract CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions);
+
+    public CraftCheck canStartCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
+        return CraftCheck.skipComponent();
+    }
 
     //Creates an exact copy of the current requirement
     public abstract ComponentRequirement<T, V> deepCopy();
@@ -138,6 +151,10 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
     //in the JEI Integration! Otherwise JEI will complain about not having proper handling for this
     //Also, be sure that this generic T is the *only one* with that type otherwise internally stuff might break...
     public abstract JEIComponent<T> provideJEIComponent();
+
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return Collections.emptyList();
+    }
 
     public boolean isIgnoreOutputCheck() {
         return ignoreOutputCheck;
@@ -164,7 +181,9 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          * @param context Context
          * @return 最大可并行数量
          */
-        int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism);
+        int getMaxParallelism(final List<ProcessingComponent<?>> components,
+                              final RecipeCraftingContext context,
+                              final int maxParallelism);
 
         /**
          * 设置需求并行数。
@@ -178,6 +197,18 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          * @param unaffected 是否不受影响
          */
         void setParallelizeUnaffected(boolean unaffected);
+    }
+
+    /**
+     * <p>实现此接口的 ComponentRequirement 应当重写以下方法：</p>
+     *
+     * <p>{@link #startCrafting(List, RecipeCraftingContext, ResultChance)}</p>
+     * <p>{@link #finishCrafting(List, RecipeCraftingContext, ResultChance)}</p>
+     * <p>{@link #canStartCrafting(List, RecipeCraftingContext)}</p>
+     * <p>{@link #copyComponents(List)}</p>
+     */
+    public interface MultiComponent {
+
     }
 
     public abstract static class JEIComponent<T> {
@@ -219,5 +250,8 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         @Nonnull
         public abstract CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context);
 
+        public CraftCheck doIOTick(List<ProcessingComponent<?>> components, RecipeCraftingContext context, float durationMultiplier) {
+            return null;
+        }
     }
 }

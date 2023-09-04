@@ -8,7 +8,6 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import com.google.common.collect.Iterables;
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
@@ -19,11 +18,13 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.*;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
+import hellfirepvp.modularmachinery.common.util.IItemHandlerImpl;
+import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -37,7 +38,11 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:35
  */
-public class RequirementItem extends ComponentRequirement<ItemStack, RequirementTypeItem> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
+public class RequirementItem extends ComponentRequirement<ItemStack, RequirementTypeItem> implements
+        ComponentRequirement.ChancedRequirement,
+        ComponentRequirement.Parallelizable,
+        ComponentRequirement.MultiComponent,
+        Asyncable {
 
     public final ItemRequirementType requirementType;
 
@@ -51,7 +56,6 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public final List<ItemStack> previewItemStacks = new ArrayList<>();
 
     public final List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
-    public int countIOBuffer = 0;
 
     public NBTTagCompound tag = null;
     public NBTTagCompound previewDisplayTag = null;
@@ -154,27 +158,6 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     }
 
     @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-        switch (this.requirementType) {
-            case ITEMSTACKS:
-                this.countIOBuffer = this.required.getCount();
-                break;
-            case OREDICT:
-                this.countIOBuffer = this.oreDictItemAmount;
-                break;
-            case FUEL:
-                this.countIOBuffer = this.fuelBurntime;
-                break;
-        }
-        this.countIOBuffer = Math.round(RecipeModifier.applyModifiers(context, this, this.countIOBuffer, false) * parallelism);
-    }
-
-    @Override
-    public void endRequirementCheck() {
-        this.countIOBuffer = 0;
-    }
-
-    @Override
     public void setChance(float chance) {
         this.chance = chance;
     }
@@ -195,262 +178,222 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                cmp.ioType == actionType;
     }
 
-    @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IItemHandlerImpl handler = (IOInventory) component.providedComponent;
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        if (actionType == IOType.INPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            doItemIO(components, context, itemModifierList);
+        }
+    }
 
-        if (actionType == IOType.INPUT) {
-            boolean isSuccess;
-            switch (this.requirementType) {
-                case ITEMSTACKS:
-                    ItemStack inReq = this.required.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, inReq.getCount(), false) * parallelism);
-                    inReq.setCount(amt);
+    @Override
+    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (actionType == IOType.OUTPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            return doItemIO(components, context, itemModifierList);
+        }
+        return CraftCheck.skipComponent();
+    }
 
-                    isSuccess = (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventory(handler, inReq, true, this.itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventory(handler, inReq, true, this.tag);
-                    if (isSuccess) {
-                        return CraftCheck.success();
-                    }
-                    break;
-                case OREDICT:
-                    int inOreAmt = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
+    @Override
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        return doItemIO(components, context, Collections.emptyList());
+    }
 
-                    isSuccess = (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, inOreAmt, true, this.tag);
-                    if (isSuccess) {
-                        return CraftCheck.success();
-                    }
-                    break;
-                case FUEL:
-                    int inFuel = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                    if (ItemUtils.consumeFromInventoryFuel(handler, inFuel, true, this.tag) <= 0) {
-                        return CraftCheck.success();
-                    }
-                    break;
+    @Override
+    public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+            return maxParallelism;
+        }
+
+        return doItemIOInternal(components, context, maxParallelism, Collections.emptyList());
+    }
+
+    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers) {
+        int mul = doItemIOInternal(components, context, parallelism, itemModifiers);
+        if (mul < parallelism) {
+            switch (actionType) {
+                case INPUT:
+                    return CraftCheck.failure("craftcheck.failure.item.input");
+                case OUTPUT:
+                    return CraftCheck.failure("craftcheck.failure.item.output.space");
             }
-            return CraftCheck.failure("craftcheck.failure.item.input");
-        } else if (actionType == IOType.OUTPUT) {
-            if (isIgnoreOutputCheck()) {
-                return CraftCheck.success();
-            }
+        }
+        return CraftCheck.success();
+    }
 
-            handler = handler.copy();
-            for (ComponentOutputRestrictor restrictor : restrictions) {
-                if (restrictor instanceof ComponentOutputRestrictor.RestrictionInventory) {
-                    ComponentOutputRestrictor.RestrictionInventory inv = (ComponentOutputRestrictor.RestrictionInventory) restrictor;
+    private int doItemIOInternal(final List<ProcessingComponent<?>> components,
+                                 final RecipeCraftingContext context,
+                                 final int maxMultiplier,
+                                 final List<AdvancedItemModifier> itemModifiers)
+    {
+        List<IItemHandlerImpl> handlers = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.providedComponent;
+            handlers.add(providedComponent);
+        }
 
-                    if (inv.exactComponent.equals(component)) {
-                        ItemUtils.tryPlaceItemInInventory(inv.inserted.copy(), handler, false);
+        switch (actionType) {
+            case INPUT:
+                return consumeAllItems(handlers, context, maxMultiplier, itemModifiers);
+            case OUTPUT:
+                if (ignoreOutputCheck) {
+                    insertAllItems(handlers, context, maxMultiplier, itemModifiers);
+                    return maxMultiplier;
+                }
+                return insertAllItems(handlers, context, maxMultiplier, itemModifiers);
+        }
+
+        return maxMultiplier;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return ItemUtils.copyItemHandlerComponents(components);
+    }
+
+    public int consumeAllItems(final List<IItemHandlerImpl> handlers,
+                               final RecipeCraftingContext context,
+                               final int maxMultiplier,
+                               final List<AdvancedItemModifier> itemModifiers)
+    {
+        int consumed = 0;
+        int toConsume = 0;
+        switch (this.requirementType) {
+            case ITEMSTACKS:
+                toConsume = Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
+                break;
+            case OREDICT:
+                toConsume = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
+                break;
+        }
+
+        if (toConsume <= 0) {
+            return maxMultiplier;
+        }
+
+        int maxConsume;
+
+        ItemStack stack;
+        switch (this.requirementType) {
+            case ITEMSTACKS: {
+                stack = required.copy();
+                if (!itemModifiers.isEmpty()) {
+                    stack.setCount(toConsume);
+
+                    for (final AdvancedItemModifier modifier : itemModifiers) {
+                        stack = modifier.apply(context.getMachineController(), stack);
+                    }
+                    toConsume *= stack.getCount();
+                    if (toConsume <= 0) {
+                        return maxMultiplier;
                     }
                 }
-            }
+                maxConsume = toConsume * maxMultiplier;
 
-            ItemStack stack = ItemStack.EMPTY;
-            if (oreDictName != null) {
-                for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
-                    if (oreInstance.isEmpty()) {
-                        continue;
+                for (final IItemHandlerImpl handler : handlers) {
+                    if (itemChecker != null) {
+                        consumed += ItemUtils.consumeAll(
+                                handler, stack, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
+                    } else {
+                        consumed += ItemUtils.consumeAll(
+                                handler, stack, maxMultiplier - (consumed / toConsume), tag);
                     }
-                    stack = ItemUtils.copyStackWithSize(oreInstance, this.countIOBuffer);
-
-                    if (!stack.isEmpty()) { //Try all options first..
+                    if (consumed >= maxConsume) {
                         break;
                     }
                 }
-
-                if (this.countIOBuffer > 0 && stack.isEmpty()) {
-                    throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
-                }
-            } else {
-                stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
+                break;
             }
+            case OREDICT: {
+                if (!itemModifiers.isEmpty()) {
+                    stack = ItemUtils.getOredictItem(context, oreDictName, tag);
+                    stack.setCount(toConsume);
 
-            if (tag != null) {
-                stack.setTagCompound(tag.copy());
-            }
-            int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
-            if (inserted > 0) {
-                context.addRestriction(new ComponentOutputRestrictor.RestrictionInventory(ItemUtils.copyStackWithSize(stack, inserted), component));
-            }
-            this.countIOBuffer -= inserted;
-            if (this.countIOBuffer <= 0) {
-                return CraftCheck.success();
-            }
-            return CraftCheck.failure("craftcheck.failure.item.output.space");
-        }
-        return CraftCheck.skipComponent();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (actionType != IOType.INPUT) {
-            return true;
-        }
-
-        IOInventory handler = (IOInventory) component.providedComponent;
-        float productionChance = RecipeModifier.applyModifiers(context, this, this.chance, true);
-        switch (this.requirementType) {
-            case ITEMSTACKS:
-                ItemStack stackRequired = this.required.copy();
-                int amt = Math.round(RecipeModifier.applyModifiers(context, this, stackRequired.getCount(), false) * parallelism);
-                stackRequired.setCount(amt);
-                if (!itemModifierList.isEmpty()) {
-                    for (AdvancedItemModifier modifier : itemModifierList) {
-                        stackRequired = modifier.apply(context.getMachineController(), stackRequired);
+                    for (final AdvancedItemModifier modifier : itemModifiers) {
+                        stack = modifier.apply(context.getMachineController(), stack);
+                    }
+                    toConsume *= stack.getCount();
+                    if (toConsume <= 0) {
+                        return maxMultiplier;
                     }
                 }
+                maxConsume = toConsume * maxMultiplier;
 
-                if (chance.canProduce(productionChance)) {
-                    return (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventory(handler, stackRequired, true, this.itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventory(handler, stackRequired, true, this.tag);
-                } else {
-                    return (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventory(handler, stackRequired, false, this.itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventory(handler, stackRequired, false, this.tag);
+                for (final IItemHandlerImpl handler : handlers) {
+                    if (itemChecker != null) {
+                        consumed += ItemUtils.consumeAll(
+                                handler, oreDictName, 1, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
+                    } else {
+                        consumed += ItemUtils.consumeAll(
+                                handler, oreDictName, 1, maxMultiplier - (consumed / toConsume), tag);
+                    }
+                    if (consumed >= maxConsume) {
+                        break;
+                    }
                 }
-            case OREDICT:
-                int requiredOredict = Math.round(RecipeModifier.applyModifiers(context, this, this.oreDictItemAmount, false) * parallelism);
-                if (chance.canProduce(productionChance)) {
-                    return (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, true, this.tag);
-                } else {
-                    return (this.itemChecker != null)
-                            ? ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, itemChecker, context.getMachineController())
-                            : ItemUtils.consumeFromInventoryOreDict(handler, this.oreDictName, requiredOredict, false, this.tag);
-                }
-            case FUEL:
-                int requiredBurnTime = Math.round(RecipeModifier.applyModifiers(context, this, this.fuelBurntime, false));
-                boolean can = ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
-                if (chance.canProduce(productionChance)) {
-                    return can;
-                }
-                return can && ItemUtils.consumeFromInventoryFuel(handler, requiredBurnTime, false, this.tag) <= 0;
+                break;
+            }
         }
-        return false;
+
+        return consumed / toConsume;
     }
 
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+    public int insertAllItems(final List<IItemHandlerImpl> handlers,
+                              final RecipeCraftingContext context,
+                              final int maxMultiplier,
+                              final List<AdvancedItemModifier> itemModifiers)
+    {
         if (fuelBurntime > 0 && oreDictName == null && required.isEmpty()) {
             throw new IllegalStateException("Invalid item output!");
         }
-        IOInventory handler = (IOInventory) component.providedComponent;
-        if (actionType == IOType.OUTPUT) {
-            ItemStack stack;
-            if (oreDictName != null) {
-                stack = Iterables.getFirst(OreDictionary.getOres(oreDictName), ItemStack.EMPTY);
-                stack = ItemUtils.copyStackWithSize(stack, this.countIOBuffer);
-            } else {
-                stack = ItemUtils.copyStackWithSize(required, this.countIOBuffer);
-            }
 
-            if (stack.isEmpty()) {
-                return CraftCheck.success(); //Can't find anything to output. Guess that's a valid state.
-            }
-            if (!itemModifierList.isEmpty()) {
-                for (AdvancedItemModifier modifier : itemModifierList) {
-                    stack = modifier.apply(context.getMachineController(),stack);
-                }
-            } else {
-                if (tag != null) {
-                    stack.setTagCompound(tag);
-                }
-            }
+        int inserted = 0;
+        int toInsert = 0;
 
-            //If we don't produce the item, we only need to see if there would be space for it at all.
-            int inserted = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, true);
-            if (inserted > 0 && chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                return CraftCheck.success();
-            }
-            if (inserted > 0) {
-                int actual = ItemUtils.tryPlaceItemInInventory(stack.copy(), handler, false);
-                this.countIOBuffer -= actual;
-                if (this.countIOBuffer <= 0) {
-                    return CraftCheck.success();
-                }
-                return CraftCheck.partialSuccess();
-            }
-            return CraftCheck.failure("craftcheck.failure.item.output.space");
-        }
-        return CraftCheck.skipComponent();
-    }
-
-    @Override
-    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
-        if (parallelizeUnaffected) {
-            return maxParallelism;
-        }
-        IOInventory handler = (IOInventory) component.providedComponent;
-        switch (actionType) {
-            case INPUT:
-                switch (this.requirementType) {
-                    case ITEMSTACKS: {
-                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
-                                RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
-                                parallelism);
-                        if (itemChecker != null) {
-                            return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, itemChecker, context.getMachineController());
-                        } else {
-                            return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, tag);
-                        }
-                    }
-                    case OREDICT: {
-                        int amount = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false) * parallelism);
-                        if (itemChecker != null) {
-                            return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, itemChecker, context.getMachineController());
-                        } else {
-                            return ItemUtils.maxInputParallelism(handler, oreDictName, amount, maxParallelism, tag);
-                        }
-                    }
-                }
+        switch (this.requirementType) {
+            case ITEMSTACKS:
+                toInsert = Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
                 break;
-            case OUTPUT:
-                switch (this.requirementType) {
-                    case ITEMSTACKS: {
-                        if (isIgnoreOutputCheck()) {
-                            return maxParallelism;
-                        }
-                        ItemStack stack = ItemUtils.copyStackWithSize(required, Math.round(
-                                RecipeModifier.applyModifiers(context, this, required.getCount(), false)) *
-                                                                                parallelism);
-                        return ItemUtils.maxOutputParallelism(stack, handler, maxParallelism);
-                    }
-                    case OREDICT: {
-                        if (isIgnoreOutputCheck()) {
-                            return maxParallelism;
-                        }
-                        ItemStack stack = ItemStack.EMPTY;
-                        for (ItemStack oreInstance : OreDictionary.getOres(oreDictName)) {
-                            if (oreInstance.isEmpty()) {
-                                continue;
-                            }
-                            stack = ItemUtils.copyStackWithSize(oreInstance, Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false) * parallelism));
-
-                            if (!stack.isEmpty()) { //Try all options first..
-                                break;
-                            }
-                        }
-
-                        if (oreDictItemAmount > 0 && stack.isEmpty()) {
-                            throw new IllegalArgumentException("Unknown ItemStack: Cannot find an item in oredict '" + oreDictName + "'!");
-                        }
-
-                        if (tag != null) {
-                            stack.setTagCompound(tag.copy());
-                        }
-                        return ItemUtils.maxOutputParallelism(stack, handler, maxParallelism);
-                    }
-                }
+            case OREDICT:
+                toInsert = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
                 break;
         }
-        return maxParallelism;
+        if (toInsert <= 0) {
+            return maxMultiplier;
+        }
+
+        ItemStack stack;
+        switch (this.requirementType) {
+            case ITEMSTACKS:
+                stack = ItemUtils.copyStackWithSize(required, 1);
+                break;
+            case OREDICT:
+                stack = ItemUtils.getOredictItem(context, oreDictName, tag);
+                break;
+            default:
+                return 0;
+        }
+
+        if (!itemModifiers.isEmpty()) {
+            for (final AdvancedItemModifier modifier : itemModifiers) {
+                stack = modifier.apply(context.getMachineController(), stack);
+            }
+            toInsert *= stack.getCount();
+            if (toInsert <= 0) {
+                return maxMultiplier;
+            }
+            stack.setCount(1);
+        }
+
+        int maxInsert = toInsert * maxMultiplier;
+        for (final IItemHandlerImpl handler : handlers) {
+            inserted += ItemUtils.insertAll(stack, handler, maxInsert - inserted);
+            if (inserted >= maxInsert) {
+                break;
+            }
+        }
+
+        return inserted / toInsert;
     }
 
     @Override
@@ -466,6 +409,32 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
+    }
+
+    // Noop
+    @Override
+    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
+    }
+
+    @Override
+    public void endRequirementCheck() {
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return true;
+    }
+
+    @Override
+    @Nonnull
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return CraftCheck.success();
     }
 
     public enum ItemRequirementType {

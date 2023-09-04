@@ -294,10 +294,10 @@ public class MMInfoProvider implements IProbeInfoProvider {
     private static void addEnergyUsageText(final IProbeInfo probe, final EntityPlayer player, final IOType ioType, final long usagePerTick) {
         if (ioType == IOType.INPUT) {
             probe.text(TextFormatting.AQUA + "{*top.energy.input*}" + TextFormatting.RED +
-                    formatEnergyUsage(player, usagePerTick) + "{*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}");
+                    formatEnergyUsage(player, usagePerTick) + " {*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}/t");
         } else if (ioType == IOType.OUTPUT) {
             probe.text(TextFormatting.AQUA + "{*top.energy.output*}" + TextFormatting.RED +
-                    formatEnergyUsage(player, usagePerTick) + "{*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}");
+                    formatEnergyUsage(player, usagePerTick) + " {*" + EnergyDisplayUtil.type.getUnlocalizedFormat() + "*}/t");
         }
     }
 

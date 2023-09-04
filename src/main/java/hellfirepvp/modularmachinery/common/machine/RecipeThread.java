@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.machine;
 
 import crafttweaker.annotations.ZenRegister;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
@@ -24,9 +25,10 @@ public abstract class RecipeThread {
     protected final Map<String, RecipeModifier> semiPermanentModifiers = new ConcurrentHashMap<>();
 
     protected ActiveMachineRecipe activeRecipe = null;
-    protected RecipeCraftingContext context = null;
     protected CraftingStatus status = CraftingStatus.IDLE;
     protected boolean waitForFinish = false;
+
+    private RecipeCraftingContext context = null;
 
     protected RecipeThread(TileMultiblockMachineController ctrl) {
         this.ctrl = ctrl;
@@ -50,7 +52,7 @@ public abstract class RecipeThread {
             return status;
         }
         if (context == null) {
-            context = createContext(activeRecipe);
+            setContext(createContext(activeRecipe));
         }
         return (status = activeRecipe.tick(ctrl, context));
     }
@@ -61,7 +63,7 @@ public abstract class RecipeThread {
             return;
         }
         if (context == null) {
-            context = createContext(activeRecipe);
+            setContext(createContext(activeRecipe));
         }
 
         RecipeCraftingContext.CraftingCheckResult checkResult = context.canFinishCrafting();
@@ -113,6 +115,9 @@ public abstract class RecipeThread {
     }
 
     public RecipeThread setContext(RecipeCraftingContext context) {
+        if (this.context != null && this.context != context) {
+            RecipeCraftingContextPool.returnCtx(this.context);
+        }
         this.context = context;
         return this;
     }

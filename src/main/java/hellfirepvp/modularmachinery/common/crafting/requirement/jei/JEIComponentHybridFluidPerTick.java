@@ -25,7 +25,7 @@ public class JEIComponentHybridFluidPerTick extends ComponentRequirement.JEIComp
 
     @Override
     public List<HybridFluid> getJEIIORequirements() {
-        return Collections.singletonList(requirement.required);
+        return Collections.singletonList(new HybridFluid(requirement.required));
     }
 
     @Override

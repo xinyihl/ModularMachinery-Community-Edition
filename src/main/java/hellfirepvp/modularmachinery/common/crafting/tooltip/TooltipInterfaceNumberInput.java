@@ -17,7 +17,7 @@ public class TooltipInterfaceNumberInput extends RequirementTip {
     @Override
     public Collection<ComponentRequirement<?, ?>> filterRequirements(MachineRecipe recipe, Collection<ComponentRequirement<?, ?>> requirements) {
         return requirements.stream()
-                .filter(type -> type instanceof RequirementInterfaceNumInput)
+                .filter(RequirementInterfaceNumInput.class::isInstance)
                 .collect(Collectors.toList());
     }
 

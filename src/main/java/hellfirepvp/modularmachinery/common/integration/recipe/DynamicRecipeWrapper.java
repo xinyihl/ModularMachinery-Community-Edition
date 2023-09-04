@@ -129,7 +129,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
         GlStateManager.color(1, 1, 1, 1);
         for (List<String> tTip : tooltips) {
             for (String tip : tTip) {
-                fr.drawStringWithShadow(tip, 8, offsetY, 0xFFFFFF);
+                fr.drawStringWithShadow(tip, 4, offsetY, 0xFFFFFF);
                 offsetY += lineHeight;
             }
             offsetY += splitHeight;
@@ -139,15 +139,15 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
 
         //TODO Rework this along with the ingredient for energy stuffs
         long totalEnergyIn = 0;
-        for (ComponentRequirement req : this.recipe.getCraftingRequirements().stream()
-                .filter(r -> r instanceof RequirementEnergy)
+        for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements().stream()
+                .filter(RequirementEnergy.class::isInstance)
                 .filter(r -> r.getActionType() == IOType.INPUT)
                 .collect(Collectors.toList())) {
             totalEnergyIn += ((RequirementEnergy) req).getRequiredEnergyPerTick();
         }
         long totalEnergyOut = 0;
-        for (ComponentRequirement req : this.recipe.getCraftingRequirements().stream()
-                .filter(r -> r instanceof RequirementEnergy)
+        for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements().stream()
+                .filter(RequirementEnergy.class::isInstance)
                 .filter(r -> r.getActionType() == IOType.OUTPUT)
                 .collect(Collectors.toList())) {
             totalEnergyOut += ((RequirementEnergy) req).getRequiredEnergyPerTick();
@@ -155,11 +155,11 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
 
         long finalTotalEnergyIn = totalEnergyIn;
         recipeCategory.inputComponents.stream()
-                .filter(r -> r instanceof RecipeLayoutPart.Energy)
+                .filter(RecipeLayoutPart.Energy.class::isInstance)
                 .forEach(part -> ((RecipeLayoutPart.Energy) part).drawEnergy(minecraft, finalTotalEnergyIn));
         long finalTotalEnergyOut = totalEnergyOut;
         recipeCategory.outputComponents.stream()
-                .filter(r -> r instanceof RecipeLayoutPart.Energy)
+                .filter(RecipeLayoutPart.Energy.class::isInstance)
                 .forEach(part -> ((RecipeLayoutPart.Energy) part).drawEnergy(minecraft, finalTotalEnergyOut));
         GlStateManager.color(1F, 1F, 1F, 1F);
     }
@@ -176,7 +176,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
                 continue;
             }
             IIngredientType type = ModIntegrationJEI.ingredientRegistry.getIngredientType(comp.getJEIRequirementClass());
-            componentMap.computeIfAbsent(type, t -> new HashMap<>())
+            componentMap.computeIfAbsent(type, t -> new EnumMap<>(IOType.class))
                     .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
         }
 

@@ -11,17 +11,16 @@ package hellfirepvp.modularmachinery.common.machine;
 import com.google.common.collect.Lists;
 import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
-import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
-import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
@@ -166,17 +165,14 @@ public class DynamicMachine extends AbstractMachine {
         return RecipeRegistry.getRecipesFor(this);
     }
 
-    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe,
-                                               TileMultiblockMachineController controller,
-                                               List<ProcessingComponent<?>> taggedComponents,
-                                               List<RecipeModifier> modifiers) {
-        if (!activeRecipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {
+    public RecipeCraftingContext createContext(ActiveMachineRecipe recipe,
+                                               TileMultiblockMachineController ctrl)
+    {
+        if (!recipe.getRecipe().getOwningMachineIdentifier().equals(registryName)) {
             throw new IllegalArgumentException("Tried to create context for a recipe that doesn't belong to the referenced machine!");
         }
-        RecipeCraftingContext ctx = new RecipeCraftingContext(activeRecipe, controller);
-        ctx.updateComponents(taggedComponents);
-        modifiers.forEach(ctx::addModifier);
-        return ctx;
+
+        return RecipeCraftingContextPool.borrowCtx(recipe, ctrl);
     }
 
     public void mergeFrom(DynamicMachine another) {

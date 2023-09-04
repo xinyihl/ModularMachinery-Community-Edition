@@ -1,7 +1,7 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
+import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
-import github.kasuminova.mmce.common.itemtype.IngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentIngredientArray;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeIngredientArray;
@@ -10,7 +10,7 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.IOInventory;
+import hellfirepvp.modularmachinery.common.util.IItemHandlerImpl;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
@@ -19,10 +19,17 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
-    public final List<ChancedIngredientStack> itemArray;
+public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements
+        ComponentRequirement.ChancedRequirement,
+        ComponentRequirement.Parallelizable,
+        ComponentRequirement.MultiComponent {
+
+    public final List<ChancedIngredientStack> ingredients;
+
     public float chance = 1.0F;
+
     protected int parallelism = 1;
     protected boolean parallelizeUnaffected = false;
 
@@ -30,10 +37,10 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
      * <p>物品组输入，仅消耗组内的其中一个</p>
      * <p>**仅限输入**</p>
      */
-    public RequirementIngredientArray(List<ChancedIngredientStack> itemArray) {
+    public RequirementIngredientArray(List<ChancedIngredientStack> ingredients) {
         super(RequirementTypesMM.REQUIREMENT_INGREDIENT_ARRAY, IOType.INPUT);
 
-        this.itemArray = itemArray;
+        this.ingredients = ingredients;
     }
 
     @Override
@@ -44,110 +51,10 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                 cmp.ioType == actionType;
     }
 
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        IOInventory handler = (IOInventory) component.providedComponent;
-
-        for (ChancedIngredientStack stack : itemArray) {
-            float productionChance = RecipeModifier.applyModifiers(context, this, stack.chance, true) * this.chance;
-
-            switch (stack.ingredientType) {
-                case ITEMSTACK: {
-                    ItemStack copiedStack = stack.itemStack.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
-                    copiedStack.setCount(amt);
-
-                    if (stack.itemChecker != null) {
-                        if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.itemChecker, context.getMachineController())) {
-                            if (chance.canProduce(productionChance)) {
-                                return true;
-                            } else {
-                                return ItemUtils.consumeFromInventory(handler, copiedStack, false, stack.itemChecker, context.getMachineController());
-                            }
-                        }
-                    } else if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.tag)) {
-                        if (chance.canProduce(productionChance)) {
-                            return true;
-                        } else {
-                            return ItemUtils.consumeFromInventory(handler, copiedStack, false, stack.tag);
-                        }
-                    }
-                    break;
-                }
-                case ORE_DICT: {
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
-
-                    if (stack.itemChecker != null) {
-                        if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.itemChecker, context.getMachineController())) {
-                            if (chance.canProduce(productionChance)) {
-                                return true;
-                            } else {
-                                return ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, false, stack.itemChecker, context.getMachineController());
-                            }
-                        }
-                    } else if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
-                        if (chance.canProduce(productionChance)) {
-                            return true;
-                        } else {
-                            return ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, false, stack.tag);
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.skipComponent();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        IOInventory handler = (IOInventory) component.providedComponent;
-
-        for (IngredientStack stack : itemArray) {
-            switch (stack.ingredientType) {
-                case ITEMSTACK: {
-                    ItemStack copiedStack = stack.itemStack.copy();
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, copiedStack.getCount(), false)) * parallelism;
-                    copiedStack.setCount(amt);
-
-                    if (stack.itemChecker != null) {
-                        if (ItemUtils.consumeFromInventory(handler, copiedStack, true, stack.itemChecker, context.getMachineController())) {
-                            return CraftCheck.success();
-                        }
-                    } else if (ItemUtils.consumeFromInventory(handler, copiedStack, true, copiedStack.getTagCompound())) {
-                        return CraftCheck.success();
-                    }
-                    break;
-                }
-                case ORE_DICT: {
-                    int amt = Math.round(RecipeModifier.applyModifiers(context, this, stack.count, false)) * parallelism;
-
-                    if (stack.itemChecker != null) {
-                        if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.itemChecker, context.getMachineController())) {
-                            return CraftCheck.success();
-                        }
-                    } else if (ItemUtils.consumeFromInventoryOreDict(handler, stack.oreDictName, amt, true, stack.tag)) {
-                        return CraftCheck.success();
-                    }
-                    break;
-                }
-            }
-        }
-
-        return CraftCheck.failure("craftcheck.failure.item.input");
-    }
 
     @Override
     public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopy() {
-        RequirementIngredientArray copied = new RequirementIngredientArray(this.itemArray);
+        RequirementIngredientArray copied = new RequirementIngredientArray(this.ingredients);
         copied.setTag(getTag());
         copied.parallelizeUnaffected = this.parallelizeUnaffected;
         copied.triggerTime = this.triggerTime;
@@ -157,7 +64,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
 
     @Override
     public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopyModified(List<RecipeModifier> modifiers) {
-        ArrayList<ChancedIngredientStack> newArray = new ArrayList<>(this.itemArray);
+        ArrayList<ChancedIngredientStack> newArray = new ArrayList<>(this.ingredients);
         newArray.forEach(item -> {
             switch (item.ingredientType) {
                 case ITEMSTACK: {
@@ -180,14 +87,6 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
         return copied;
     }
 
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
     @Nonnull
     @Override
     public String getMissingComponentErrorMessage(IOType ioType) {
@@ -207,25 +106,100 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
     }
 
     @Override
-    public int maxParallelism(ProcessingComponent<?> component, RecipeCraftingContext context, int maxParallelism) {
-        if (parallelizeUnaffected) {
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            doItemIO(components, context);
+        }
+    }
+
+    @Override
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        return doItemIO(components, context);
+    }
+
+    @Override
+    public int getMaxParallelism(List<ProcessingComponent<?>> component, RecipeCraftingContext context, int maxParallelism) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
             return maxParallelism;
         }
-        IOInventory handler = (IOInventory) component.providedComponent;
-        for (ChancedIngredientStack ingredientStack : this.itemArray) {
-            switch (ingredientStack.ingredientType) {
-                case ITEMSTACK: {
-                    ItemStack stack = ItemUtils.copyStackWithSize(ingredientStack.itemStack, ingredientStack.count);
-                    stack.setCount(stack.getCount() * parallelism);
-                    return ItemUtils.maxInputParallelism(handler, stack, maxParallelism, ingredientStack.tag);
-                }
-                case ORE_DICT: {
-                    int amount = ingredientStack.count;
-                    return ItemUtils.maxInputParallelism(handler, ingredientStack.oreDictName, amount, maxParallelism, ingredientStack.tag);
-                }
-            }
+
+        return doItemIOInternal(component, context, maxParallelism);
+    }
+
+    @Override
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return ItemUtils.copyItemHandlerComponents(components);
+    }
+
+    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
+        int mul = doItemIOInternal(components, context, parallelism);
+        if (mul < parallelism) {
+            return CraftCheck.failure("craftcheck.failure.item.input");
         }
-        return maxParallelism;
+        return CraftCheck.success();
+    }
+
+    private int doItemIOInternal(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxMultiplier) {
+        List<IItemHandlerImpl> handlers = components.stream()
+                .map(component -> (IItemHandlerImpl) component.providedComponent)
+                .collect(Collectors.toList());
+
+        return consumeAllItems(handlers, context, maxMultiplier);
+    }
+
+    public int consumeAllItems(final List<IItemHandlerImpl> handlers,
+                               final RecipeCraftingContext context,
+                               final int maxMultiplier)
+    {
+        int totalConsumed = 0;
+
+        for (final ChancedIngredientStack ingredient : ingredients) {
+            int toConsume = Math.round(RecipeModifier.applyModifiers(context, this, ingredient.count, false));
+            int maxConsume = maxMultiplier - totalConsumed;
+            int consumed = 0;
+
+            AdvancedItemChecker checker;
+
+            switch (ingredient.ingredientType) {
+                case ITEMSTACK:
+                    checker = ingredient.itemChecker;
+                    ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
+
+                    for (final IItemHandlerImpl handler : handlers) {
+                        if (checker != null) {
+                            consumed += ItemUtils.consumeAll(
+                                    handler, stack, maxConsume - (consumed / toConsume), checker, context.getMachineController()) / toConsume;
+                        } else {
+                            consumed += ItemUtils.consumeAll(
+                                    handler, stack, maxConsume - (consumed / toConsume), ingredient.tag);
+                        }
+                        if (consumed >= maxConsume) {
+                            break;
+                        }
+                    }
+                    break;
+                case ORE_DICT:
+                    checker = ingredient.itemChecker;
+
+                    for (final IItemHandlerImpl handler : handlers) {
+                        if (checker != null) {
+                            consumed += ItemUtils.consumeAll(
+                                    handler, ingredient.oreDictName, toConsume, maxConsume - (consumed / toConsume), checker, context.getMachineController());
+                        } else {
+                            consumed += ItemUtils.consumeAll(
+                                    handler, ingredient.oreDictName, toConsume, maxConsume - (consumed / toConsume), ingredient.tag);
+                        }
+                        if (consumed >= maxConsume) {
+                            break;
+                        }
+                    }
+                    break;
+            }
+
+            totalConsumed += (consumed / toConsume);
+        }
+
+        return totalConsumed;
     }
 
     @Override
@@ -241,5 +215,32 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
+    }
+
+    // Noop
+
+    @Override
+    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
+    }
+
+    @Override
+    public void endRequirementCheck() {
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
+        return CraftCheck.success();
+    }
+
+    @Override
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return true;
+    }
+
+    @Override
+    @Nonnull
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        return CraftCheck.success();
     }
 }

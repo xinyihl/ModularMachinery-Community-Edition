@@ -14,7 +14,7 @@ public class RecipeFailureEvent extends RecipeEvent {
     private boolean destructRecipe;
 
     public RecipeFailureEvent(TileMultiblockMachineController controller, RecipeThread thread, String cause, boolean destructRecipe) {
-        super(controller, thread.getContext());
+        super(controller, thread, thread.getContext());
         this.cause = cause;
         this.destructRecipe = destructRecipe;
     }

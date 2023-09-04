@@ -65,7 +65,6 @@ public class ActiveMachineRecipe {
 
     public void reset() {
         this.tick = 0;
-        this.parallelism = 1;
         this.maxParallelism = 1;
         this.data = new NBTTagCompound();
     }
@@ -120,6 +119,30 @@ public class ActiveMachineRecipe {
         return this.tick >= totalTick;
     }
 
+    public RecipeCraftingContext.CraftingCheckResult canStartCrafting(RecipeCraftingContext context) {
+        calculateExtraParallelism(context);
+        return context.canStartCrafting();
+    }
+
+    public RecipeCraftingContext.CraftingCheckResult canRestartCrafting(RecipeCraftingContext context) {
+        calculateExtraParallelism(context);
+        return context.canRestartCrafting();
+    }
+
+    public void calculateExtraParallelism(final RecipeCraftingContext context) {
+        float totalTick = RecipeModifier.applyModifiers(
+                context, RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false);
+        if (totalTick < 0) {
+            this.totalTick = 1;
+        } else if (totalTick < 1) {
+            int extraParallelism = (int) (1F / totalTick);
+            this.maxParallelism *= extraParallelism;
+            this.totalTick = 1;
+        } else {
+            this.totalTick = Math.round(totalTick);
+        }
+    }
+
     public void start(RecipeCraftingContext context) {
         context.startCrafting();
         totalTick = Math.round(RecipeModifier.applyModifiers(
@@ -140,14 +163,14 @@ public class ActiveMachineRecipe {
         return tag;
     }
 
-    @ZenSetter("maxParallelism")
-    public void setMaxParallelism(int maxParallelism) {
-        this.maxParallelism = maxParallelism;
-    }
-
     @ZenGetter("maxParallelism")
     public int getMaxParallelism() {
         return maxParallelism;
+    }
+
+    @ZenSetter("maxParallelism")
+    public void setMaxParallelism(int maxParallelism) {
+        this.maxParallelism = maxParallelism;
     }
 
     @ZenGetter("parallelism")

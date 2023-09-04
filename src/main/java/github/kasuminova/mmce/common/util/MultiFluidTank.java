@@ -141,7 +141,7 @@ public class MultiFluidTank implements IFluidHandler {
         int totalDrainAmount = 0;
         for (int i = 0; i < contents.length; i++) {
             FluidStack content = contents[i];
-            if (content == null || content.isFluidEqual(res)) {
+            if (content == null || !content.isFluidEqual(res)) {
                 continue;
             }
 

@@ -13,7 +13,7 @@ public class ResultChanceCreateEvent extends RecipeEvent {
                                    final RecipeCraftingContext context,
                                    final ResultChance currentChance,
                                    final Phase phase) {
-        super(controller, context);
+        super(controller, null, context);
 
         this.resultChance = currentChance;
         this.phase = phase;

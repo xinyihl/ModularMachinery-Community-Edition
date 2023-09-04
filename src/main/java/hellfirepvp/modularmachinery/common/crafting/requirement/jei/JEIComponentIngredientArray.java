@@ -29,8 +29,8 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
 
     @Override
     public List<ItemStack> getJEIIORequirements() {
-        ArrayList<ItemStack> copiedItemArray = new ArrayList<>(requirement.itemArray.size());
-        for (ChancedIngredientStack stack : requirement.itemArray) {
+        ArrayList<ItemStack> copiedItemArray = new ArrayList<>(requirement.ingredients.size());
+        for (ChancedIngredientStack stack : requirement.ingredients) {
             switch (stack.ingredientType) {
                 case ITEMSTACK: {
                     ItemStack itemStack = stack.itemStack;
@@ -71,7 +71,7 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
     public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
         tooltip.add("");
         tooltip.add(I18n.format("tooltip.machinery.ingredient_array_input"));
-        for (ChancedIngredientStack stack : requirement.itemArray) {
+        for (ChancedIngredientStack stack : requirement.ingredients) {
             StringBuilder tooltipBuilder = new StringBuilder(10);
             switch (stack.ingredientType) {
                 case ITEMSTACK: {
