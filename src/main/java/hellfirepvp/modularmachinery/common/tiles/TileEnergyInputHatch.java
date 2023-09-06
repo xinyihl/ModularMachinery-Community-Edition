@@ -11,19 +11,17 @@ package hellfirepvp.modularmachinery.common.tiles;
 import com.brandon3055.draconicevolution.blocks.tileentity.TileEnergyStorageCore;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.prop.EnergyHatchData;
+import hellfirepvp.modularmachinery.common.integration.IntegrationIC2EventHandlerHelper;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
-import ic2.api.energy.event.EnergyTileLoadEvent;
-import ic2.api.energy.event.EnergyTileUnloadEvent;
 import ic2.api.energy.tile.IEnergyEmitter;
 import ic2.api.energy.tile.IEnergySink;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
@@ -64,7 +62,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
 
         if (!tickedOnce) {
             if (Mods.IC2.isPresent()) {
-                MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
+                IntegrationIC2EventHandlerHelper.onEnergyTileLoaded(this);
             }
             tickedOnce = true;
         }
@@ -99,18 +97,20 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     }
 
     @Override
+    @Optional.Method(modid = "ic2")
     public void invalidate() {
         super.invalidate();
         if (Mods.IC2.isPresent() && tickedOnce && !world.isRemote) {
-            MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
+            IntegrationIC2EventHandlerHelper.onEnergyTileUnLoaded(this);
         }
     }
 
     @Override
+    @Optional.Method(modid = "ic2")
     public void onChunkUnload() {
         super.onChunkUnload();
         if (Mods.IC2.isPresent() && tickedOnce && !world.isRemote) {
-            MinecraftForge.EVENT_BUS.post(new EnergyTileUnloadEvent(this));
+            IntegrationIC2EventHandlerHelper.onEnergyTileUnLoaded(this);
         }
     }
 

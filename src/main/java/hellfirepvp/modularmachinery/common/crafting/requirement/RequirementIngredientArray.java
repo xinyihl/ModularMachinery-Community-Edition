@@ -19,7 +19,6 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements
         ComponentRequirement.ChancedRequirement,
@@ -107,14 +106,12 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
 
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            doItemIO(components, context);
-        }
+        doItemIO(components, context, chance);
     }
 
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        return doItemIO(components, context);
+        return doItemIO(components, context, ResultChance.GUARANTEED);
     }
 
     @Override
@@ -123,7 +120,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             return maxParallelism;
         }
 
-        return doItemIOInternal(component, context, maxParallelism);
+        return doItemIOInternal(component, context, maxParallelism, ResultChance.GUARANTEED);
     }
 
     @Override
@@ -131,25 +128,28 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
         return ItemUtils.copyItemHandlerComponents(components);
     }
 
-    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
-        int mul = doItemIOInternal(components, context, parallelism);
+    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        int mul = doItemIOInternal(components, context, parallelism, chance);
         if (mul < parallelism) {
             return CraftCheck.failure("craftcheck.failure.item.input");
         }
         return CraftCheck.success();
     }
 
-    private int doItemIOInternal(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxMultiplier) {
-        List<IItemHandlerImpl> handlers = components.stream()
-                .map(component -> (IItemHandlerImpl) component.providedComponent)
-                .collect(Collectors.toList());
+    private int doItemIOInternal(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxMultiplier, ResultChance chance) {
+        List<IItemHandlerImpl> handlers = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.providedComponent;
+            handlers.add(providedComponent);
+        }
 
-        return consumeAllItems(handlers, context, maxMultiplier);
+        return consumeAllItems(handlers, context, maxMultiplier, chance);
     }
 
     public int consumeAllItems(final List<IItemHandlerImpl> handlers,
                                final RecipeCraftingContext context,
-                               final int maxMultiplier)
+                               final int maxMultiplier,
+                               final ResultChance chance)
     {
         int totalConsumed = 0;
 
@@ -164,6 +164,10 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                 case ITEMSTACK:
                     checker = ingredient.itemChecker;
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
+
+                    if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                        return maxMultiplier;
+                    }
 
                     for (final IItemHandlerImpl handler : handlers) {
                         if (checker != null) {
@@ -180,6 +184,10 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     break;
                 case ORE_DICT:
                     checker = ingredient.itemChecker;
+
+                    if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                        return maxMultiplier;
+                    }
 
                     for (final IItemHandlerImpl handler : handlers) {
                         if (checker != null) {

@@ -181,21 +181,21 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
         if (actionType == IOType.INPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            doItemIO(components, context, itemModifierList);
+            doItemIO(components, context, itemModifierList, chance);
         }
     }
 
     @Override
     public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.OUTPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            return doItemIO(components, context, itemModifierList);
+            return doItemIO(components, context, itemModifierList, chance);
         }
         return CraftCheck.skipComponent();
     }
 
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        return doItemIO(components, context, Collections.emptyList());
+        return doItemIO(components, context, Collections.emptyList(), ResultChance.GUARANTEED);
     }
 
     @Override
@@ -204,11 +204,11 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             return maxParallelism;
         }
 
-        return doItemIOInternal(components, context, maxParallelism, Collections.emptyList());
+        return doItemIOInternal(components, context, maxParallelism, Collections.emptyList(), ResultChance.GUARANTEED);
     }
 
-    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers) {
-        int mul = doItemIOInternal(components, context, parallelism, itemModifiers);
+    private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers, ResultChance chance) {
+        int mul = doItemIOInternal(components, context, parallelism, itemModifiers, chance);
         if (mul < parallelism) {
             switch (actionType) {
                 case INPUT:
@@ -223,7 +223,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     private int doItemIOInternal(final List<ProcessingComponent<?>> components,
                                  final RecipeCraftingContext context,
                                  final int maxMultiplier,
-                                 final List<AdvancedItemModifier> itemModifiers)
+                                 final List<AdvancedItemModifier> itemModifiers,
+                                 final ResultChance chance)
     {
         List<IItemHandlerImpl> handlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
@@ -233,20 +234,19 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
         switch (actionType) {
             case INPUT:
-                return consumeAllItems(handlers, context, maxMultiplier, itemModifiers);
+                return consumeAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
             case OUTPUT:
                 if (ignoreOutputCheck) {
-                    insertAllItems(handlers, context, maxMultiplier, itemModifiers);
+                    insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
                     return maxMultiplier;
                 }
-                return insertAllItems(handlers, context, maxMultiplier, itemModifiers);
+                return insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
         }
 
         return maxMultiplier;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         return ItemUtils.copyItemHandlerComponents(components);
     }
@@ -254,7 +254,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public int consumeAllItems(final List<IItemHandlerImpl> handlers,
                                final RecipeCraftingContext context,
                                final int maxMultiplier,
-                               final List<AdvancedItemModifier> itemModifiers)
+                               final List<AdvancedItemModifier> itemModifiers,
+                               final ResultChance chance)
     {
         int consumed = 0;
         int toConsume = 0;
@@ -290,6 +291,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 }
                 maxConsume = toConsume * maxMultiplier;
 
+                if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                    return maxMultiplier;
+                }
+
                 for (final IItemHandlerImpl handler : handlers) {
                     if (itemChecker != null) {
                         consumed += ItemUtils.consumeAll(
@@ -317,6 +322,11 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         return maxMultiplier;
                     }
                 }
+
+                if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                    return maxMultiplier;
+                }
+
                 maxConsume = toConsume * maxMultiplier;
 
                 for (final IItemHandlerImpl handler : handlers) {
@@ -341,7 +351,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public int insertAllItems(final List<IItemHandlerImpl> handlers,
                               final RecipeCraftingContext context,
                               final int maxMultiplier,
-                              final List<AdvancedItemModifier> itemModifiers)
+                              final List<AdvancedItemModifier> itemModifiers,
+                              final ResultChance chance)
     {
         if (fuelBurntime > 0 && oreDictName == null && required.isEmpty()) {
             throw new IllegalStateException("Invalid item output!");
@@ -383,6 +394,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 return maxMultiplier;
             }
             stack.setCount(1);
+        }
+
+        if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            return maxMultiplier;
         }
 
         int maxInsert = toInsert * maxMultiplier;

@@ -3,7 +3,7 @@ plugins {
     id 'wtf.gofancy.fancygradle' version '1.+'
 }
 
-version = "1.12.2-1.11.1-r45-dev"
+version = "1.12.2-1.11.1-r46-dev"
 group = "hellfirepvp.modularmachinery"
 
 repositories {
@@ -103,7 +103,7 @@ dependencies {
     implementation fg.deobf("curse.maven:draconicevolution-223565:3051542")
     implementation fg.deobf("curse.maven:the-one-probe-245211:2667280")
     implementation fg.deobf("curse.maven:Mekanism-268560:2835175")
-    implementation fg.deobf("curse.maven:industrialcraft-2-242638:3078604")
+    compileOnly fg.deobf("curse.maven:industrialcraft-2-242638:3078604")
     compileOnly fg.deobf("curse.maven:nuclearcraft-overhauled-336895:3862197")
     implementation fg.deobf("curse.maven:flux-networks-248020:3178199")
     compileOnly fg.deobf("curse.maven:tinkers-construct-74072:2902483")
