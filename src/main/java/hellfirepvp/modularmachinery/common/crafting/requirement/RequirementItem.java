@@ -180,14 +180,14 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        if (actionType == IOType.INPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+        if (actionType == IOType.INPUT) {
             doItemIO(components, context, itemModifierList, chance);
         }
     }
 
     @Override
     public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        if (actionType == IOType.OUTPUT && !chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+        if (actionType == IOType.OUTPUT) {
             return doItemIO(components, context, itemModifierList, chance);
         }
         return CraftCheck.skipComponent();
@@ -291,7 +291,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 }
                 maxConsume = toConsume * maxMultiplier;
 
-                if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                     return maxMultiplier;
                 }
 
@@ -323,7 +323,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                     }
                 }
 
-                if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                     return maxMultiplier;
                 }
 
@@ -396,7 +396,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
             stack.setCount(1);
         }
 
-        if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
             return maxMultiplier;
         }
 

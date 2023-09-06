@@ -165,7 +165,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                     checker = ingredient.itemChecker;
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
 
-                    if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                    if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                         return maxMultiplier;
                     }
 
@@ -185,7 +185,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                 case ORE_DICT:
                     checker = ingredient.itemChecker;
 
-                    if (!chance.canProduce(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+                    if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                         return maxMultiplier;
                     }
 

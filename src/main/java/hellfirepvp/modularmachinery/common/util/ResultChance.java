@@ -24,6 +24,10 @@ public class ResultChance {
         public boolean canProduce(float chance) {
             return true;
         }
+
+        public boolean canWork(float canWork) {
+            return true;
+        }
     };
 
     private final Random rand;
@@ -32,8 +36,26 @@ public class ResultChance {
         this.rand = new Random(seed);
     }
 
+    /**
+     * Wtf, why canProduce() return the true is not the *consume / produce*?
+     * TODO: Remove this.
+     *
+     * @deprecated Use {@link ResultChance#canWork(float)}
+     */
+    @Deprecated
     public boolean canProduce(float chance) {
         return chance <= rand.nextFloat();
+    }
+
+    public boolean canWork(float chance) {
+        if (chance >= 1.0F) {
+            return true;
+        }
+        if (chance <= 0.0F) {
+            return false;
+        }
+
+        return chance > rand.nextFloat();
     }
 
 }
