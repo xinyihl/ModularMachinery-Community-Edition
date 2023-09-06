@@ -161,14 +161,14 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        if (actionType == IOType.INPUT && !chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+        if (actionType == IOType.INPUT && chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
             doFluidGasIO(components, context);
         }
     }
 
     @Override
     public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        if (actionType == IOType.OUTPUT && !chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+        if (actionType == IOType.OUTPUT && chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
             return doFluidGasIO(components, context);
         }
         return CraftCheck.skipComponent();

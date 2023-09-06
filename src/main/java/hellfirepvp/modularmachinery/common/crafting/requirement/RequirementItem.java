@@ -332,10 +332,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 for (final IItemHandlerImpl handler : handlers) {
                     if (itemChecker != null) {
                         consumed += ItemUtils.consumeAll(
-                                handler, oreDictName, 1, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
+                                handler, oreDictName, oreDictItemAmount, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
                     } else {
                         consumed += ItemUtils.consumeAll(
-                                handler, oreDictName, 1, maxMultiplier - (consumed / toConsume), tag);
+                                handler, oreDictName, oreDictItemAmount, maxMultiplier - (consumed / toConsume), tag);
                     }
                     if (consumed >= maxConsume) {
                         break;

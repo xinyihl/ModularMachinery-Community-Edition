@@ -37,8 +37,8 @@ public class ResultChance {
     }
 
     /**
-     * Wtf, why canProduce() return the true is not the *consume / produce*?
-     * TODO: Remove this.
+     * <p>Wtf, why canProduce() return the true is not the *consume / produce*?</p>
+     * <p>TODO: Remove this.</p>
      *
      * @deprecated Use {@link ResultChance#canWork(float)}
      */
