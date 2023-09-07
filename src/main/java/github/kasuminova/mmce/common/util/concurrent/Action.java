@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.common.concurrent;
+package github.kasuminova.mmce.common.util.concurrent;
 
 import crafttweaker.annotations.ZenRegister;
 import stanhebben.zenscript.annotations.ZenClass;

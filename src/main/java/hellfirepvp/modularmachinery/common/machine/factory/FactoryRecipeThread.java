@@ -2,9 +2,8 @@ package hellfirepvp.modularmachinery.common.machine.factory;
 
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
-import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
-import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
+import github.kasuminova.mmce.common.util.concurrent.Action;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -15,7 +14,6 @@ import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
-import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
@@ -42,7 +40,6 @@ public class FactoryRecipeThread extends RecipeThread {
     private TileFactoryController factory;
     private boolean isCoreThread;
     private String threadName;
-    private FactoryRecipeSearchTask searchTask = null;
 
     public FactoryRecipeThread(TileFactoryController factory) {
         this(factory, false, "", Collections.emptySet(), Collections.emptyMap());
@@ -76,6 +73,11 @@ public class FactoryRecipeThread extends RecipeThread {
     }
 
     @Override
+    public void fireStartedEvent() {
+        factory.onThreadRecipeStart(this);
+    }
+
+    @Override
     public void fireFinishedEvent() {
         factory.onThreadRecipeFinished(this);
     }
@@ -94,47 +96,6 @@ public class FactoryRecipeThread extends RecipeThread {
             setContext(null);
             status = CraftingStatus.failure(result.getFirstErrorMessage(""));
             if (isCoreThread) {
-                createRecipeSearchTask();
-            }
-        }
-    }
-
-    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        RecipeCraftingContext context = factory.createContext(activeRecipe);
-        context.addModifier(semiPermanentModifiers.values());
-        context.addModifier(permanentModifiers.values());
-        return context;
-    }
-
-    public void searchAndStartRecipe() {
-        if (searchTask != null) {
-            if (!searchTask.isDone()) {
-                return;
-            }
-
-            RecipeCraftingContext context = null;
-            try {
-                context = searchTask.get();
-                status = searchTask.getStatus();
-            } catch (Exception e) {
-                ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
-            }
-            searchTask = null;
-
-            if (context == null) {
-                return;
-            }
-
-            if (context.canStartCrafting().isSuccess()) {
-                setContext(context);
-                this.activeRecipe = context.getActiveRecipe();
-                this.status = CraftingStatus.SUCCESS;
-                factory.onThreadRecipeStart(this);
-            } else {
-                RecipeCraftingContextPool.returnCtx(context);
-            }
-        } else {
-            if (factory.getTicksExisted() % factory.currentRecipeSearchDelay() == 0) {
                 createRecipeSearchTask();
             }
         }

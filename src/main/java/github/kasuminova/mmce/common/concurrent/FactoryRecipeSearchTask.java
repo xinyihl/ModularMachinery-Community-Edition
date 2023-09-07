@@ -35,7 +35,7 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
     }
 
     @Override
-    protected RecipeCraftingContext compute() {
+    protected RecipeCraftingContext computeTask() {
         filterRecipe();
 
         TileFactoryController factory = this.factory;
@@ -64,8 +64,8 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
                 highestValidity = recipe;
                 highestValidityResult = result;
                 validity = result.getValidity();
-                RecipeCraftingContextPool.returnCtx(context);
             }
+            RecipeCraftingContextPool.returnCtx(context);
         }
 
         if (highestValidity != null) {

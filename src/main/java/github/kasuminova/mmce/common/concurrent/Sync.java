@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.common.concurrent;
 
 import crafttweaker.annotations.ZenRegister;
+import github.kasuminova.mmce.common.util.concurrent.Action;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;

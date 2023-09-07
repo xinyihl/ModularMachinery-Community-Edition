@@ -1,13 +1,14 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import github.kasuminova.mmce.common.concurrent.FactoryRecipeSearchTask;
+import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
-import github.kasuminova.mmce.common.concurrent.SequentialTaskExecutor;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFinishEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeStartEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeTickEvent;
+import github.kasuminova.mmce.common.util.concurrent.SequentialTaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
@@ -33,7 +34,6 @@ import net.minecraftforge.common.util.Constants;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 
 public class TileFactoryController extends TileMultiblockMachineController {
@@ -68,7 +68,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
             if (!doStructureCheck() || !isStructureFormed()) {
                 return;
             }
@@ -96,7 +96,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
 
             onMachineTick(Phase.END);
-        }, usedTimeAvg());
+        }, timeRecorder.usedTimeAvg());
     }
 
     @Override
@@ -107,6 +107,14 @@ public class TileFactoryController extends TileMultiblockMachineController {
     @Override
     public void setControllerStatus(CraftingStatus status) {
         this.controllerStatus = status;
+    }
+
+    @Override
+    public int currentRecipeSearchDelay() {
+        if (coreRecipeThreads.isEmpty()) {
+            return super.currentRecipeSearchDelay();
+        }
+        return Math.min(20 + this.recipeResearchRetryCounter * Math.max(10 / coreRecipeThreads.size(), 1), 150);
     }
 
     /**
@@ -242,11 +250,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
             if (!task.isDone()) {
                 return;
             }
-            //并发检查
-            if (task.getCurrentMachine() != getFoundMachine()) {
-                searchTask = null;
-                return;
-            }
+
+            timeRecorder.addRecipeResearchUsedTime(searchTask.usedTime);
 
             RecipeCraftingContext context = null;
             try {
@@ -256,13 +261,14 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
 
             if (context != null) {
-                offerRecipe(context);
-                searchTask = null;
-
+                if (context.canStartCrafting().isSuccess()) {
+                    offerRecipe(context);
+                } else {
+                    RecipeCraftingContextPool.returnCtx(context);
+                }
                 if (hasIdleThread()) {
                     createRecipeSearchTask();
                 }
-                return;
             } else {
                 incrementRecipeSearchRetryCount();
                 CraftingStatus status = task.getStatus();
@@ -270,12 +276,8 @@ public class TileFactoryController extends TileMultiblockMachineController {
                     controllerStatus = status;
                 }
             }
-
             searchTask = null;
-            return;
-        }
-
-        if (this.ticksExisted % currentRecipeSearchDelay() == 0) {
+        } else if (this.ticksExisted % currentRecipeSearchDelay() == 0) {
             createRecipeSearchTask();
         }
     }
@@ -290,7 +292,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
         threadTask = new SequentialTaskExecutor(waitToExecute);
         waitToExecute.clear();
-        ForkJoinPool.commonPool().submit(threadTask);
+        ModularMachinery.EXECUTE_MANAGER.submitForkJoinTask(threadTask);
     }
 
     @Override
@@ -551,6 +553,19 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         compound.setInteger("totalParallelism", getMaxParallelism());
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        for (final FactoryRecipeThread thread : recipeThreadList) {
+            thread.invalidate();
+        }
+        recipeThreadList.clear();
+        for (final FactoryRecipeThread thread : coreRecipeThreads.values()) {
+            thread.invalidate();
+        }
+        coreRecipeThreads.clear();
     }
 
     @Nullable

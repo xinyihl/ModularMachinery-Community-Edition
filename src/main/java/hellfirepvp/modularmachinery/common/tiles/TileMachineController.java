@@ -65,7 +65,7 @@ public class TileMachineController extends TileMultiblockMachineController {
             return;
         }
 
-        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addParallelAsyncTask(() -> {
+        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
             if (!doStructureCheck() || !isStructureFormed()) {
                 return;
             }
@@ -84,7 +84,7 @@ public class TileMachineController extends TileMultiblockMachineController {
             }
 
             onMachineTick(Phase.END);
-        }, usedTimeAvg());
+        }, timeRecorder.usedTimeAvg());
     }
 
     protected boolean doRecipeTick() {
@@ -186,6 +186,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         new RecipeStartEvent(this, recipeThread).postEvent();
         ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
         activeRecipe.start(recipeThread.getContext());
+        resetRecipeSearchRetryCount();
     }
 
     /**
@@ -225,6 +226,12 @@ public class TileMachineController extends TileMultiblockMachineController {
                 break;
             }
         }
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        recipeThread.invalidate();
     }
 
     @Override

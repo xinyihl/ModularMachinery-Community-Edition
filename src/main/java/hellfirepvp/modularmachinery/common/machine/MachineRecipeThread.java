@@ -1,7 +1,6 @@
 package hellfirepvp.modularmachinery.common.machine;
 
 import crafttweaker.annotations.ZenRegister;
-import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.concurrent.RecipeSearchTask;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -10,7 +9,6 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
-import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
@@ -18,17 +16,20 @@ import stanhebben.zenscript.annotations.ZenClass;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineRecipeThread")
 public class MachineRecipeThread extends RecipeThread {
     private final TileMachineController controller;
-    private RecipeSearchTask searchTask = null;
 
     public MachineRecipeThread(TileMachineController ctrl) {
         super(ctrl);
         this.controller = ctrl;
+    }
+
+    @Override
+    public void fireStartedEvent() {
+        controller.onStart();
     }
 
     @Override
@@ -54,46 +55,6 @@ public class MachineRecipeThread extends RecipeThread {
         }
     }
 
-    @Override
-    public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {
-        return controller.createContext(activeRecipe);
-    }
-
-    @Override
-    public void searchAndStartRecipe() {
-        if (searchTask != null) {
-            if (!searchTask.isDone()) {
-                return;
-            }
-
-            RecipeCraftingContext context = null;
-            try {
-                context = searchTask.get();
-                status = searchTask.getStatus();
-            } catch (Exception e) {
-                ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
-            }
-            searchTask = null;
-
-            if (context == null) {
-                return;
-            }
-
-            if (context.canStartCrafting().isSuccess()) {
-                setContext(context);
-                this.activeRecipe = context.getActiveRecipe();
-                this.status = CraftingStatus.SUCCESS;
-                controller.onStart();
-            } else {
-                RecipeCraftingContextPool.returnCtx(context);
-            }
-        } else {
-            if (ctrl.getTicksExisted() % controller.currentRecipeSearchDelay() == 0) {
-                createRecipeSearchTask();
-            }
-        }
-    }
-
     protected void createRecipeSearchTask() {
         TileMachineController controller = this.controller;
         assert controller.getFoundMachine() != null;
@@ -103,7 +64,7 @@ public class MachineRecipeThread extends RecipeThread {
                 controller.getFoundMachine(),
                 controller.getMaxParallelism(),
                 RecipeRegistry.getRecipesFor(controller.getFoundMachine()));
-        ForkJoinPool.commonPool().submit(searchTask);
+        ModularMachinery.EXECUTE_MANAGER.submitForkJoinTask(searchTask);
     }
 
     public NBTTagCompound serialize(NBTTagCompound tag) {

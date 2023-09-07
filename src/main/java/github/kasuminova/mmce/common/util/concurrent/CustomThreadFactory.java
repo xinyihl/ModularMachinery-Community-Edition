@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.common.concurrent;
+package github.kasuminova.mmce.common.util.concurrent;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.ThreadFactory;

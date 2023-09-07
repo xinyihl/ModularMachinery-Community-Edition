@@ -6,14 +6,17 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
-import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class RecipeCraftingContextPool {
-    private static final Map<ResourceLocation, Queue<WeakReference<RecipeCraftingContext>>> POOL = new ConcurrentHashMap<>();
+    private static final Map<ResourceLocation, Queue<RecipeCraftingContext>> POOL = new ConcurrentHashMap<>();
+    private static final AtomicLong CREATED_CONTEXTS = new AtomicLong(0);
+    private static final AtomicLong CACHE_HIT_COUNT = new AtomicLong(0);
+    private static final AtomicLong CACHE_RECYCLED_COUNT = new AtomicLong(0);
 
     private static int reloadCounter = 0;
 
@@ -22,27 +25,20 @@ public class RecipeCraftingContextPool {
                                                   @Nonnull final TileMultiblockMachineController ctrl)
     {
         if (POOL.isEmpty()) {
+            CREATED_CONTEXTS.incrementAndGet();
             return new RecipeCraftingContext(reloadCounter, activeRecipe, ctrl);
         }
 
-        Queue<WeakReference<RecipeCraftingContext>> queue = POOL.computeIfAbsent(
+        Queue<RecipeCraftingContext> queue = POOL.computeIfAbsent(
                 activeRecipe.getRecipe().getRegistryName(), q -> new ConcurrentLinkedQueue<>());
 
-        WeakReference<RecipeCraftingContext> polled;
-        while (!queue.isEmpty()) {
-            polled = queue.poll();
-            if (polled == null) {
-                continue;
-            }
-
-            RecipeCraftingContext ctx = polled.get();
-            if (ctx == null) {
-                continue;
-            }
-
+        RecipeCraftingContext ctx;
+        if ((ctx = queue.poll()) != null) {
+            CACHE_HIT_COUNT.incrementAndGet();
             return ctx.init(activeRecipe, ctrl);
         }
 
+        CREATED_CONTEXTS.incrementAndGet();
         return new RecipeCraftingContext(reloadCounter, activeRecipe, ctrl);
     }
 
@@ -51,14 +47,14 @@ public class RecipeCraftingContextPool {
             ctx.destroy();
             return;
         }
-
+        CACHE_RECYCLED_COUNT.incrementAndGet();
         POOL.computeIfAbsent(ctx.getParentRecipe().getRegistryName(), q -> new ConcurrentLinkedQueue<>())
-                .offer(new WeakReference<>(ctx.resetAll()));
+                .offer(ctx.resetAll());
     }
 
     public static long getPoolTotalSize() {
         long total = 0;
-        for (final Queue<WeakReference<RecipeCraftingContext>> queue : POOL.values()) {
+        for (final Queue<RecipeCraftingContext> queue : POOL.values()) {
             total += queue.size();
         }
         return total;
@@ -68,11 +64,23 @@ public class RecipeCraftingContextPool {
         return POOL.size();
     }
 
-    public static Map.Entry<ResourceLocation, Queue<WeakReference<RecipeCraftingContext>>> getMaxPoolSize() {
-        Map.Entry<ResourceLocation, Queue<WeakReference<RecipeCraftingContext>>> max = null;
+    public static long getCreatedContexts() {
+        return CREATED_CONTEXTS.get();
+    }
+
+    public static long getCacheHitCount() {
+        return CACHE_HIT_COUNT.get();
+    }
+
+    public static long getCacheRecycledCount() {
+        return CACHE_RECYCLED_COUNT.get();
+    }
+
+    public static Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> getMaxPoolSize() {
+        Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> max = null;
         long maxSize = 0;
 
-        for (final Map.Entry<ResourceLocation, Queue<WeakReference<RecipeCraftingContext>>> entry : POOL.entrySet()) {
+        for (final Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> entry : POOL.entrySet()) {
             int size = entry.getValue().size();
             if (size > maxSize) {
                 max = entry;
@@ -84,10 +92,13 @@ public class RecipeCraftingContextPool {
     }
 
     public static void clear() {
-        for (final Queue<WeakReference<RecipeCraftingContext>> queue : POOL.values()) {
+        for (final Queue<RecipeCraftingContext> queue : POOL.values()) {
             queue.clear();
         }
 
         reloadCounter++;
+        CREATED_CONTEXTS.set(0);
+        CACHE_HIT_COUNT.set(0);
+        CACHE_RECYCLED_COUNT.set(0);
     }
 }

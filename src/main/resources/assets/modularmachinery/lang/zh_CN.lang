@@ -15,7 +15,10 @@ command.modularmachinery.performance_report.reset=性能报告数据已重置。
 command.modularmachinery.performance_report.total_executed=已执行的任务数量: %s
 command.modularmachinery.performance_report.tasks_avg_per_execution=平均每次执行的任务数: %s
 command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext 池总大小: %s，池数量：%s
-command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext 最大配方池大小: %s
+command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext 最大配方池大小: %s，配方名：%s
+command.modularmachinery.performance_report.ctx_created=已创建的 RecipeCraftingContext 数量: %s
+command.modularmachinery.performance_report.ctx_cache_hit_count=RecipeCraftingContext 池缓存命中次数: %s
+command.modularmachinery.performance_report.ctx_cache_recycled_count=RecipeCraftingContext 回收入池的次数: %s
 
 command.modularmachinery.performance_report.total_used_time=总耗时: %s 毫秒
 command.modularmachinery.performance_report.used_time_avg_per_execution=每次执行平均耗时: %.2f 毫秒

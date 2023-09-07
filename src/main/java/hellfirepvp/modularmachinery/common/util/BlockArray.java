@@ -429,8 +429,10 @@ public class BlockArray {
     public static class BlockInformation {
 
         public static final int CYCLE_TICK_SPEED = 30;
-        public final List<IBlockStateDescriptor> matchingStates = new ArrayList<>();
-        private final List<IBlockState> samples = new ArrayList<>();
+        public List<IBlockStateDescriptor> matchingStates = new ArrayList<>();
+
+        private List<IBlockState> samples = new ArrayList<>();
+
         private boolean hasTileEntity;
         public NBTTagCompound matchingTag = null;
         public NBTTagCompound previewTag = null;
@@ -551,15 +553,32 @@ public class BlockArray {
         }
 
         public BlockInformation copyRotateYCCW() {
-            List<IBlockStateDescriptor> newDescriptors = new ArrayList<>(this.matchingStates.size());
+            List<IBlockStateDescriptor> newDescriptors = new ArrayList<>();
+
+            boolean noBlockCanRotated = true;
             for (IBlockStateDescriptor desc : this.matchingStates) {
                 IBlockStateDescriptor copy = new IBlockStateDescriptor();
                 for (IBlockState applicableState : desc.applicable) {
-                    copy.applicable.add(applicableState.withRotation(Rotation.COUNTERCLOCKWISE_90));
+                    IBlockState rotated = applicableState.withRotation(Rotation.COUNTERCLOCKWISE_90);
+                    if (rotated != applicableState) {
+                        noBlockCanRotated = false;
+                    }
+
+                    copy.applicable.add(rotated);
                 }
                 newDescriptors.add(copy);
             }
-            BlockInformation bi = new BlockInformation(newDescriptors);
+
+            BlockInformation bi;
+            if (noBlockCanRotated) {
+                bi = new BlockInformation(Collections.emptyList());
+                bi.matchingStates = this.matchingStates;
+                bi.samples = this.samples;
+                bi.hasTileEntity = this.hasTileEntity;
+            } else {
+                bi = new BlockInformation(newDescriptors);
+            }
+
             if (this.matchingTag != null) {
                 bi.matchingTag = this.matchingTag;
             }

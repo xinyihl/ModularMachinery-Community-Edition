@@ -1,4 +1,4 @@
-package github.kasuminova.mmce.common.concurrent;
+package github.kasuminova.mmce.common.util.concurrent;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
 import io.netty.util.internal.ThrowableUtil;

@@ -70,7 +70,7 @@ public class RecipeCraftingContext {
         this.reloadCounter = reloadCounter;
         this.activeRecipe = activeRecipe;
         for (ComponentRequirement<?, ?> craftingRequirement : getParentRecipe().getCraftingRequirements()) {
-            this.requirements.add(craftingRequirement.deepCopy());
+            this.requirements.add(this.requirements.size(), craftingRequirement.deepCopy());
         }
 
         init(activeRecipe, controller);
@@ -433,7 +433,6 @@ public class RecipeCraftingContext {
                                      final RequirementComponents reqComponent,
                                      final Map<IOType, Map<RequirementType<?, ?>, List<ProcessingComponent<?>>>> typeCopiedComp)
     {
-
         ComponentRequirement<?, ?> req = reqComponent.getRequirement();
         req.startRequirementCheck(ResultChance.GUARANTEED, this);
 

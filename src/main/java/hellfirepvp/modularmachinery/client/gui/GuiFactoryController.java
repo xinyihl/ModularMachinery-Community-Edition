@@ -10,6 +10,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
@@ -202,11 +203,17 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         int tmp = offsetY;
         offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
-            if (tmp != offsetY) {
-                offsetY += 5;
-            }
+        if (tmp != offsetY) {
+            offsetY += 5;
+        }
 
-        fr.drawStringWithShadow(String.format("Avg: %sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
+        float usedTimeCache = TileMultiblockMachineController.usedTimeCache;
+        float searchUsedTimeCache = TileMultiblockMachineController.searchUsedTimeCache;
+        fr.drawStringWithShadow(String.format("Avg: %sμs/t (Search Avg: %sms)",
+                        usedTimeCache,
+                        MiscUtils.formatFloat(searchUsedTimeCache / 1000F, 2)),
+                offsetX, offsetY, 0xFFFFFF
+        );
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();

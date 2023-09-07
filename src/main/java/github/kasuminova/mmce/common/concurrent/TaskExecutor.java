@@ -1,5 +1,9 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import github.kasuminova.mmce.common.util.concurrent.Action;
+import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
+import github.kasuminova.mmce.common.util.concurrent.CustomForkJoinWorkerThreadFactory;
+import github.kasuminova.mmce.common.util.concurrent.CustomThreadFactory;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import io.netty.util.internal.ThrowableUtil;
@@ -9,10 +13,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.ArrayList;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
 /**
@@ -22,18 +23,26 @@ import java.util.concurrent.locks.LockSupport;
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.min(Math.max(Runtime.getRuntime().availableProcessors() / 4, 4), 8);
 
-    private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(
-            4, THREAD_COUNT, 5000, TimeUnit.MILLISECONDS,
+    private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(4, THREAD_COUNT,
+            5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
+
+    private static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(THREAD_COUNT,
+            new CustomForkJoinWorkerThreadFactory("MMCE-ForkJoinPool-worker-%s"),
+            null, true);
 
     public static long totalExecuted = 0;
     public static long taskUsedTime = 0;
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
 
-    private final ArrayList<ActionExecutor> submitted = new ArrayList<>();
+    private final MpscLinkedAtomicQueue<ActionExecutor> submitted = new MpscLinkedAtomicQueue<>();
+
     private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
+
+    private final MpscLinkedAtomicQueue<ForkJoinTask<?>> forkJoinTasks = new MpscLinkedAtomicQueue<>();
+
     private final MpscLinkedAtomicQueue<Action> mainThreadActions = new MpscLinkedAtomicQueue<>();
     private final MpscLinkedAtomicQueue<TileEntitySynchronized> requireUpdateTEQueue = new MpscLinkedAtomicQueue<>();
     private final TaskSubmitter submitter = new TaskSubmitter();
@@ -114,7 +123,8 @@ public class TaskExecutor {
     private int spinAwaitActionExecutor() {
         int executed = 0;
 
-        for (ActionExecutor executor : submitted) {
+        ActionExecutor executor;
+        while ((executor = submitted.poll()) != null) {
             // Spin up while completing the operation in the queue.
             while (!executor.isCompleted) {
                 executed += executeMainThreadActions();
@@ -125,7 +135,6 @@ public class TaskExecutor {
             taskUsedTime += executor.usedTime;
             executed++;
         }
-        submitted.clear();
         return executed;
     }
 
@@ -141,26 +150,33 @@ public class TaskExecutor {
     }
 
     /**
-     * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
+     * <p>添加一个异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
      * @param action 要执行的异步任务
      */
-    public ActionExecutor addParallelAsyncTask(final Action action) {
-        return addParallelAsyncTask(action, 0);
+    public ActionExecutor addTask(final Action action) {
+        return addTask(action, 0);
     }
 
     /**
-     * <p>添加一个并行异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
+     * <p>添加一个异步操作引用，这个操作必定在本 Tick 结束前执行完毕。</p>
      *
      * @param action   要执行的异步任务
      * @param priority 优先级
      */
-    public ActionExecutor addParallelAsyncTask(final Action action, final int priority) {
+    public ActionExecutor addTask(final Action action, final int priority) {
         ActionExecutor actionExecutor = new ActionExecutor(action, priority);
         executors.offer(actionExecutor);
 
         return actionExecutor;
     }
+
+    public <T> ForkJoinTask<T> submitForkJoinTask(final ForkJoinTask<T> task) {
+        forkJoinTasks.offer(task);
+        return task;
+    }
+
+
 
     /**
      * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在<strong>主线程</strong>中顺序执行。</p>
@@ -179,7 +195,12 @@ public class TaskExecutor {
         ActionExecutor executor;
         while ((executor = executors.poll()) != null) {
             THREAD_POOL.execute(executor);
-            submitted.add(executor);
+            submitted.offer(executor);
+        }
+
+        ForkJoinTask<?> forkJoinTask;
+        while ((forkJoinTask = forkJoinTasks.poll()) != null) {
+            FORK_JOIN_POOL.submit(forkJoinTask);
         }
     }
 

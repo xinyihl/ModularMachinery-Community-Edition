@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common;
 
 import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
-import github.kasuminova.mmce.common.concurrent.Action;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import github.kasuminova.mmce.common.container.ContainerMEFluidInputBus;
 import github.kasuminova.mmce.common.container.ContainerMEFluidOutputBus;
@@ -23,6 +22,7 @@ import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
+import github.kasuminova.mmce.common.util.concurrent.Action;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;

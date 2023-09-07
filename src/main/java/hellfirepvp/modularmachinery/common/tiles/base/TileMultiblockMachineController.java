@@ -5,7 +5,6 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
-import github.kasuminova.mmce.common.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
@@ -16,6 +15,8 @@ import github.kasuminova.mmce.common.helper.IMachineController;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
+import github.kasuminova.mmce.common.util.TimeRecorder;
+import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -69,28 +70,39 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
-    public static int performanceCache = 0;
+
+    public static int usedTimeCache = 0;
+    public static int searchUsedTimeCache = 0;
+
     protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
     protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
+
     protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
     protected final Map<String, List<MachineUpgrade>> foundUpgrades = new ConcurrentHashMap<>();
     protected final List<TileUpgradeBus.UpgradeBusProvider> foundUpgradeBuses = new ArrayList<>();
     protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
     protected final List<ProcessingComponent<?>> foundComponents = new CopyOnWriteArrayList<>();
+
+    protected final TimeRecorder timeRecorder = new TimeRecorder();
+
     protected EnumFacing controllerRotation = null;
     protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
+
     protected IOInventory inventory;
+
     protected NBTTagCompound customData = new NBTTagCompound();
+
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
-    protected Map<String, DynamicPattern.Status> foundDynamicPatterns = new HashMap<>();
     protected TaggedPositionBlockArray foundPattern = null;
+
+    protected Map<String, DynamicPattern.Status> foundDynamicPatterns = new HashMap<>();
     protected ActionExecutor tickExecutor = null;
-    protected LinkedList<Integer> usedTimeList = new LinkedList<>();
-    protected int usedTimeCache = 0;
+
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
-    protected int lastStrongPower = 0;
+
+    protected int lastStrongPower = -1;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -131,14 +143,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (getWorld().isRemote) {
             return;
         }
-        updateUsedTime();
+        timeRecorder.updateUsedTime(tickExecutor);
 
         final long tickStart = System.nanoTime();
 
         // Controller Tick
         doControllerTick();
 
-        incrementUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
+        timeRecorder.incrementUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
     }
 
     public abstract void doControllerTick();
@@ -148,36 +160,26 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected int getStrongPower() {
-        if (ticksExisted % 20 == 0) {
+        if (ticksExisted % 20 == 0 || lastStrongPower == -1) {
             lastStrongPower = getWorld().getStrongPower(getPos());
         }
         return lastStrongPower;
     }
 
-    protected void updateUsedTime() {
-        addUsedTime(tickExecutor == null ? 0 : tickExecutor.usedTime);
-    }
-
-    protected void incrementUsedTime(int add) {
-        usedTimeCache += add;
-        Integer first = usedTimeList.getFirst();
-        if (first != null) {
-            usedTimeList.set(0, first + add);
-        } else {
-            usedTimeList.addFirst(add);
-        }
-    }
-
-    protected void addUsedTime(int time) {
-        usedTimeCache += time;
-        usedTimeList.addFirst(time);
-        if (usedTimeList.size() > 100) {
-            usedTimeCache -= usedTimeList.pollLast();
-        }
+    protected void addRecipeResearchUsedTime(int time) {
+        timeRecorder.addRecipeResearchUsedTime(time);
     }
 
     public int usedTimeAvg() {
-        return usedTimeCache / usedTimeList.size();
+        return timeRecorder.usedTimeAvg();
+    }
+
+    public int recipeSearchUsedTimeAvg() {
+        return timeRecorder.recipeSearchUsedTimeAvg();
+    }
+
+    public TimeRecorder getTimeRecorder() {
+        return timeRecorder;
     }
 
     public int getMaxParallelism() {
@@ -235,9 +237,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return ticksExisted % structureCheckDelay == 0;
         }
         if (isStructureFormed()) {
-            return ticksExisted % Math.min(structureCheckDelay + currentRecipeSearchDelay(), maxStructureCheckDelay - structureCheckDelay) == 0;
+            return ticksExisted % Math.min(structureCheckDelay + currentRecipeSearchDelay(), maxStructureCheckDelay) == 0;
         } else {
-            return ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay - structureCheckDelay) == 0;
+            return ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0;
         }
     }
 
@@ -411,8 +413,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (foundPattern == null) {
             return;
         }
+        final long start = System.nanoTime() / 1000;
+
         foundPattern.getPattern().forEach((pos, blockInfo) -> {
-            final long start = System.nanoTime() / 1000;
 
             if (!blockInfo.hasStatedMachineComponent()) {
                 return;
@@ -428,9 +431,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             getWorld().setBlockState(realPos, blockState.withProperty(
                     BlockStatedMachineComponent.WORKING_STATE,
                     working ? WorkingState.WORKING : WorkingState.IDLE));
-
-            addUsedTime((int) (System.nanoTime() / 1000 - start));
         });
+
+        timeRecorder.addUsedTime((int) (System.nanoTime() / 1000 - start));
     }
 
     public RecipeCraftingContext createContext(ActiveMachineRecipe activeRecipe) {

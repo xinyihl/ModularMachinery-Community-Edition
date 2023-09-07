@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
@@ -153,7 +154,13 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
             }
         }
 
-        fr.drawStringWithShadow(String.format("Avg: %sμs/t", TileMultiblockMachineController.performanceCache), offsetX, offsetY, 0xFFFFFF);
+        float usedTimeCache = TileMultiblockMachineController.usedTimeCache;
+        float searchUsedTimeCache = TileMultiblockMachineController.searchUsedTimeCache;
+        fr.drawStringWithShadow(String.format("Avg: %sμs/t (Search Avg: %sms)",
+                        usedTimeCache,
+                        MiscUtils.formatFloat(searchUsedTimeCache / 1000F, 2)),
+                offsetX, offsetY, 0xFFFFFF
+        );
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();

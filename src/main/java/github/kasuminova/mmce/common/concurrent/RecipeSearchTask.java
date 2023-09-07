@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import github.kasuminova.mmce.common.util.concurrent.TimeRecordingTask;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
@@ -7,9 +8,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 
-import java.util.concurrent.RecursiveTask;
-
-public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
+public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
     protected final TileMultiblockMachineController controller;
     protected final DynamicMachine currentMachine;
     protected final int maxParallelism;
@@ -24,7 +23,7 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
     }
 
     @Override
-    protected RecipeCraftingContext compute() {
+    protected RecipeCraftingContext computeTask() {
         DynamicMachine foundMachine = controller.getFoundMachine();
         if (foundMachine == null) return null;
 
@@ -49,8 +48,8 @@ public class RecipeSearchTask extends RecursiveTask<RecipeCraftingContext> {
                 highestValidity = recipe;
                 highestValidityResult = result;
                 validity = result.getValidity();
-                RecipeCraftingContextPool.returnCtx(context);
             }
+            RecipeCraftingContextPool.returnCtx(context);
         }
 
         if (highestValidity != null) {
