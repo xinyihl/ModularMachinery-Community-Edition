@@ -11,8 +11,9 @@ public class ContainerMEItemOutputBus extends AEBaseContainer {
 
     public ContainerMEItemOutputBus(final MEItemOutputBus owner, final EntityPlayer player) {
         super(player.inventory, owner);
-
         this.owner = owner;
+
+        this.bindPlayerInventory(getInventoryPlayer(), 0, 195 - /* height of player inventory */ 82);
 
         IItemHandlerModifiable guiAccess = this.owner.getInternalInventory().asGUIAccess();
         for (int y = 0; y < 4; y++) {
@@ -20,8 +21,6 @@ public class ContainerMEItemOutputBus extends AEBaseContainer {
                 this.addSlotToContainer(new SlotDisabled(guiAccess, y * 9 + x, 8 + 18 * x, 24 + 18 * y));
             }
         }
-
-        this.bindPlayerInventory(getInventoryPlayer(), 0, 195 - /* height of player inventory */ 82);
     }
 
     public MEItemOutputBus getOwner() {

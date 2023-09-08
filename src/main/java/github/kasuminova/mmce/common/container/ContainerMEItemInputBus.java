@@ -14,6 +14,8 @@ public class ContainerMEItemInputBus extends AEBaseContainer {
         super(player.inventory, owner);
         this.owner = owner;
 
+        this.bindPlayerInventory(getInventoryPlayer(), 0, 195 - /* height of player inventory */ 72);
+
         IItemHandlerModifiable config = this.owner.getConfigInventory().asGUIAccess();
         for (int y = 0; y < 4; y++) {
             for (int x = 0; x < 4; x++) {
@@ -29,8 +31,6 @@ public class ContainerMEItemInputBus extends AEBaseContainer {
                         y * 4 + x, 90 + 8 + 18 * x, 35 + 18 * y));
             }
         }
-
-        this.bindPlayerInventory(getInventoryPlayer(), 0, 195 - /* height of player inventory */ 72);
     }
 
     public MEItemInputBus getOwner() {

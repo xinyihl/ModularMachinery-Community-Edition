@@ -48,27 +48,25 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
                            @Nonnull final BlockPos pos,
                            @Nonnull final IBlockState state)
     {
-        ItemStack dropped = new ItemStack(ItemsMM.meItemOutputBus);
 
         TileEntity te = worldIn.getTileEntity(pos);
 
         if (te == null) {
-            spawnAsEntity(worldIn, pos, dropped);
+            super.breakBlock(worldIn, pos, state);
             return;
         }
         if (!(te instanceof MEItemOutputBus)) {
-            spawnAsEntity(worldIn, pos, dropped);
-            worldIn.removeTileEntity(pos);
+            super.breakBlock(worldIn, pos, state);
             return;
         }
 
         MEItemOutputBus bus = (MEItemOutputBus) te;
         if (!bus.hasItem()) {
-            spawnAsEntity(worldIn, pos, dropped);
-            worldIn.removeTileEntity(pos);
+            super.breakBlock(worldIn, pos, state);
             return;
         }
 
+        ItemStack dropped = new ItemStack(ItemsMM.meItemOutputBus);
         IOInventory inventory = bus.getInternalInventory();
         NBTTagCompound tag = new NBTTagCompound();
         tag.setTag("inventory", inventory.writeNBT());
@@ -81,10 +79,6 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
         spawnAsEntity(worldIn, pos, dropped);
 
         worldIn.removeTileEntity(pos);
-    }
-
-    @Override
-    public void dropBlockAsItemWithChance(@Nonnull final World worldIn, @Nonnull final BlockPos pos, @Nonnull final IBlockState state, final float chance, final int fortune) {
     }
 
     @Override

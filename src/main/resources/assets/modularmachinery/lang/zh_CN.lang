@@ -70,6 +70,7 @@ gui.meiteminputbus.inv_action.increase=滚轮向上滚动时，按 %s 组合键�
 gui.meiteminputbus.inv_action.decrease=滚轮向下滚动时，按 %s 组合键减少 %s 个物品数量。
 gui.meiteminputbus.items_marked=已标记物品：%s
 gui.meitembus.item_cached=已缓存物品: %s
+gui.meitembus.nbt_stored=内部已存储物品。
 
 gui.mefluidoutputbus.title=ME 机械流体输出总线
 gui.mefluidinputbus.title=ME 机械流体输入总线

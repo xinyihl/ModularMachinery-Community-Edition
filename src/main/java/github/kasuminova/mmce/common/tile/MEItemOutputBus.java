@@ -97,16 +97,6 @@ public class MEItemOutputBus extends MEItemBus {
         return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
 
-    public boolean hasItem() {
-        for (int i = 0; i < inventory.getSlots(); i++) {
-            ItemStack stack = inventory.getStackInSlot(i);
-            if (!stack.isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public void markForUpdate() {
         if (proxy.isActive() && hasItem()) {

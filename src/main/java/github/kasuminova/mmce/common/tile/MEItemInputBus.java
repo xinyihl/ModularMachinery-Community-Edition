@@ -57,7 +57,7 @@ public class MEItemInputBus extends MEItemBus {
         super.readCustomNBT(compound);
 
         if (compound.hasKey("configInventory")) {
-            readConfigInventoryNBT(compound);
+            readConfigInventoryNBT(compound.getCompoundTag("configInventory"));
         }
     }
 
@@ -221,8 +221,18 @@ public class MEItemInputBus extends MEItemBus {
         super.markForUpdate();
     }
 
-    private void readConfigInventoryNBT(final NBTTagCompound compound) {
-        configInventory = IOInventory.deserialize(this, compound.getCompoundTag("configInventory"));
+    public boolean configInvHasItem() {
+        for (int i = 0; i < configInventory.getSlots(); i++) {
+            ItemStack stack = configInventory.getStackInSlot(i);
+            if (!stack.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void readConfigInventoryNBT(final NBTTagCompound compound) {
+        configInventory = IOInventory.deserialize(this, compound);
 
         int[] slotIDs = new int[configInventory.getSlots()];
         for (int slotID = 0; slotID < slotIDs.length; slotID++) {

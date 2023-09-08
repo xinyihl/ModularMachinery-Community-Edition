@@ -20,7 +20,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.List;
 
 @SuppressWarnings("MethodMayBeStatic")
-public class MachineEventHandler {
+public class UpgradeEventHandler {
 
     @SubscribeEvent
     public void onMachineEvent(MachineEvent event) {
@@ -79,8 +79,12 @@ public class MachineEventHandler {
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void onItemTooltip(ItemTooltipEvent event) {
-        CapabilityUpgrade upgrade = event.getItemStack().getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
+    public void onUpgradeItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        if (!RegistryUpgrade.supportsUpgrade(stack)) {
+            return;
+        }
+        CapabilityUpgrade upgrade = stack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
         if (upgrade == null) {
             return;
         }

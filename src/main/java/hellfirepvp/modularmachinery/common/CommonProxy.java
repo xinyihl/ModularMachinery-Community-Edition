@@ -15,7 +15,7 @@ import github.kasuminova.mmce.common.container.ContainerMEFluidOutputBus;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
 import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.handler.EventHandler;
-import github.kasuminova.mmce.common.handler.MachineEventHandler;
+import github.kasuminova.mmce.common.handler.UpgradeEventHandler;
 import github.kasuminova.mmce.common.integration.ModIntegrationAE2;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
@@ -115,7 +115,7 @@ public class CommonProxy implements IGuiHandler {
 
         MinecraftForge.EVENT_BUS.register(AssemblyEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
-        MinecraftForge.EVENT_BUS.register(new MachineEventHandler());
+        MinecraftForge.EVENT_BUS.register(new UpgradeEventHandler());
         MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
 
         ModularMachinery.EXECUTE_MANAGER.init();

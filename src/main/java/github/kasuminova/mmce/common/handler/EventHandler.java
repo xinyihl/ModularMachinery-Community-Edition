@@ -5,20 +5,26 @@ import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.ContainerBase;
+import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SuppressWarnings("MethodMayBeStatic")
 public class EventHandler {
@@ -94,6 +100,20 @@ public class EventHandler {
                 }
             }
         });
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public void onMEItemBusItemTooltip(ItemTooltipEvent event) {
+        ItemStack stack = event.getItemStack();
+        Item item = stack.getItem();
+        if (item != ItemsMM.meItemInputBus && item != ItemsMM.meItemOutputBus) {
+            return;
+        }
+
+        if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("inventory")) {
+            event.getToolTip().add(I18n.format("gui.meitembus.nbt_stored"));
+        }
     }
 
     private static boolean checkTERange(final EntityPlayer player, final TileEntity te) {

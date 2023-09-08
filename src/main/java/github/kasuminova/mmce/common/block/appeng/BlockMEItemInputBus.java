@@ -3,8 +3,13 @@ package github.kasuminova.mmce.common.block.appeng;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
+import hellfirepvp.modularmachinery.common.lib.ItemsMM;
+import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -37,4 +42,64 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
         return new MEItemInputBus();
     }
 
+    @Override
+    public void breakBlock(final World worldIn,
+                           @Nonnull final BlockPos pos,
+                           @Nonnull final IBlockState state)
+    {
+        TileEntity te = worldIn.getTileEntity(pos);
+
+        if (te == null) {
+            super.breakBlock(worldIn, pos, state);
+            return;
+        }
+        if (!(te instanceof MEItemInputBus)) {
+            super.breakBlock(worldIn, pos, state);
+            return;
+        }
+
+        MEItemInputBus bus = (MEItemInputBus) te;
+        if (!bus.hasItem() && !bus.configInvHasItem()) {
+            super.breakBlock(worldIn, pos, state);
+            return;
+        }
+
+        ItemStack dropped = new ItemStack(ItemsMM.meItemInputBus);
+        IOInventory inventory = bus.getInternalInventory();
+        IOInventory cfgInventory = bus.getConfigInventory();
+
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setTag("inventory", inventory.writeNBT());
+        tag.setTag("configInventory", cfgInventory.writeNBT());
+
+        dropped.setTagCompound(tag);
+
+        for (int i = 0; i < inventory.getSlots(); i++) {
+            inventory.setStackInSlot(i, ItemStack.EMPTY);
+        }
+        for (int i = 0; i < cfgInventory.getSlots(); i++) {
+            cfgInventory.setStackInSlot(i, ItemStack.EMPTY);
+        }
+
+        spawnAsEntity(worldIn, pos, dropped);
+        worldIn.removeTileEntity(pos);
+    }
+
+    @Override
+    public void onBlockPlacedBy(@Nonnull final World worldIn,
+                                @Nonnull final BlockPos pos,
+                                @Nonnull final IBlockState state,
+                                @Nonnull final EntityLivingBase placer,
+                                @Nonnull final ItemStack stack)
+    {
+        super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+
+        TileEntity te = worldIn.getTileEntity(pos);
+        NBTTagCompound tag = stack.getTagCompound();
+        if (te instanceof MEItemInputBus && tag != null && tag.hasKey("inventory") && tag.hasKey("configInventory")) {
+            MEItemInputBus bus = (MEItemInputBus) te;
+            bus.readInventoryNBT(tag.getCompoundTag("inventory"));
+            bus.readConfigInventoryNBT(tag.getCompoundTag("configInventory"));
+        }
+    }
 }
