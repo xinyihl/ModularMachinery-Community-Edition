@@ -43,8 +43,18 @@ public abstract class MEItemBus extends MEMachineComponent {
         super.readCustomNBT(compound);
 
         if (compound.hasKey("inventory")) {
-            inventory = IOInventory.deserialize(this, compound.getCompoundTag("inventory"));
+            readInventoryNBT(compound.getCompoundTag("inventory"));
         }
+    }
+
+    public void readInventoryNBT(final NBTTagCompound tag) {
+        this.inventory = IOInventory.deserialize(this, tag);
+
+        int[] slotIDs = new int[inventory.getSlots()];
+        for (int slotID = 0; slotID < slotIDs.length; slotID++) {
+            slotIDs[slotID] = slotID;
+        }
+        inventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
     }
 
     @Override

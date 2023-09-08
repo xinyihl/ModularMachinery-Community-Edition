@@ -63,6 +63,14 @@ gui.upgradebus.incompatible=§e警告：%s 与此机械不兼容。
 
 gui.meitemoutputbus.title=ME 机械物品输出总线
 gui.meiteminputbus.title=ME 机械物品输入总线
+gui.meiteminputbus.inv_action=使用滚轮和 SHIFT, CONTROL, ALT 组合键来修改标记物品的数量。
+gui.meiteminputbus.inv_action.increase.normal=滚轮向上滚动增加 1 个物品数量。
+gui.meiteminputbus.inv_action.decrease.normal=滚轮向下滚动或右击物品减少 1 个物品数量。
+gui.meiteminputbus.inv_action.increase=滚轮向上滚动时，按 %s 组合键增加 %s 个物品数量。
+gui.meiteminputbus.inv_action.decrease=滚轮向下滚动时，按 %s 组合键减少 %s 个物品数量。
+gui.meiteminputbus.items_marked=已标记物品：%s
+gui.meitembus.item_cached=已缓存物品: %s
+
 gui.mefluidoutputbus.title=ME 机械流体输出总线
 gui.mefluidinputbus.title=ME 机械流体输入总线
 

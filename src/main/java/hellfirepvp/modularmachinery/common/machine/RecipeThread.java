@@ -18,6 +18,8 @@ import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeThread")
@@ -142,21 +144,22 @@ public abstract class RecipeThread {
         permanentModifiers.clear();
         semiPermanentModifiers.clear();
 
-        if (searchTask == null) {
+        if (searchTask == null || searchTask.isDone()) {
             return;
         }
 
-        ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
-            RecipeCraftingContext ctx;
-            try {
-                ctx = searchTask.get();
-                if (ctx != null) {
-                    RecipeCraftingContextPool.returnCtx(ctx);
-                }
-            } catch (Exception ignored) {
+        RecipeCraftingContext ctx;
+        try {
+            ctx = searchTask.get(100L, TimeUnit.MICROSECONDS);
+            if (ctx != null) {
+                RecipeCraftingContextPool.returnCtx(ctx);
             }
-            searchTask = null;
-        });
+        } catch (TimeoutException ex) {
+            ModularMachinery.log.warn("DIM: {} - {} controller is timeout to wait searchTask, discard search result.",
+                    ctrl.getWorld().getWorldInfo().getWorldName(), ctrl.getPos());
+        } catch (Exception ignored) {
+        }
+        searchTask = null;
     }
 
     protected abstract void createRecipeSearchTask();

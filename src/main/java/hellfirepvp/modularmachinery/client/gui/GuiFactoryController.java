@@ -207,7 +207,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             offsetY += 5;
         }
 
-        float usedTimeCache = TileMultiblockMachineController.usedTimeCache;
+        int usedTimeCache = TileMultiblockMachineController.usedTimeCache;
         float searchUsedTimeCache = TileMultiblockMachineController.searchUsedTimeCache;
         fr.drawStringWithShadow(String.format("Avg: %sμs/t (Search Avg: %sms)",
                         usedTimeCache,

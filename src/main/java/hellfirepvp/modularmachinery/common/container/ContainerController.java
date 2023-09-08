@@ -38,8 +38,9 @@ public class ContainerController extends ContainerBase<TileMachineController> {
                 TileMultiblockMachineController.BLUEPRINT_SLOT, 151, 8));
     }
 
+    @Nonnull
     @Override
-    public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
+    public ItemStack transferStackInSlot(@Nonnull EntityPlayer playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = this.inventorySlots.get(index);
 

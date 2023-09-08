@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nonnull;
+
 public class ContainerUpgradeBus extends ContainerBase<TileUpgradeBus> {
     public static final int SLOT_START_X = 8;
     public static final int SLOT_START_Y = 17;
@@ -43,8 +45,9 @@ public class ContainerUpgradeBus extends ContainerBase<TileUpgradeBus> {
         }
     }
 
+    @Nonnull
     @Override
-    public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
+    public ItemStack transferStackInSlot(@Nonnull EntityPlayer playerIn, int index) {
         ItemStack itemstack = ItemStack.EMPTY;
         Slot slot = this.inventorySlots.get(index);
 

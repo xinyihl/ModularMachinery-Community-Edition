@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import io.netty.util.collection.IntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IItemHandlerImpl implements IItemHandlerModifiable {
-    protected final Map<Integer, Integer> slotLimits; // Value not present means default, aka 64.
+    protected final Int2IntOpenHashMap slotLimits; // Value not present means default, aka 64.
     protected final Map<Integer, SlotStackHolder> inventory;
 
     public boolean allowAnySlots = false;
@@ -21,7 +22,8 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
     protected IItemHandlerImpl() {
         this.inventory = new IntObjectHashMap<>();
-        this.slotLimits = new IntObjectHashMap<>();
+        this.slotLimits = new Int2IntOpenHashMap();
+        this.slotLimits.defaultReturnValue(64);
     }
 
     public IItemHandlerImpl(int[] inSlots, int[] outSlots) {
@@ -33,7 +35,8 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         this.outSlots = outSlots;
 
         this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
-        this.slotLimits = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
+        this.slotLimits = new Int2IntOpenHashMap((inSlots.length + outSlots.length) * 2);
+        this.slotLimits.defaultReturnValue(64);
         for (int slot : inSlots) {
             this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
         }
@@ -48,7 +51,8 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         this.outSlots = outSlots;
 
         this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
-        this.slotLimits = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
+        this.slotLimits = new Int2IntOpenHashMap((inSlots.length + outSlots.length) * 2);
+        this.slotLimits.defaultReturnValue(64);
         for (int slot : inSlots) {
             this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
         }
@@ -66,6 +70,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
             SlotStackHolder holder = entry.getValue();
             copy.inventory.put(slot, holder.copy());
         }
+        copy.slotLimits.putAll(slotLimits);
         return copy;
     }
 
@@ -95,10 +100,15 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         return this;
     }
 
+    public IItemHandlerModifiable asGUIAccess() {
+        return new GuiAccess(this);
+    }
+
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        if (this.inventory.containsKey(slot)) {
-            this.inventory.get(slot).itemStack = stack;
+        SlotStackHolder holder = this.inventory.get(slot);
+        if (holder != null) {
+            holder.itemStack = stack;
         }
     }
 
@@ -109,16 +119,14 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
     @Override
     public int getSlotLimit(int slot) {
-        if (slotLimits.containsKey(slot)) {
-            return slotLimits.get(slot);
-        }
-        return 64;
+        return slotLimits.get(slot);
     }
 
     @Override
     @Nonnull
     public ItemStack getStackInSlot(int slot) {
-        return inventory.containsKey(slot) ? inventory.get(slot).itemStack : ItemStack.EMPTY;
+        SlotStackHolder holder = inventory.get(slot);
+        return holder != null ? holder.itemStack : ItemStack.EMPTY;
     }
 
     @Override
@@ -134,11 +142,11 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
                 return stack;
             }
         }
-        if (!this.inventory.containsKey(slot)) {
-            return stack; //Shouldn't happen anymore here tho
-        }
 
         IItemHandlerImpl.SlotStackHolder holder = this.inventory.get(slot);
+        if (holder == null) {
+            return stack; // Shouldn't happen anymore here tho
+        }
         ItemStack toInsert = ItemUtils.copyStackWithSize(stack, stack.getCount());
         if (!holder.itemStack.isEmpty()) {
             ItemStack existing = ItemUtils.copyStackWithSize(holder.itemStack, holder.itemStack.getCount());
@@ -189,10 +197,10 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
                 return ItemStack.EMPTY;
             }
         }
-        if (!this.inventory.containsKey(slot)) {
-            return ItemStack.EMPTY; //Shouldn't happen anymore here tho
-        }
         IItemHandlerImpl.SlotStackHolder holder = this.inventory.get(slot);
+        if (holder == null) {
+            return ItemStack.EMPTY; // Shouldn't happen anymore here tho
+        }
         if (holder.itemStack.isEmpty()) {
             return ItemStack.EMPTY;
         }
@@ -235,6 +243,60 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
                 copied.itemStack = itemStack.copy();
             }
             return copied;
+        }
+    }
+
+    public static class GuiAccess implements IItemHandlerModifiable {
+
+        private final IItemHandlerImpl inventory;
+
+        public GuiAccess(IItemHandlerImpl inventory) {
+            this.inventory = inventory;
+        }
+
+        @Override
+        public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
+            inventory.setStackInSlot(slot, stack);
+        }
+
+        @Override
+        public int getSlots() {
+            return inventory.getSlots();
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return inventory.getStackInSlot(slot);
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
+            boolean allowPrev = inventory.allowAnySlots;
+            inventory.allowAnySlots = true;
+
+            ItemStack insert = inventory.insertItem(slot, stack, simulate);
+
+            inventory.allowAnySlots = allowPrev;
+            return insert;
+        }
+
+        @Nonnull
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            boolean allowPrev = inventory.allowAnySlots;
+            inventory.allowAnySlots = true;
+
+            ItemStack extract = inventory.extractItem(slot, Math.min(amount, 64), simulate);
+
+            inventory.allowAnySlots = allowPrev;
+            return extract;
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return inventory.getSlotLimit(slot);
         }
     }
 }

@@ -83,10 +83,6 @@ public class IOInventory extends IItemHandlerImpl {
         return owner;
     }
 
-    public IItemHandlerModifiable asGUIAccess() {
-        return new GuiAccess(this);
-    }
-
     @Override
     public synchronized void setStackInSlot(int slot, @Nonnull ItemStack stack) {
         super.setStackInSlot(slot, stack);
@@ -181,10 +177,6 @@ public class IOInventory extends IItemHandlerImpl {
         }
     }
 
-    public boolean hasCapability(EnumFacing facing) {
-        return facing == null || accessibleSides.contains(facing);
-    }
-
     public IItemHandlerModifiable getCapability(EnumFacing facing) {
         if (hasCapability(facing)) {
             return this;
@@ -204,56 +196,6 @@ public class IOInventory extends IItemHandlerImpl {
         }
         f = f / (float) getSlots();
         return MathHelper.floor(f * 14.0F) + (i > 0 ? 1 : 0);
-    }
-
-    public static class GuiAccess implements IItemHandlerModifiable {
-
-        private final IOInventory inventory;
-
-        public GuiAccess(IOInventory inventory) {
-            this.inventory = inventory;
-        }
-
-        @Override
-        public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-            inventory.setStackInSlot(slot, stack);
-        }
-
-        @Override
-        public int getSlots() {
-            return inventory.getSlots();
-        }
-
-        @Nonnull
-        @Override
-        public ItemStack getStackInSlot(int slot) {
-            return inventory.getStackInSlot(slot);
-        }
-
-        @Nonnull
-        @Override
-        public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-            boolean allowPrev = inventory.allowAnySlots;
-            inventory.allowAnySlots = true;
-            ItemStack insert = inventory.insertItem(slot, stack, simulate);
-            inventory.allowAnySlots = allowPrev;
-            return insert;
-        }
-
-        @Nonnull
-        @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            boolean allowPrev = inventory.allowAnySlots;
-            inventory.allowAnySlots = true;
-            ItemStack extract = inventory.extractItem(slot, amount, simulate);
-            inventory.allowAnySlots = allowPrev;
-            return extract;
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return inventory.getSlotLimit(slot);
-        }
     }
 
 }

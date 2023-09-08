@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery;
 
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
+import github.kasuminova.mmce.common.network.PktMEInputBusInvAction;
 import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -86,6 +87,7 @@ public class ModularMachinery {
         NET_CHANNEL.registerMessage(PktInteractFluidTankGui.class, PktInteractFluidTankGui.class, 100, Side.SERVER);
         NET_CHANNEL.registerMessage(PktSmartInterfaceUpdate.class, PktSmartInterfaceUpdate.class, 101, Side.SERVER);
         NET_CHANNEL.registerMessage(PktParallelControllerUpdate.class, PktParallelControllerUpdate.class, 102, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktMEInputBusInvAction.class, PktMEInputBusInvAction.class, 103, Side.SERVER);
 
         proxy.loadModData(event.getModConfigurationDirectory());
 

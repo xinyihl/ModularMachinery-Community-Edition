@@ -25,12 +25,13 @@ public class MEItemInputBus extends MEItemBus {
     @Override
     public IOInventory buildInventory() {
         int size = 16;
-
         int[] slotIDs = new int[size];
         for (int slotID = 0; slotID < size; slotID++) {
             slotIDs[slotID] = slotID;
         }
-        return new IOInventory(this, slotIDs, new int[]{});
+        IOInventory inv = new IOInventory(this, slotIDs, new int[]{});
+        inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
+        return inv;
     }
 
     @Override
@@ -45,8 +46,10 @@ public class MEItemInputBus extends MEItemBus {
         for (int slotID = 0; slotID < size; slotID++) {
             slotIDs[slotID] = slotID;
         }
-
-        return (IOInventory) new IOInventory(this, new int[]{}, new int[]{}).setMiscSlots(slotIDs);
+        IOInventory inv = new IOInventory(this, new int[]{}, new int[]{});
+        inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
+        inv.setMiscSlots(slotIDs);
+        return inv;
     }
 
     @Override
@@ -54,7 +57,7 @@ public class MEItemInputBus extends MEItemBus {
         super.readCustomNBT(compound);
 
         if (compound.hasKey("configInventory")) {
-            configInventory = IOInventory.deserialize(this, compound.getCompoundTag("configInventory"));
+            readConfigInventoryNBT(compound);
         }
     }
 
@@ -216,5 +219,15 @@ public class MEItemInputBus extends MEItemBus {
         }
 
         super.markForUpdate();
+    }
+
+    private void readConfigInventoryNBT(final NBTTagCompound compound) {
+        configInventory = IOInventory.deserialize(this, compound.getCompoundTag("configInventory"));
+
+        int[] slotIDs = new int[configInventory.getSlots()];
+        for (int slotID = 0; slotID < slotIDs.length; slotID++) {
+            slotIDs[slotID] = slotID;
+        }
+        configInventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
     }
 }
