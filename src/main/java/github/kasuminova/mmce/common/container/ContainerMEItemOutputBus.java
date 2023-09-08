@@ -1,9 +1,10 @@
 package github.kasuminova.mmce.common.container;
 
 import appeng.container.AEBaseContainer;
-import appeng.container.slot.SlotNormal;
+import appeng.container.slot.SlotDisabled;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 public class ContainerMEItemOutputBus extends AEBaseContainer {
     private final MEItemOutputBus owner;
@@ -13,9 +14,10 @@ public class ContainerMEItemOutputBus extends AEBaseContainer {
 
         this.owner = owner;
 
+        IItemHandlerModifiable guiAccess = this.owner.getInternalInventory().asGUIAccess();
         for (int y = 0; y < 4; y++) {
             for (int x = 0; x < 9; x++) {
-                this.addSlotToContainer(new SlotNormal(this.owner.getInternalInventory().asGUIAccess(), y * 9 + x, 8 + 18 * x, 24 + 18 * y));
+                this.addSlotToContainer(new SlotDisabled(guiAccess, y * 9 + x, 8 + 18 * x, 24 + 18 * y));
             }
         }
 

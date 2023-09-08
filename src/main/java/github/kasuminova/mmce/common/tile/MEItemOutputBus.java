@@ -24,10 +24,12 @@ public class MEItemOutputBus extends MEItemBus {
         int size = 36;
 
         int[] slotIDs = new int[size];
-        for (int slotID = 0; slotID < size; slotID++) {
+        for (int slotID = 0; slotID < slotIDs.length; slotID++) {
             slotIDs[slotID] = slotID;
         }
-        return new IOInventory(this, new int[]{}, slotIDs);
+        IOInventory inv = new IOInventory(this, new int[]{}, slotIDs);
+        inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
+        return inv;
     }
 
     @Override
@@ -117,6 +119,4 @@ public class MEItemOutputBus extends MEItemBus {
 
         super.markForUpdate();
     }
-
-
 }

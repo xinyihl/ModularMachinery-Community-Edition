@@ -17,9 +17,11 @@ import javax.annotation.Nullable;
 public class BlockMEItemInputBus extends BlockMEItemBus {
     @Override
     public boolean onBlockActivated(
-            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state, @Nonnull EntityPlayer playerIn,
-            @Nonnull EnumHand hand, @Nonnull EnumFacing facing,
-            float hitX, float hitY, float hitZ) {
+            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
+            @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand,
+            @Nonnull EnumFacing facing,
+            float hitX, float hitY, float hitZ)
+    {
         if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
             if (te instanceof MEItemInputBus) {

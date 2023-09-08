@@ -157,7 +157,7 @@ public class ItemUtils {
 
     public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, itemChecker, controller);
-        if (toConsume.getCount() <= 0) {
+        if (toConsume.getCount() <= 0 || contents.isEmpty()) {
             return 0;
         }
         return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
@@ -165,7 +165,7 @@ public class ItemUtils {
 
     public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
-        if (toConsume.getCount() <= 0) {
+        if (toConsume.getCount() <= 0 || contents.isEmpty()) {
             return 0;
         }
         return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
@@ -173,7 +173,7 @@ public class ItemUtils {
 
     public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, itemChecker, controller);
-        if (amount <= 0) {
+        if (amount <= 0 || contents.isEmpty()) {
             return 0;
         }
         return consumeAllInternal(handler, contents, maxMultiplier * amount);
@@ -181,7 +181,7 @@ public class ItemUtils {
 
     public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
-        if (amount <= 0) {
+        if (amount <= 0 || contents.isEmpty()) {
             return 0;
         }
         return consumeAllInternal(handler, contents, maxMultiplier * amount);

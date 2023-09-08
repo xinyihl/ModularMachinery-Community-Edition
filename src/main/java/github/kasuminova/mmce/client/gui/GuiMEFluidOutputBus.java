@@ -8,6 +8,7 @@ import appeng.fluids.util.IAEFluidTank;
 import github.kasuminova.mmce.common.container.ContainerMEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -23,7 +24,6 @@ public class GuiMEFluidOutputBus extends GuiUpgradeable {
         this.ySize = 204;
     }
 
-    @SuppressWarnings("ConstantValue")
     @Override
     public void initGui() {
         super.initGui();
@@ -35,7 +35,7 @@ public class GuiMEFluidOutputBus extends GuiUpgradeable {
                     8 + 18 * i, 26, 16, 68);
 
             // AE2 Unofficial Extended Life Check
-            if (GuiCustomSlot.class.isInstance(guiTank)) {
+            if (Mods.AE2EL.isPresent()) {
                 this.guiSlots.add(GuiCustomSlot.class.cast(guiTank));
             } else {
                 guiTank.x += getGuiLeft();
