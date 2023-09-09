@@ -114,7 +114,7 @@ public class BlockArrayCache {
             BlockArray rotated = blockArray;
             EnumFacing rotatedFacing = EnumFacing.NORTH;
             if (facing == EnumFacing.UP || facing == EnumFacing.DOWN) {
-                buildHorizontalPatternCache(blockArray, facing);
+//                buildHorizontalPatternCache(blockArray, facing);
                 continue;
             }
 

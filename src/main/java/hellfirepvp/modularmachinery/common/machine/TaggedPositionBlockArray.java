@@ -29,7 +29,7 @@ import java.util.Map;
 @ZenRegister
 @ZenClass("mods.modularmachinery.TaggedPositionBlockArray")
 public class TaggedPositionBlockArray extends BlockArray {
-    private final Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
+    private Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
 
     public TaggedPositionBlockArray() {
     }
@@ -57,15 +57,23 @@ public class TaggedPositionBlockArray extends BlockArray {
     }
 
     @Override
+    public void overwrite(final BlockArray other) {
+        super.overwrite(other);
+        if (other instanceof TaggedPositionBlockArray) {
+            this.taggedPositions = new HashMap<>(((TaggedPositionBlockArray) other).taggedPositions);
+        }
+    }
+
+    @Override
     public TaggedPositionBlockArray rotateYCCW() {
         TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
 
-        Map<BlockPos, BlockInformation> outPattern = out.pattern;
-        for (BlockPos pos : pattern.keySet()) {
-            outPattern.put(MiscUtils.rotateYCCW(pos), pattern.get(pos).copyRotateYCCW());
+        for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
+            out.pattern.put(MiscUtils.rotateYCCW(entry.getKey()), entry.getValue().copyRotateYCCW());
         }
-        for (BlockPos pos : taggedPositions.keySet()) {
-            out.taggedPositions.put(MiscUtils.rotateYCCW(pos), taggedPositions.get(pos));
+
+        for (final Map.Entry<BlockPos, ComponentSelectorTag> entry : taggedPositions.entrySet()) {
+            out.taggedPositions.put(MiscUtils.rotateYCCW(entry.getKey()), entry.getValue());
         }
 
         return out;

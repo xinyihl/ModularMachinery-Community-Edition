@@ -125,11 +125,17 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
         if (i != 0) {
             final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
             final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-            this.mouseWheelEvent(x, y, i / Math.abs(i));
+            this.onMouseWheelEvent(x, y, i / Math.abs(i));
         }
     }
 
+    /**
+     * Override AE2EL mouseWheelEvent() to prevent SHIFT = 11.
+     */
     protected void mouseWheelEvent(final int x, final int y, final int wheel) {
+    }
+
+    protected void onMouseWheelEvent(final int x, final int y, final int wheel) {
         final Slot slot = this.getSlot(x, y);
         if (slot instanceof SlotFake) {
             final ItemStack stack = slot.getStack();
