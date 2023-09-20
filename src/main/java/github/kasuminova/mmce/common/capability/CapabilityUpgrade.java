@@ -37,7 +37,6 @@ public class CapabilityUpgrade {
 
             @Override
             public void readNBT(final Capability<CapabilityUpgrade> capability, final CapabilityUpgrade instance, final EnumFacing side, final NBTBase nbt) {
-
                 instance.readNBT((NBTTagCompound) nbt);
             }
         }, CapabilityUpgrade::new);

@@ -11,12 +11,14 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
+import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -30,7 +32,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.IntStream;
 
-public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineComponentTile {
+public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineComponentTile, SelectiveUpdateTileEntity {
     private final UpgradeBusProvider provider = new UpgradeBusProvider();
     private final Map<BlockPos, DynamicMachine> boundedMachine = new HashMap<>();
     private NBTTagCompound upgradeCustomData = new NBTTagCompound();
@@ -62,12 +64,11 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             DynamicMachine machine = entry.getValue();
 
             TileEntity te = world.getTileEntity(key);
-            if (!(te instanceof TileMultiblockMachineController)) {
+            if (!(te instanceof final TileMultiblockMachineController controller)) {
                 it.remove();
                 continue;
             }
 
-            TileMultiblockMachineController controller = (TileMultiblockMachineController) te;
             if (!machine.equals(controller.getFoundMachine())) {
                 it.remove();
             }
@@ -147,6 +148,16 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             });
             compound.setTag("boundedMachine", tagList);
         }
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getUpdatePacket() {
+        return null;
+    }
+
+    @Override
+    public SPacketUpdateTileEntity getTrueUpdatePacket() {
+        return super.getUpdatePacket();
     }
 
     public class UpgradeBusProvider extends MachineComponent<UpgradeBusProvider> {

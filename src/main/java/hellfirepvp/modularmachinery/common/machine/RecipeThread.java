@@ -150,7 +150,7 @@ public abstract class RecipeThread {
 
         RecipeCraftingContext ctx;
         try {
-            ctx = searchTask.get(100L, TimeUnit.MICROSECONDS);
+            ctx = searchTask.get(50L, TimeUnit.MICROSECONDS);
             if (ctx != null) {
                 RecipeCraftingContextPool.returnCtx(ctx);
             }

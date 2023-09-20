@@ -96,7 +96,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ENERGY) &&
                 cmp.getContainerProvider() instanceof IEnergyHandler &&
                 cmp instanceof MachineComponent.EnergyHatch &&
@@ -128,8 +128,8 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
             ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component,
-                    new IEnergyHandlerImpl((IEnergyHandler) component.providedComponent),
+                    (MachineComponent<Object>) component.component(),
+                    new IEnergyHandlerImpl((IEnergyHandler) component.getProvidedComponent()),
                     component.getTag());
             list.add(objectProcessingComponent);
         }
@@ -158,12 +158,10 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     {
         float mul = doEnergyIOInternal(components, context, parallelism * durationMultiplier);
         if (mul < parallelism) {
-            switch (actionType) {
-                case INPUT:
-                    return CraftCheck.failure("craftcheck.failure.energy.input");
-                case OUTPUT:
-                    return CraftCheck.failure("craftcheck.failure.energy.output.space");
-            }
+            return switch (actionType) {
+                case INPUT -> CraftCheck.failure("craftcheck.failure.energy.input");
+                case OUTPUT -> CraftCheck.failure("craftcheck.failure.energy.output.space");
+            };
         }
         return CraftCheck.success();
     }
@@ -177,7 +175,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
         List<IEnergyHandler> handlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            IEnergyHandler providedComponent = (IEnergyHandler) component.providedComponent;
+            IEnergyHandler providedComponent = (IEnergyHandler) component.getProvidedComponent();
             handlers.add(providedComponent);
         }
 
@@ -187,22 +185,22 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     private float consumeOrInsertEnergy(final List<IEnergyHandler> handlers, double total, final long required, final float multiplier) {
         double maxRequired = total;
         switch (actionType) {
-            case INPUT:
+            case INPUT -> {
                 for (final IEnergyHandler handler : handlers) {
                     long current = handler.getCurrentEnergy();
                     long toConsume = (long) Math.min(current, maxRequired);
                     handler.setCurrentEnergy(current - toConsume);
                     maxRequired -= toConsume;
                 }
-                break;
-            case OUTPUT:
+            }
+            case OUTPUT -> {
                 for (final IEnergyHandler handler : handlers) {
                     long remaining = handler.getRemainingCapacity();
                     long toReceive = (long) Math.min(remaining, maxRequired);
                     handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
                     maxRequired -= toReceive;
                 }
-                break;
+            }
         }
 
         if (maxRequired > 0) {

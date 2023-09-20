@@ -102,7 +102,7 @@ public class SingleBlockModifierReplacement extends AbstractModifierReplacement 
             }
 
             if (!part.has("modifier") && !part.has("modifiers")) {
-                throw new JsonParseException("'modifiers' tag not found!");
+                throw new JsonParseException("'modifiers' getTag not found!");
             }
             JsonElement elementModifiers = part.has("modifier") ? part.get("modifier") : part.get("modifiers");
             List<RecipeModifier> modifiers = Lists.newArrayList();
@@ -118,7 +118,7 @@ public class SingleBlockModifierReplacement extends AbstractModifierReplacement 
                     modifiers.add(context.deserialize(modifierElement, RecipeModifier.class));
                 }
             } else {
-                throw new JsonParseException("'modifiers' tag needs to be either a single modifier object or an array of modifier objects!");
+                throw new JsonParseException("'modifiers' getTag needs to be either a single modifier object or an array of modifier objects!");
             }
 
 

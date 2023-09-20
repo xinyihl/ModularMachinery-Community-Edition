@@ -26,8 +26,7 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
     @Override
     public boolean canAddEnergy(@Nonnull TileEntity tile, EnumFacing side) {
-        if (tile instanceof TileEnergyHatch) {
-            TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
+        if (tile instanceof final TileEnergyHatch energyHatch) {
             return energyHatch.canReceive();
         }
         return false;
@@ -35,8 +34,7 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
     @Override
     public boolean canRemoveEnergy(@Nonnull TileEntity tile, EnumFacing side) {
-        if (tile instanceof TileEnergyHatch) {
-            TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
+        if (tile instanceof final TileEnergyHatch energyHatch) {
             return energyHatch.canExtract();
         }
         return false;
@@ -44,11 +42,10 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
     @Override
     public long addEnergy(long amount, @Nonnull TileEntity tile, EnumFacing side, boolean simulate) {
-        if (!(tile instanceof TileEnergyHatch)) {
+        if (!(tile instanceof final TileEnergyHatch energyHatch)) {
             return 0;
         }
 
-        TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
         long remainingCapacity = energyHatch.getRemainingCapacity();
         long transferLimit = Math.min(energyHatch.getTier().transferLimit, remainingCapacity);
         if (simulate) {
@@ -64,11 +61,10 @@ public class MMEnergyHandler implements ITileEnergyHandler {
 
     @Override
     public long removeEnergy(long amount, @Nonnull TileEntity tile, EnumFacing side) {
-        if (!(tile instanceof TileEnergyHatch)) {
+        if (!(tile instanceof final TileEnergyHatch energyHatch)) {
             return 0;
         }
 
-        TileEnergyHatch energyHatch = (TileEnergyHatch) tile;
         long currentEnergy = energyHatch.getCurrentEnergy();
         long transferLimit = Math.min(energyHatch.getTier().transferLimit, currentEnergy);
 

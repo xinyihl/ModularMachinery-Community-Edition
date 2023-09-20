@@ -28,20 +28,13 @@ public class NBTJsonSerializer {
     public static String serializeNBT(NBTBase nbtBase) {
         StringBuilder sb = new StringBuilder();
         switch (nbtBase.getId()) {
-            case Constants.NBT.TAG_BYTE:
-            case Constants.NBT.TAG_SHORT:
-            case Constants.NBT.TAG_INT:
-            case Constants.NBT.TAG_LONG:
-            case Constants.NBT.TAG_FLOAT:
-            case Constants.NBT.TAG_DOUBLE: {
+            case Constants.NBT.TAG_BYTE, Constants.NBT.TAG_SHORT, Constants.NBT.TAG_INT, Constants.NBT.TAG_LONG, Constants.NBT.TAG_FLOAT, Constants.NBT.TAG_DOUBLE -> {
                 sb.append(NBTTagString.quoteAndEscape(nbtBase.toString()));
-                break;
             }
-            case Constants.NBT.TAG_STRING: {
+            case Constants.NBT.TAG_STRING -> {
                 sb.append(nbtBase);
-                break;
             }
-            case Constants.NBT.TAG_LIST: {
+            case Constants.NBT.TAG_LIST -> {
                 StringBuilder stringbuilder = new StringBuilder("[");
                 NBTTagList listTag = (NBTTagList) nbtBase;
 
@@ -53,9 +46,8 @@ public class NBTJsonSerializer {
                     stringbuilder.append(serializeNBT(listTag.get(i)));
                 }
                 sb.append(stringbuilder.append(']'));
-                break;
             }
-            case Constants.NBT.TAG_COMPOUND: {
+            case Constants.NBT.TAG_COMPOUND -> {
                 StringBuilder stringbuilder = new StringBuilder("{");
                 NBTTagCompound cmpTag = (NBTTagCompound) nbtBase;
                 Set<String> collection = cmpTag.getKeySet();
@@ -69,7 +61,6 @@ public class NBTJsonSerializer {
                 }
 
                 sb.append(stringbuilder.append('}'));
-                break;
             }
         }
         return sb.toString();

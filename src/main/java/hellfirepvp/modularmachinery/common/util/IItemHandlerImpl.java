@@ -1,76 +1,67 @@
 package hellfirepvp.modularmachinery.common.util;
 
-import io.netty.util.collection.IntObjectHashMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class IItemHandlerImpl implements IItemHandlerModifiable {
-    protected final Int2IntOpenHashMap slotLimits; // Value not present means default, aka 64.
-    protected final Map<Integer, SlotStackHolder> inventory;
+    public static final int DEFAULT_SLOT_LIMIT = 64;
+
+    protected int[] slotLimits = {64}; // Value not present means default, aka 64.
+    protected SlotStackHolder[] inventory = {new SlotStackHolder(0)};
 
     public boolean allowAnySlots = false;
-    public List<EnumFacing> accessibleSides = new ArrayList<>();
+    public EnumFacing[] accessibleSides = {};
     protected int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
 
     protected IItemHandlerImpl() {
-        this.inventory = new IntObjectHashMap<>();
-        this.slotLimits = new Int2IntOpenHashMap();
-        this.slotLimits.defaultReturnValue(64);
     }
 
     public IItemHandlerImpl(int[] inSlots, int[] outSlots) {
         this(inSlots, outSlots, EnumFacing.VALUES);
     }
 
-    public IItemHandlerImpl(int[] inSlots, int[] outSlots, EnumFacing... accessibleFrom) {
+    public IItemHandlerImpl(int[] inSlots, int[] outSlots, EnumFacing[] accessibleFrom) {
         this.inSlots = inSlots;
         this.outSlots = outSlots;
 
-        this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
-        this.slotLimits = new Int2IntOpenHashMap((inSlots.length + outSlots.length) * 2);
-        this.slotLimits.defaultReturnValue(64);
-        for (int slot : inSlots) {
-            this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
-        }
-        for (int slot : outSlots) {
-            this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
-        }
-        this.accessibleSides = Arrays.asList(accessibleFrom);
-    }
+        int max = Math.max(getArrayMax(inSlots), getArrayMax(outSlots)) ;
+        this.inventory = new SlotStackHolder[max + 1];
+        this.slotLimits = new int[max + 1];
 
-    public IItemHandlerImpl(int[] inSlots, int[] outSlots, List<EnumFacing> accessibleFrom) {
-        this.inSlots = inSlots;
-        this.outSlots = outSlots;
-
-        this.inventory = new IntObjectHashMap<>((inSlots.length + outSlots.length) * 2);
-        this.slotLimits = new Int2IntOpenHashMap((inSlots.length + outSlots.length) * 2);
-        this.slotLimits.defaultReturnValue(64);
-        for (int slot : inSlots) {
-            this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
-        }
-        for (int slot : outSlots) {
-            this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
+        Arrays.fill(this.slotLimits, DEFAULT_SLOT_LIMIT);
+        for (int i = 0; i < inventory.length; i++) {
+            inventory[i] = new SlotStackHolder(i);
         }
 
-        this.accessibleSides = new ArrayList<>(accessibleFrom);
+        this.accessibleSides = accessibleFrom;
+        System.arraycopy(accessibleFrom, 0,  this.accessibleSides, 0, accessibleFrom.length);
     }
 
     public IItemHandlerImpl copy() {
         IItemHandlerImpl copy = new IItemHandlerImpl(inSlots, outSlots, accessibleSides);
-        for (Map.Entry<Integer, SlotStackHolder> entry : inventory.entrySet()) {
-            Integer slot = entry.getKey();
-            SlotStackHolder holder = entry.getValue();
-            copy.inventory.put(slot, holder.copy());
+        for (int i = 0; i < inventory.length; i++) {
+            copy.inventory[i] = inventory[i].copy();
         }
-        copy.slotLimits.putAll(slotLimits);
+        System.arraycopy(slotLimits, 0, copy.slotLimits, 0, slotLimits.length);
+        return copy;
+    }
+
+    public IItemHandlerImpl fastCopy() {
+        IItemHandlerImpl copy = new IItemHandlerImpl();
+        copy.inSlots = inSlots;
+        copy.outSlots = outSlots;
+        copy.miscSlots = miscSlots;
+
+        copy.inventory = new SlotStackHolder[inventory.length];
+        for (int i = 0; i < inventory.length; i++) {
+            copy.inventory[i] = inventory[i].fastCopy();
+        }
+
+        copy.slotLimits = slotLimits;
         return copy;
     }
 
@@ -87,15 +78,24 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
     public IItemHandlerImpl setMiscSlots(int... miscSlots) {
         this.miscSlots = miscSlots;
+
+        int max = getArrayMax(miscSlots);
+        checkSlotLimitsLength(max);
+        checkInventoryLength(max);
+
         for (int slot : miscSlots) {
-            this.inventory.put(slot, new IItemHandlerImpl.SlotStackHolder(slot));
+            this.inventory[slot] = new SlotStackHolder(slot);
         }
         return this;
     }
 
     public IItemHandlerImpl setStackLimit(int limit, int... slots) {
+        int max = getArrayMax(slots);
+        checkSlotLimitsLength(max);
+        checkInventoryLength(max);
+
         for (int slot : slots) {
-            this.slotLimits.put(slot, limit);
+            this.slotLimits[slot] = limit;
         }
         return this;
     }
@@ -106,26 +106,32 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
     @Override
     public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        SlotStackHolder holder = this.inventory.get(slot);
-        if (holder != null) {
-            holder.itemStack = stack;
+        if (slot <= -1 || slot >= inventory.length) {
+            return;
         }
+        this.inventory[slot].itemStack = stack;
     }
 
     @Override
     public int getSlots() {
-        return inventory.size();
+        return inventory.length;
     }
 
     @Override
     public int getSlotLimit(int slot) {
-        return slotLimits.get(slot);
+        if (slot < 0 || slot >= slotLimits.length) {
+            return DEFAULT_SLOT_LIMIT;
+        }
+        return slotLimits[slot];
     }
 
     @Override
     @Nonnull
     public ItemStack getStackInSlot(int slot) {
-        SlotStackHolder holder = inventory.get(slot);
+        if (slot < 0 || slot > inventory.length) {
+            return ItemStack.EMPTY;
+        }
+        SlotStackHolder holder = inventory[slot];
         return holder != null ? holder.itemStack : ItemStack.EMPTY;
     }
 
@@ -143,7 +149,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
             }
         }
 
-        IItemHandlerImpl.SlotStackHolder holder = this.inventory.get(slot);
+        IItemHandlerImpl.SlotStackHolder holder = this.inventory[slot];
         if (holder == null) {
             return stack; // Shouldn't happen anymore here tho
         }
@@ -197,7 +203,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
                 return ItemStack.EMPTY;
             }
         }
-        IItemHandlerImpl.SlotStackHolder holder = this.inventory.get(slot);
+        IItemHandlerImpl.SlotStackHolder holder = this.inventory[slot];
         if (holder == null) {
             return ItemStack.EMPTY; // Shouldn't happen anymore here tho
         }
@@ -216,7 +222,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
     }
 
     public boolean hasCapability(EnumFacing facing) {
-        return facing == null || accessibleSides.contains(facing);
+        return facing == null || Arrays.binarySearch(accessibleSides, facing) >= 0;
     }
 
     public IItemHandlerModifiable getCapability(EnumFacing facing) {
@@ -224,6 +230,42 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
             return this;
         }
         return null;
+    }
+
+    protected void checkSlotLimitsLength(final int max) {
+        int required = max + 1;
+        int invLength = slotLimits.length;
+        if (required > invLength) {
+            int[] tmp = new int[required];
+            Arrays.fill(tmp, invLength, max, DEFAULT_SLOT_LIMIT);
+            System.arraycopy(slotLimits, 0, tmp, 0, invLength);
+            this.slotLimits = tmp;
+        }
+    }
+
+    protected void checkInventoryLength(final int max) {
+        int required = max + 1;
+        int invLength = inventory.length;
+        if (required > invLength) {
+            SlotStackHolder[] tmp = new SlotStackHolder[required];
+            for (int i = invLength; i < max; i++) {
+                tmp[i] = new SlotStackHolder(i);
+            }
+            for (int i = 0; i < invLength; i++) {
+                tmp[i] = inventory[i].copy();
+            }
+            this.inventory = tmp;
+        }
+    }
+
+    protected static int getArrayMax(final int[] slots) {
+        int max = 0;
+        for (final int slot : slots) {
+            if (slot > max) {
+                max = slot;
+            }
+        }
+        return max;
     }
 
     protected static class SlotStackHolder {
@@ -241,6 +283,14 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
             SlotStackHolder copied = new SlotStackHolder(slotId);
             if (!itemStack.isEmpty()) {
                 copied.itemStack = itemStack.copy();
+            }
+            return copied;
+        }
+
+        public SlotStackHolder fastCopy() {
+            SlotStackHolder copied = new SlotStackHolder(slotId);
+            if (!itemStack.isEmpty()) {
+                copied.itemStack = itemStack;
             }
             return copied;
         }

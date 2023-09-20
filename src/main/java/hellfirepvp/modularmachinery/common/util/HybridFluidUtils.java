@@ -23,15 +23,13 @@ public class HybridFluidUtils {
             stack.amount = maxDrainOrFill - totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (maxDrainOrFill - totalIO);
 
             switch (actionType) {
-                case INPUT:
+                case INPUT -> {
                     FluidStack drained = handler.drain(stack, false);
                     if (drained != null) {
                         totalIO += drained.amount;
                     }
-                    break;
-                case OUTPUT:
-                    totalIO += handler.fill(stack, false);
-                    break;
+                }
+                case OUTPUT -> totalIO += handler.fill(stack, false);
             }
 
             if (totalIO >= maxDrainOrFill) {
@@ -50,15 +48,13 @@ public class HybridFluidUtils {
             stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
 
             switch (actionType) {
-                case INPUT:
+                case INPUT -> {
                     FluidStack drained = handler.drain(stack, true);
                     if (drained != null) {
                         totalIO -= drained.amount;
                     }
-                    break;
-                case OUTPUT:
-                    totalIO -= handler.fill(stack, true);
-                    break;
+                }
+                case OUTPUT -> totalIO -= handler.fill(stack, true);
             }
 
             if (totalIO <= 0) {
@@ -77,7 +73,7 @@ public class HybridFluidUtils {
 
             GasStack gas = handler.getGas();
             switch (actionType) {
-                case INPUT:
+                case INPUT -> {
                     if (!stack.isGasEqual(gas)) {
                         continue;
                     }
@@ -85,13 +81,13 @@ public class HybridFluidUtils {
                     if (drained != null) {
                         totalIO += drained.amount;
                     }
-                    break;
-                case OUTPUT:
+                }
+                case OUTPUT -> {
                     if (gas != null && !stack.isGasEqual(gas)) {
                         continue;
                     }
                     totalIO += handler.receiveGas(EnumFacing.UP, stack, false);
-                    break;
+                }
             }
 
             if (totalIO >= maxDrainOrFill) {
@@ -114,21 +110,21 @@ public class HybridFluidUtils {
             GasStack gas = handler.getGas();
 
             switch (actionType) {
-                case INPUT:
+                case INPUT -> {
                     if (!stack.isGasEqual(gas)) {
                         continue;
                     }
-                    GasStack drained = handler.drawGas(EnumFacing.UP, stack.amount, false);
+                    GasStack drained = handler.drawGas(EnumFacing.UP, stack.amount, true);
                     if (drained != null) {
                         totalIO -= drained.amount;
                     }
-                    break;
-                case OUTPUT:
+                }
+                case OUTPUT -> {
                     if (gas != null && !stack.isGasEqual(gas)) {
                         continue;
                     }
-                    totalIO -= handler.receiveGas(EnumFacing.UP, stack, false);
-                    break;
+                    totalIO -= handler.receiveGas(EnumFacing.UP, stack, true);
+                }
             }
 
             if (totalIO <= 0) {
@@ -141,7 +137,7 @@ public class HybridFluidUtils {
     public static List<IFluidHandler> castFluidHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<IFluidHandler> fluidHandlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            IFluidHandler providedComponent = (IFluidHandler) component.providedComponent;
+            IFluidHandler providedComponent = (IFluidHandler) component.getProvidedComponent();
             fluidHandlers.add(providedComponent);
         }
         return fluidHandlers;
@@ -151,9 +147,8 @@ public class HybridFluidUtils {
     public static List<HybridGasTank> castGasHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<HybridGasTank> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            Object providedComponent = component.providedComponent;
-            if (providedComponent instanceof HybridGasTank) {
-                HybridGasTank hybridGasTank = (HybridGasTank) providedComponent;
+            Object providedComponent = component.getProvidedComponent();
+            if (providedComponent instanceof final HybridGasTank hybridGasTank) {
                 list.add(hybridGasTank);
             }
         }
@@ -166,8 +161,8 @@ public class HybridFluidUtils {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
             ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component,
-                    new MultiFluidTank((IFluidHandler) component.providedComponent),
+                    (MachineComponent<Object>) component.component(),
+                    new MultiFluidTank((IFluidHandler) component.getProvidedComponent()),
                     component.getTag());
             list.add(objectProcessingComponent);
         }
@@ -179,12 +174,12 @@ public class HybridFluidUtils {
     public static List<ProcessingComponent<?>> copyGasHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            if (!(component.providedComponent instanceof HybridGasTank)) {
+            if (!(component.getProvidedComponent() instanceof HybridGasTank)) {
                 continue;
             }
             ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component,
-                    CopyHandlerHelper.copyGasTank((HybridGasTank) component.providedComponent),
+                    (MachineComponent<Object>) component.component(),
+                    CopyHandlerHelper.copyGasTank((HybridGasTank) component.getProvidedComponent()),
                     component.getTag());
             list.add(objectProcessingComponent);
         }

@@ -76,8 +76,7 @@ public class HybridStackHelper<T extends HybridFluid> implements IIngredientHelp
             if (!Iterables.isEmpty(ingredients)) {
                 GasStack toMatch = ((HybridFluidGas) ingredientToMatch).asGasStack();
                 for (T hybridFluid : ingredients) {
-                    if (hybridFluid instanceof HybridFluidGas) {
-                        HybridFluidGas hybridFluidGas = (HybridFluidGas) hybridFluid;
+                    if (hybridFluid instanceof final HybridFluidGas hybridFluidGas) {
                         if (hybridFluidGas.asGasStack().getGas() == toMatch.getGas()) { //Identical check to the GasStackHelper in mek
                             return (T) hybridFluidGas;
                         }

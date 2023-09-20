@@ -53,12 +53,11 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
             super.breakBlock(worldIn, pos, state);
             return;
         }
-        if (!(te instanceof MEItemInputBus)) {
+        if (!(te instanceof final MEItemInputBus bus)) {
             super.breakBlock(worldIn, pos, state);
             return;
         }
 
-        MEItemInputBus bus = (MEItemInputBus) te;
         if (!bus.hasItem() && !bus.configInvHasItem()) {
             super.breakBlock(worldIn, pos, state);
             return;
@@ -96,8 +95,7 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
 
         TileEntity te = worldIn.getTileEntity(pos);
         NBTTagCompound tag = stack.getTagCompound();
-        if (te instanceof MEItemInputBus && tag != null && tag.hasKey("inventory") && tag.hasKey("configInventory")) {
-            MEItemInputBus bus = (MEItemInputBus) te;
+        if (te instanceof final MEItemInputBus bus && tag != null && tag.hasKey("inventory") && tag.hasKey("configInventory")) {
             bus.readInventoryNBT(tag.getCompoundTag("inventory"));
             bus.readConfigInventoryNBT(tag.getCompoundTag("configInventory"));
         }

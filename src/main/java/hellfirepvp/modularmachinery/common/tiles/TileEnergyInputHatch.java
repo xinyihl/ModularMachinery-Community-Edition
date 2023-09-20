@@ -84,13 +84,12 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
     @Optional.Method(modid = "draconicevolution")
     protected long attemptDECoreTransfer(long maxCanReceive) {
         TileEntity te = foundCore == null ? null : world.getTileEntity(foundCore);
-        if (foundCore == null || !(te instanceof TileEnergyStorageCore)) {
+        if (foundCore == null || !(te instanceof final TileEnergyStorageCore core)) {
             foundCore = null;
             findCore();
             return 0;
         }
 
-        TileEnergyStorageCore core = (TileEnergyStorageCore) te;
         long received = Math.min(core.energy.value, maxCanReceive);
         core.energy.value -= received;
         return received;

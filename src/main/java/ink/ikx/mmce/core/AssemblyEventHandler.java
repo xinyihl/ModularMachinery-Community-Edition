@@ -50,11 +50,10 @@ public class AssemblyEventHandler {
             return;
         }
 
-        if (!(tileEntity instanceof TileMultiblockMachineController)) {
+        if (!(tileEntity instanceof final TileMultiblockMachineController controller)) {
             return;
         }
 
-        TileMultiblockMachineController controller = (TileMultiblockMachineController) tileEntity;
         if (stack.getItem().equals(ItemsMM.blueprint)) {
             if (getBlueprint(controller).isEmpty()) {
                 ItemStack copy = stack.copy();

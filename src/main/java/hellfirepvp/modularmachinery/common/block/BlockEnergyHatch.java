@@ -107,11 +107,6 @@ public abstract class BlockEnergyHatch extends BlockMachineComponent implements 
         return RedstoneHelper.getRedstoneLevel(worldIn.getTileEntity(pos));
     }
 
-    @Override
-    public boolean hasTileEntity(IBlockState state) {
-        return true;
-    }
-
     @Nullable
     @Override
     public abstract TileEntity createTileEntity(World world, IBlockState state);

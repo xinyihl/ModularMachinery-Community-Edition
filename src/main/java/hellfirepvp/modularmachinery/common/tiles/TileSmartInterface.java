@@ -92,10 +92,9 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
 
     public static void onDataUpdate(TileSmartInterface owner, SmartInterfaceData newData) {
         TileEntity te = owner.getWorld().getTileEntity(newData.getPos());
-        if (!(te instanceof TileMultiblockMachineController)) {
+        if (!(te instanceof final TileMultiblockMachineController ctrl)) {
             return;
         }
-        TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
         new SmartInterfaceUpdateEvent(ctrl, owner.getPos(), newData).postEvent();
     }
 

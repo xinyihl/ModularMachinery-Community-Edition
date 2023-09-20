@@ -44,7 +44,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ITEM) &&
                 cmp instanceof MachineComponent.ItemBus &&
                 cmp.ioType == actionType;
@@ -66,15 +66,13 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
         ArrayList<ChancedIngredientStack> newArray = new ArrayList<>(this.ingredients);
         newArray.forEach(item -> {
             switch (item.ingredientType) {
-                case ITEMSTACK: {
+                case ITEMSTACK -> {
                     ItemStack itemStack = item.itemStack;
                     int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, itemStack.getCount(), false));
                     itemStack.setCount(amt);
-                    break;
                 }
-                case ORE_DICT: {
+                case ORE_DICT -> {
                     item.count = Math.round(RecipeModifier.applyModifiers(modifiers, this, item.count, false));
-                    break;
                 }
             }
 
@@ -139,7 +137,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
     private int doItemIOInternal(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxMultiplier, ResultChance chance) {
         List<IItemHandlerImpl> handlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.providedComponent;
+            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.getProvidedComponent();
             handlers.add(providedComponent);
         }
 
@@ -161,14 +159,12 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
             AdvancedItemChecker checker;
 
             switch (ingredient.ingredientType) {
-                case ITEMSTACK:
+                case ITEMSTACK -> {
                     checker = ingredient.itemChecker;
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
-
                     if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                         return maxMultiplier;
                     }
-
                     for (final IItemHandlerImpl handler : handlers) {
                         if (checker != null) {
                             consumed += ItemUtils.consumeAll(
@@ -181,14 +177,12 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                             break;
                         }
                     }
-                    break;
-                case ORE_DICT:
+                }
+                case ORE_DICT -> {
                     checker = ingredient.itemChecker;
-
                     if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
                         return maxMultiplier;
                     }
-
                     for (final IItemHandlerImpl handler : handlers) {
                         if (checker != null) {
                             consumed += ItemUtils.consumeAll(
@@ -201,7 +195,7 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
                             break;
                         }
                     }
-                    break;
+                }
             }
 
             totalConsumed += (consumed / toConsume);

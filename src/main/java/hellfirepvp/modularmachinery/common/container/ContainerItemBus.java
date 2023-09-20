@@ -82,55 +82,53 @@ public class ContainerItemBus extends ContainerBase<TileItemBus> {
 
     private void addInventorySlots(IItemHandlerModifiable itemHandler, ItemBusSize size) {
         switch (size) {
-            case TINY:
-                addSlotToContainer(new SlotItemHandler(itemHandler, 0, 81, 30));
-                break;
-            case SMALL:
+            case TINY -> addSlotToContainer(new SlotItemHandler(itemHandler, 0, 81, 30));
+            case SMALL -> {
                 addSlotToContainer(new SlotItemHandler(itemHandler, 0, 70, 18));
                 addSlotToContainer(new SlotItemHandler(itemHandler, 1, 88, 18));
                 addSlotToContainer(new SlotItemHandler(itemHandler, 2, 70, 36));
                 addSlotToContainer(new SlotItemHandler(itemHandler, 3, 88, 36));
-                break;
-            case NORMAL:
+            }
+            case NORMAL -> {
                 for (int zz = 0; zz < 2; zz++) {
                     for (int xx = 0; xx < 3; xx++) {
                         int index = zz * 3 + xx;
                         addSlotToContainer(new SlotItemHandler(itemHandler, index, 61 + xx * 18, 18 + zz * 18));
                     }
                 }
-                break;
-            case REINFORCED:
+            }
+            case REINFORCED -> {
                 for (int zz = 0; zz < 3; zz++) {
                     for (int xx = 0; xx < 3; xx++) {
                         int index = zz * 3 + xx;
                         addSlotToContainer(new SlotItemHandler(itemHandler, index, 61 + xx * 18, 13 + zz * 18));
                     }
                 }
-                break;
-            case BIG:
+            }
+            case BIG -> {
                 for (int zz = 0; zz < 3; zz++) {
                     for (int xx = 0; xx < 4; xx++) {
                         int index = zz * 4 + xx;
                         addSlotToContainer(new SlotItemHandler(itemHandler, index, 52 + xx * 18, 18 + zz * 18));
                     }
                 }
-                break;
-            case HUGE:
+            }
+            case HUGE -> {
                 for (int zz = 0; zz < 4; zz++) {
                     for (int xx = 0; xx < 4; xx++) {
                         int index = zz * 4 + xx;
                         addSlotToContainer(new SlotItemHandler(itemHandler, index, 53 + xx * 18, 8 + zz * 18));
                     }
                 }
-                break;
-            case LUDICROUS:
+            }
+            case LUDICROUS -> {
                 for (int zz = 0; zz < 4; zz++) {
                     for (int xx = 0; xx < 8; xx++) {
                         int index = zz * 8 + xx;
                         addSlotToContainer(new SlotItemHandler(itemHandler, index, 17 + xx * 18, 8 + zz * 18));
                     }
                 }
-                break;
+            }
         }
     }
 

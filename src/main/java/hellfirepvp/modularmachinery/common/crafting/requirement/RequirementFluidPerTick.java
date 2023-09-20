@@ -41,7 +41,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_FLUID) &&
                 cmp instanceof MachineComponent.FluidHatch &&
                 cmp.ioType == this.actionType;
@@ -115,15 +115,15 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     private CraftCheck doFluidIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         int mul = doFluidIOInternal(components, context, parallelism);
         if (mul < parallelism) {
-            switch (actionType) {
-                case INPUT:
-                    return CraftCheck.failure("craftcheck.failure.fluid.input");
-                case OUTPUT:
+            return switch (actionType) {
+                case INPUT -> CraftCheck.failure("craftcheck.failure.fluid.input");
+                case OUTPUT -> {
                     if (ignoreOutputCheck) {
-                        return CraftCheck.success();
+                        yield CraftCheck.success();
                     }
-                    return CraftCheck.failure("craftcheck.failure.fluid.output.space");
-            }
+                    yield CraftCheck.failure("craftcheck.failure.fluid.output.space");
+                }
+            };
         }
         return CraftCheck.success();
     }

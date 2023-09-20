@@ -65,21 +65,20 @@ public class RequirementCatalyst extends RequirementItem {
     public RequirementCatalyst deepCopyModified(List<RecipeModifier> modifiers) {
         RequirementCatalyst catalyst;
         switch (this.requirementType) {
-            case OREDICT:
+            case OREDICT -> {
                 int inOreAmt = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.oreDictItemAmount, false));
                 catalyst = new RequirementCatalyst(this.oreDictName, inOreAmt);
-                break;
-            case FUEL:
+            }
+            case FUEL -> {
                 int inFuel = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.fuelBurntime, false));
                 catalyst = new RequirementCatalyst(inFuel);
-                break;
-            default:
-            case ITEMSTACKS:
+            }
+            default -> {
                 ItemStack inReq = this.required.copy();
                 int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, inReq.getCount(), false));
                 inReq.setCount(amt);
                 catalyst = new RequirementCatalyst(inReq);
-                break;
+            }
         }
         catalyst.setTag(getTag());
         catalyst.triggerTime = this.triggerTime;

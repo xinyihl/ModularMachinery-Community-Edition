@@ -31,7 +31,7 @@ public class CommandGetBluePrint extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if (!(sender instanceof EntityPlayer)) {
+        if (!(sender instanceof final EntityPlayer player)) {
             sender.sendMessage(new TextComponentTranslation("command.modularmachinery.get_blueprint.player_only"));
             return;
         }
@@ -49,7 +49,6 @@ public class CommandGetBluePrint extends CommandBase {
             return;
         }
 
-        EntityPlayer player = (EntityPlayer) sender;
         ItemStack blueprint = new ItemStack(ItemsMM.blueprint);
         ItemBlueprint.setAssociatedMachine(blueprint, machine);
 

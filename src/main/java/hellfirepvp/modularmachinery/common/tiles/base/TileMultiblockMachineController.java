@@ -200,6 +200,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return foundMachine;
     }
 
+    public TaggedPositionBlockArray getFoundPattern() {
+        return foundPattern;
+    }
+
     public boolean isParallelized() {
         if (foundMachine != null) {
             return foundMachine.isParallelizable() && getMaxParallelism() > 1;
@@ -307,7 +311,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected boolean matchesDynamicPattern(final DynamicMachine machine) {
         for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
-            DynamicPattern pattern = status.getPattern();
+            DynamicPattern pattern = status.pattern();
             DynamicPattern.MatchResult result = pattern.matches(this, true, controllerRotation);
             if (!result.isMatched()) {
                 return false;
@@ -330,7 +334,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             DynamicPattern.MatchResult matchResult = dynamicPattern.matches(this, false, rotation);
             if (matchResult.isMatched()) {
                 foundDynamicPatterns.add(new DynamicPattern.Status(
-                        dynamicPattern, matchResult.getMatchFacing(), matchResult.getSize())
+                        dynamicPattern, matchResult.matchFacing(), matchResult.size())
                 );
             } else {
                 return false;
@@ -338,7 +342,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         for (final DynamicPattern.Status pattern : foundDynamicPatterns) {
-            this.foundDynamicPatterns.put(pattern.getPattern().getName(), pattern);
+            this.foundDynamicPatterns.put(pattern.pattern().getName(), pattern);
         }
         return true;
     }
@@ -361,9 +365,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     private void tryColorize(BlockPos pos, int color) {
         TileEntity te = this.getWorld().getTileEntity(pos);
-        if (te instanceof ColorableMachineTile) {
-            ((ColorableMachineTile) te).setMachineColor(color);
-            getWorld().addBlockEvent(pos, getWorld().getBlockState(pos).getBlock(), 1, 1);
+        if (te instanceof final ColorableMachineTile colorable) {
+            if (colorable.getMachineColor() != color) {
+                colorable.setMachineColor(color);
+                getWorld().addBlockEvent(pos, getWorld().getBlockState(pos).getBlock(), 1, 1);
+            }
         }
     }
 
@@ -462,8 +468,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     private void addDynamicPatternToBlockArray() {
         this.foundPattern = new TaggedPositionBlockArray(foundPattern);
         for (final DynamicPattern.Status status : foundDynamicPatterns.values()) {
-            DynamicPattern pattern = status.getPattern();
-            pattern.addPatternToBlockArray(foundPattern, status.getSize(), status.getMatchFacing(), controllerRotation);
+            DynamicPattern pattern = status.pattern();
+            pattern.addPatternToBlockArray(foundPattern, status.size(), status.matchFacing(), controllerRotation);
         }
         this.foundPattern.flushTileBlocksCache();
     }
@@ -605,10 +611,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public void checkAndAddUpgradeBus(final MachineComponent<?> component) {
-        if (!(component instanceof TileUpgradeBus.UpgradeBusProvider)) {
+        if (!(component instanceof final TileUpgradeBus.UpgradeBusProvider upgradeBus)) {
             return;
         }
-        TileUpgradeBus.UpgradeBusProvider upgradeBus = (TileUpgradeBus.UpgradeBusProvider) component;
         upgradeBus.boundMachine(this);
         foundUpgradeBuses.add(upgradeBus);
 
@@ -668,10 +673,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public void checkAndAddSmartInterface(MachineComponent<?> component, BlockPos realPos) {
-        if (!(component instanceof TileSmartInterface.SmartInterfaceProvider) || foundMachine.smartInterfaceTypesIsEmpty()) {
+        if (!(component instanceof final TileSmartInterface.SmartInterfaceProvider smartInterface) || foundMachine.smartInterfaceTypesIsEmpty()) {
             return;
         }
-        TileSmartInterface.SmartInterfaceProvider smartInterface = (TileSmartInterface.SmartInterfaceProvider) component;
         SmartInterfaceData data = smartInterface.getMachineData(getPos());
         Map<String, SmartInterfaceType> notFoundInterface = foundMachine.getFilteredType(foundSmartInterfaces.values());
 

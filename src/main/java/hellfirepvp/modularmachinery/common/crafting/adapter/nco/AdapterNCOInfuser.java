@@ -64,20 +64,17 @@ public class AdapterNCOInfuser extends AdapterNCOMachine {
 
                 int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, stack.getCount(), false));
                 if (inAmount > 0) {
-                    if (iItemIngredient instanceof OreIngredient) {
-                        OreIngredient oreIngredient = (OreIngredient) iItemIngredient;
+                    if (iItemIngredient instanceof OreIngredient oreIngredient) {
                         recipe.addRequirement(new RequirementItem(IOType.INPUT, oreIngredient.oreName, inAmount));
                         continue;
                     }
 
-                    if (iItemIngredient instanceof ItemArrayIngredient) {
-                        ItemArrayIngredient arrayIngredient = (ItemArrayIngredient) iItemIngredient;
+                    if (iItemIngredient instanceof ItemArrayIngredient arrayIngredient) {
                         List<IItemIngredient> ingredientList = arrayIngredient.ingredientList;
                         List<ChancedIngredientStack> ingredientStackList = new ArrayList<>(ingredientList.size());
                         for (IItemIngredient itemIngredient : ingredientList) {
 
-                            if (itemIngredient instanceof OreIngredient) {
-                                OreIngredient oreIngredient = (OreIngredient) itemIngredient;
+                            if (itemIngredient instanceof final OreIngredient oreIngredient) {
                                 int subInAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, oreIngredient.stackSize, false));
 
                                 ingredientStackList.add(new ChancedIngredientStack(oreIngredient.oreName, subInAmount));

@@ -37,11 +37,10 @@ public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEIn
     @Override
     public IMessage onMessage(final PktMEInputBusInvAction message, final MessageContext ctx) {
         EntityPlayerMP player = ctx.getServerHandler().player;
-        if (!(player.openContainer instanceof ContainerMEItemInputBus)) {
+        if (!(player.openContainer instanceof final ContainerMEItemInputBus inputBus)) {
             return null;
         }
 
-        ContainerMEItemInputBus inputBus = (ContainerMEItemInputBus) player.openContainer;
         Slot slot = inputBus.getSlot(message.slotID);
         if (!(slot instanceof SlotFake)) {
             return null;

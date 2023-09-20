@@ -283,6 +283,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             IGuiIngredientGroup<?> clazzGroup = recipeLayout.getIngredientsGroup(clazz);
             int compSlotIndex = 0;
 
+            //noinspection SimplifyStreamApiCallChains
             for (RecipeLayoutPart slot : this.inputComponents
                     .stream()
                     .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))
@@ -301,6 +302,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 amtCompInputs++;
             }
 
+            //noinspection SimplifyStreamApiCallChains
             for (RecipeLayoutPart slot : this.outputComponents
                     .stream()
                     .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))

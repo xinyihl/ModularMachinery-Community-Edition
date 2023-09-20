@@ -34,6 +34,6 @@ public class ActionExecutor implements Runnable, Comparable<ActionExecutor> {
 
     @Override
     public int compareTo(ActionExecutor o) {
-        return priority - o.priority;
+        return o.priority - priority;
     }
 }

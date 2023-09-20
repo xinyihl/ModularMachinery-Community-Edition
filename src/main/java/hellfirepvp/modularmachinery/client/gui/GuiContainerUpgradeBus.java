@@ -66,6 +66,7 @@ public class GuiContainerUpgradeBus extends GuiContainerBase<ContainerUpgradeBus
         collectBoundedMachineDescriptions(description, boundedMachine, upgrades);
         collectUpgradeDescriptions(component, description, upgrades);
 
+        //noinspection SimplifyStreamApiCallChains
         List<String> wrappedDesc = description.stream()
                 .flatMap(s -> fr.listFormattedStringToWidth(s, (int) (89 * (1 / FONT_SCALE))).stream())
                 .collect(Collectors.toList());

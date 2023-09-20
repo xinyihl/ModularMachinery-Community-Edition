@@ -58,99 +58,63 @@ public interface NBTComparableNumber {
         }
 
         public boolean testByte(byte original, byte toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
         public boolean testInt(int original, int toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
         public boolean testShort(short original, short toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
         public boolean testLong(long original, long toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
         public boolean testFloat(float original, float toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
         public boolean testDouble(double original, double toTest) {
-            switch (this) {
-                case LESS:
-                    return toTest < original;
-                case LESS_EQUAL:
-                    return toTest <= original;
-                case EQUAL:
-                    return toTest == original;
-                case GREATER_EQUAL:
-                    return toTest >= original;
-                case GREATER:
-                    return toTest > original;
-            }
-            throw new IllegalStateException("What am i?");
+            return switch (this) {
+                case LESS -> toTest < original;
+                case LESS_EQUAL -> toTest <= original;
+                case EQUAL -> toTest == original;
+                case GREATER_EQUAL -> toTest >= original;
+                case GREATER -> toTest > original;
+            };
         }
 
     }

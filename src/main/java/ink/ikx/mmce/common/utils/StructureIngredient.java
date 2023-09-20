@@ -1,5 +1,6 @@
 package ink.ikx.mmce.common.utils;
 
+import com.github.bsideup.jabel.Desugar;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -12,14 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class StructureIngredient {
-    private final List<ItemIngredient> itemIngredient;
-    private final List<FluidIngredient> fluidIngredient;
-
-    public StructureIngredient(final List<ItemIngredient> itemIngredient, final List<FluidIngredient> fluidIngredient) {
-        this.itemIngredient = itemIngredient;
-        this.fluidIngredient = fluidIngredient;
-    }
+@Desugar
+public record StructureIngredient(List<ItemIngredient> itemIngredient, List<FluidIngredient> fluidIngredient) {
 
     public static StructureIngredient of(World world, BlockPos ctrlPos, BlockArray blockArray) {
         List<ItemIngredient> itemIngredients = blockArray.getBlockStateIngredientList(world, ctrlPos);
@@ -48,14 +43,6 @@ public class StructureIngredient {
         }
 
         return new StructureIngredient(itemIngredients, fluidIngredients);
-    }
-
-    public List<ItemIngredient> getItemIngredient() {
-        return itemIngredient;
-    }
-
-    public List<FluidIngredient> getFluidIngredient() {
-        return fluidIngredient;
     }
 
     public StructureIngredient copy() {

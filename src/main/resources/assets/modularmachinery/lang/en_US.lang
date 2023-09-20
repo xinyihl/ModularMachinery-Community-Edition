@@ -76,6 +76,10 @@ gui.meitembus.nbt_stored=Items have been stored internally.
 gui.mefluidoutputbus.title=ME Machinery Fluid Output Bus
 gui.mefluidinputbus.title=ME Machinery Fluid Input Bus
 
+gui.preview.error.too_large.tip.0=The machinery are overly complex and large!
+gui.preview.error.too_large.tip.1=Only the ingredients required for the structure are shown.
+gui.preview.error.too_large.tip.2=Use the Structure Projector to right-click the controller to view the structure projection.
+
 top.recipe.progress=Progress
 top.machine.working=Processing
 top.machine.structure.found=Structure formed

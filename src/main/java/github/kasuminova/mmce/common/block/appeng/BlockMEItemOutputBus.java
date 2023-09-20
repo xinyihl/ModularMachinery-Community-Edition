@@ -55,12 +55,11 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
             super.breakBlock(worldIn, pos, state);
             return;
         }
-        if (!(te instanceof MEItemOutputBus)) {
+        if (!(te instanceof final MEItemOutputBus bus)) {
             super.breakBlock(worldIn, pos, state);
             return;
         }
 
-        MEItemOutputBus bus = (MEItemOutputBus) te;
         if (!bus.hasItem()) {
             super.breakBlock(worldIn, pos, state);
             return;

@@ -115,21 +115,20 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     public ComponentRequirement<ItemStack, RequirementTypeItem> deepCopyModified(List<RecipeModifier> modifiers) {
         RequirementItem item;
         switch (this.requirementType) {
-            case OREDICT:
+            case OREDICT -> {
                 int inOreAmt = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.oreDictItemAmount, false));
                 item = new RequirementItem(this.actionType, this.oreDictName, inOreAmt);
-                break;
-            case FUEL:
+            }
+            case FUEL -> {
                 int inFuel = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.fuelBurntime, false));
                 item = new RequirementItem(this.actionType, inFuel);
-                break;
-            default:
-            case ITEMSTACKS:
+            }
+            default -> {
                 ItemStack inReq = this.required.copy();
                 int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, inReq.getCount(), false));
                 inReq.setCount(amt);
                 item = new RequirementItem(this.actionType, inReq);
-                break;
+            }
         }
 
         item.setTag(getTag());
@@ -172,7 +171,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         return cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_ITEM) &&
                cmp instanceof MachineComponent.ItemBus &&
                cmp.ioType == actionType;
@@ -210,12 +209,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers, ResultChance chance) {
         int mul = doItemIOInternal(components, context, parallelism, itemModifiers, chance);
         if (mul < parallelism) {
-            switch (actionType) {
-                case INPUT:
-                    return CraftCheck.failure("craftcheck.failure.item.input");
-                case OUTPUT:
-                    return CraftCheck.failure("craftcheck.failure.item.output.space");
-            }
+            return switch (actionType) {
+                case INPUT -> CraftCheck.failure("craftcheck.failure.item.input");
+                case OUTPUT -> CraftCheck.failure("craftcheck.failure.item.output.space");
+            };
         }
         return CraftCheck.success();
     }
@@ -228,22 +225,21 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     {
         List<IItemHandlerImpl> handlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.providedComponent;
+            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.getProvidedComponent();
             handlers.add(providedComponent);
         }
 
-        switch (actionType) {
-            case INPUT:
-                return consumeAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
-            case OUTPUT:
+        return switch (actionType) {
+            case INPUT -> consumeAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
+            case OUTPUT -> {
                 if (ignoreOutputCheck) {
                     insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
-                    return maxMultiplier;
+                    yield maxMultiplier;
                 }
-                return insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
-        }
+                yield insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
+            }
+        };
 
-        return maxMultiplier;
     }
 
     @Override
@@ -258,15 +254,11 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                                final ResultChance chance)
     {
         int consumed = 0;
-        int toConsume = 0;
-        switch (this.requirementType) {
-            case ITEMSTACKS:
-                toConsume = Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
-                break;
-            case OREDICT:
-                toConsume = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
-                break;
-        }
+        int toConsume = switch (this.requirementType) {
+            case ITEMSTACKS -> Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
+            case OREDICT -> Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
+            default -> 0;
+        };
 
         if (toConsume <= 0) {
             return maxMultiplier;
@@ -276,7 +268,7 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
 
         ItemStack stack;
         switch (this.requirementType) {
-            case ITEMSTACKS: {
+            case ITEMSTACKS -> {
                 stack = required.copy();
                 if (!itemModifiers.isEmpty()) {
                     stack.setCount(toConsume);
@@ -307,9 +299,8 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         break;
                     }
                 }
-                break;
             }
-            case OREDICT: {
+            case OREDICT -> {
                 if (!itemModifiers.isEmpty()) {
                     stack = ItemUtils.getOredictItem(context, oreDictName, tag);
                     stack.setCount(toConsume);
@@ -341,7 +332,6 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                         break;
                     }
                 }
-                break;
             }
         }
 
@@ -359,30 +349,26 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         }
 
         int inserted = 0;
-        int toInsert = 0;
+        int toInsert = switch (this.requirementType) {
+            case ITEMSTACKS -> Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
+            case OREDICT -> Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
+            default -> 0;
+        };
 
-        switch (this.requirementType) {
-            case ITEMSTACKS:
-                toInsert = Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
-                break;
-            case OREDICT:
-                toInsert = Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
-                break;
-        }
         if (toInsert <= 0) {
             return maxMultiplier;
         }
 
         ItemStack stack;
         switch (this.requirementType) {
-            case ITEMSTACKS:
-                stack = ItemUtils.copyStackWithSize(required, 1);
-                break;
-            case OREDICT:
-                stack = ItemUtils.getOredictItem(context, oreDictName, tag);
-                break;
-            default:
+            case ITEMSTACKS -> stack = ItemUtils.copyStackWithSize(required, 1);
+            case OREDICT -> stack = ItemUtils.getOredictItem(context, oreDictName, tag);
+            default -> {
                 return 0;
+            }
+        }
+        if (tag != null) {
+            stack.setTagCompound(tag);
         }
 
         if (!itemModifiers.isEmpty()) {

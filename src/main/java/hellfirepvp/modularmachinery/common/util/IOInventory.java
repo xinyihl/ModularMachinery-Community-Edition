@@ -15,10 +15,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
-import java.util.Arrays;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -41,37 +39,14 @@ public class IOInventory extends IItemHandlerImpl {
     }
 
     public IOInventory(TileEntitySynchronized owner, int[] inSlots, int[] outSlots, EnumFacing... accessibleFrom) {
+        super(inSlots, outSlots, accessibleFrom);
         this.owner = owner;
-        this.inSlots = inSlots;
-        this.outSlots = outSlots;
-        for (int slot : inSlots) {
-            this.inventory.put(slot, new SlotStackHolder(slot));
-        }
-        for (int slot : outSlots) {
-            this.inventory.put(slot, new SlotStackHolder(slot));
-        }
-        this.accessibleSides = Arrays.asList(accessibleFrom);
     }
 
     public static IOInventory deserialize(TileEntitySynchronized owner, NBTTagCompound tag) {
         IOInventory inv = new IOInventory(owner);
         inv.readNBT(tag);
         return inv;
-    }
-
-    public static IOInventory mergeBuild(TileEntitySynchronized tile, IOInventory... inventories) {
-        IOInventory merged = new IOInventory(tile);
-        int slotOffset = 0;
-        for (IOInventory inventory : inventories) {
-            for (int key : inventory.inventory.keySet()) {
-                merged.inventory.put(key + slotOffset, inventory.inventory.get(key));
-            }
-            for (int key : inventory.slotLimits.keySet()) {
-                merged.slotLimits.put(key + slotOffset, inventory.slotLimits.get(key));
-            }
-            slotOffset += inventory.inventory.size();
-        }
-        return merged;
     }
 
     public IOInventory setListener(InventoryUpdateListener listener) {
@@ -126,8 +101,8 @@ public class IOInventory extends IItemHandlerImpl {
         tag.setIntArray("miscSlots", this.miscSlots);
 
         NBTTagList inv = new NBTTagList();
-        for (int slot : this.inventory.keySet()) {
-            SlotStackHolder holder = this.inventory.get(slot);
+        for (int slot = 0; slot < inventory.length; slot++) {
+            SlotStackHolder holder = this.inventory[slot];
             NBTTagCompound holderTag = new NBTTagCompound();
             holderTag.setBoolean("holderEmpty", holder.itemStack.isEmpty());
             holderTag.setInteger("holderId", slot);
@@ -138,9 +113,9 @@ public class IOInventory extends IItemHandlerImpl {
         }
         tag.setTag("inventoryArray", inv);
 
-        int[] sides = new int[accessibleSides.size()];
-        for (int i = 0; i < accessibleSides.size(); i++) {
-            EnumFacing side = accessibleSides.get(i);
+        int[] sides = new int[accessibleSides.length];
+        for (int i = 0; i < accessibleSides.length; i++) {
+            EnumFacing side = accessibleSides[i];
             sides[i] = side.ordinal();
         }
         tag.setIntArray("sides", sides);
@@ -152,36 +127,36 @@ public class IOInventory extends IItemHandlerImpl {
         this.outSlots = tag.getIntArray("outSlots");
         this.miscSlots = tag.getIntArray("miscSlots");
 
-        this.inventory.clear();
         NBTTagList list = tag.getTagList("inventoryArray", Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < list.tagCount(); i++) {
+
+        int tagCount = list.tagCount();
+        this.inventory = new SlotStackHolder[tagCount];
+        for (int i = 0; i < tagCount; i++) {
             NBTTagCompound holderTag = list.getCompoundTagAt(i);
             int slot = holderTag.getInteger("holderId");
+            checkInventoryLength(slot);
+
             boolean isEmpty = holderTag.getBoolean("holderEmpty");
             ItemStack stack = ItemStack.EMPTY;
             if (!isEmpty) {
                 stack = new ItemStack(holderTag);
             }
+
             SlotStackHolder holder = new SlotStackHolder(slot);
             holder.itemStack = stack;
-            this.inventory.put(slot, holder);
+            this.inventory[slot] = holder;
         }
 
         int[] sides = tag.getIntArray("sides");
-        for (int i : sides) {
-            this.accessibleSides.add(EnumFacing.values()[i]);
+        this.accessibleSides = new EnumFacing[sides.length];
+        for (int index = 0; index < sides.length; index++) {
+            final int facingIndex = sides[index];
+            this.accessibleSides[index] = EnumFacing.values()[facingIndex];
         }
 
         if (listener != null) {
             listener.onChange();
         }
-    }
-
-    public IItemHandlerModifiable getCapability(EnumFacing facing) {
-        if (hasCapability(facing)) {
-            return this;
-        }
-        return null;
     }
 
     public int calcRedstoneFromInventory() {

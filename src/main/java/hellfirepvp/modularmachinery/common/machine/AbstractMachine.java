@@ -121,8 +121,7 @@ public abstract class AbstractMachine {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof AbstractMachine)) return false;
-        AbstractMachine machine = (AbstractMachine) obj;
+        if (!(obj instanceof final AbstractMachine machine)) return false;
         return machine.registryName.toString().equals(registryName.toString());
     }
 

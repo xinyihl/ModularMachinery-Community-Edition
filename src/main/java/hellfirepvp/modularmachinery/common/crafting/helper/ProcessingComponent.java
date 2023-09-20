@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.crafting.helper;
 
+import com.github.bsideup.jabel.Desugar;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 
 import javax.annotation.Nullable;
@@ -19,22 +20,19 @@ import javax.annotation.Nullable;
  * Created by HellFirePvP
  * Date: 04.03.2019 / 22:44
  */
-public class ProcessingComponent<T> {
+@Desugar
+public record ProcessingComponent<T>(MachineComponent<T> component, T providedComponent, ComponentSelectorTag tag) {
 
-    public final T providedComponent;
-    public final MachineComponent<T> component;
-    protected final ComponentSelectorTag tag;
-
-    public ProcessingComponent(MachineComponent<T> component, T providedComponent, ComponentSelectorTag tag) {
-        this.component = component;
-        this.providedComponent = providedComponent;
-        this.tag = tag;
-    }
-
+    /**
+     * Required by addon mod.
+     */
     public MachineComponent<T> getComponent() {
         return component;
     }
 
+    /**
+     * Required by addon mod.
+     */
     public T getProvidedComponent() {
         return providedComponent;
     }

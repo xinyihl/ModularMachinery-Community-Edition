@@ -37,6 +37,8 @@ public class TaskExecutor {
     public static long totalUsedTime = 0;
     public static long executedCount = 0;
 
+    public static long tickExisted = 0;
+
     private final MpscLinkedAtomicQueue<ActionExecutor> submitted = new MpscLinkedAtomicQueue<>();
 
     private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
@@ -60,14 +62,14 @@ public class TaskExecutor {
             return;
         }
         switch (event.phase) {
-            case START:
+            case START -> {
                 inTick = true;
                 submitter.unpark();
-                break;
-            case END:
-            default:
+            }
+            default -> {
                 inTick = false;
-                break;
+                tickExisted++;
+            }
         }
 
         int executed = executeActions();

@@ -147,7 +147,7 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         if (Mods.MEKANISM.isPresent() && required instanceof HybridFluidGas) {
             return  cmp instanceof MachineComponent.FluidHatch &&
                     cmp.ioType == this.actionType &&
@@ -199,15 +199,15 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     private CraftCheck doFluidGasIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         int mul = doFluidGasIOInternal(components, context, parallelism);
         if (mul < parallelism) {
-            switch (actionType) {
-                case INPUT:
-                    return CraftCheck.failure("craftcheck.failure.fluid.input");
-                case OUTPUT:
+            return switch (actionType) {
+                case INPUT -> CraftCheck.failure("craftcheck.failure.fluid.input");
+                case OUTPUT -> {
                     if (ignoreOutputCheck) {
-                        return CraftCheck.success();
+                        yield CraftCheck.success();
                     }
-                    return CraftCheck.failure("craftcheck.failure.fluid.output.space");
-            }
+                    yield CraftCheck.failure("craftcheck.failure.fluid.output.space");
+                }
+            };
         }
         return CraftCheck.success();
     }

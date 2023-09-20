@@ -32,13 +32,12 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
         ArrayList<ItemStack> copiedItemArray = new ArrayList<>(requirement.ingredients.size());
         for (ChancedIngredientStack stack : requirement.ingredients) {
             switch (stack.ingredientType) {
-                case ITEMSTACK: {
+                case ITEMSTACK -> {
                     ItemStack itemStack = stack.itemStack;
                     ItemStack copiedStack = ItemUtils.copyStackWithSize(itemStack, itemStack.getCount());
                     copiedItemArray.add(copiedStack);
-                    break;
                 }
-                case ORE_DICT: {
+                case ORE_DICT -> {
                     NonNullList<ItemStack> stacks = OreDictionary.getOres(stack.oreDictName);
                     NonNullList<ItemStack> out = NonNullList.create();
                     for (ItemStack oreDictIn : stacks) {
@@ -54,7 +53,6 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
                         copy.setCount(stack.count);
                         copiedItemArray.add(copy);
                     }
-                    break;
                 }
             }
         }
@@ -74,14 +72,12 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
         for (ChancedIngredientStack stack : requirement.ingredients) {
             StringBuilder tooltipBuilder = new StringBuilder(10);
             switch (stack.ingredientType) {
-                case ITEMSTACK: {
+                case ITEMSTACK -> {
                     ItemStack itemStack = stack.itemStack;
                     tooltipBuilder.append(itemStack.getDisplayName()).append(" * ").append(itemStack.getCount());
-                    break;
                 }
-                case ORE_DICT: {
+                case ORE_DICT -> {
                     tooltipBuilder.append(stack.oreDictName).append(" * ").append(stack.count);
-                    break;
                 }
             }
 

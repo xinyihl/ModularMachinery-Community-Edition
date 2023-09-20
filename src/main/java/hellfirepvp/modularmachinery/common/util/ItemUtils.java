@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
+import github.kasuminova.mmce.common.util.OredictCache;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -228,8 +229,8 @@ public class ItemUtils {
             ItemStack stack = content.getValue();
             int count = stack.getCount();
 
-            if (stack.getItem().hasContainerItem(stack)) {
-                if (count > 1) {
+            if (count >= 1) {
+                if (stack.getItem().hasContainerItem(stack)) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }
             }
@@ -448,10 +449,11 @@ public class ItemUtils {
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
-            int[] ids = OreDictionary.getOreIDs(s);
+            int[] ids = OredictCache.getOreIDsFast(s);
             for (int id : ids) {
                 if (OreDictionary.getOreName(id).equals(oreDict) && NBTMatchingHelper.matchNBTCompound(matchNBTTag, s.getTagCompound())) {
                     stacksOut.put(j, s);
+                    break;
                 }
             }
         }
@@ -463,10 +465,11 @@ public class ItemUtils {
         for (int j = 0; j < handler.getSlots(); j++) {
             ItemStack s = handler.getStackInSlot(j);
             if (s.isEmpty()) continue;
-            int[] ids = OreDictionary.getOreIDs(s);
+            int[] ids = OredictCache.getOreIDsFast(s);
             for (int id : ids) {
                 if (OreDictionary.getOreName(id).equals(oreDict) && itemChecker.isMatch(controller, s)) {
                     stacksOut.put(j, s);
+                    break;
                 }
             }
         }
@@ -543,8 +546,22 @@ public class ItemUtils {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
             ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component,
-                    ((IItemHandlerImpl) component.providedComponent).copy(),
+                    (MachineComponent<Object>) component.component(),
+                    ((IItemHandlerImpl) component.getProvidedComponent()).copy(),
+                    component.getTag());
+            list.add(objectProcessingComponent);
+        }
+        return list;
+    }
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static List<ProcessingComponent<?>> fastCopyItemHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                    (MachineComponent<Object>) component.component(),
+                    ((IItemHandlerImpl) component.getProvidedComponent()).fastCopy(),
                     component.getTag());
             list.add(objectProcessingComponent);
         }

@@ -140,11 +140,6 @@ public abstract class BlockFluidHatch extends BlockMachineComponent implements B
         return RedstoneHelper.getRedstoneLevel(worldIn.getTileEntity(pos));
     }
 
-    @Override
-    public boolean hasTileEntity(IBlockState state) {
-        return true;
-    }
-
     @Nullable
     @Override
     public abstract TileEntity createTileEntity(World world, IBlockState state);

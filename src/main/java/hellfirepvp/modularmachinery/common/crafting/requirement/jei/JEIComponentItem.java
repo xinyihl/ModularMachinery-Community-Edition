@@ -51,7 +51,7 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
     @Override
     public List<ItemStack> getJEIIORequirements() {
         switch (requirement.requirementType) {
-            case ITEMSTACKS:
+            case ITEMSTACKS -> {
                 ItemStack stack = ItemUtils.copyStackWithSize(requirement.required, requirement.required.getCount());
                 if (requirement.previewDisplayTag != null) {
                     stack.setTagCompound(requirement.previewDisplayTag);
@@ -60,7 +60,8 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                     stack.setTagCompound(requirement.previewDisplayTag.copy());
                 }
                 return Lists.newArrayList(stack);
-            case OREDICT:
+            }
+            case OREDICT -> {
                 NonNullList<ItemStack> stacks = OreDictionary.getOres(requirement.oreDictName);
                 NonNullList<ItemStack> out = NonNullList.create();
                 for (ItemStack oreDictIn : stacks) {
@@ -70,17 +71,17 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                         out.add(oreDictIn);
                     }
                 }
-
                 NonNullList<ItemStack> stacksOut = NonNullList.create();
-
                 for (ItemStack itemStack : out) {
                     ItemStack copy = itemStack.copy();
                     copy.setCount(requirement.oreDictItemAmount);
                     stacksOut.add(copy);
                 }
                 return stacksOut;
-            case FUEL:
+            }
+            case FUEL -> {
                 return FuelItemHelper.getFuelItems();
+            }
         }
         return new ArrayList<>(0);
     }

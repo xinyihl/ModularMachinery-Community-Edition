@@ -95,10 +95,9 @@ public abstract class MachineUpgrade {
 
     @Override
     public boolean equals(final Object obj) {
-        if (!(obj instanceof MachineUpgrade)) {
+        if (!(obj instanceof final MachineUpgrade another)) {
             return false;
         }
-        MachineUpgrade another = (MachineUpgrade) obj;
         return type.equals((another).type) && parentBus == another.parentBus;
     }
 }

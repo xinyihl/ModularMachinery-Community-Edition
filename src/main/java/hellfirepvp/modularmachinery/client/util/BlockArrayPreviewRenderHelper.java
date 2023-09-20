@@ -161,7 +161,7 @@ public class BlockArrayPreviewRenderHelper {
         }
         GlStateManager.disableDepth();
         GlStateManager.enableBlend();
-        Blending.ALPHA.applyStateManager();
+        GlStateManager.blendFunc(GL11.GL_ONE_MINUS_DST_COLOR, GL11.GL_DST_COLOR);
         GlStateManager.callList(batchDList);
         Blending.DEFAULT.applyStateManager();
         GlStateManager.enableDepth();

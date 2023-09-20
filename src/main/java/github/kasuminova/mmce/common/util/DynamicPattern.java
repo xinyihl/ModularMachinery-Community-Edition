@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.util;
 
+import com.github.bsideup.jabel.Desugar;
 import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -19,7 +20,6 @@ import java.util.stream.Collectors;
 /**
  * <p>动态可扩展结构。</p>
  * <p>TODO: 实现垂直动态结构。</p>
- * <p></p>
  * <p>Dynamic scalable structures.</p>
  * <p>TODO: Realization of vertical dynamic structures.</p>
  */
@@ -34,7 +34,7 @@ public class DynamicPattern {
     private BlockPos structureSizeOffsetStart = new BlockPos(0, 0, 0);
     private BlockPos structureSizeOffset = new BlockPos(0, 0, 0);
 
-//    private TaggedPositionBlockArray patternStart;
+    //    private TaggedPositionBlockArray patternStart;
     private TaggedPositionBlockArray pattern;
     private TaggedPositionBlockArray patternEnd = null;
 
@@ -55,6 +55,21 @@ public class DynamicPattern {
         this.pattern = new TaggedPositionBlockArray();
         this.minSize = 0;
         this.maxSize = 1;
+    }
+
+    private static BlockPos rotatePosTo(final EnumFacing target, final BlockPos pos) {
+        if (target == EnumFacing.NORTH) {
+            return pos;
+        }
+
+        EnumFacing facing = EnumFacing.NORTH;
+        BlockPos rotated = pos;
+        while (facing != target) {
+            facing = facing.rotateYCCW();
+            rotated = MiscUtils.rotateYCCW(rotated);
+        }
+
+        return rotated;
     }
 
     public MatchResult matches(final TileMultiblockMachineController ctrl,
@@ -217,41 +232,26 @@ public class DynamicPattern {
         return structureSizeOffsetStart;
     }
 
-    public BlockPos getStructureSizeOffsetStart(EnumFacing facingOffset) {
-        return rotatePosTo(facingOffset, structureSizeOffsetStart);
-    }
-
     public DynamicPattern setStructureSizeOffsetStart(final BlockPos structureSizeOffsetStart) {
         this.structureSizeOffsetStart = structureSizeOffsetStart;
         return this;
+    }
+
+    public BlockPos getStructureSizeOffsetStart(EnumFacing facingOffset) {
+        return rotatePosTo(facingOffset, structureSizeOffsetStart);
     }
 
     public BlockPos getStructureSizeOffset() {
         return structureSizeOffset;
     }
 
-    public BlockPos getStructureSizeOffset(EnumFacing facingOffset) {
-        return rotatePosTo(facingOffset, structureSizeOffset);
-    }
-
-    private static BlockPos rotatePosTo(final EnumFacing target, final BlockPos pos) {
-        if (target == EnumFacing.NORTH) {
-            return pos;
-        }
-
-        EnumFacing facing = EnumFacing.NORTH;
-        BlockPos rotated = pos;
-        while (facing != target) {
-            facing = facing.rotateYCCW();
-            rotated = MiscUtils.rotateYCCW(rotated);
-        }
-
-        return rotated;
-    }
-
     public DynamicPattern setStructureSizeOffset(final BlockPos structureSizeOffset) {
         this.structureSizeOffset = structureSizeOffset;
         return this;
+    }
+
+    public BlockPos getStructureSizeOffset(EnumFacing facingOffset) {
+        return rotatePosTo(facingOffset, structureSizeOffset);
     }
 
     public Set<EnumFacing> getFaces() {
@@ -285,6 +285,11 @@ public class DynamicPattern {
         return pattern;
     }
 
+    public DynamicPattern setPattern(final TaggedPositionBlockArray pattern) {
+        this.pattern = pattern;
+        return this;
+    }
+
     public TaggedPositionBlockArray getPattern(EnumFacing patternOffset, EnumFacing facingOffset) {
         if (patternOffset == EnumFacing.UP || patternOffset == EnumFacing.DOWN) {
             return BlockArrayCache.getHorizontalBlockArrayCache(pattern, patternOffset, facingOffset);
@@ -293,13 +298,13 @@ public class DynamicPattern {
         }
     }
 
-    public DynamicPattern setPattern(final TaggedPositionBlockArray pattern) {
-        this.pattern = pattern;
-        return this;
-    }
-
     public TaggedPositionBlockArray getPatternEnd() {
         return patternEnd;
+    }
+
+    public DynamicPattern setPatternEnd(final TaggedPositionBlockArray patternEnd) {
+        this.patternEnd = patternEnd;
+        return this;
     }
 
     public TaggedPositionBlockArray getPatternEnd(EnumFacing patternOffset, EnumFacing facingOffset) {
@@ -314,21 +319,8 @@ public class DynamicPattern {
         }
     }
 
-    public DynamicPattern setPatternEnd(final TaggedPositionBlockArray patternEnd) {
-        this.patternEnd = patternEnd;
-        return this;
-    }
-
-    public static class Status implements IDynamicPatternInfo {
-        private final DynamicPattern pattern;
-        private final EnumFacing matchFacing;
-        private final int size;
-
-        public Status(final DynamicPattern pattern, final EnumFacing matchFacing, final int size) {
-            this.pattern = pattern;
-            this.matchFacing = matchFacing;
-            this.size = size;
-        }
+    @Desugar
+    public record Status(DynamicPattern pattern, EnumFacing matchFacing, int size) implements IDynamicPatternInfo {
 
         public static Status readFromNBT(final NBTTagCompound tag, final DynamicMachine machine) {
             if (!tag.hasKey("size") || !tag.hasKey("facing") || !tag.hasKey("pattern")) {
@@ -385,24 +377,15 @@ public class DynamicPattern {
         }
     }
 
-    public static class MatchResult {
-        private final int size;
-        private final EnumFacing matchFacing;
-
-        public MatchResult(final int size, final EnumFacing matchFacing) {
-            this.size = size;
-            this.matchFacing = matchFacing;
-        }
+    @Desugar
+    public record MatchResult(int size, EnumFacing matchFacing) {
 
         /**
          * @return the dynamic structure size, may be 0.
          */
-        public int getSize() {
+        @Override
+        public int size() {
             return size;
-        }
-
-        public EnumFacing getMatchFacing() {
-            return matchFacing;
         }
 
         public boolean isMatched() {

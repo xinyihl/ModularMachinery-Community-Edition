@@ -16,6 +16,7 @@ import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
 import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.handler.EventHandler;
 import github.kasuminova.mmce.common.handler.UpgradeEventHandler;
+import github.kasuminova.mmce.common.handler.UpgradeMachineEventHandler;
 import github.kasuminova.mmce.common.integration.ModIntegrationAE2;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
@@ -113,10 +114,11 @@ public class CommonProxy implements IGuiHandler {
 
         CapabilityUpgrade.register();
 
+        MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
         MinecraftForge.EVENT_BUS.register(AssemblyEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(new UpgradeEventHandler());
-        MinecraftForge.EVENT_BUS.register(ModularMachinery.EXECUTE_MANAGER);
+        ModularMachinery.EVENT_BUS.register(new UpgradeMachineEventHandler());
 
         ModularMachinery.EXECUTE_MANAGER.init();
         ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_COUNT));
@@ -181,44 +183,56 @@ public class CommonProxy implements IGuiHandler {
         }
 
         switch (type) {
-            case CONTROLLER:
+            case CONTROLLER -> {
                 return new ContainerController((TileMachineController) present, player);
-            case FACTORY:
+            }
+            case FACTORY -> {
                 return new ContainerFactoryController((TileFactoryController) present, player);
-            case BUS_INVENTORY:
+            }
+            case BUS_INVENTORY -> {
                 return new ContainerItemBus((TileItemBus) present, player);
-            case TANK_INVENTORY:
+            }
+            case TANK_INVENTORY -> {
                 return new ContainerFluidHatch((TileFluidTank) present, player);
-            case ENERGY_INVENTORY:
+            }
+            case ENERGY_INVENTORY -> {
                 return new ContainerEnergyHatch((TileEnergyHatch) present, player);
-            case SMART_INTERFACE:
+            }
+            case SMART_INTERFACE -> {
                 return new ContainerSmartInterface((TileSmartInterface) present, player);
-            case PARALLEL_CONTROLLER:
+            }
+            case PARALLEL_CONTROLLER -> {
                 return new ContainerParallelController((TileParallelController) present, player);
-            case UPGRADE_BUS:
+            }
+            case UPGRADE_BUS -> {
                 return new ContainerUpgradeBus((TileUpgradeBus) present, player);
-            case BLUEPRINT_PREVIEW:
-                break;
-            case ME_ITEM_OUTPUT_BUS:
+            }
+            case BLUEPRINT_PREVIEW -> {
+            }
+            case ME_ITEM_OUTPUT_BUS -> {
                 if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEItemOutputBus((MEItemOutputBus) present, player);
-            case ME_ITEM_INPUT_BUS:
+            }
+            case ME_ITEM_INPUT_BUS -> {
                 if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEItemInputBus((MEItemInputBus) present, player);
-            case ME_FLUID_OUTPUT_BUS:
+            }
+            case ME_FLUID_OUTPUT_BUS -> {
                 if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEFluidOutputBus((MEFluidOutputBus) present, player);
-            case ME_FLUID_INPUT_BUS:
+            }
+            case ME_FLUID_INPUT_BUS -> {
                 if (aeSecurityCheck(player, present)) {
                     return null;
                 }
                 return new ContainerMEFluidInputBus((MEFluidInputBus) present, player);
+            }
         }
 
         return null;

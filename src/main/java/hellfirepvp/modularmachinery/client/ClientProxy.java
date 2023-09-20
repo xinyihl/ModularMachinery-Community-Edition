@@ -228,23 +228,31 @@ public class ClientProxy extends CommonProxy {
             }
         }
         switch (type) {
-            case CONTROLLER:
+            case CONTROLLER -> {
                 return new GuiMachineController((TileMachineController) present, player);
-            case FACTORY:
+            }
+            case FACTORY -> {
                 return new GuiFactoryController((TileFactoryController) present, player);
-            case BUS_INVENTORY:
+            }
+            case BUS_INVENTORY -> {
                 return new GuiContainerItemBus((TileItemBus) present, player);
-            case TANK_INVENTORY:
+            }
+            case TANK_INVENTORY -> {
                 return new GuiContainerFluidHatch((TileFluidTank) present, player);
-            case ENERGY_INVENTORY:
+            }
+            case ENERGY_INVENTORY -> {
                 return new GuiContainerEnergyHatch((TileEnergyHatch) present, player);
-            case SMART_INTERFACE:
+            }
+            case SMART_INTERFACE -> {
                 return new GuiContainerSmartInterface((TileSmartInterface) present, player);
-            case PARALLEL_CONTROLLER:
+            }
+            case PARALLEL_CONTROLLER -> {
                 return new GuiContainerParallelController((TileParallelController) present, player);
-            case UPGRADE_BUS:
+            }
+            case UPGRADE_BUS -> {
                 return new GuiContainerUpgradeBus((TileUpgradeBus) present, player);
-            case BLUEPRINT_PREVIEW:
+            }
+            case BLUEPRINT_PREVIEW -> {
                 ItemStack stack;
                 if (x == 0) {
                     stack = Minecraft.getMinecraft().player.getHeldItemMainhand();
@@ -255,27 +263,31 @@ public class ClientProxy extends CommonProxy {
                 if (machine != null) {
                     return new GuiScreenBlueprint(machine);
                 }
-                break;
-            case ME_ITEM_OUTPUT_BUS:
+            }
+            case ME_ITEM_OUTPUT_BUS -> {
                 if (!Mods.AE2.isPresent()) {
                     return null;
                 }
                 return new GuiMEItemOutputBus((MEItemOutputBus) present, player);
-            case ME_ITEM_INPUT_BUS:
+            }
+            case ME_ITEM_INPUT_BUS -> {
                 if (!Mods.AE2.isPresent()) {
                     return null;
                 }
                 return new GuiMEItemInputBus((MEItemInputBus) present, player);
-            case ME_FLUID_OUTPUT_BUS:
+            }
+            case ME_FLUID_OUTPUT_BUS -> {
                 if (!Mods.AE2.isPresent()) {
                     return null;
                 }
                 return new GuiMEFluidOutputBus((MEFluidOutputBus) present, player);
-            case ME_FLUID_INPUT_BUS:
+            }
+            case ME_FLUID_INPUT_BUS -> {
                 if (!Mods.AE2.isPresent()) {
                     return null;
                 }
                 return new GuiMEFluidInputBus((MEFluidInputBus) present, player);
+            }
         }
 
         return null;

@@ -24,8 +24,7 @@ public class IngredientArrayPrimer {
 
     @ZenMethod
     public IngredientArrayPrimer addIngredient(IIngredient input) {
-        if (input instanceof IItemStack) {
-            IItemStack stackCT = (IItemStack) input;
+        if (input instanceof final IItemStack stackCT) {
             ItemStack stackMC = CraftTweakerMC.getItemStack(input);
             if (stackMC.isEmpty()) {
                 CraftTweakerAPI.logError("[ModularMachinery] ItemStack not found/unknown item: " + stackMC);

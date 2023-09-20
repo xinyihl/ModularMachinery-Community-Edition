@@ -58,7 +58,7 @@ import java.util.*;
 @ZenClass("mods.modularmachinery.RecipePrimer")
 public class RecipePrimer implements PreparedRecipe {
 
-    private final ResourceLocation name, machineName;
+    protected final ResourceLocation name, machineName;
     private final int tickTime, priority;
     private final boolean doesVoidPerTick;
 

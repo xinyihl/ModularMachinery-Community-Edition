@@ -98,7 +98,7 @@ public class BlockCompatHelper {
                 return ret;
             }
         }
-        TileEntity te = state.getBlock().hasTileEntity(state) ? state.getBlock().createTileEntity(context.getWorld(), state) : null;
+        TileEntity te = state.getBlock().hasTileEntity(state) ? state.getBlock().createTileEntity(context.world(), state) : null;
         if (te != null) {
             context.apply(te);
         }

@@ -139,13 +139,10 @@ public class MachineLoader {
         MACHINE;
 
         public boolean accepts(String fileName) {
-            switch (this) {
-                case VARIABLES:
-                    return fileName.endsWith(".var.json");
-                case MACHINE:
-                default:
-                    return fileName.endsWith(".json");
-            }
+            return switch (this) {
+                case VARIABLES -> fileName.endsWith(".var.json");
+                default -> fileName.endsWith(".json");
+            };
         }
 
     }

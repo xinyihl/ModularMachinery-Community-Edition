@@ -91,11 +91,6 @@ public class BlockSmartInterface extends BlockMachineComponent implements BlockC
         return state.getValue(INTERFACE_TYPE).getName();
     }
 
-    @Override
-    public boolean hasTileEntity() {
-        return true;
-    }
-
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {

@@ -27,6 +27,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -58,6 +59,8 @@ public class ModularMachinery {
     public static final String COMMON_PROXY = "hellfirepvp.modularmachinery.common.CommonProxy";
     public static final SimpleNetworkWrapper NET_CHANNEL = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
     public static final TaskExecutor EXECUTE_MANAGER = new TaskExecutor();
+    public static final EventBus EVENT_BUS = new EventBus();
+
     @Mod.Instance(MODID)
     public static ModularMachinery instance;
     public static Logger log;

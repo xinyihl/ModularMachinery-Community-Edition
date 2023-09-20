@@ -32,6 +32,7 @@ import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -65,6 +66,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -232,15 +234,30 @@ public class GuiScreenBlueprint extends GuiScreen {
             renderContext.releaseSamples();
         }
 
-        ScaledResolution res = new ScaledResolution(mc);
-        Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 82) * res.getScaleFactor(),
-                160 * res.getScaleFactor(), 94 * res.getScaleFactor());
-        GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
-        x = 88;
-        z = 62;
-        renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        if (renderContext.getPattern().getPattern().size() >= 3500 && renderContext.doesRenderIn3D()) {
+            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+            FontRenderer fr = fontRenderer;
+            final int[] y = {guiTop + 12};
+            Stream.of(
+                            I18n.format("gui.preview.error.too_large.tip.0"),
+                            I18n.format("gui.preview.error.too_large.tip.1"),
+                            I18n.format("gui.preview.error.too_large.tip.2"))
+                    .flatMap(str -> fr.listFormattedStringToWidth(str, 160 * res.getScaleFactor()).stream())
+                    .forEach(str -> {
+                        fr.drawStringWithShadow(str,  guiLeft + 10, y[0], 0xFFFFFF);
+                        y[0] += 12;
+                    });
+        } else {
+            ScaledResolution res = new ScaledResolution(mc);
+            Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 82) * res.getScaleFactor(),
+                    160 * res.getScaleFactor(), 94 * res.getScaleFactor());
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
+            x = 88;
+            z = 62;
+            renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        }
 
         renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
         drawButtons(mouseX, mouseY);
@@ -252,7 +269,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0xFFFFFF);
         }
 
-        scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
+        Rectangle scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
         if (!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
             render2DHover(mouseX, mouseY, x, z);
         }

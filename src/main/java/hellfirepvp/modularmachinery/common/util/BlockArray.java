@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import com.github.bsideup.jabel.Desugar;
 import com.google.gson.JsonParseException;
 import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
@@ -652,24 +653,8 @@ public class BlockArray {
         }
     }
 
-    public static class TileInstantiateContext {
-
-        private final World world;
-        private final BlockPos pos;
-
-        public TileInstantiateContext(World world, BlockPos pos) {
-            this.world = world;
-            this.pos = pos;
-        }
-
-        public World getWorld() {
-            return world;
-        }
-
-        public BlockPos getPos() {
-            return pos;
-        }
-
+    @Desugar
+    public record TileInstantiateContext(World world, BlockPos pos) {
         public void apply(TileEntity te) {
             if (te != null) {
                 te.setWorld(world);

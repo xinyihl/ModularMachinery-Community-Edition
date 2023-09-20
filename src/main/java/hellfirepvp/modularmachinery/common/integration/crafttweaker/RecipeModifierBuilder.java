@@ -74,15 +74,12 @@ public class RecipeModifierBuilder {
         }
         IOType ioType;
         switch (ioTypeStr.toLowerCase()) {
-            case "input":
-                ioType = IOType.INPUT;
-                break;
-            case "output":
-                ioType = IOType.OUTPUT;
-                break;
-            default:
+            case "input" -> ioType = IOType.INPUT;
+            case "output" -> ioType = IOType.OUTPUT;
+            default -> {
                 CraftTweakerAPI.logError("Invalid ioType " + ioTypeStr + "!");
                 return null;
+            }
         }
         if (operation > 1 || operation < 0) {
             CraftTweakerAPI.logError("Invalid operation " + operation + "!");

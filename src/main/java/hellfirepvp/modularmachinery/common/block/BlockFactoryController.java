@@ -112,8 +112,7 @@ public class BlockFactoryController extends BlockMachineComponent implements Ite
     @SuppressWarnings("deprecation")
     public int getComparatorInputOverride(@Nonnull IBlockState blockState, World worldIn, @Nonnull BlockPos pos) {
         TileEntity te = worldIn.getTileEntity(pos);
-        if (te instanceof TileMultiblockMachineController) {
-            TileMultiblockMachineController ctrl = (TileMultiblockMachineController) te;
+        if (te instanceof final TileMultiblockMachineController ctrl) {
             return ctrl.isWorking() ? 15 : ctrl.getFoundMachine() != null ? 1 : 0;
         }
         return 0;

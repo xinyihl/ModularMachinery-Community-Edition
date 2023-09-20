@@ -6,7 +6,6 @@ import github.kasuminova.mmce.common.helper.IMachineController;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
@@ -34,7 +33,7 @@ public class MachineEvent extends Event {
 
     public void postEvent() {
         try {
-            MinecraftForge.EVENT_BUS.post(this);
+            ModularMachinery.EVENT_BUS.post(this);
             if (!isCanceled()) {
                 postCrTEvent();
             }

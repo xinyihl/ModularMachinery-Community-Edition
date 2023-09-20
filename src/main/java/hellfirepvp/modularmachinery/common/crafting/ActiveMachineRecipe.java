@@ -104,14 +104,12 @@ public class ActiveMachineRecipe {
 
     public void doFailureAction(RecipeFailureActions action) {
         switch (action) {
-            case RESET:
-                this.tick = 0;
-                break;
-            case DECREASE:
+            case RESET -> this.tick = 0;
+            case DECREASE -> {
                 if (this.tick > 0) {
                     this.tick--;
                 }
-                break;
+            }
         }
     }
 

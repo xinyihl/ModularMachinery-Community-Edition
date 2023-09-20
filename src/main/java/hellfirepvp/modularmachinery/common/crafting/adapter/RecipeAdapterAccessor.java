@@ -50,7 +50,7 @@ public class RecipeAdapterAccessor {
 
     public RecipeAdapterAccessor(RecipeAdapterBuilder builder) {
         this.owningMachine = builder.getAssociatedMachineName();
-        this.adapterKey = builder.getParentMachineName();
+        this.adapterKey = builder.getAdapterParentMachineName();
         this.modifiers = builder.getModifiers();
         this.additionalRecipeRequirements = builder.getComponents();
         this.tooltipList = builder.getTooltipList();

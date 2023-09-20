@@ -139,6 +139,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
 
         //TODO Rework this along with the ingredient for energy stuffs
         long totalEnergyIn = 0;
+        //noinspection SimplifyStreamApiCallChains
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements().stream()
                 .filter(RequirementEnergy.class::isInstance)
                 .filter(r -> r.getActionType() == IOType.INPUT)
@@ -146,6 +147,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             totalEnergyIn += ((RequirementEnergy) req).getRequiredEnergyPerTick();
         }
         long totalEnergyOut = 0;
+        //noinspection SimplifyStreamApiCallChains
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements().stream()
                 .filter(RequirementEnergy.class::isInstance)
                 .filter(r -> r.getActionType() == IOType.OUTPUT)
@@ -193,12 +195,8 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
                     componentObjects.add(jeiComp.getJEIIORequirements());
                 }
                 switch (ioType) {
-                    case INPUT:
-                        ingredients.setInputLists(type, componentObjects);
-                        break;
-                    case OUTPUT:
-                        ingredients.setOutputLists(type, componentObjects);
-                        break;
+                    case INPUT -> ingredients.setInputLists(type, componentObjects);
+                    case OUTPUT -> ingredients.setOutputLists(type, componentObjects);
                 }
             }
         }

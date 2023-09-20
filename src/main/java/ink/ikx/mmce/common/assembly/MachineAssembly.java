@@ -69,8 +69,8 @@ public class MachineAssembly {
                     .collect(Collectors.toList());
         }
 
-        List<StructureIngredient.ItemIngredient> newItemIngredients = buildItemIngredients(inventory, ingredient.getItemIngredient());
-        List<StructureIngredient.FluidIngredient> newFluidIngredients = buildFluidIngredients(inventory, ingredient.getFluidIngredient());
+        List<StructureIngredient.ItemIngredient> newItemIngredients = buildItemIngredients(inventory, ingredient.itemIngredient());
+        List<StructureIngredient.FluidIngredient> newFluidIngredients = buildFluidIngredients(inventory, ingredient.fluidIngredient());
 
         ingredient = new StructureIngredient(newItemIngredients, newFluidIngredients);
     }
@@ -193,8 +193,8 @@ public class MachineAssembly {
                 .map(ItemStack::copy)
                 .collect(Collectors.toList());
 
-        List<StructureIngredient.ItemIngredient> itemIngredientList = ingredient.getItemIngredient();
-        List<StructureIngredient.FluidIngredient> fluidIngredientList = ingredient.getFluidIngredient();
+        List<StructureIngredient.ItemIngredient> itemIngredientList = ingredient.itemIngredient();
+        List<StructureIngredient.FluidIngredient> fluidIngredientList = ingredient.fluidIngredient();
         searchAndRemoveContainItem(inventory, itemIngredientList);
         searchAndRemoveContainFluid(inventory, fluidIngredientList);
 
@@ -260,6 +260,7 @@ public class MachineAssembly {
                 continue;
             }
 
+            @SuppressWarnings("SimplifyStreamApiCallChains")
             List<ItemStack> stackIngList = itemIng.getIngredientList()
                     .stream()
                     .map(Tuple::getFirst)
@@ -300,12 +301,12 @@ public class MachineAssembly {
     }
 
     public boolean isCompleted() {
-        return ingredient.getItemIngredient().isEmpty() && ingredient.getFluidIngredient().isEmpty();
+        return ingredient.itemIngredient().isEmpty() && ingredient.fluidIngredient().isEmpty();
     }
 
     public void assembly(boolean consumeInventory) {
-        List<StructureIngredient.ItemIngredient> itemIngredient = ingredient.getItemIngredient();
-        List<StructureIngredient.FluidIngredient> fluidIngredient = ingredient.getFluidIngredient();
+        List<StructureIngredient.ItemIngredient> itemIngredient = ingredient.itemIngredient();
+        List<StructureIngredient.FluidIngredient> fluidIngredient = ingredient.fluidIngredient();
 
         if (!itemIngredient.isEmpty()) {
             assemblyItemBlocks(consumeInventory, itemIngredient);
@@ -315,14 +316,14 @@ public class MachineAssembly {
     }
 
     public void assemblyCreative() {
-        for (final StructureIngredient.ItemIngredient itemIngredient : ingredient.getItemIngredient()) {
+        for (final StructureIngredient.ItemIngredient itemIngredient : ingredient.itemIngredient()) {
             List<Tuple<ItemStack, IBlockState>> ingredientList = itemIngredient.getIngredientList();
             if (ingredientList.isEmpty()) continue;
 
             IBlockState state = ingredientList.get(0).getSecond();
             world.setBlockState(ctrlPos.add(itemIngredient.getPos()), state);
         }
-        for (final StructureIngredient.FluidIngredient fluidIngredient : ingredient.getFluidIngredient()) {
+        for (final StructureIngredient.FluidIngredient fluidIngredient : ingredient.fluidIngredient()) {
             List<Tuple<FluidStack, IBlockState>> ingredientList = fluidIngredient.getIngredientList();
             if (ingredientList.isEmpty()) continue;
 
@@ -455,9 +456,8 @@ public class MachineAssembly {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MachineAssembly)) return false;
+        if (!(o instanceof final MachineAssembly another)) return false;
 
-        MachineAssembly another = (MachineAssembly) o;
         return ctrlPos.equals(another.ctrlPos);
     }
 

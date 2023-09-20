@@ -131,6 +131,7 @@ public class BlockArrayRenderHelper {
         double size = 2;
         double minSize = 0.5;
 
+        //noinspection SimplifyOptionalCallChains
         if (!slice.isPresent()) {
             double maxLength = 0;
             double pointDst = max.getX() - min.getX();

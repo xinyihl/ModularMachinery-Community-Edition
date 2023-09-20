@@ -57,11 +57,10 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cmp = component.component;
+        MachineComponent<?> cmp = component.component();
         if (cmp.getComponentType().equals(ComponentTypesMM.COMPONENT_SMART_INTERFACE) &&
-            cmp instanceof TileSmartInterface.SmartInterfaceProvider) {
+                cmp instanceof final TileSmartInterface.SmartInterfaceProvider provider) {
 
-            TileSmartInterface.SmartInterfaceProvider provider = (TileSmartInterface.SmartInterfaceProvider) cmp;
             return provider.getMachineData(type.getType()) != null;
         } else {
             return false;
@@ -82,7 +81,7 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        TileSmartInterface.SmartInterfaceProvider provider = (TileSmartInterface.SmartInterfaceProvider) component.providedComponent;
+        TileSmartInterface.SmartInterfaceProvider provider = (TileSmartInterface.SmartInterfaceProvider) component.getProvidedComponent();
         SmartInterfaceData data = provider.getMachineData(type.getType());
         if (data == null) {
             return CraftCheck.failure("component.missing.modularmachinery.interface.number");

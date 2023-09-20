@@ -63,8 +63,7 @@ public class CraftingStatus {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof CraftingStatus)) return false;
-        CraftingStatus another = (CraftingStatus) obj;
+        if (!(obj instanceof final CraftingStatus another)) return false;
         if (status != another.status) return false;
         return unlocalizedMessage.equals(another.unlocalizedMessage);
     }

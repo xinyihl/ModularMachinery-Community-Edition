@@ -138,13 +138,10 @@ public class RecipeLoader {
         RECIPE;
 
         public boolean accepts(String fileName) {
-            switch (this) {
-                case ADAPTER:
-                    return fileName.endsWith(".adapter.json");
-                case RECIPE:
-                default:
-                    return fileName.endsWith(".json");
-            }
+            return switch (this) {
+                case ADAPTER -> fileName.endsWith(".adapter.json");
+                default -> fileName.endsWith(".json");
+            };
         }
 
     }

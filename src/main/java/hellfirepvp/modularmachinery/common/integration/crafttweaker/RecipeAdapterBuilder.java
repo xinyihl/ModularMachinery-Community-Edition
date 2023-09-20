@@ -58,8 +58,7 @@ public class RecipeAdapterBuilder extends RecipePrimer {
         return modifiers;
     }
 
-    @Override
-    public ResourceLocation getParentMachineName() {
+    public ResourceLocation getAdapterParentMachineName() {
         return parentMachineName;
     }
 

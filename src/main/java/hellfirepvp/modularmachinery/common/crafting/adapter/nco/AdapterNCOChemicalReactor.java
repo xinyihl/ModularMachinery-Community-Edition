@@ -7,15 +7,12 @@ import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
-import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import nc.recipe.BasicRecipe;
 import nc.recipe.NCRecipes;
 import nc.recipe.ingredient.IFluidIngredient;
-import nc.recipe.ingredient.IItemIngredient;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -40,7 +37,7 @@ public class AdapterNCOChemicalReactor extends AdapterNCOMachine {
         List<MachineRecipe> machineRecipeList = new ArrayList<>(recipeList.size());
 
         for (BasicRecipe basicRecipe : recipeList) {
-            MachineRecipe recipe = createRecipeShell(new ResourceLocation("nuclearcraft", "infuser_" + incId),
+            MachineRecipe recipe = createRecipeShell(new ResourceLocation("nuclearcraft", "chemical_reactor_" + incId),
                     owningMachineName, (int) basicRecipe.getBaseProcessTime(Math.round(RecipeModifier.applyModifiers(
                             modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, WORK_TIME, false))),
                     incId, false
@@ -49,18 +46,24 @@ public class AdapterNCOChemicalReactor extends AdapterNCOMachine {
             RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             for (IFluidIngredient fluidIngredient : basicRecipe.getFluidIngredients()) {
-                FluidStack stack = fluidIngredient.getStack().copy();
-                int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, stack.amount, false));
+                FluidStack copied = fluidIngredient.getStack().copy();
+                int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, copied.amount, false));
                 if (inAmount > 0) {
-                    stack.amount = inAmount;
-                    recipe.addRequirement(new RequirementFluid(IOType.INPUT, stack));
+                    copied.amount = inAmount;
+                    recipe.addRequirement(new RequirementFluid(IOType.INPUT, copied));
                 }
             }
 
-            for (IItemIngredient itemProduct : basicRecipe.getItemProducts()) {
-                int outputAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, itemProduct.getStack().getCount(), false));
+            for (IFluidIngredient fluidProduct : basicRecipe.getFluidProducts()) {
+                FluidStack productStack = fluidProduct.getStack();
+                if (productStack == null) {
+                    continue;
+                }
+                FluidStack copied = productStack.copy();
+                int outputAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.OUTPUT, copied.amount, false));
                 if (outputAmount > 0) {
-                    recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(itemProduct.getStack(), outputAmount)));
+                    copied.amount = outputAmount;
+                    recipe.addRequirement(new RequirementFluid(IOType.OUTPUT, copied));
                 }
             }
 

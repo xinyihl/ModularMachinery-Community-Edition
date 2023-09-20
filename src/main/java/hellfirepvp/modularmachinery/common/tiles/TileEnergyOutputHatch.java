@@ -133,8 +133,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         EnumFacing oppositeSide = face.getOpposite();
 
         TileEntity te = world.getTileEntity(at);
-        if (te instanceof TileFluxPlug) {
-            TileFluxPlug plug = (TileFluxPlug) te;
+        if (te instanceof final TileFluxPlug plug) {
             long maxCanReceive = Math.min(plug.getMaxTransferLimit() - plug.getTransferBuffer(), maxCanExtract);
             return plug.getTransferHandler().receiveFromSupplier(maxCanReceive, oppositeSide, false);
         }
@@ -150,8 +149,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
             findCore();
         }
 
-        if (foundCore != null && te instanceof TileEnergyStorageCore) {
-            TileEnergyStorageCore core = (TileEnergyStorageCore) te;
+        if (foundCore != null && te instanceof final TileEnergyStorageCore core) {
 
             long energyReceived = Math.min(core.getExtendedCapacity() - core.energy.value, maxCanExtract);
             core.energy.value += energyReceived;

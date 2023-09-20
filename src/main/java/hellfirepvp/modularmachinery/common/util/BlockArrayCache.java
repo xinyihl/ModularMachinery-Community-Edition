@@ -134,7 +134,7 @@ public class BlockArrayCache {
         TaggedPositionBlockArray upDownRotated;
 
         switch (upDown) {
-            case UP:
+            case UP -> {
                 do {
                     facing = facing.rotateYCCW();
                     rotated = rotated.rotateYCCW();
@@ -142,8 +142,8 @@ public class BlockArrayCache {
                     upDownRotated.flushTileBlocksCache();
                     addHorizontalBlockArrayCache(upDownRotated, upDown, facing);
                 } while (facing != EnumFacing.NORTH);
-                break;
-            case DOWN:
+            }
+            case DOWN -> {
                 do {
                     facing = facing.rotateYCCW();
                     rotated = rotated.rotateYCCW();
@@ -151,7 +151,7 @@ public class BlockArrayCache {
                     upDownRotated.flushTileBlocksCache();
                     addHorizontalBlockArrayCache(upDownRotated, upDown, facing);
                 } while (facing != EnumFacing.NORTH);
-                break;
+            }
         }
     }
 

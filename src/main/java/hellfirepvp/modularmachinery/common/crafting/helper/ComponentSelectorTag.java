@@ -8,6 +8,8 @@
 
 package hellfirepvp.modularmachinery.common.crafting.helper;
 
+import com.github.bsideup.jabel.Desugar;
+
 import javax.annotation.Nonnull;
 
 /**
@@ -18,15 +20,13 @@ import javax.annotation.Nonnull;
  * Date: 04.03.2019 / 21:31
  */
 // Basically a super fancy wrapped string.
-public class ComponentSelectorTag {
+@Desugar
+public record ComponentSelectorTag(String tag) {
 
-    private final String tag;
-
-    public ComponentSelectorTag(String tag) {
+    public ComponentSelectorTag {
         if (tag == null || tag.isEmpty()) {
             throw new IllegalArgumentException("Tried to create tag object will null or empty tag!");
         }
-        this.tag = tag;
     }
 
     @Nonnull
