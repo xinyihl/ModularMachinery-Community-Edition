@@ -15,7 +15,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -29,7 +28,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SuppressWarnings("MethodMayBeStatic")
 public class EventHandler {
     /**
-     * <p>当玩家对打开控制器界面时更新控制器的信息，以避免某些消息不同步的问题。</p>
+     * <p>当玩家对某些方块实体右击时更新方块实体，以避免某些消息不同步的问题。</p>
      * <p>Update the controller's information when the player interacts with the controller,
      * Avoid the problem of some messages being out of sync.</p>
      */
@@ -41,13 +40,12 @@ public class EventHandler {
         }
 
         TileEntity te = world.getTileEntity(event.getPos());
-        if (!(te instanceof SelectiveUpdateTileEntity)) {
+        if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof final TileEntitySynchronized teSync)) {
             return;
         }
-        SPacketUpdateTileEntity packet = ((SelectiveUpdateTileEntity) te).getTrueUpdatePacket();
-        if (event.getEntityPlayer() instanceof EntityPlayerMP) {
-            ((EntityPlayerMP) event.getEntityPlayer()).connection.sendPacket(packet);
-        }
+
+        // 触发更新，并使其同步至客户端。
+        teSync.notifyUpdate();
     }
 
     /**
@@ -74,7 +72,7 @@ public class EventHandler {
             }
         }
 
-        if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof TileEntitySynchronized)) {
+        if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof final TileEntitySynchronized teSync)) {
             return;
         }
 
@@ -83,12 +81,13 @@ public class EventHandler {
             return;
         }
 
+        teSync.markForUpdateSync();
+
         ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
             if (event.player instanceof EntityPlayerMP) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) player;
-                TileEntitySynchronized teSynchronized = (TileEntitySynchronized) te;
-                if (teSynchronized.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
-                    playerMP.connection.sendPacket(((SelectiveUpdateTileEntity) te).getTrueUpdatePacket());
+                if (teSync.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
+                    teSync.notifyUpdate();
                 }
 
                 World world = event.player.getEntityWorld();

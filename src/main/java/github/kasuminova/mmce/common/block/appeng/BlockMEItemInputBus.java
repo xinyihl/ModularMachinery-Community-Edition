@@ -43,6 +43,10 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
     }
 
     @Override
+    public void dropBlockAsItemWithChance(@Nonnull final World worldIn, @Nonnull final BlockPos pos, @Nonnull final IBlockState state, final float chance, final int fortune) {
+    }
+
+    @Override
     public void breakBlock(final World worldIn,
                            @Nonnull final BlockPos pos,
                            @Nonnull final IBlockState state)
@@ -50,16 +54,17 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
         TileEntity te = worldIn.getTileEntity(pos);
 
         if (te == null) {
-            super.breakBlock(worldIn, pos, state);
+            super.dropBlockAsItemWithChance(worldIn, pos, state, 1.0F, 0);
+            worldIn.removeTileEntity(pos);
             return;
         }
         if (!(te instanceof final MEItemInputBus bus)) {
-            super.breakBlock(worldIn, pos, state);
+            worldIn.removeTileEntity(pos);
             return;
         }
 
         if (!bus.hasItem() && !bus.configInvHasItem()) {
-            super.breakBlock(worldIn, pos, state);
+            worldIn.removeTileEntity(pos);
             return;
         }
 

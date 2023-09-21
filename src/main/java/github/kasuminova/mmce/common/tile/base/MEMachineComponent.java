@@ -22,7 +22,6 @@ import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import javax.annotation.Nonnull;
@@ -53,16 +52,6 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     public void writeCustomNBT(final NBTTagCompound compound) {
         super.writeCustomNBT(compound);
         proxy.writeToNBT(compound);
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return null;
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getTrueUpdatePacket() {
-        return super.getUpdatePacket();
     }
 
     // AppEng Compat

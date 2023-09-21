@@ -125,15 +125,15 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
         if (successAtLeastOnce) {
             incrementSuccessCounter(maxWorkDelay, minWorkDelay);
-            super.markForUpdate();
+            super.markNoUpdate();
         } else {
             decrementSuccessCounter();
         }
     }
 
     @Override
-    public void markForUpdate() {
-        super.markForUpdate();
+    public void markNoUpdate() {
+        super.markNoUpdate();
         inventoryChanged = true;
     }
 

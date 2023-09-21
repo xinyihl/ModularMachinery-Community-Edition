@@ -57,7 +57,7 @@ public class GTEnergyContainer implements IEnergyContainer {
                 long acceptingAmperage = Math.min(availableSpace / voltage, maxAmperage);
                 if (acceptingAmperage > 0) {
                     hatch.setCurrentEnergy(hatch.getCurrentEnergy() + ((acceptingAmperage * voltage) * 4L));
-                    hatch.markForUpdate();
+                    hatch.markNoUpdate();
                     return acceptingAmperage;
                 }
             }

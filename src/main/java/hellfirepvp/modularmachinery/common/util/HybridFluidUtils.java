@@ -144,6 +144,7 @@ public class HybridFluidUtils {
     }
 
     @Nonnull
+    @Optional.Method(modid = "mekanism")
     public static List<HybridGasTank> castGasHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<HybridGasTank> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
@@ -171,6 +172,7 @@ public class HybridFluidUtils {
 
     @Nonnull
     @SuppressWarnings("unchecked")
+    @Optional.Method(modid = "mekanism")
     public static List<ProcessingComponent<?>> copyGasHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {

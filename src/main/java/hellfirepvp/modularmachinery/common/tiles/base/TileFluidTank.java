@@ -19,7 +19,6 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import mekanism.api.gas.ITubeConnection;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
@@ -97,16 +96,6 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
             }
         }
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return null;
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getTrueUpdatePacket() {
-        return super.getUpdatePacket();
     }
 
     @Override

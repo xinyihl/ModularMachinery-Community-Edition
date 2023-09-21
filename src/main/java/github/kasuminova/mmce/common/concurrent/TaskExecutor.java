@@ -47,6 +47,8 @@ public class TaskExecutor {
 
     private final MpscLinkedAtomicQueue<Action> mainThreadActions = new MpscLinkedAtomicQueue<>();
     private final MpscLinkedAtomicQueue<TileEntitySynchronized> requireUpdateTEQueue = new MpscLinkedAtomicQueue<>();
+    private final MpscLinkedAtomicQueue<TileEntitySynchronized> requireMarkNoUpdateTEQueue = new MpscLinkedAtomicQueue<>();
+
     private final TaskSubmitter submitter = new TaskSubmitter();
 
     private volatile boolean inTick = false;
@@ -141,13 +143,17 @@ public class TaskExecutor {
     }
 
     private void updateTileEntity() {
-        if (requireUpdateTEQueue.isEmpty()) {
+        if (requireUpdateTEQueue.isEmpty() && requireMarkNoUpdateTEQueue.isEmpty()) {
             return;
         }
 
         TileEntitySynchronized te;
         while ((te = requireUpdateTEQueue.poll()) != null) {
             te.markForUpdate();
+        }
+
+        while ((te = requireMarkNoUpdateTEQueue.poll()) != null) {
+            te.markNoUpdate();
         }
     }
 
@@ -191,6 +197,10 @@ public class TaskExecutor {
 
     public void addTEUpdateTask(final TileEntitySynchronized te) {
         requireUpdateTEQueue.offer(te);
+    }
+
+    public void addTEMarkNoUpdateTask(final TileEntitySynchronized te) {
+        requireMarkNoUpdateTEQueue.offer(te);
     }
 
     private synchronized void submitTask() {

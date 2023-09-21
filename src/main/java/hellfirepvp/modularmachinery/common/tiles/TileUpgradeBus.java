@@ -18,7 +18,6 @@ import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -148,16 +147,6 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             });
             compound.setTag("boundedMachine", tagList);
         }
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return null;
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getTrueUpdatePacket() {
-        return super.getUpdatePacket();
     }
 
     public class UpgradeBusProvider extends MachineComponent<UpgradeBusProvider> {

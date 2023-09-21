@@ -20,7 +20,6 @@ import mcjty.lib.api.power.IBigPower;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTPrimitive;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -136,7 +135,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         insertable = Math.min(insertable, convertDownEnergy(size.transferLimit));
         if (!simulate) {
             this.energy.set(MiscUtils.clamp(this.energy.get() + insertable, 0, this.size.maxEnergy));
-            markForUpdate();
+            markNoUpdate();
         }
         return insertable;
     }
@@ -150,7 +149,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         extractable = Math.min(extractable, convertDownEnergy(size.transferLimit));
         if (!simulate) {
             this.energy.set(MiscUtils.clamp(this.energy.get() - extractable, 0, this.size.maxEnergy));
-            markForUpdate();
+            markNoUpdate();
         }
         return extractable;
     }
@@ -192,16 +191,6 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         }
 
         return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getUpdatePacket() {
-        return null;
-    }
-
-    @Override
-    public SPacketUpdateTileEntity getTrueUpdatePacket() {
-        return super.getUpdatePacket();
     }
 
     @Override

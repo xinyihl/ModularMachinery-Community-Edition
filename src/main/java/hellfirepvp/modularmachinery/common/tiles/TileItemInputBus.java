@@ -122,7 +122,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
 
         if (successAtLeastOnce) {
             incrementSuccessCounter(maxWorkDelay, minWorkDelay);
-            markForUpdate();
+            markNoUpdate();
         } else {
             decrementSuccessCounter();
         }

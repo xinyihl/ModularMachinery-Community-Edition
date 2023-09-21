@@ -26,6 +26,8 @@ import javax.annotation.Nonnull;
  */
 public class TileEntitySynchronized extends TileEntity {
     private boolean inUpdateTask = false;
+    private boolean inMarkTask = false;
+
     private long lastUpdateTick = 0;
 
     public final void readFromNBT(NBTTagCompound compound) {
@@ -52,6 +54,7 @@ public class TileEntitySynchronized extends TileEntity {
     public void writeNetNBT(NBTTagCompound compound) {
     }
 
+    @Nonnull
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() {
         NBTTagCompound compound = new NBTTagCompound();
@@ -76,13 +79,30 @@ public class TileEntitySynchronized extends TileEntity {
         readNetNBT(packet.getNbtCompound());
     }
 
-    public void markForUpdate() {
-        IBlockState state = world.getBlockState(pos);
-        world.notifyBlockUpdate(pos, state, state, 3);
+    public void markNoUpdate() {
         markDirty();
-
-        inUpdateTask = false;
+        inMarkTask = false;
         lastUpdateTick = getWorld().getTotalWorldTime();
+    }
+
+    public void markForUpdate() {
+        markNoUpdate();
+        notifyUpdate();
+    }
+
+    public void notifyUpdate() {
+        IBlockState state = world.getBlockState(pos);
+
+        world.notifyBlockUpdate(pos, state, state, 3);
+        inUpdateTask = false;
+    }
+
+    public void markNoUpdateSync() {
+        if (inMarkTask) {
+            return;
+        }
+        ModularMachinery.EXECUTE_MANAGER.addTEMarkNoUpdateTask(this);
+        inMarkTask = true;
     }
 
     /**
@@ -90,11 +110,16 @@ public class TileEntitySynchronized extends TileEntity {
      * <p>*** 只能保证 MMCE 自身对世界的线程安全 ***</p>
      */
     public void markForUpdateSync() {
+        if (this instanceof SelectiveUpdateTileEntity) {
+            markNoUpdateSync();
+            return;
+        }
         if (inUpdateTask) {
             return;
         }
         ModularMachinery.EXECUTE_MANAGER.addTEUpdateTask(this);
         inUpdateTask = true;
+        inMarkTask = true;
     }
 
     public boolean isInUpdateTask() {

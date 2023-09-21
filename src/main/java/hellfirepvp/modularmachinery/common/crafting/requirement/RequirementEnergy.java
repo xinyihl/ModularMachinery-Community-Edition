@@ -156,8 +156,9 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                                   final RecipeCraftingContext context,
                                   final float durationMultiplier)
     {
-        float mul = doEnergyIOInternal(components, context, parallelism * durationMultiplier);
-        if (mul < parallelism) {
+        float maxMultiplier = parallelism * durationMultiplier;
+        float mul = doEnergyIOInternal(components, context, maxMultiplier);
+        if (mul < maxMultiplier) {
             return switch (actionType) {
                 case INPUT -> CraftCheck.failure("craftcheck.failure.energy.input");
                 case OUTPUT -> CraftCheck.failure("craftcheck.failure.energy.output.space");
