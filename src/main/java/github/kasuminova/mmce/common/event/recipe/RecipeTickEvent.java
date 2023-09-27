@@ -31,8 +31,8 @@ public class RecipeTickEvent extends RecipeEvent {
 
         if (preventProgressing) {
             ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
-            if (controller.getFoundMachine() != null) {
-                activeRecipe.doFailureAction(controller.getFoundMachine().getFailureAction());
+            if (activeRecipe.getTick() > 0) {
+                activeRecipe.setTick(activeRecipe.getTick() - 1);
             }
             recipeThread.setStatus(CraftingStatus.working(failureReason));
             return;

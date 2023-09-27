@@ -131,6 +131,20 @@ public interface IMachineController {
     RecipeThread[] getRecipeThreadList();
 
     /**
+     * 获取工厂控制器的额外配方线程数。
+     *
+     * @return 额外配方线程数，如果机械控制器是普通控制器则始终返回 0。
+     */
+    @ZenGetter("extraThreadCount")
+    int getExtraThreadCount();
+
+    /**
+     * 设置工厂控制器的额外配方线程数，如果机械控制器是普通控制器则此方法无效。
+     */
+    @ZenSetter("extraThreadCount")
+    void setExtraThreadCount(int extraThreadCount);
+
+    /**
      * 机器是否在工作。
      *
      * @return true 为工作，反之为闲置或未形成结构

@@ -115,11 +115,11 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        return doEnergyIO(components, context, 1F);
+        return doEnergyIO(components, context, 1F, true);
     }
 
     public CraftCheck doIOTick(List<ProcessingComponent<?>> components, RecipeCraftingContext context, final float durationMultiplier) {
-        return doEnergyIO(components, context, durationMultiplier);
+        return doEnergyIO(components, context, durationMultiplier, false);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
             return max;
         }
 
-        return (int) doEnergyIOInternal(components, context, max);
+        return (int) doEnergyIOInternal(components, context, max, true);
     }
 
     @Override
@@ -154,10 +154,12 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     private CraftCheck doEnergyIO(final List<ProcessingComponent<?>> components,
                                   final RecipeCraftingContext context,
-                                  final float durationMultiplier)
+                                  final float durationMultiplier,
+                                  final boolean simulate)
+
     {
         float maxMultiplier = parallelism * durationMultiplier;
-        float mul = doEnergyIOInternal(components, context, maxMultiplier);
+        float mul = doEnergyIOInternal(components, context, maxMultiplier, simulate);
         if (mul < maxMultiplier) {
             return switch (actionType) {
                 case INPUT -> CraftCheck.failure("craftcheck.failure.energy.input");
@@ -168,8 +170,9 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
     }
 
     private float doEnergyIOInternal(final List<ProcessingComponent<?>> components,
-                                   final RecipeCraftingContext context,
-                                   final float maxMultiplier)
+                                     final RecipeCraftingContext context,
+                                     final float maxMultiplier,
+                                     final boolean simulate)
     {
         long required = (long) RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false);
         long maxRequired = (long) (required * maxMultiplier);
@@ -180,17 +183,33 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
             handlers.add(providedComponent);
         }
 
-        return consumeOrInsertEnergy(handlers, maxRequired, required, maxMultiplier);
+        float consumed = consumeOrInsertEnergy(handlers, maxRequired, required, maxMultiplier, true);
+        if (simulate) {
+            return consumed;
+        }
+
+        if (consumed >= maxMultiplier) {
+            return consumeOrInsertEnergy(handlers, maxRequired, required, maxMultiplier, false);
+        } else {
+            return 0;
+        }
     }
 
-    private float consumeOrInsertEnergy(final List<IEnergyHandler> handlers, double total, final long required, final float multiplier) {
+    private float consumeOrInsertEnergy(final List<IEnergyHandler> handlers,
+                                        final double total,
+                                        final long required,
+                                        final float multiplier,
+                                        final boolean simulate)
+    {
         double maxRequired = total;
         switch (actionType) {
             case INPUT -> {
                 for (final IEnergyHandler handler : handlers) {
                     long current = handler.getCurrentEnergy();
                     long toConsume = (long) Math.min(current, maxRequired);
-                    handler.setCurrentEnergy(current - toConsume);
+                    if (!simulate) {
+                        handler.setCurrentEnergy(current - toConsume);
+                    }
                     maxRequired -= toConsume;
                 }
             }
@@ -198,7 +217,9 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                 for (final IEnergyHandler handler : handlers) {
                     long remaining = handler.getRemainingCapacity();
                     long toReceive = (long) Math.min(remaining, maxRequired);
-                    handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
+                    if (!simulate) {
+                        handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
+                    }
                     maxRequired -= toReceive;
                 }
             }

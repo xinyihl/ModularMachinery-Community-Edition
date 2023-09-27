@@ -200,6 +200,8 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         }
         offsetY += 15;
 
+        offsetY = drawFactoryRecipeSearchStatusInfo(offsetX, offsetY, fr);
+
         int tmp = offsetY;
         offsetY = drawFactoryThreadsInfo(offsetX, offsetY, fr);
         offsetY = drawParallelismInfo(offsetX, offsetY, fr);
@@ -219,16 +221,31 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         GlStateManager.popMatrix();
     }
 
-    private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
-        DynamicMachine foundMachine = factory.getFoundMachine();
-        assert foundMachine != null;
+    private int drawFactoryRecipeSearchStatusInfo(int offsetX, int y, FontRenderer fr) {
+        if (!factory.hasIdleThread()) {
+            return y;
+        }
+        int offsetY = y;
 
-        if (foundMachine.getMaxThreads() <= 0) {
-            return offsetY;
+        String status = I18n.format("gui.controller.status");
+        fr.drawStringWithShadow(status, offsetX, offsetY, 0xFFFFFF);
+        String statusKey = factory.getControllerStatus().getUnlocMessage();
+
+        List<String> out = fr.listFormattedStringToWidth(I18n.format(statusKey), MathHelper.floor(135 * (1 / FONT_SCALE)));
+        for (String draw : out) {
+            offsetY += 10;
+            fr.drawStringWithShadow(draw, offsetX, offsetY, 0xFFFFFF);
         }
 
+        return offsetY + 15;
+    }
+
+    private int drawFactoryThreadsInfo(int offsetX, int offsetY, FontRenderer fr) {
+        if (factory.getMaxThreads() <= 0) {
+            return offsetY;
+        }
         fr.drawStringWithShadow(I18n.format("gui.factory.threads",
-                factory.getFactoryRecipeThreadList().size(), foundMachine.getMaxThreads()),
+                factory.getFactoryRecipeThreadList().size(), factory.getMaxThreads()),
                 offsetX, offsetY, 0xFFFFFF);
         return offsetY + 10;
     }

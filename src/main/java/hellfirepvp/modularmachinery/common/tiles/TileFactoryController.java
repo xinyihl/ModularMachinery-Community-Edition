@@ -42,6 +42,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     private final List<ForkJoinTask<?>> waitToExecute = new ArrayList<>();
     private CraftingStatus controllerStatus = CraftingStatus.MISSING_STRUCTURE;
     private int totalParallelism = 1;
+    private int extraThreadCount = 0;
     private BlockFactoryController parentController = null;
     private FactoryRecipeSearchTask searchTask = null;
     private SequentialTaskExecutor threadTask = null;
@@ -163,8 +164,13 @@ public class TileFactoryController extends TileMultiblockMachineController {
         CraftingStatus status = thread.getStatus();
 
         // PreTickEvent
-        new FactoryRecipeTickEvent(thread, this, Phase.START).postEvent();
+        FactoryRecipeTickEvent event = new FactoryRecipeTickEvent(thread, this, Phase.START);
+        event.postEvent();
+        if (event.isFailure()) {
+            return;
+        }
 
+        // RecipeTick
         if (status != thread.getStatus()) {
             status = thread.getStatus();
             thread.onTick();
@@ -173,13 +179,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             status = thread.onTick();
         }
 
-        // RecipeTick
-        if (!status.isCrafting()) {
-            boolean destruct = onThreadRecipeFailure(thread);
-            if (destruct) {
-                // Destruction recipe
-                thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
-            }
+        if (isNotWorking(thread, status)) {
             return;
         }
 
@@ -189,6 +189,18 @@ public class TileFactoryController extends TileMultiblockMachineController {
         if (thread.isCompleted()) {
             thread.onFinished();
         }
+    }
+
+    protected boolean isNotWorking(final FactoryRecipeThread thread, final CraftingStatus status) {
+        if (status.isCrafting()) {
+            return false;
+        }
+        boolean destruct = onThreadRecipeFailure(thread);
+        if (destruct) {
+            // Destruction recipe
+            thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
+        }
+        return true;
     }
 
     /**
@@ -300,6 +312,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         super.resetMachine(clearData);
         recipeThreadList.clear();
         coreRecipeThreads.clear();
+        extraThreadCount = 0;
     }
 
     public List<FactoryRecipeThread> getFactoryRecipeThreadList() {
@@ -357,7 +370,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             }
         }
 
-        if (recipeThreadList.size() > foundMachine.getMaxThreads()) {
+        if (recipeThreadList.size() > getMaxThreads()) {
             return;
         }
 
@@ -367,6 +380,10 @@ public class TileFactoryController extends TileMultiblockMachineController {
                 .setStatus(CraftingStatus.SUCCESS);
         recipeThreadList.add(thread);
         onThreadRecipeStart(thread);
+    }
+
+    public int getMaxThreads() {
+        return extraThreadCount + foundMachine.getMaxThreads();
     }
 
     @Override
@@ -432,7 +449,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
     }
 
     public boolean hasIdleThread() {
-        if (recipeThreadList.size() < foundMachine.getMaxThreads()) {
+        if (recipeThreadList.size() < getMaxThreads()) {
             return true;
         }
 
@@ -487,6 +504,12 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
+
+        if (compound.hasKey("status")) {
+            controllerStatus = CraftingStatus.deserialize(compound.getCompoundTag("status"));
+        }
+
+        extraThreadCount = compound.getInteger("extraThreadCount");
 
         recipeThreadList.clear();
         coreRecipeThreads.clear();
@@ -552,7 +575,9 @@ public class TileFactoryController extends TileMultiblockMachineController {
             compound.setTag("coreThreadList", threadList);
         }
 
+        compound.setTag("status", controllerStatus.serialize());
         compound.setInteger("totalParallelism", getMaxParallelism());
+        compound.setInteger("extraThreadCount", extraThreadCount);
     }
 
     @Override
@@ -600,6 +625,16 @@ public class TileFactoryController extends TileMultiblockMachineController {
         list.addAll(coreRecipeThreads.values());
         list.addAll(recipeThreadList);
         return list.toArray(new RecipeThread[0]);
+    }
+
+    @Override
+    public int getExtraThreadCount() {
+        return extraThreadCount;
+    }
+
+    @Override
+    public void setExtraThreadCount(final int extraThreadCount) {
+        this.extraThreadCount = extraThreadCount;
     }
 
     @Override

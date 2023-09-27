@@ -116,8 +116,13 @@ public class TileMachineController extends TileMultiblockMachineController {
         CraftingStatus status = thread.getStatus();
 
         // PreTickEvent
-        new RecipeTickEvent(this, thread, Phase.START).postEvent();
+        RecipeTickEvent event = new RecipeTickEvent(this, thread, Phase.START);
+        event.postEvent();
+        if (event.isFailure()) {
+            return true;
+        }
 
+        // RecipeTick
         if (status != thread.getStatus()) {
             status = thread.getStatus();
             thread.onTick();
@@ -126,13 +131,7 @@ public class TileMachineController extends TileMultiblockMachineController {
             status = thread.onTick();
         }
 
-        // RecipeTick
-        if (!status.isCrafting()) {
-            boolean destruct = onFailure();
-            if (destruct) {
-                // Destruction recipe
-                thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
-            }
+        if (isNotWorking(thread, status)) {
             return true;
         }
 
@@ -141,6 +140,18 @@ public class TileMachineController extends TileMultiblockMachineController {
 
         if (thread.isCompleted()) {
             thread.onFinished();
+        }
+        return true;
+    }
+
+    protected boolean isNotWorking(final MachineRecipeThread thread, final CraftingStatus status) {
+        if (status.isCrafting()) {
+            return false;
+        }
+        boolean destruct = onFailure();
+        if (destruct) {
+            // Destruction recipe
+            thread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
         }
         return true;
     }
@@ -248,6 +259,15 @@ public class TileMachineController extends TileMultiblockMachineController {
     @Override
     public RecipeThread[] getRecipeThreadList() {
         return new RecipeThread[]{recipeThread};
+    }
+
+    @Override
+    public int getExtraThreadCount() {
+        return 0;
+    }
+
+    @Override
+    public void setExtraThreadCount(final int extraThreadCount) {
     }
 
     @Override

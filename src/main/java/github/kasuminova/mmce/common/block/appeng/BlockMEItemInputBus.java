@@ -59,11 +59,13 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
             return;
         }
         if (!(te instanceof final MEItemInputBus bus)) {
+            super.dropBlockAsItemWithChance(worldIn, pos, state, 1.0F, 0);
             worldIn.removeTileEntity(pos);
             return;
         }
 
         if (!bus.hasItem() && !bus.configInvHasItem()) {
+            super.dropBlockAsItemWithChance(worldIn, pos, state, 1.0F, 0);
             worldIn.removeTileEntity(pos);
             return;
         }

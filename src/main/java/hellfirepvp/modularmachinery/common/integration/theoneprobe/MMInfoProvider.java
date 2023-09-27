@@ -100,7 +100,7 @@ public class MMInfoProvider implements IProbeInfoProvider {
             addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyGenerateTotal.get());
         }
 
-        int maxThreads = factory.getFoundMachine().getMaxThreads();
+        int maxThreads = factory.getMaxThreads();
         if (maxThreads > 0) {
             probeInfo.text(
                     TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +

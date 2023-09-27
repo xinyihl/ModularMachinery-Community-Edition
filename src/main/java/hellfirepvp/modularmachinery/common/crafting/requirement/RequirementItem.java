@@ -270,6 +270,9 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         switch (this.requirementType) {
             case ITEMSTACKS -> {
                 stack = required.copy();
+                if (tag != null) {
+                    stack.setTagCompound(tag);
+                }
                 if (!itemModifiers.isEmpty()) {
                     stack.setCount(toConsume);
 
@@ -304,6 +307,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
                 if (!itemModifiers.isEmpty()) {
                     stack = ItemUtils.getOredictItem(context, oreDictName, tag);
                     stack.setCount(toConsume);
+
+                    if (tag != null) {
+                        stack.setTagCompound(tag);
+                    }
 
                     for (final AdvancedItemModifier modifier : itemModifiers) {
                         stack = modifier.apply(context.getMachineController(), stack);

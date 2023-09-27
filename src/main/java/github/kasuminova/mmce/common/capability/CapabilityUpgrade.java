@@ -28,7 +28,7 @@ public class CapabilityUpgrade {
     private final List<MachineUpgrade> upgrades = new ArrayList<>();
 
     public static void register() {
-        CapabilityManager.INSTANCE.register(CapabilityUpgrade.class, new Capability.IStorage<CapabilityUpgrade>() {
+        CapabilityManager.INSTANCE.register(CapabilityUpgrade.class, new Capability.IStorage<>() {
             @Nullable
             @Override
             public NBTBase writeNBT(final Capability<CapabilityUpgrade> capability, final CapabilityUpgrade instance, final EnumFacing side) {
@@ -49,15 +49,15 @@ public class CapabilityUpgrade {
     public void readNBT(NBTTagCompound tag) {
         upgrades.clear();
         for (final String upgradeType : tag.getKeySet()) {
-            NBTTagCompound upgradeTag = tag.getCompoundTag(upgradeType);
             MachineUpgrade upgrade = RegistryUpgrade.getUpgrade(upgradeType);
-
             if (upgrade == null) {
                 continue;
             }
+
             upgrade = upgrade.copy(upgrade.getParentStack());
             upgrades.add(upgrade);
             if (upgrade instanceof DynamicMachineUpgrade) {
+                NBTTagCompound upgradeTag = tag.getCompoundTag(upgradeType);
                 ((DynamicMachineUpgrade) upgrade).readItemNBT(upgradeTag);
             }
         }

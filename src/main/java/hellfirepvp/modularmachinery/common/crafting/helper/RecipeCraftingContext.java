@@ -351,16 +351,16 @@ public class RecipeCraftingContext {
             }
         }
 
-        Map<IOType, Map<RequirementType<?, ?>, List<ProcessingComponent<?>>>> typeCopiedComp = new EnumMap<>(IOType.class);
+        CopiedReqCompMap typeCopiedComp = new CopiedReqCompMap();
+        TaggedCopiedReqCompMap taggedTypeCopiedComp = new TaggedCopiedReqCompMap();
 
         int reqMaxParallelism = maxParallelism;
         for (RequirementComponents reqComponent : parallelizableList) {
             ComponentRequirement<?, ?> req = reqComponent.requirement();
-            ComponentRequirement.Parallelizable requirement = (ComponentRequirement.Parallelizable) req;
-            List<ProcessingComponent<?>> copiedCompList = typeCopiedComp.computeIfAbsent(
-                    req.actionType, v -> new Object2ObjectArrayMap<>()).computeIfAbsent(
-                            req.requirementType, v -> req.copyComponents(reqComponent.components()));
+            List<ProcessingComponent<?>> compList = reqComponent.components();
+            List<ProcessingComponent<?>> copiedCompList = getRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
 
+            ComponentRequirement.Parallelizable requirement = (ComponentRequirement.Parallelizable) req;
             reqMaxParallelism = Math.min(reqMaxParallelism, requirement.getMaxParallelism(copiedCompList, this, maxParallelism));
         }
 

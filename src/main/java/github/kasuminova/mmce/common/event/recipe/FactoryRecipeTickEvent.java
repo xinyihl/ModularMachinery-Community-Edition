@@ -29,7 +29,9 @@ public class FactoryRecipeTickEvent extends FactoryRecipeEvent {
 
         if (preventProgressing) {
             ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
-            activeRecipe.setTick(activeRecipe.getTick() - 1);
+            if (activeRecipe.getTick() > 0) {
+                activeRecipe.setTick(activeRecipe.getTick() - 1);
+            }
             recipeThread.setStatus(CraftingStatus.working(failureReason));
             return;
         }

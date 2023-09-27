@@ -188,7 +188,9 @@ public class ActiveMachineRecipe {
 
     @ZenSetter("tick")
     public void setTick(int tick) {
-        this.tick = tick;
+        if (tick >= 0) {
+            this.tick = tick;
+        }
     }
 
     @ZenGetter("totalTick")

@@ -48,7 +48,7 @@ public class RecipeBuilder {
             machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
         }
 
-        if (!path.matches("[_\\-a-zA-Z][_\\-a-zA-Z0-9]*")) {
+        if (!path.matches("[._\\-a-zA-Z][._\\-a-zA-Z0-9]*")) {
             CraftTweakerAPI.logWarning("[ModularMachinery] Dangerous recipe registry name: " + path);
         }
         if (processingTickTime <= 0) {

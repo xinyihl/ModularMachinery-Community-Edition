@@ -81,8 +81,6 @@ public class EventHandler {
             return;
         }
 
-        teSync.markForUpdateSync();
-
         ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
             if (event.player instanceof EntityPlayerMP) {
                 EntityPlayerMP playerMP = (EntityPlayerMP) player;
