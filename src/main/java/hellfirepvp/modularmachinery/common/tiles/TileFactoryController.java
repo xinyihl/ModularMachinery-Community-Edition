@@ -639,6 +639,9 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     public boolean isWorking() {
+        if (lastStrongPower > 0) {
+            return false;
+        }
         if (coreRecipeThreads.isEmpty() && recipeThreadList.isEmpty()) {
             return false;
         }

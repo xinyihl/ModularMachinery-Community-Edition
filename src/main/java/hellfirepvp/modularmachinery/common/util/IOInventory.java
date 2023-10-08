@@ -104,11 +104,18 @@ public class IOInventory extends IItemHandlerImpl {
         for (int slot = 0; slot < inventory.length; slot++) {
             SlotStackHolder holder = this.inventory[slot];
             NBTTagCompound holderTag = new NBTTagCompound();
-            holderTag.setBoolean("holderEmpty", holder.itemStack.isEmpty());
+            ItemStack stack = holder.itemStack;
+
+            holderTag.setBoolean("holderEmpty", stack.isEmpty());
             holderTag.setInteger("holderId", slot);
-            if (!holder.itemStack.isEmpty()) {
-                holder.itemStack.writeToNBT(holderTag);
+
+            if (!stack.isEmpty()) {
+                stack.writeToNBT(holderTag);
+                if (stack.getCount() >= 127) {
+                    holderTag.setInteger("Count", stack.getCount());
+                }
             }
+
             inv.appendTag(holderTag);
         }
         tag.setTag("inventoryArray", inv);
@@ -136,10 +143,10 @@ public class IOInventory extends IItemHandlerImpl {
             int slot = holderTag.getInteger("holderId");
             checkInventoryLength(slot);
 
-            boolean isEmpty = holderTag.getBoolean("holderEmpty");
             ItemStack stack = ItemStack.EMPTY;
-            if (!isEmpty) {
+            if (!holderTag.hasKey("holderEmpty")) {
                 stack = new ItemStack(holderTag);
+                stack.setCount(holderTag.getInteger("Count"));
             }
 
             SlotStackHolder holder = new SlotStackHolder(slot);

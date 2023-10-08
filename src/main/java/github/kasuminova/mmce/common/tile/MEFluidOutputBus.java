@@ -89,7 +89,7 @@ public class MEFluidOutputBus extends MEFluidBus {
     }
 
     @Override
-    public void markForUpdate() {
+    public void markNoUpdate() {
         if (proxy.isActive() && hasFluid()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
@@ -98,7 +98,7 @@ public class MEFluidOutputBus extends MEFluidBus {
             }
         }
 
-        super.markForUpdate();
+        super.markNoUpdate();
     }
 
 

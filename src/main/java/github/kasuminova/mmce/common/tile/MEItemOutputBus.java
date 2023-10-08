@@ -98,7 +98,7 @@ public class MEItemOutputBus extends MEItemBus {
     }
 
     @Override
-    public void markForUpdate() {
+    public void markNoUpdate() {
         if (proxy.isActive() && hasItem()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
@@ -107,6 +107,6 @@ public class MEItemOutputBus extends MEItemBus {
             }
         }
 
-        super.markForUpdate();
+        super.markNoUpdate();
     }
 }

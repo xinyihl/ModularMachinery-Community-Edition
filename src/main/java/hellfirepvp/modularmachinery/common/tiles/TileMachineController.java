@@ -272,7 +272,7 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     @Override
     public boolean isWorking() {
-        return getControllerStatus().isCrafting();
+        return lastStrongPower <= 0 && getControllerStatus().isCrafting();
     }
 
     @Override

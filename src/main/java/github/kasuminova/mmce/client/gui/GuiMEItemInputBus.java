@@ -147,10 +147,10 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
             int stackCount = stack.getCount();
 
             if (amount > 0) {
-                if (Math.min(slot.getSlotStackLimit() - stackCount, amount) == stackCount) {
+                if (stackCount + amount > slot.getSlotStackLimit()) {
                     return;
                 }
-            } else if (Math.min(stackCount - 1, amount) == stackCount - 1) {
+            } else if (stackCount - amount <= 0) {
                 return;
             }
 

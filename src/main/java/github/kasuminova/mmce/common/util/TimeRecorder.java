@@ -5,10 +5,10 @@ import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import java.util.LinkedList;
 
 public class TimeRecorder {
-    public LinkedList<Integer> usedTimeList = new LinkedList<>();
-    public LinkedList<Integer> searchUsedTimeList = new LinkedList<>();
-    public int usedTimeCache = 0;
-    public int searchUsedTimeCache = 0;
+    private final LinkedList<Integer> usedTimeList = new LinkedList<>();
+    private final LinkedList<Integer> searchUsedTimeList = new LinkedList<>();
+    private int usedTimeCache = 0;
+    private int searchUsedTimeCache = 0;
 
     public void updateUsedTime(ActionExecutor executor) {
         addUsedTime(executor == null ? 0 : executor.usedTime);
