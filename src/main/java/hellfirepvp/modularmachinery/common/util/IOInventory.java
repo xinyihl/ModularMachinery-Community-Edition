@@ -106,10 +106,10 @@ public class IOInventory extends IItemHandlerImpl {
             NBTTagCompound holderTag = new NBTTagCompound();
             ItemStack stack = holder.itemStack;
 
-            holderTag.setBoolean("holderEmpty", stack.isEmpty());
             holderTag.setInteger("holderId", slot);
-
-            if (!stack.isEmpty()) {
+            if (stack.isEmpty()) {
+                holderTag.setBoolean("holderEmpty", true);
+            } else {
                 stack.writeToNBT(holderTag);
                 if (stack.getCount() >= 127) {
                     holderTag.setInteger("Count", stack.getCount());
@@ -144,7 +144,7 @@ public class IOInventory extends IItemHandlerImpl {
             checkInventoryLength(slot);
 
             ItemStack stack = ItemStack.EMPTY;
-            if (!holderTag.hasKey("holderEmpty")) {
+            if (!holderTag.getBoolean("holderEmpty")) {
                 stack = new ItemStack(holderTag);
                 stack.setCount(holderTag.getInteger("Count"));
             }
