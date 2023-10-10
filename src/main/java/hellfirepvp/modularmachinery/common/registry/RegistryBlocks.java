@@ -28,6 +28,7 @@ import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
+import kport.modularmagic.common.block.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResource;
@@ -122,6 +123,72 @@ public class RegistryBlocks {
             ItemsMM.meFluidOutputBus = prepareItemBlockRegister(meFluidOutputBus);
             meFluidInputBus = prepareRegister(new BlockMEFluidInputBus());
             ItemsMM.meFluidinputBus = prepareItemBlockRegister(meFluidInputBus);
+        }
+
+        if (Mods.BM2.isPresent()) {
+            blockWillProviderInput = prepareRegister(new BlockWillProviderInput());
+            blockWillProviderOutput = prepareRegister(new BlockWillProviderOutput());
+            blockLifeEssenceProviderInput = prepareRegister(new BlockLifeEssenceProviderInput());
+            blockLifeEssenceProviderOutput = prepareRegister(new BlockLifeEssenceProviderOutput());
+
+            prepareItemBlockRegister(blockWillProviderInput);
+            prepareItemBlockRegister(blockWillProviderOutput);
+            prepareItemBlockRegister(blockLifeEssenceProviderInput);
+            prepareItemBlockRegister(blockLifeEssenceProviderOutput);
+        }
+
+        if (Mods.TC6.isPresent()) {
+            blockAspectProviderInput = prepareRegister(new BlockAspectProviderInput());
+            blockAspectProviderOutput = prepareRegister(new BlockAspectProviderOutput());
+
+            prepareItemBlockRegister(blockAspectProviderInput);
+            prepareItemBlockRegister(blockAspectProviderOutput);
+
+        }
+
+
+        if (Mods.TA.isPresent()) {
+            blockImpetusProviderInput = prepareRegister(new BlockImpetusProviderInput());
+            blockImpetusProviderOutput = prepareRegister(new BlockImpetusProviderOutput());
+
+            prepareItemBlockRegister(blockImpetusProviderInput);
+            prepareItemBlockRegister(blockImpetusProviderOutput);
+        }
+
+        if (Mods.EXU2.isPresent()) {
+            blockGridProviderInput = prepareRegister(new BlockGridProviderInput());
+            blockGridProviderOutput = prepareRegister(new BlockGridProviderOutput());
+            blockRainbowProvider = prepareRegister(new BlockRainbowProvider());
+
+            prepareItemBlockRegister(blockGridProviderInput);
+            prepareItemBlockRegister(blockGridProviderOutput);
+            prepareItemBlockRegister(blockRainbowProvider);
+        }
+
+        if (Mods.ASTRAL.isPresent()) {
+            blockStarlightProviderInput = prepareRegister(new BlockStarlightProviderInput());
+            blockStarlightProviderOutput = prepareRegister(new BlockStarlightProviderOutput());
+            blockConstellationProvider = prepareRegister(new BlockConstellationProvider());
+
+            prepareItemBlockRegister(blockStarlightProviderInput);
+            prepareItemBlockRegister(blockStarlightProviderOutput);
+            prepareItemBlockRegister(blockConstellationProvider);
+        }
+
+        if (Mods.NATURESAURA.isPresent()) {
+            blockAuraProviderInput = prepareRegister(new BlockAuraProviderInput());
+            blockAuraProviderOutput = prepareRegister(new BlockAuraProviderOutput());
+
+            prepareItemBlockRegister(blockAuraProviderInput);
+            prepareItemBlockRegister(blockAuraProviderOutput);
+        }
+
+        if(Mods.BOTANIA.isPresent()) {
+            blockManaProviderInput = prepareRegister(new BlockManaProviderInput());
+            blockManaProviderOutput = prepareRegister(new BlockManaProviderOutput());
+
+            prepareItemBlockRegister(blockManaProviderInput);
+            prepareItemBlockRegister(blockManaProviderOutput);
         }
     }
 

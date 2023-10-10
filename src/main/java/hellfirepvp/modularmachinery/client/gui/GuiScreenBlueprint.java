@@ -50,7 +50,6 @@ import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
-import net.minecraftforge.fluids.BlockFluidBase;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.IFluidBlock;
@@ -368,8 +367,9 @@ public class GuiScreenBlueprint extends GuiScreen {
             int zMod = pos.getZ() + 1 + this.renderContext.getMoveOffset().getZ();
             Rectangle.Double rct = new Rectangle2D.Double(offset.x - xMod * scaleJump, offset.y - zMod * scaleJump, scaleJump, scaleJump);
             if (rct.contains(mouseX, mouseY)) {
-                IBlockState state = slice.get(pos).getSampleState(renderContext.getShiftSnap());
-                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, slice.get(pos).previewTag,
+                BlockArray.BlockInformation info = slice.get(pos);
+                IBlockState state = info.getSampleState(renderContext.getShiftSnap());
+                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, info.previewTag == null ? info.matchingTag : info.previewTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                 state = recovered.getFirst();
                 Block type = state.getBlock();
@@ -377,7 +377,6 @@ public class GuiScreenBlueprint extends GuiScreen {
 
                 ItemStack stack = ItemStack.EMPTY;
 
-                //TODO 意义不明的 catch 块
                 try {
                     if (ic2TileBlock.equals(type.getRegistryName())) {
                         stack = BlockCompatHelper.tryGetIC2MachineStack(state, recovered.getSecond());
@@ -388,7 +387,7 @@ public class GuiScreenBlueprint extends GuiScreen {
                 }
 
                 if (stack.isEmpty()) {
-                    if (type instanceof BlockFluidBase) {
+                    if (type instanceof IFluidBlock) {
                         stack = FluidUtil.getFilledBucket(new FluidStack(((IFluidBlock) type).getFluid(), 1000));
                     } else if (type instanceof BlockLiquid) {
                         Material material = state.getMaterial();

@@ -50,18 +50,25 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
 import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
 import ink.ikx.mmce.core.AssemblyEventHandler;
+import kport.modularmagic.common.container.ContainerLifeEssence;
+import kport.modularmagic.common.crafting.component.ModularMagicComponents;
+import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
+import kport.modularmagic.common.item.ModularMagicItems;
+import kport.modularmagic.common.tile.*;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -122,6 +129,44 @@ public class CommonProxy implements IGuiHandler {
 
         ModularMachinery.EXECUTE_MANAGER.init();
         ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_COUNT));
+
+        ModularMagicItems.initItems();
+        ModularMagicComponents.initComponents();
+        ModularMagicRequirements.initRequirements();
+
+        //ModularMagic
+        if(Mods.BM2.isPresent()) {
+            GameRegistry.registerTileEntity(TileWillProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilewillproviderinput"));
+            GameRegistry.registerTileEntity(TileWillProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilewillprovideroutput"));
+            GameRegistry.registerTileEntity(TileLifeEssenceProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilelifeessenceproviderinput"));
+            GameRegistry.registerTileEntity(TileLifeEssenceProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilelifeessenceprovideroutput"));
+        }
+        if(Mods.TC6.isPresent()) {
+            GameRegistry.registerTileEntity(TileAspectProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tileaspectproviderinput"));
+            GameRegistry.registerTileEntity(TileAspectProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tileaspectprovideroutput"));
+        }
+        if(Mods.EXU2.isPresent()) {
+            GameRegistry.registerTileEntity(TileGridProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilegridproviderinput"));
+            GameRegistry.registerTileEntity(TileGridProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilegridprovideroutput"));
+            GameRegistry.registerTileEntity(TileRainbowProvider.class, new ResourceLocation(ModularMachinery.MODID, "tilerainbowprovider"));
+        }
+        if(Mods.ASTRAL.isPresent()) {
+            GameRegistry.registerTileEntity(TileStarlightInput.class, new ResourceLocation(ModularMachinery.MODID, "tilestarlightinput"));
+            GameRegistry.registerTileEntity(TileStarlightOutput.class, new ResourceLocation(ModularMachinery.MODID, "tilestarlightoutput"));
+            GameRegistry.registerTileEntity(TileConstellationProvider.class, new ResourceLocation(ModularMachinery.MODID, "tileconstellationprovider"));
+        }
+        if(Mods.NATURESAURA.isPresent()) {
+            GameRegistry.registerTileEntity(TileAuraProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tileauraproviderinput"));
+            GameRegistry.registerTileEntity(TileAuraProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tileauraprovideroutput"));
+        }
+        if(Mods.BOTANIA.isPresent()) {
+            GameRegistry.registerTileEntity(TileManaProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilemanainput"));
+            GameRegistry.registerTileEntity(TileManaProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilemanaoutput"));
+        }
+        if(Mods.TA.isPresent()) {
+            GameRegistry.registerTileEntity(TileImpetusComponent.Input.class, new ResourceLocation(ModularMachinery.MODID, "impetusinput"));
+            GameRegistry.registerTileEntity(TileImpetusComponent.Output.class, new ResourceLocation(ModularMachinery.MODID, "impetusoutput"));
+        }
     }
 
     public void init() {
@@ -233,6 +278,13 @@ public class CommonProxy implements IGuiHandler {
                 }
                 return new ContainerMEFluidInputBus((MEFluidInputBus) present, player);
             }
+
+            case GUI_ESSENCE_PROVIDER -> {
+                if (!Mods.BM2.isPresent()) {
+                    return null;
+                }
+                return new ContainerLifeEssence((TileLifeEssenceProvider) present, player);
+            }
         }
 
         return null;
@@ -267,6 +319,7 @@ public class CommonProxy implements IGuiHandler {
         ME_ITEM_INPUT_BUS(Mods.AE2.isPresent() ? MEItemInputBus.class : null),
         ME_FLUID_OUTPUT_BUS(Mods.AE2.isPresent() ? MEFluidOutputBus.class : null),
         ME_FLUID_INPUT_BUS(Mods.AE2.isPresent() ? MEFluidInputBus.class : null),
+        GUI_ESSENCE_PROVIDER(Mods.BM2.isPresent() ? TileLifeEssenceProvider.class : null),
         ;
 
         public final Class<? extends TileEntity> requiredTileEntity;

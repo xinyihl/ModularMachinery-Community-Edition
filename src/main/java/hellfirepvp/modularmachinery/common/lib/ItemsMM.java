@@ -33,4 +33,6 @@ public class ItemsMM {
     public static Item meFluidOutputBus;
     public static Item meFluidinputBus;
 
+    public static Item impetusOutputBus;
+    public static Item impetusinputBus;
 }

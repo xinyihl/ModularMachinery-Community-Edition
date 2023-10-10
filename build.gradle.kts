@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r49-dev"
+version = "1.12.2-1.11.1-r50-dev"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -169,6 +169,18 @@ dependencies {
     //Because GTCEu 2.4 and above and NCo crashed, this is to use GTCEu 2.3.4 for testing
     //Rendering errors occur when the GTCEu version is tested running, so just compileOnly
     compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:3859788"))
+
+    //Modular Magic compact
+    compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
+    compileOnly(rfg.deobf("curse.maven:blood-magic-224791:2822288"))
+    compileOnly(rfg.deobf("curse.maven:thaumcraft-223628:2629023"))
+    compileOnly(rfg.deobf("curse.maven:extrautils2-225561:2678374"))
+    compileOnly(rfg.deobf("curse.maven:naturesaura-306626:2882138"))
+    compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
+    compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
+//    compileOnly(rfg.deobf("curse.maven:guideapi-228832:2645992"))
+//    compileOnly(rfg.deobf("curse.maven:patchouli-306770:3162874"))
+    compileOnly(rfg.deobf("curse.maven:thaumic-augmentation-319441:4486505"))
 }
 
 // Publishing to a Maven repository

@@ -144,7 +144,7 @@ public class IOInventory extends IItemHandlerImpl {
             checkInventoryLength(slot);
 
             ItemStack stack = ItemStack.EMPTY;
-            if (!holderTag.getBoolean("holderEmpty")) {
+            if (!holderTag.hasKey("holderEmpty")) {
                 stack = new ItemStack(holderTag);
                 stack.setCount(holderTag.getInteger("Count"));
             }

@@ -48,6 +48,15 @@ public enum Mods {
         }
     },
 
+    BM2("bloodmagic"),
+    TC6("thaumcraft"),
+    TA("thaumicaugmentation"),
+    THAUM_JEI("thaumicjei"),
+    EXU2("extrautils2"),
+    ASTRAL("astralsorcery"),
+    NATURESAURA("naturesaura"),
+    BOTANIA("botania"),
+
     ;
 
     public final String modid;

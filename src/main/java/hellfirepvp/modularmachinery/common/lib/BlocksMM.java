@@ -13,6 +13,7 @@ import github.kasuminova.mmce.common.block.appeng.BlockMEFluidOutputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
 import hellfirepvp.modularmachinery.common.block.*;
+import kport.modularmagic.common.block.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -43,5 +44,24 @@ public class BlocksMM {
     public static BlockMEItemInputBus meItemInputBus;
     public static BlockMEFluidOutputBus meFluidOutputBus;
     public static BlockMEFluidInputBus meFluidInputBus;
+    public static BlockWillProviderInput blockWillProviderInput;
+    public static BlockWillProviderOutput blockWillProviderOutput;
+    public static BlockLifeEssenceProviderInput blockLifeEssenceProviderInput;
+    public static BlockLifeEssenceProviderOutput blockLifeEssenceProviderOutput;
+    public static BlockGridProviderInput  blockGridProviderInput;
+    public static BlockGridProviderOutput blockGridProviderOutput;
+    public static BlockRainbowProvider    blockRainbowProvider;
+    public static BlockAuraProviderInput blockAuraProviderInput;
+    public static BlockAuraProviderOutput blockAuraProviderOutput;
+    public static BlockStarlightProviderInput  blockStarlightProviderInput;
+    public static BlockStarlightProviderOutput blockStarlightProviderOutput;
+    public static BlockConstellationProvider   blockConstellationProvider;
+    public static BlockManaProviderInput blockManaProviderInput;
+    public static BlockManaProviderOutput blockManaProviderOutput;
 
+    public static BlockImpetusProviderInput blockImpetusProviderInput;
+    public static BlockImpetusProviderOutput blockImpetusProviderOutput;
+
+    public static BlockAspectProviderInput  blockAspectProviderInput;
+    public static BlockAspectProviderOutput blockAspectProviderOutput;
 }

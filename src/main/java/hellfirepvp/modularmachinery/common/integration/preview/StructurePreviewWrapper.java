@@ -408,7 +408,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             if (rct.contains(mouseX, mouseY)) {
                 BlockArray.BlockInformation bi = slice.get(pos);
                 IBlockState state = bi.getSampleState(dynamnicContext.getShiftSnap());
-                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, bi.previewTag,
+                Tuple<IBlockState, TileEntity> recovered = BlockCompatHelper.transformState(state, bi.previewTag == null ? bi.matchingTag : bi.previewTag,
                         new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, pos));
                 state = recovered.getFirst();
                 Block type = state.getBlock();

@@ -37,6 +37,12 @@ import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEnergyHatch;
 import hellfirepvp.modularmachinery.common.tiles.base.TileFluidTank;
 import hellfirepvp.modularmachinery.common.tiles.base.TileItemBus;
+import kport.modularmagic.client.gui.GuiContainerLifeEssence;
+import kport.modularmagic.client.renderer.TileAspectProviderRenderer;
+import kport.modularmagic.client.renderer.TileLifeEssentiaHatchRenderer;
+import kport.modularmagic.common.item.ModularMagicItems;
+import kport.modularmagic.common.tile.TileAspectProvider;
+import kport.modularmagic.common.tile.TileLifeEssenceProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -58,6 +64,7 @@ import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -74,7 +81,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 26.06.2017 / 21:01
  */
-@Mod.EventBusSubscriber(Side.CLIENT)
+@Mod.EventBusSubscriber(value = Side.CLIENT, modid = ModularMachinery.MODID)
 public class ClientProxy extends CommonProxy {
 
     public static final ClientScheduler clientScheduler = new ClientScheduler();
@@ -131,7 +138,18 @@ public class ClientProxy extends CommonProxy {
             registerJEIEventHandler();
         }
 
+        if(Mods.TC6.isPresent()) {
+            ClientRegistry.bindTileEntitySpecialRenderer(TileAspectProvider.Input.class, new TileAspectProviderRenderer());
+            ClientRegistry.bindTileEntitySpecialRenderer(TileAspectProvider.Output.class, new TileAspectProviderRenderer());
+        }
+
+        if(Mods.BM2.isPresent()) {
+            ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Input.class, new TileLifeEssentiaHatchRenderer());
+            ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Output.class, new TileLifeEssentiaHatchRenderer());
+        }
+
         super.preInit();
+
     }
 
     @SubscribeEvent
@@ -189,6 +207,14 @@ public class ClientProxy extends CommonProxy {
 
         registerPendingIBlockColorBlocks();
         registerPendingIItemColorItems();
+
+
+        BlockColors blockColors = Minecraft.getMinecraft().getBlockColors();
+        ItemColors itemColors = Minecraft.getMinecraft().getItemColors();
+
+        for (ItemDynamicColor item : ModularMagicItems.COLOR_ITEMS) {
+            itemColors.registerItemColorHandler(item::getColorFromItemstack,(Item)item);
+        }
     }
 
     @Override
@@ -287,6 +313,12 @@ public class ClientProxy extends CommonProxy {
                     return null;
                 }
                 return new GuiMEFluidInputBus((MEFluidInputBus) present, player);
+            }
+            case GUI_ESSENCE_PROVIDER -> {
+                if (!Mods.BM2.isPresent()) {
+                    return null;
+                }
+                return new GuiContainerLifeEssence((TileLifeEssenceProvider) present, player);
             }
         }
 

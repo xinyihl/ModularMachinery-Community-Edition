@@ -1,4 +1,4 @@
-{
+ {
   "parent": "modularmachinery:block/blockmodel_overlay_all",
   "textures": {
     "bg_all": "modularmachinery:blocks/blockcasing_plain",
