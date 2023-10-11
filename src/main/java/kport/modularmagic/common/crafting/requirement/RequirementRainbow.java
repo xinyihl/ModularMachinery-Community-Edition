@@ -1,13 +1,14 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentRainbow;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeRainbow;
@@ -18,62 +19,49 @@ import kport.modularmagic.common.tile.TileRainbowProvider;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementRainbow extends ComponentRequirement<Rainbow, RequirementTypeRainbow> implements Asyncable {
+public class RequirementRainbow extends ComponentRequirement.PerTickMultiComponent<Rainbow, RequirementTypeRainbow> implements Asyncable {
 
-    public RequirementRainbow(IOType actionType) {
-        super((RequirementTypeRainbow) RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(ModularMagicRequirements.KEY_REQUIREMENT_RAINBOW), actionType);
+    public RequirementRainbow() {
+        super((RequirementTypeRainbow) RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(ModularMagicRequirements.KEY_REQUIREMENT_RAINBOW), IOType.INPUT);
     }
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+        MachineComponent<?> cpn = component.getComponent();
         return cpn.getContainerProvider() instanceof TileRainbowProvider &&
                 cpn.getComponentType() instanceof ComponentRainbow &&
                 cpn.ioType == getActionType();
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
-            return false;
-
-        return true;
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return components;
     }
 
-    @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        for (final ProcessingComponent<?> component : components) {
+            TileRainbowProvider provider = (TileRainbowProvider) component.getComponent().getContainerProvider();
+            if (provider.rainbow()) {
+                return CraftCheck.success();
+            }
+        }
+        return CraftCheck.failure("error.modularmachinery.requirement.rainbow.less");
     }
 
-    @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        TileRainbowProvider provider = (TileRainbowProvider) component.getComponent().getContainerProvider();
-        if (provider.rainbow())
-            return CraftCheck.success();
-        else
-            return CraftCheck.failure("error.modularmachinery.requirement.rainbow.less");
+    public CraftCheck doIOTick(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final float durationMultiplier) {
+        return canStartCrafting(components, context);
     }
 
     @Override
     public ComponentRequirement<Rainbow, RequirementTypeRainbow> deepCopy() {
-        return this;
+        return new RequirementRainbow();
     }
 
     @Override
     public ComponentRequirement<Rainbow, RequirementTypeRainbow> deepCopyModified(List<RecipeModifier> modifiers) {
-        return this;
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
+        return new RequirementRainbow();
     }
 
     @Nonnull

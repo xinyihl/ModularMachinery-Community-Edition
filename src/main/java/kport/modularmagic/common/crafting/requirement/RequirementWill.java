@@ -1,14 +1,12 @@
 package kport.modularmagic.common.crafting.requirement;
 
 import WayofTime.bloodmagic.soul.EnumDemonWillType;
-import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
-import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
-import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentWill;
@@ -19,6 +17,7 @@ import kport.modularmagic.common.integration.jei.ingredient.DemonWill;
 import kport.modularmagic.common.tile.TileWillProvider;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementWill extends ComponentRequirement<DemonWill, RequirementTypeWill> implements Asyncable {
@@ -37,47 +36,51 @@ public class RequirementWill extends ComponentRequirement<DemonWill, Requirement
     }
 
     @Override
-    public boolean isValidComponent(ProcessingComponent component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+    public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
+        MachineComponent<?> cpn = component.getComponent();
         return cpn.getContainerProvider() instanceof TileWillProvider &&
                 cpn.getComponentType() instanceof ComponentWill &&
                 cpn.ioType == getActionType();
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
-        if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        if (!canStartCrafting(component, context, Collections.emptyList()).isSuccess()) {
             return false;
+        }
 
         if (getActionType() == IOType.INPUT) {
             TileWillProvider willProvider = (TileWillProvider) component.getComponent().getContainerProvider();
-            willProvider.removeWill(willAmount, willType);
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> willProvider.removeWill(willAmount, willType));
         }
         return true;
     }
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {
             TileWillProvider willProvider = (TileWillProvider) component.getComponent().getContainerProvider();
-            willProvider.addWill(willAmount, willType);
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> willProvider.addWill(willAmount, willType));
         }
         return CraftCheck.success();
     }
 
     @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent component, RecipeCraftingContext context, List restrictions) {
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         TileWillProvider willProvider = (TileWillProvider) component.getComponent().getContainerProvider();
         switch (getActionType()) {
-            case INPUT:
-                if (willProvider.getWill(this.willType) - this.willAmount < this.min)
+            case INPUT -> {
+                if (willProvider.getWill(this.willType) - this.willAmount < this.min) {
                     return CraftCheck.failure("error.modularmachinery.requirement.will.less");
-
-            case OUTPUT:
-                if (willProvider.getWill(this.willType) - this.willAmount > this.max)
+                }
+            }
+            case OUTPUT -> {
+                if (willProvider.getWill(this.willType) - this.willAmount > this.max) {
                     return CraftCheck.failure("error.modularmachinery.requirement.will.more");
+                }
+            }
         }
         return CraftCheck.success();
     }
@@ -89,27 +92,17 @@ public class RequirementWill extends ComponentRequirement<DemonWill, Requirement
     }
 
     @Override
-    public ComponentRequirement deepCopy() {
+    public RequirementWill deepCopy() {
         return this;
     }
 
     @Override
-    public ComponentRequirement deepCopyModified(List list) {
+    public RequirementWill deepCopyModified(List<RecipeModifier> list) {
         return this;
     }
 
     @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
-    }
-
-    @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentWill provideJEIComponent() {
         return new JEIComponentWill(this);
     }
 }

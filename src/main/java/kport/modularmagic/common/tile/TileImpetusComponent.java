@@ -20,6 +20,7 @@ import thecodex6824.thaumicaugmentation.api.impetus.node.prefab.ImpetusNode;
 import thecodex6824.thaumicaugmentation.api.impetus.node.prefab.SimpleImpetusConsumer;
 import thecodex6824.thaumicaugmentation.api.util.DimensionalBlockPos;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -27,7 +28,7 @@ import javax.annotation.Nullable;
  */
 public abstract class TileImpetusComponent extends TileColorableMachineComponent implements MachineComponentTile {
     public static final int CAPACITY = 1000;
-    protected int impetus = 0;
+    protected volatile int impetus = 0;
     protected ImpetusNode node;
 
     @Override
@@ -73,13 +74,13 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
     }
 
     @Override
-    public void setWorld(World worldIn) {
+    public void setWorld(@Nonnull World worldIn) {
         super.setWorld(worldIn);
         node.setLocation(new DimensionalBlockPos(pos.toImmutable(), worldIn.provider.getDimension()));
     }
 
     @Override
-    public void setPos(BlockPos posIn) {
+    public void setPos(@Nonnull BlockPos posIn) {
         super.setPos(posIn);
         if (world != null)
             node.setLocation(new DimensionalBlockPos(posIn.toImmutable(), world.provider.getDimension()));
@@ -106,7 +107,7 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
     }
 
     @Override
-    public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+    public boolean shouldRefresh(@Nonnull World world, @Nonnull BlockPos pos, IBlockState oldState, IBlockState newState) {
         return oldState.getBlock() != newState.getBlock();
     }
 
@@ -125,20 +126,20 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
             return impetus >= amount;
         }
 
-        public void consumeImpetus(int amount) {
+        public synchronized void consumeImpetus(int amount) {
             if (hasEnoughImpetus(amount)) {
                 impetus -= amount;
             }
         }
 
         @Override
-        public void update() {
+        public synchronized void update() {
             if (world.isRemote || impetus >= CAPACITY)
                 return;
             ConsumeResult result = ((IImpetusConsumer) node).consume(CAPACITY - impetus, false);
             if (result.energyConsumed > 0) {
-                impetus += result.energyConsumed;
-                this.markDirty();
+                impetus += (int) result.energyConsumed;
+                markNoUpdate();
             }
         }
 
@@ -160,7 +161,7 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
             return this.impetus + amount <= CAPACITY;
         }
 
-        public void supplyImpetus(int amount) {
+        public synchronized void supplyImpetus(int amount) {
             if (hasEnoughCapacity(amount)) {
                 this.impetus += amount;
             }
@@ -174,16 +175,16 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
 
         private class CustomImpetusProvider extends ImpetusNode implements IImpetusProvider {
 
-            public CustomImpetusProvider(int totalInputs, int totalOutputs) {
+            private CustomImpetusProvider(int totalInputs, int totalOutputs) {
                 super(totalInputs, totalOutputs);
             }
 
             @Override
-            public long provide(long energy, boolean simulate) {
+            public synchronized long provide(long energy, boolean simulate) {
                 long amount = Math.min(impetus, energy);
                 if (!simulate) {
-                    impetus -= amount;
-                    markDirty();
+                    impetus -= (int) amount;
+                    markNoUpdateSync();
                 }
                 return amount;
             }

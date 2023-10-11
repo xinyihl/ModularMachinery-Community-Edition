@@ -1,12 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import WayofTime.bloodmagic.core.data.SoulNetwork;
-import WayofTime.bloodmagic.core.data.SoulTicket;
-import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
-import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
-import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -20,14 +14,13 @@ import kport.modularmagic.common.integration.jei.ingredient.LifeEssence;
 import kport.modularmagic.common.tile.TileLifeEssenceProvider;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEssence, RequirementTypeLifeEssence> {
 
     public int essenceAmount;
     public boolean isPerTick;
-    SoulNetwork network;
-    private boolean flag = false;
 
     public RequirementLifeEssence(IOType actionType, int essenceAmount, boolean perTick) {
         super((RequirementTypeLifeEssence) RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(ModularMagicRequirements.KEY_REQUIREMENT_LIFE_ESSENCE), actionType);
@@ -46,42 +39,44 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
 
     @Override
     public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
+        if (!canStartCrafting(component, context, Collections.emptyList()).isSuccess()) {
             return false;
+        }
 
         TileLifeEssenceProvider essenceProvider = (TileLifeEssenceProvider) component.getComponent().getContainerProvider();
-        this.network = essenceProvider.getSoulNetwork();
 
         if (getActionType() == IOType.INPUT && !isPerTick) {
-            essenceProvider.getSoulNetwork().syphon(new SoulTicket(essenceAmount));
+            essenceProvider.removeLifeEssenceCache(essenceAmount);
         }
         return true;
     }
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT && !isPerTick) {
             TileLifeEssenceProvider essenceProvider = (TileLifeEssenceProvider) component.getComponent().getContainerProvider();
-            essenceProvider.getSoulNetwork().add(new SoulTicket(essenceAmount), essenceProvider.getOrbCapacity());
+            essenceProvider.addLifeEssenceCache(essenceAmount);
         }
         return CraftCheck.success();
     }
 
     @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent component, RecipeCraftingContext context, List restrictions) {
-        if (!isValidComponent(component, context))
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
+        if (!isValidComponent(component, context)) {
             return CraftCheck.failure(getMissingComponentErrorMessage(getActionType()));
+        }
 
         TileLifeEssenceProvider essenceProvider = (TileLifeEssenceProvider) component.getComponent().getContainerProvider();
 
-        if (essenceProvider.getSoulNetwork() == null)
+        if (essenceProvider.getSoulNetwork() == null) {
             return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.orb");
+        }
 
         switch (getActionType()) {
             case INPUT -> {
-                if (essenceProvider.getSoulNetwork().getCurrentEssence() >= essenceAmount) {
+                if (essenceProvider.getLifeEssenceCache() >= essenceAmount) {
                     return CraftCheck.success();
                 } else {
                     return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp");
@@ -100,21 +95,6 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
         return "error.modularmachinery.component.invalid";
     }
 
-    @Override
-    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-        flag = false;
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        if (!isPerTick || network.getCurrentEssence() >= essenceAmount || flag == true) {
-            return CraftCheck.success();
-        } else {
-            return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp");
-        }
-    }
-
     @Nonnull
     @Override
     public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
@@ -125,18 +105,15 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
         TileLifeEssenceProvider essenceProvider = (TileLifeEssenceProvider) component.getComponent().getContainerProvider();
         switch (getActionType()) {
             case INPUT -> {
-                if (essenceProvider.getSoulNetwork().getCurrentEssence() >= essenceAmount) {
-                    essenceProvider.getSoulNetwork().syphon(new SoulTicket(essenceAmount));
-                    flag = true;
+                if (essenceProvider.getLifeEssenceCache() >= essenceAmount) {
+                    essenceProvider.removeLifeEssenceCache(essenceAmount);
                     return CraftCheck.success();
                 } else {
-                    flag = false;
                     return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp");
                 }
             }
             case OUTPUT -> {
-                essenceProvider.getSoulNetwork().add(new SoulTicket(essenceAmount), essenceProvider.getOrbCapacity());
-                flag = true;
+                essenceProvider.addLifeEssenceCache(essenceAmount);
                 return CraftCheck.success();
             }
         }
@@ -145,7 +122,7 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
 
     @Override
     public RequirementLifeEssence deepCopy() {
-        return this;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
@@ -154,17 +131,7 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
     }
 
     @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
-    }
-
-    @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentLifeEssence provideJEIComponent() {
         return new JEIComponentLifeEssence(this);
     }
 }

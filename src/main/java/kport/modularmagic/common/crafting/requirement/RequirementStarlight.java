@@ -1,13 +1,12 @@
 package kport.modularmagic.common.crafting.requirement;
 
 import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
-import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
-import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentStarlight;
@@ -19,6 +18,7 @@ import kport.modularmagic.common.tile.TileStarlightInput;
 import kport.modularmagic.common.tile.TileStarlightOutput;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight, RequirementTypeStarlight> implements Asyncable {
@@ -31,47 +31,32 @@ public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight
     }
 
     @Override
-    public boolean isValidComponent(ProcessingComponent component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+    public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
+        MachineComponent<?> cpn = component.getComponent();
         return (cpn.getContainerProvider() instanceof TileStarlightInput || cpn.getContainerProvider() instanceof TileStarlightOutput) &&
                 cpn.getComponentType() instanceof ComponentStarlight &&
                 cpn.ioType == getActionType();
     }
 
-    @Override
-    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        return CraftCheck.success();
-    }
-
     @Nonnull
     @Override
     public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        if (getActionType() == IOType.OUTPUT)
-            ((TileStarlightOutput) component.getComponent().getContainerProvider()).setStarlightProduced(this.starlightAmount / 4000);
-
+        if (getActionType() == IOType.OUTPUT) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() ->
+                    ((TileStarlightOutput) component.getComponent().getContainerProvider())
+                            .setStarlightProduced(this.starlightAmount / 4000));
+        }
         return CraftCheck.success();
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         return canStartCrafting(component, context, Lists.newArrayList()).isSuccess();
     }
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent component, RecipeCraftingContext context, List restrictions) {
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         if (getActionType() == IOType.INPUT) {
             TileStarlightInput provider = (TileStarlightInput) component.getComponent().getContainerProvider();
             return provider.getStarlightStored() >= this.starlightAmount ? CraftCheck.success() : CraftCheck.failure("error.modularmachinery.requirement.starlight.less");
@@ -86,27 +71,18 @@ public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight
     }
 
     @Override
-    public ComponentRequirement deepCopy() {
-        return this;
+    public RequirementStarlight deepCopy() {
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
-    public ComponentRequirement deepCopyModified(List list) {
-        return this;
+    public RequirementStarlight deepCopyModified(List<RecipeModifier> list) {
+        float starlightAmount = RecipeModifier.applyModifiers(list, this, this.starlightAmount, false);
+        return new RequirementStarlight(actionType, starlightAmount);
     }
 
     @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
-    }
-
-    @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentStarlight provideJEIComponent() {
         return new JEIComponentStarlight(this);
     }
 }

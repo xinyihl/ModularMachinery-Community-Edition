@@ -66,8 +66,9 @@ public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeA
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         TileAuraProvider provider = (TileAuraProvider) component.getComponent().getContainerProvider();
-        if (provider.getAura().getType() != this.aura.getType())
+        if (provider.getAura().getType() != this.aura.getType()) {
             return CraftCheck.failure("error.modularmachinery.requirement.aura.invalid");
+        }
 
         switch (getActionType()) {
             case INPUT:

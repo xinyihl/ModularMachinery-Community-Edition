@@ -13,7 +13,7 @@ public class RequirementTypeRainbow extends RequirementType<Rainbow, Requirement
 
     @Override
     public ComponentRequirement<Rainbow, ? extends RequirementType<Rainbow, RequirementRainbow>> createRequirement(IOType type, JsonObject jsonObject) {
-        return new RequirementRainbow(type);
+        return new RequirementRainbow();
     }
 
     @Nullable

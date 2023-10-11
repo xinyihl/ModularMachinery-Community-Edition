@@ -1,6 +1,5 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -16,6 +15,7 @@ import kport.modularmagic.common.integration.jei.ingredient.Mana;
 import kport.modularmagic.common.tile.TileManaProvider;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeMana> implements Asyncable {
@@ -33,9 +33,10 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
-        if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
+        if (!canStartCrafting(component, context, Collections.emptyList()).isSuccess()) {
             return false;
+        }
         TileManaProvider provider = (TileManaProvider) component.getComponent().getContainerProvider();
         provider.recieveMana(-manaAmount);
         return true;
@@ -43,11 +44,12 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {
             TileManaProvider provider = (TileManaProvider) component.getComponent().getContainerProvider();
-            if (provider instanceof TileManaProvider.Output)
+            if (provider instanceof TileManaProvider.Output) {
                 provider.recieveMana(manaAmount);
+            }
         }
         return CraftCheck.success();
     }

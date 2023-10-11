@@ -12,7 +12,6 @@ import hellfirepvp.astralsorcery.common.util.SkyCollectionHelper;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentStarlightProviderInput;
@@ -41,7 +40,7 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponentStarlightProviderInput provideComponent() {
         return new MachineComponentStarlightProviderInput(this, IOType.INPUT);
     }
 
@@ -58,19 +57,16 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
         super.update();
 
         if (!world.isRemote) {
-            boolean needUpdate = false;
-
-            needUpdate = getPassiveStarlight(needUpdate);
-
-            if (needUpdate)
+            if (getPassiveStarlight()) {
                 this.markDirty();
+            }
         }
     }
 
-    public boolean getPassiveStarlight(boolean needUpdate) {
-        if (starlightAmount > 0) needUpdate = true;
-        starlightAmount *= 0.95;
+    public boolean getPassiveStarlight() {
+        int prev = starlightAmount;
 
+        starlightAmount = Math.round(starlightAmount * 0.95F);
         WorldSkyHandler handle = ConstellationSkyHandler.getInstance().getWorldHandler(getWorld());
         if (world.canSeeSky(getPos()) && handle != null) {
             int yLevel = getPos().getY();
@@ -87,14 +83,15 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
                 float posDistribution = SkyCollectionHelper.getSkyNoiseDistribution(world, pos);
 
                 collect *= dstr;
-                collect *= (0.6 + (0.4 * posDistribution));
-                collect *= 0.2 + (0.8 * ConstellationSkyHandler.getInstance().getCurrentDaytimeDistribution(getWorld()));
+                collect *= (float) (0.6 + (0.4 * posDistribution));
+                collect *= (float) (0.2 + (0.8 * ConstellationSkyHandler.getInstance().getCurrentDaytimeDistribution(getWorld())));
 
                 starlightAmount = Math.min(10000, (int) (starlightAmount + collect));
                 return true;
             }
         }
-        return needUpdate;
+
+        return prev != starlightAmount;
     }
 
     public void receiveStarlight(@Nullable IWeakConstellation type, double amount) {

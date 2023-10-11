@@ -11,6 +11,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import thaumcraft.api.ThaumcraftApiHelper;
 import thaumcraft.api.aspects.Aspect;
+import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IEssentiaTransport;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
@@ -51,10 +52,37 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     @Override
     public void update() {
         if (!this.world.isRemote && this.amount < TileJarFillable.CAPACITY) {
-            for (EnumFacing face : EnumFacing.VALUES) {
-                this.fillJar(face);
+            synchronized (this) {
+                for (EnumFacing face : EnumFacing.VALUES) {
+                    this.fillJar(face);
+                }
             }
         }
+    }
+
+    @Override
+    public synchronized int takeEssentia(final Aspect aspect, final int amount, final EnumFacing face) {
+        return super.takeEssentia(aspect, amount, face);
+    }
+
+    @Override
+    public synchronized int addEssentia(final Aspect aspect, final int amount, final EnumFacing face) {
+        return super.addEssentia(aspect, amount, face);
+    }
+
+    @Override
+    public synchronized int addToContainer(final Aspect tt, final int am) {
+        return super.addToContainer(tt, am);
+    }
+
+    @Override
+    public synchronized boolean takeFromContainer(final Aspect tt, final int am) {
+        return super.takeFromContainer(tt, am);
+    }
+
+    @Override
+    public synchronized boolean takeFromContainer(final AspectList ot) {
+        return super.takeFromContainer(ot);
     }
 
     private void fillJar(EnumFacing face) {

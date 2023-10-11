@@ -119,7 +119,7 @@ public class MagicPrimer {
 
     @ZenMethod
     public static RecipePrimer addRainbowInput(RecipePrimer primer) {
-        primer.appendComponent(new RequirementRainbow(IOType.INPUT));
+        primer.appendComponent(new RequirementRainbow());
         return primer;
     }
 

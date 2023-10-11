@@ -11,7 +11,6 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.Iterator;
 
 public class TileRainbowProvider extends TileColorableMachineComponent implements MachineComponentTile {
 
@@ -23,17 +22,18 @@ public class TileRainbowProvider extends TileColorableMachineComponent implement
 
     public boolean rainbow() {
         PowerManager.PowerFreq freq = PowerManager.instance.getPowerFreqRaw(this.frequency);
-        if (freq != null) {
-            Collection<TileRainbowGenerator> c = freq.getSubTypes(TileRainbowGenerator.rainbowGenerators);
-            if (c != null) {
-                Iterator i = c.iterator();
+        if (freq == null) {
+            return false;
+        }
 
-                while (i.hasNext()) {
-                    TileRainbowGenerator power = (TileRainbowGenerator) i.next();
-                    if (power.providing) {
-                        return true;
-                    }
-                }
+        Collection<TileRainbowGenerator> c = freq.getSubTypes(TileRainbowGenerator.rainbowGenerators);
+        if (c == null) {
+            return false;
+        }
+
+        for (final TileRainbowGenerator power : c) {
+            if (power.providing) {
+                return true;
             }
         }
         return false;

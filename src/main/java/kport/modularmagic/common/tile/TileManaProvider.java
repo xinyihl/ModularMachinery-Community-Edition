@@ -1,7 +1,6 @@
 package kport.modularmagic.common.tile;
 
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentManaProvider;
@@ -16,11 +15,7 @@ import vazkii.botania.common.core.handler.ManaNetworkHandler;
 
 public abstract class TileManaProvider extends TileColorableMachineComponent implements ITickable, IManaReceiver, MachineComponentTile {
 
-    int mana = 0;
-
-    public TileManaProvider() {
-        this.mana = 0;
-    }
+    private volatile int mana = 0;
 
     @Override
     public void update() {
@@ -44,22 +39,20 @@ public abstract class TileManaProvider extends TileColorableMachineComponent imp
         return mana;
     }
 
-    public void setCurrentMana(int amount) {
-        this.mana = amount;
-    }
-
     @Override
     public boolean isFull() {
-        return getCurrentMana() >= getManaCapacity();
+        return mana >= getManaCapacity();
     }
 
     @Override
-    public void recieveMana(int amount) {
-        setCurrentMana(MathHelper.clamp(getCurrentMana() + amount, 0, getManaCapacity()));
+    public synchronized void recieveMana(int amount) {
+        mana = MathHelper.clamp(mana + amount, 0, getManaCapacity());
+        markNoUpdateSync();
     }
 
-    public void reduceMana(int amount) {
-        setCurrentMana(MathHelper.clamp(getCurrentMana() - amount, 0, getManaCapacity()));
+    public synchronized void reduceMana(int amount) {
+        mana = MathHelper.clamp(mana - amount, 0, getManaCapacity());
+        markNoUpdateSync();
     }
 
     public int getManaCapacity() {
@@ -71,11 +64,10 @@ public abstract class TileManaProvider extends TileColorableMachineComponent imp
         return false;
     }
 
-
     public static class Input extends TileManaProvider {
 
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentManaProvider provideComponent() {
             return new MachineComponentManaProvider(IOType.INPUT, this);
         }
 
@@ -89,8 +81,9 @@ public abstract class TileManaProvider extends TileColorableMachineComponent imp
 
         @Override
         public void update() {
-            if (!ManaNetworkHandler.instance.isPoolIn(this) && !isInvalid())
+            if (!ManaNetworkHandler.instance.isPoolIn(this) && !isInvalid()) {
                 ManaNetworkEvent.addPool(this);
+            }
         }
 
         @Override
@@ -112,7 +105,7 @@ public abstract class TileManaProvider extends TileColorableMachineComponent imp
 
         @Override
         public EnumDyeColor getColor() {
-            return EnumDyeColor.CYAN;
+            return EnumDyeColor.WHITE;
         }
 
         @Override
@@ -120,7 +113,7 @@ public abstract class TileManaProvider extends TileColorableMachineComponent imp
         }
 
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentManaProvider provideComponent() {
             return new MachineComponentManaProvider(IOType.OUTPUT, this);
         }
     }

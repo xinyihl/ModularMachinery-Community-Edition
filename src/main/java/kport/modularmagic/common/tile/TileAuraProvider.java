@@ -2,8 +2,8 @@ package kport.modularmagic.common.tile;
 
 import de.ellpeck.naturesaura.api.aura.chunk.IAuraChunk;
 import de.ellpeck.naturesaura.api.aura.type.IAuraType;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import kport.modularmagic.common.integration.jei.ingredient.Aura;
@@ -11,18 +11,22 @@ import kport.modularmagic.common.tile.machinecomponent.MachineComponentAuraProvi
 
 import javax.annotation.Nullable;
 
-public class TileAuraProvider extends TileColorableMachineComponent implements MachineComponentTile {
+public abstract class TileAuraProvider extends TileColorableMachineComponent implements MachineComponentTile {
 
     public void addAura(Aura aura) {
-        if (aura.getType() == IAuraChunk.getAuraChunk(world, pos).getType()) {
-            IAuraChunk.getAuraChunk(world, pos).storeAura(pos, aura.getAmount() * 100000);
+        IAuraChunk auraChunk = IAuraChunk.getAuraChunk(world, pos);
+        if (aura.getType() != auraChunk.getType()) {
+            return;
         }
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> auraChunk.storeAura(pos, aura.getAmount() * 100000));
     }
 
     public void removeAura(Aura aura) {
-        if (aura.getType() == IAuraChunk.getAuraChunk(world, pos).getType()) {
-            IAuraChunk.getAuraChunk(world, pos).drainAura(pos, aura.getAmount() * 100000);
+        IAuraChunk auraChunk = IAuraChunk.getAuraChunk(world, pos);
+        if (aura.getType() != auraChunk.getType()) {
+            return;
         }
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> auraChunk.drainAura(pos, aura.getAmount() * 100000));
     }
 
     public Aura getAura() {
@@ -31,17 +35,11 @@ public class TileAuraProvider extends TileColorableMachineComponent implements M
         return new Aura(amount, type);
     }
 
-    @Nullable
-    @Override
-    public MachineComponent provideComponent() {
-        return null;
-    }
-
     public static class Input extends TileAuraProvider {
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentAuraProvider provideComponent() {
             return new MachineComponentAuraProvider(this, IOType.INPUT);
         }
     }
@@ -50,7 +48,7 @@ public class TileAuraProvider extends TileColorableMachineComponent implements M
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentAuraProvider provideComponent() {
             return new MachineComponentAuraProvider(this, IOType.OUTPUT);
         }
     }

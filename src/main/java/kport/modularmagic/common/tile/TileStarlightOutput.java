@@ -14,7 +14,6 @@ import hellfirepvp.astralsorcery.common.tile.base.TileSourceBase;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentStarlightProviderOutput;
@@ -59,16 +58,17 @@ public class TileStarlightOutput extends TileSourceBase implements MachineCompon
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponentStarlightProviderOutput provideComponent() {
         return new MachineComponentStarlightProviderOutput(this, IOType.OUTPUT);
     }
 
     @Override
     public void update() {
-        if (tick > 0)
+        if (tick > 0) {
             tick--;
-        else if (starlightProduced > 0)
+        } else if (starlightProduced > 0) {
             starlightProduced = 0;
+        }
 
         super.update();
     }
