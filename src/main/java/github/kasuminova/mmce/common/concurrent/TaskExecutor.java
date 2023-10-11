@@ -184,8 +184,6 @@ public class TaskExecutor {
         return task;
     }
 
-
-
     /**
      * <p>添加一个同步操作引用，这个操作必定会在异步操作完成后在<strong>主线程</strong>中顺序执行。</p>
      *

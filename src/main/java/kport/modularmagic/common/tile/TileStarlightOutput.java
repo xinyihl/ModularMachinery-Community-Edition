@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentStarlightProviderOutput;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -119,7 +120,7 @@ public class TileStarlightOutput extends TileSourceBase implements MachineCompon
 
     public static class IndependantStarlightProviderSource extends SimpleIndependentSource {
 
-        private TileStarlightOutput provider;
+        private final TileStarlightOutput provider;
 
         public IndependantStarlightProviderSource(IWeakConstellation constellation, TileStarlightOutput provider) {
             super(constellation);
@@ -130,11 +131,10 @@ public class TileStarlightOutput extends TileSourceBase implements MachineCompon
         public float produceStarlightTick(World world, BlockPos pos) {
             if (provider != null) {
                 return provider.getStarlightProduced();
-            } else if (world.getTileEntity(pos) != null && world.getTileEntity(pos) instanceof TileStarlightOutput) {
-                provider = (TileStarlightOutput) world.getTileEntity(pos);
-                return provider.getStarlightProduced();
-            } else
-                return 0.0F;
+            } else {
+                TileEntity te = world.getTileEntity(pos);
+                return te instanceof TileStarlightOutput starlightOutput ? starlightOutput.getStarlightProduced() : 0.0F;
+            }
         }
 
         @Override

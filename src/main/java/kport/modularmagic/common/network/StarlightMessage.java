@@ -43,16 +43,13 @@ public class StarlightMessage implements IMessage {
         public IMessage onMessage(StarlightMessage message, MessageContext ctx) {
             if (ctx.side == Side.SERVER) {
                 TileEntity te = ctx.getServerHandler().player.world.getTileEntity(message.pos);
-                if (te != null && te instanceof TileStarlightInput) {
-                    TileStarlightInput starlightInput = (TileStarlightInput) te;
+                if (te instanceof final TileStarlightInput starlightInput) {
                     return new StarlightMessage(starlightInput.getStarlightStored(), starlightInput.getPos());
                 }
             } else if (ctx.side == Side.CLIENT) {
                 TileEntity te = Minecraft.getMinecraft().world.getTileEntity(message.pos);
-                if (te != null && te instanceof TileStarlightInput) {
-                    TileStarlightInput starlightInput = (TileStarlightInput) te;
-                    Minecraft.getMinecraft().addScheduledTask(() -> ((TileStarlightInput) te).setStarlight(message.starlightAmount));
-
+                if (te instanceof final TileStarlightInput starlightInput) {
+                    Minecraft.getMinecraft().addScheduledTask(() -> starlightInput.setStarlight(message.starlightAmount));
                 }
                 return null;
             }

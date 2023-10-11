@@ -67,8 +67,8 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
         int prev = starlightAmount;
 
         starlightAmount = Math.round(starlightAmount * 0.95F);
-        WorldSkyHandler handle = ConstellationSkyHandler.getInstance().getWorldHandler(getWorld());
-        if (world.canSeeSky(getPos()) && handle != null) {
+        WorldSkyHandler handler = ConstellationSkyHandler.getInstance().getWorldHandler(getWorld());
+        if (world.canSeeSky(getPos().add(0, 1, 0)) && handler != null) {
             int yLevel = getPos().getY();
             if (yLevel > 40) {
                 float collect = 160;
@@ -83,11 +83,10 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
                 float posDistribution = SkyCollectionHelper.getSkyNoiseDistribution(world, pos);
 
                 collect *= dstr;
-                collect *= (float) (0.6 + (0.4 * posDistribution));
-                collect *= (float) (0.2 + (0.8 * ConstellationSkyHandler.getInstance().getCurrentDaytimeDistribution(getWorld())));
+                collect *= (0.6F + (0.4F * posDistribution));
+                collect *= (0.2F + (0.8F * ConstellationSkyHandler.getInstance().getCurrentDaytimeDistribution(getWorld())));
 
-                starlightAmount = Math.min(10000, (int) (starlightAmount + collect));
-                return true;
+                starlightAmount = Math.round(Math.min(10000, starlightAmount + collect));
             }
         }
 
