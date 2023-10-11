@@ -1,7 +1,10 @@
 package kport.modularmagic.common.crafting.requirement;
 
 import hellfirepvp.astralsorcery.common.constellation.IConstellation;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -18,7 +21,7 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementConstellation extends ComponentRequirement<Constellation, RequirementTypeConstellation> implements Asyncable {
+public class RequirementConstellation extends ComponentRequirement.MultiComponentRequirement<Constellation, RequirementTypeConstellation> implements Asyncable {
 
     public IConstellation constellation;
 
@@ -37,23 +40,29 @@ public class RequirementConstellation extends ComponentRequirement<Constellation
 
     @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        return components;
+    }
+
+    @Nonnull
+    @Override
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         if (getActionType() == IOType.OUTPUT) {
             return CraftCheck.failure("error.modularmachinery.requirement.invalid");
         }
-        if (component.getComponent().getContainerProvider() == null || !(component.getComponent().getContainerProvider() instanceof final TileConstellationProvider provider)) {
-            return CraftCheck.failure("error.modularmachinery.requirement.constellation.missingprovider");
+        for (final ProcessingComponent<?> component : components) {
+            TileConstellationProvider provider = (TileConstellationProvider) component.getComponent().getContainerProvider();
+            if (provider.isConstellationInSky(constellation)) {
+                return CraftCheck.success();
+            }
         }
-        if (!provider.isConstellationInSky(constellation)) {
-            return CraftCheck.failure("error.modularmachinery.requirement.constellation.less");
-        }
-        return CraftCheck.success();
+        return CraftCheck.failure("error.modularmachinery.requirement.constellation.less");
     }
 
     @Nonnull
     @Override
     public String getMissingComponentErrorMessage(IOType ioType) {
-        return "error.modularmachinery.component.invalid";
+        return "error.modularmachinery.requirement.constellation.missingprovider";
     }
 
     @Override

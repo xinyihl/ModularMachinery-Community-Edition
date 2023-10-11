@@ -545,11 +545,11 @@ public class ItemUtils {
     public static List<ProcessingComponent<?>> copyItemHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+            list.add(new ProcessingComponent<>(
                     (MachineComponent<Object>) component.component(),
                     ((IItemHandlerImpl) component.getProvidedComponent()).copy(),
-                    component.getTag());
-            list.add(objectProcessingComponent);
+                    component.getTag())
+            );
         }
         return list;
     }

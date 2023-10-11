@@ -79,6 +79,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         return new JEIComponentHybridFluidPerTick(this);
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         return doFluidIO(components, context);
@@ -89,6 +90,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         return doFluidIO(components, context);
     }
 
+    @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         return HybridFluidUtils.copyFluidHandlerComponents(components);
@@ -101,6 +103,11 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         }
 
         return doFluidIOInternal(components, context, maxParallelism);
+    }
+
+    @Override
+    public int getParallelism() {
+        return parallelism;
     }
 
     private CraftCheck doFluidIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {

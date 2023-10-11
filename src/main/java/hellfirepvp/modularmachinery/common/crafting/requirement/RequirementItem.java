@@ -191,6 +191,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         }
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         return doItemIO(components, context, Collections.emptyList(), ResultChance.GUARANTEED);
@@ -203,6 +204,11 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         }
 
         return doItemIOInternal(components, context, maxParallelism, Collections.emptyList(), ResultChance.GUARANTEED);
+    }
+
+    @Override
+    public int getParallelism() {
+        return parallelism;
     }
 
     private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers, ResultChance chance) {
@@ -241,6 +247,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
 
     }
 
+    @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         return ItemUtils.copyItemHandlerComponents(components);

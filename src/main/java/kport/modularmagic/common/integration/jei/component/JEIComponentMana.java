@@ -12,7 +12,7 @@ import java.util.List;
 
 public class JEIComponentMana extends ComponentRequirement.JEIComponent<Mana> {
 
-    private RequirementMana requirementMana;
+    private final RequirementMana requirementMana;
 
     public JEIComponentMana(RequirementMana requirementMana) {
         this.requirementMana = requirementMana;

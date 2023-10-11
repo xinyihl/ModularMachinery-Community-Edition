@@ -37,9 +37,9 @@ public class ManaRenderer implements IIngredientRenderer<Mana> {
         GlStateManager.color(1F, 1F, 1F, 1F);
         manaBar.build().draw(minecraft, xPosition, yPosition);
 
-        int manaPercentage = Math.max(0, (int) ((double) ingredient.getManaAmount() / (double) 10000 * 61));
+        int manaPercentage = Math.max(0, (int) ((double) ingredient.manaAmount() / (double) 10000 * 61));
 
-        if (manaPercentage == 0 && ingredient.getManaAmount() > 0)
+        if (manaPercentage == 0 && ingredient.manaAmount() > 0)
             manaPercentage = 1;
 
         manaBarFilled.build().draw(minecraft, xPosition + 1, yPosition + 1);

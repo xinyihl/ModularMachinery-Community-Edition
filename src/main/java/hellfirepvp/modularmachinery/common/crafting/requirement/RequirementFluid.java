@@ -165,11 +165,13 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
         }
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         return doFluidGasIO(components, context);
     }
 
+    @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         if (Mods.MEKANISM.isPresent() && this.required instanceof HybridFluidGas) {
@@ -185,6 +187,11 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
         }
 
         return doFluidGasIOInternal(components, context, maxParallelism);
+    }
+
+    @Override
+    public int getParallelism() {
+        return parallelism;
     }
 
     private CraftCheck doFluidGasIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {

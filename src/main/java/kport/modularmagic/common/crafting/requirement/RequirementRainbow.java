@@ -33,11 +33,13 @@ public class RequirementRainbow extends ComponentRequirement.PerTickMultiCompone
                 cpn.ioType == getActionType();
     }
 
+    @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         return components;
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         for (final ProcessingComponent<?> component : components) {

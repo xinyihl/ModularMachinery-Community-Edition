@@ -1,7 +1,9 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -12,19 +14,19 @@ import kport.modularmagic.common.crafting.component.ComponentAspect;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeAspect;
 import kport.modularmagic.common.integration.jei.component.JEIComponentAspect;
-import kport.modularmagic.common.tile.TileAspectProvider;
+import kport.modularmagic.common.utils.AspectJarProxy;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
-import thaumcraft.common.tiles.essentia.TileJarFillable;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementAspect extends ComponentRequirement<AspectList, RequirementTypeAspect> implements Asyncable {
+public class RequirementAspect extends ComponentRequirement.ParallelizableRequirement<AspectList, RequirementTypeAspect>
+        implements Asyncable, ComponentRequirement.Parallelizable {
 
     public int amount;
-    public int countAmount;
     public Aspect aspect;
 
     public RequirementAspect(IOType actionType, int amount, Aspect aspect) {
@@ -34,56 +36,152 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
         this.aspect = aspect;
     }
 
+    @Nonnull
+    private static List<AspectJarProxy> convertJars(final List<ProcessingComponent<?>> components) {
+        List<AspectJarProxy> jars = new ArrayList<>();
+        for (final ProcessingComponent<?> component : components) {
+            jars.add((AspectJarProxy) component.providedComponent());
+        }
+        return jars;
+    }
+
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cpn = component.getComponent();
-        return cpn.getContainerProvider() instanceof TileAspectProvider &&
+        return cpn.getContainerProvider() instanceof AspectJarProxy &&
                 cpn.getComponentType() instanceof ComponentAspect &&
                 cpn.ioType == getActionType();
     }
 
+    @Nonnull
     @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
-            return false;
-
-        if (getActionType() == IOType.INPUT) {
-            TileAspectProvider provider = (TileAspectProvider) component.getComponent().getContainerProvider();
-            return provider.takeFromContainer(this.aspect, this.amount);
+    @SuppressWarnings("unchecked")
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (final ProcessingComponent<?> component : components) {
+            list.add(new ProcessingComponent<>((
+                    MachineComponent<Object>) component.component(),
+                    new AspectJarProxy(((AspectJarProxy) component.providedComponent()).getOriginal()),
+                    component.tag())
+            );
         }
-        return false;
+        return list;
     }
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (getActionType() == IOType.OUTPUT) {
-            TileAspectProvider provider = (TileAspectProvider) component.getComponent().getContainerProvider();
-            provider.addToContainer(this.aspect, this.amount);
-        }
-        return CraftCheck.success();
-    }
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        List<AspectJarProxy> jars = convertJars(components);
 
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        TileAspectProvider provider = (TileAspectProvider) component.getComponent().getContainerProvider();
         switch (getActionType()) {
             case INPUT -> {
-                if (provider.doesContainerContainAmount(this.aspect, this.amount)) {
-                    return CraftCheck.success();
-                } else {
+                int taken = takeAll(jars, context, parallelism, true);
+                if (taken < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.aspect.less");
                 }
             }
             case OUTPUT -> {
-                if (ignoreOutputCheck || provider.amount == 0 || provider.aspect == this.aspect && TileJarFillable.CAPACITY >= provider.amount + this.amount)
-                    return CraftCheck.success();
-                else
-                    return CraftCheck.failure("error.modularmachinery.requirement.aspect.out");
+                if (!ignoreOutputCheck) {
+                    int added = addAll(jars, context, parallelism, true);
+                    if (added < parallelism) {
+                        return CraftCheck.failure("error.modularmachinery.requirement.aspect.out");
+                    }
+                }
             }
         }
-        return CraftCheck.skipComponent();
+
+        return CraftCheck.success();
+    }
+
+    @Override
+    public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (actionType == IOType.INPUT) {
+            List<AspectJarProxy> jars = convertJars(components);
+            takeAll(jars, context, parallelism, false);
+        }
+    }
+
+    @Override
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (actionType == IOType.OUTPUT) {
+            List<AspectJarProxy> jars = convertJars(components);
+            addAll(jars, context, parallelism, false);
+        }
+    }
+
+    @Override
+    public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+            return maxParallelism;
+        }
+
+        List<AspectJarProxy> jars = convertJars(components);
+        switch (actionType) {
+            case INPUT -> {
+                return takeAll(jars, context, maxParallelism, true);
+            }
+            case OUTPUT -> {
+                return addAll(jars, context, maxParallelism, true);
+            }
+        }
+
+        return 0;
+    }
+
+    private int addAll(final List<AspectJarProxy> jars,
+                       final RecipeCraftingContext context,
+                       final float maxMultiplier,
+                       final boolean simulate) {
+        int toAdd = Math.round(RecipeModifier.applyModifiers(context, this, (float) this.amount, false));
+        int maxAdd = (int) (toAdd * maxMultiplier);
+
+        int totalAdded = 0;
+        for (final AspectJarProxy jar : jars) {
+            if (simulate) {
+                totalAdded += jar.addToContainer(aspect, maxAdd - totalAdded);
+            } else {
+                totalAdded += jar.getOriginal().addToContainer(aspect, maxAdd - totalAdded);
+            }
+            if (totalAdded >= maxAdd) {
+                break;
+            }
+        }
+
+        if (totalAdded < maxAdd) {
+            return totalAdded / toAdd;
+        }
+        return totalAdded;
+    }
+
+    private int takeAll(final List<AspectJarProxy> jars,
+                        final RecipeCraftingContext context,
+                        final float maxMultiplier,
+                        final boolean simulate) {
+        int toTake = Math.round(RecipeModifier.applyModifiers(context, this, (float) this.amount, false));
+        int maxTake = (int) (toTake * maxMultiplier);
+
+        int totalTaken = 0;
+        for (final AspectJarProxy jar : jars) {
+            if (simulate) {
+                int jarAmount = jar.getAmount();
+                if (jar.takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
+                    totalTaken += jarAmount;
+                }
+            } else {
+                int jarAmount = jar.getOriginal().amount;
+                if (jar.getOriginal().takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
+                    totalTaken += jarAmount;
+                }
+            }
+            if (totalTaken >= maxTake) {
+                break;
+            }
+        }
+
+        if (totalTaken < maxTake) {
+            return totalTaken / toTake;
+        }
+        return totalTaken;
     }
 
     @Nonnull
@@ -103,6 +201,7 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
         RequirementAspect req = new RequirementAspect(actionType, amount, aspect);
         req.tag = this.tag;
         req.ignoreOutputCheck = this.ignoreOutputCheck;
+        req.parallelizeUnaffected = this.parallelizeUnaffected;
         return req;
     }
 

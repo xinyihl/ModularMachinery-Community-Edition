@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentAspectProvider;
+import kport.modularmagic.common.utils.AspectJarProxy;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -146,14 +147,14 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     public static class Input extends TileAspectProvider {
         @Override
         public MachineComponentAspectProvider provideComponent() {
-            return new MachineComponentAspectProvider(this, IOType.INPUT);
+            return new MachineComponentAspectProvider(new AspectJarProxy(this), IOType.INPUT);
         }
     }
 
     public static class Output extends TileAspectProvider {
         @Override
         public MachineComponentAspectProvider provideComponent() {
-            return new MachineComponentAspectProvider(this, IOType.OUTPUT);
+            return new MachineComponentAspectProvider(new AspectJarProxy(this), IOType.OUTPUT);
         }
     }
 }

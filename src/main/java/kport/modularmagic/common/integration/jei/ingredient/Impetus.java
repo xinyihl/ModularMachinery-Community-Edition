@@ -1,16 +1,10 @@
 package kport.modularmagic.common.integration.jei.ingredient;
 
+import com.github.bsideup.jabel.Desugar;
+
 /**
  * @author youyihj
  */
-public class Impetus {
-    private final int amount;
-
-    public Impetus(int amount) {
-        this.amount = amount;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
+@Desugar
+public record Impetus(int amount) {
 }

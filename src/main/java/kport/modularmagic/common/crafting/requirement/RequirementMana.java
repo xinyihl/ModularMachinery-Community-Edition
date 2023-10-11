@@ -1,11 +1,9 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
-import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
-import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
+import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -56,7 +54,7 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
 
     @Nonnull
     @Override
-    public CraftCheck canStartCrafting(ProcessingComponent component, RecipeCraftingContext context, List restrictions) {
+    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         if (getActionType() == IOType.INPUT) {
             TileManaProvider provider = (TileManaProvider) component.getComponent().getContainerProvider();
             return provider.getCurrentMana() >= this.manaAmount ? CraftCheck.success() : CraftCheck.failure("error.modularmachinery.requirement.mana.less");
@@ -71,27 +69,17 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
     }
 
     @Override
-    public ComponentRequirement deepCopy() {
+    public RequirementMana deepCopy() {
+        return deepCopyModified(Collections.emptyList());
+    }
+
+    @Override
+    public RequirementMana deepCopyModified(List<RecipeModifier> list) {
         return this;
     }
 
     @Override
-    public ComponentRequirement deepCopyModified(List list) {
-        return this;
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
-    }
-
-    @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentMana provideJEIComponent() {
         return new JEIComponentMana(this);
     }
 }

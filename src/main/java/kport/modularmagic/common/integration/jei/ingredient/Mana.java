@@ -1,16 +1,7 @@
 package kport.modularmagic.common.integration.jei.ingredient;
 
-public class Mana {
+import com.github.bsideup.jabel.Desugar;
 
-    private int manaAmount;
-
-    public Mana(int manaAmount) {
-        this.manaAmount = manaAmount;
-    }
-
-    public int getManaAmount() {
-        return manaAmount;
-    }
-
-
+@Desugar
+public record Mana(int manaAmount) {
 }

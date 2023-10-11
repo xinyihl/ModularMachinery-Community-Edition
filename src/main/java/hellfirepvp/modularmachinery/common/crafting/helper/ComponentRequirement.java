@@ -285,6 +285,8 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
                               final RecipeCraftingContext context,
                               final int maxParallelism);
 
+        int getParallelism();
+
         /**
          * <p>
          * 设置该需求的并行数，检查需求或工作时应当严格遵守该并行数量，不得自行增加或减少并行数。
@@ -326,15 +328,16 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          * <p>
          * 为所有匹配的组件都提供一份复制副本，通常用于并行检查和配方检查。<br/>
          * 通常情况下可以不实现，但是如果实现了接口 {@link MultiComponent} 则必须实现此方法。<br/>
-         * 注意：如果需要实现此方法，<strong>绝对不能返回组件自身</strong>，否则可能会出现包括但不限于物品复制等问题。<br/>
+         * 注意：如果需要实现此方法，<strong>非必要情况下请不要返回组件自身</strong>，否则可能会出现包括但不限于物品复制等问题。<br/>
          * </p>
          * <p>
          * Provides a duplicate copy for all matching components, typically used for parallel checking and recipe checking.<br/>
          * This method can normally be left out, but must be implemented if the interface {@link MultiComponent} is implemented.<br/>
-         * WARN: If this method needs to be implemented, <strong>it should never return the component itself</strong>,
+         * WARN: If this method needs to be implemented, <strong>do not return to the component itself unless absolutely necessary</strong>,
          * otherwise issues including, but not limited to, item duplication may occur.<br/>
          * </p>
          */
+        @Nonnull
         List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components);
 
         /**
@@ -352,6 +355,7 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          * @param components 被复制后的组件，通常情况下可以自由修改其内容。<br/>
          *                   Components that have been copied are, in general, free to modify their contents.
          */
+        @Nonnull
         CraftCheck canStartCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context);
 
         /**
@@ -424,6 +428,38 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         }
     }
 
+    public abstract static class ParallelizableRequirement<T, V extends RequirementType<T, ? extends ComponentRequirement<T, V>>>
+            extends MultiComponentRequirement<T, V>
+            implements Parallelizable {
+
+        protected int parallelism = 1;
+        protected boolean parallelizeUnaffected = false;
+
+        public ParallelizableRequirement(final V requirementType, final IOType actionType) {
+            super(requirementType, actionType);
+        }
+
+        @Override
+        public void setParallelizeUnaffected(boolean unaffected) {
+            this.parallelizeUnaffected = unaffected;
+            if (parallelizeUnaffected) {
+                this.parallelism = 1;
+            }
+        }
+
+        @Override
+        public int getParallelism() {
+            return parallelism;
+        }
+
+        @Override
+        public void setParallelism(int parallelism) {
+            if (!parallelizeUnaffected) {
+                this.parallelism = parallelism;
+            }
+        }
+    }
+
     public abstract static class PerTick<T, V extends RequirementType<T, ? extends PerTick<T, V>>>
             extends ComponentRequirement<T, V> {
 
@@ -469,7 +505,6 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         public CraftCheck doIOTick(final ProcessingComponent<?> component, final RecipeCraftingContext context) {
             return CraftCheck.success();
         }
-
 
         /**
          * <p>

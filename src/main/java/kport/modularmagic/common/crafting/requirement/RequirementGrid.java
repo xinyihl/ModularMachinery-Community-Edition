@@ -1,7 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
 import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -41,14 +40,12 @@ public class RequirementGrid extends ComponentRequirement.PerTick<Grid, Requirem
     @Override
     public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
         TileGridProvider provider = (TileGridProvider) component.getComponent().getContainerProvider();
-        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-            switch (getActionType()) {
-                case OUTPUT:
-                    provider.setPower(-this.power);
-                case INPUT:
-                    provider.setPower(this.power);
-            }
-        });
+        switch (getActionType()) {
+            case OUTPUT:
+                provider.setPower(-this.power);
+            case INPUT:
+                provider.setPower(this.power);
+        }
         return CraftCheck.success();
     }
 

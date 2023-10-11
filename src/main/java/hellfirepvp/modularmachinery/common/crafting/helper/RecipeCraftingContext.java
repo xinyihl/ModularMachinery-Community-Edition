@@ -341,20 +341,24 @@ public class RecipeCraftingContext {
         this.getParentRecipe().getCommandContainer().runFinishCommands(this.commandSender);
     }
 
-    public int getMaxParallelism() {
-        int maxParallelism = this.activeRecipe.getMaxParallelism();
-        List<RequirementComponents> parallelizableList = new ArrayList<>();
-        for (RequirementComponents e : requirementComponents) {
-            if (e.requirement() instanceof ComponentRequirement.Parallelizable) {
-                parallelizableList.add(e);
+    public List<RequirementComponents> getAllParallelizableComponents() {
+        List<RequirementComponents> list = new ArrayList<>();
+        for (RequirementComponents reqComponent : requirementComponents) {
+            if (reqComponent.requirement() instanceof ComponentRequirement.Parallelizable) {
+                list.add(reqComponent);
             }
         }
+        return list;
+    }
+
+    public int getMaxParallelism(List<RequirementComponents> parallelizable) {
+        int maxParallelism = this.activeRecipe.getMaxParallelism();
 
         ReqCompMap typeCopiedComp = new ReqCompMap();
         TaggedReqCompMap taggedTypeCopiedComp = new TaggedReqCompMap();
 
         int reqMaxParallelism = maxParallelism;
-        for (RequirementComponents reqComponent : parallelizableList) {
+        for (RequirementComponents reqComponent : parallelizable) {
             ComponentRequirement<?, ?> req = reqComponent.requirement();
             List<ProcessingComponent<?>> compList = reqComponent.components();
             List<ProcessingComponent<?>> copiedCompList = getCopiedRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
@@ -378,7 +382,13 @@ public class RecipeCraftingContext {
     public CraftingCheckResult canStartCrafting() {
         permanentModifierList.clear();
         if (getParentRecipe().isParallelized() && activeRecipe.getMaxParallelism() > 1) {
-            setParallelism(Math.max(1, getMaxParallelism()));
+            List<RequirementComponents> parallelizable = getAllParallelizableComponents();
+            int maxParallelism = getMaxParallelism(parallelizable);
+            setParallelism(Math.max(1, maxParallelism));
+
+            if (parallelizable.size() >= requirementComponents.size() && maxParallelism > 0) {
+                return CraftingCheckResult.SUCCESS;
+            }
         }
         return canStartCrafting(req -> true);
     }

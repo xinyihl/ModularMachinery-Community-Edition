@@ -108,6 +108,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
         doItemIO(components, context, chance);
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         return doItemIO(components, context, ResultChance.GUARANTEED);
@@ -122,6 +123,12 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
         return doItemIOInternal(component, context, maxParallelism, ResultChance.GUARANTEED);
     }
 
+    @Override
+    public int getParallelism() {
+        return parallelism;
+    }
+
+    @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
         return ItemUtils.copyItemHandlerComponents(components);

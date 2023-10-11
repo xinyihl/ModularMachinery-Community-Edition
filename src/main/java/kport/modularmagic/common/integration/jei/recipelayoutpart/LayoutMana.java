@@ -3,7 +3,6 @@ package kport.modularmagic.common.integration.jei.recipelayoutpart;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import kport.modularmagic.common.integration.jei.ingredient.Mana;
 import kport.modularmagic.common.integration.jei.render.ManaRenderer;
-import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.client.Minecraft;
 
 import java.awt.*;
@@ -30,7 +29,7 @@ public class LayoutMana extends RecipeLayoutPart<Mana> {
     }
 
     @Override
-    public IIngredientRenderer provideIngredientRenderer() {
+    public ManaRenderer provideIngredientRenderer() {
         return new ManaRenderer();
     }
 

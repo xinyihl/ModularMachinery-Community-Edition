@@ -63,7 +63,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopyModified(List<RecipeModifier> modifiers) {
         long requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) this.requirementPerTick, false));
         RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
-        energy.setTag(getTag());
+        energy.tag = this.tag;
         energy.parallelizeUnaffected = this.parallelizeUnaffected;
         energy.ignoreOutputCheck = this.ignoreOutputCheck;
         return energy;
@@ -95,6 +95,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
                 cmp.ioType == this.actionType;
     }
 
+    @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         return doEnergyIO(components, context, 1F, true);
@@ -104,6 +105,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
         return doEnergyIO(components, context, durationMultiplier, false);
     }
 
+    @Nonnull
     @Override
     @SuppressWarnings("unchecked")
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
@@ -208,7 +210,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
         }
 
         if (maxRequired > 0) {
-            return (int) Math.round((total - maxRequired) / required);
+            return (float) ((total - maxRequired) / required);
         }
         return multiplier;
     }

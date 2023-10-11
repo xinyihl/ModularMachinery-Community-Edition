@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 
 public abstract class TileGridProvider extends TilePower implements IWorldPowerMultiplier, MachineComponentTile, ITickable, ColorableMachineTile {
 
-    private float power;
+    private volatile float power;
     private int tick;
     private int color = Config.machineColor;
 

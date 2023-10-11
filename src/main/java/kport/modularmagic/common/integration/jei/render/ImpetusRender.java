@@ -24,6 +24,6 @@ public class ImpetusRender implements IIngredientRenderer<Impetus> {
 
     @Override
     public List<String> getTooltip(Minecraft minecraft, Impetus ingredient, ITooltipFlag tooltipFlag) {
-        return Collections.singletonList(I18n.format("info.modularmachinery.impetus", ingredient.getAmount()));
+        return Collections.singletonList(I18n.format("info.modularmachinery.impetus", ingredient.amount()));
     }
 }
