@@ -195,8 +195,8 @@ public class RecipeCraftingContext {
                 continue;
             }
 
-            if (perTickRequirement instanceof ComponentRequirement.MultiComponent) {
-                CraftCheck result = perTickRequirement.doIOTick(reqComponent.components(), this, durMultiplier);
+            if (perTickRequirement instanceof ComponentRequirement.PerTickMultiComponent<?, ?> reqMulti) {
+                CraftCheck result = reqMulti.doIOTick(reqComponent.components(), this, durMultiplier);
                 if (!result.isSuccess()) {
                     currentIOTickIndex = i;
                     checkResult.addError(result.getUnlocalizedMessage());
@@ -284,8 +284,8 @@ public class RecipeCraftingContext {
     private void startCrafting(final ResultChance chance, final RequirementComponents reqComponents) {
         ComponentRequirement<?, ?> requirement = reqComponents.requirement();
 
-        if (requirement instanceof ComponentRequirement.MultiComponent) {
-            requirement.startCrafting(reqComponents.components(), this, chance);
+        if (requirement instanceof ComponentRequirement.MultiComponent req) {
+            req.startCrafting(reqComponents.components(), this, chance);
             return;
         }
 
@@ -299,7 +299,7 @@ public class RecipeCraftingContext {
             }
             if (success.get()) {
                 requirement.endRequirementCheck();
-                break;
+                return;
             }
         }
         requirement.endRequirementCheck();
@@ -319,8 +319,8 @@ public class RecipeCraftingContext {
             ComponentRequirement<?, ?> requirement = reqComponents.requirement();
             List<ProcessingComponent<?>> components = reqComponents.components();
 
-            if (requirement instanceof ComponentRequirement.MultiComponent) {
-                requirement.finishCrafting(components, this, chance);
+            if (requirement instanceof ComponentRequirement.MultiComponent reqMulti) {
+                reqMulti.finishCrafting(components, this, chance);
                 continue;
             }
 
@@ -439,9 +439,9 @@ public class RecipeCraftingContext {
 
         List<ProcessingComponent<?>> compList = reqComponent.components();
         if (!compList.isEmpty()) {
-            if (req instanceof ComponentRequirement.MultiComponent) {
+            if (req instanceof ComponentRequirement.MultiComponent reqMulti) {
                 List<ProcessingComponent<?>> copiedCompList = getRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
-                CraftCheck check = req.canStartCrafting(copiedCompList, this);
+                CraftCheck check = reqMulti.canStartCrafting(copiedCompList, this);
                 if (check.isSuccess()) {
                     return true;
                 }
@@ -482,11 +482,11 @@ public class RecipeCraftingContext {
             copiedCompList = taggedTypeCopiedComp.computeIfAbsent(
                     req.actionType, reqTypeMap -> new Object2ObjectArrayMap<>()).computeIfAbsent(
                     req.requirementType, tagMap -> new Object2ObjectOpenHashMap<>()).computeIfAbsent(
-                            req.tag, comp -> req.copyComponents(compList));
+                            req.tag, comp -> ((ComponentRequirement.MultiComponent) req).copyComponents(compList));
         } else {
             copiedCompList = typeCopiedComp.computeIfAbsent(
                     req.actionType, reqTypeMap -> new Object2ObjectArrayMap<>()).computeIfAbsent(
-                    req.requirementType, comp -> req.copyComponents(compList));
+                    req.requirementType, comp -> ((ComponentRequirement.MultiComponent) req).copyComponents(compList));
         }
         return copiedCompList;
     }

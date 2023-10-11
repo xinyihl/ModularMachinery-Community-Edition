@@ -57,6 +57,7 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTick<LifeEss
         return true;
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT && !isPerTick) {

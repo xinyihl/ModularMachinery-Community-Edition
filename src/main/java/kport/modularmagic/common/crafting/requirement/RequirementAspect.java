@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentAspect;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -51,6 +52,7 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
         return false;
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {
@@ -65,17 +67,19 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         TileAspectProvider provider = (TileAspectProvider) component.getComponent().getContainerProvider();
         switch (getActionType()) {
-            case INPUT:
-                if (provider.doesContainerContainAmount(this.aspect, this.amount))
+            case INPUT -> {
+                if (provider.doesContainerContainAmount(this.aspect, this.amount)) {
                     return CraftCheck.success();
-                else
+                } else {
                     return CraftCheck.failure("error.modularmachinery.requirement.aspect.less");
-
-            case OUTPUT:
+                }
+            }
+            case OUTPUT -> {
                 if (provider.amount == 0 || provider.aspect == this.aspect && TileJarFillable.CAPACITY >= provider.amount + this.amount)
                     return CraftCheck.success();
                 else
                     return CraftCheck.failure("error.modularmachinery.requirement.aspect.out");
+            }
         }
         return CraftCheck.skipComponent();
     }
@@ -87,12 +91,12 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
     }
 
     @Override
-    public ComponentRequirement deepCopy() {
+    public RequirementAspect deepCopy() {
         return this;
     }
 
     @Override
-    public ComponentRequirement deepCopyModified(List list) {
+    public RequirementAspect deepCopyModified(List<RecipeModifier> list) {
         return this;
     }
 
@@ -107,7 +111,7 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
     }
 
     @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentAspect provideJEIComponent() {
         return new JEIComponentAspect(this);
     }
 }

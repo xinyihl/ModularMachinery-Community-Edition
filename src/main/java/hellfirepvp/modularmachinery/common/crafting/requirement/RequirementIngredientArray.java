@@ -2,7 +2,10 @@ package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentIngredientArray;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeIngredientArray;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
@@ -20,10 +23,8 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequirementIngredientArray extends ComponentRequirement<ItemStack, RequirementTypeIngredientArray> implements
-        ComponentRequirement.ChancedRequirement,
-        ComponentRequirement.Parallelizable,
-        ComponentRequirement.MultiComponent {
+public class RequirementIngredientArray extends ComponentRequirement.MultiComponentRequirement<ItemStack, RequirementTypeIngredientArray>
+        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
 
     public final List<ChancedIngredientStack> ingredients;
 
@@ -217,32 +218,5 @@ public class RequirementIngredientArray extends ComponentRequirement<ItemStack, 
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
-    }
-
-    // Noop
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
     }
 }

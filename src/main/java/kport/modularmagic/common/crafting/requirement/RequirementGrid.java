@@ -63,6 +63,7 @@ public class RequirementGrid extends ComponentRequirement.PerTick<Grid, Requirem
         return canStartCrafting(component, context, Lists.newArrayList()).isSuccess();
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         return CraftCheck.success();

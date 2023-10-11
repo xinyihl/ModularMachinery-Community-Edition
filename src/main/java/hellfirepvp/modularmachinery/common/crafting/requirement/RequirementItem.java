@@ -10,7 +10,10 @@ package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeItem;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
@@ -38,11 +41,8 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:35
  */
-public class RequirementItem extends ComponentRequirement<ItemStack, RequirementTypeItem> implements
-        ComponentRequirement.ChancedRequirement,
-        ComponentRequirement.Parallelizable,
-        ComponentRequirement.MultiComponent,
-        Asyncable {
+public class RequirementItem extends ComponentRequirement.MultiComponentRequirement<ItemStack, RequirementTypeItem>
+        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
 
     public final ItemRequirementType requirementType;
 
@@ -185,11 +185,10 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
     }
 
     @Override
-    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.OUTPUT) {
-            return doItemIO(components, context, itemModifierList, chance);
+            doItemIO(components, context, itemModifierList, chance);
         }
-        return CraftCheck.skipComponent();
     }
 
     @Override
@@ -417,32 +416,6 @@ public class RequirementItem extends ComponentRequirement<ItemStack, Requirement
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
-    }
-
-    // Noop
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
     }
 
     public enum ItemRequirementType {

@@ -8,7 +8,10 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeEnergy;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
@@ -19,7 +22,6 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerImpl;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
@@ -34,10 +36,8 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTick<Long, RequirementTypeEnergy> implements
-        ComponentRequirement.Parallelizable,
-        ComponentRequirement.MultiComponent,
-        Asyncable {
+public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponent<Long, RequirementTypeEnergy>
+        implements ComponentRequirement.Parallelizable, Asyncable {
 
     public final long requirementPerTick;
 
@@ -69,14 +69,6 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
         return energy;
     }
 
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
     @Nonnull
     @Override
     public String getMissingComponentErrorMessage(IOType ioType) {
@@ -101,16 +93,6 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
                 cmp.getContainerProvider() instanceof IEnergyHandler &&
                 cmp instanceof MachineComponent.EnergyHatch &&
                 cmp.ioType == this.actionType;
-    }
-
-    @Override
-    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        super.startCrafting(components, context, chance);
-    }
-
-    @Override
-    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        return CraftCheck.success();
     }
 
     @Override
@@ -241,40 +223,5 @@ public class RequirementEnergy extends ComponentRequirement.PerTick<Long, Requir
 
     public int getParallelism() {
         return parallelism;
-    }
-
-    // Noop
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        return CraftCheck.skipComponent();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        return CraftCheck.skipComponent();
     }
 }

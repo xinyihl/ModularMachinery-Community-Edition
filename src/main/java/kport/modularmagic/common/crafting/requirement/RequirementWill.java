@@ -55,6 +55,7 @@ public class RequirementWill extends ComponentRequirement<DemonWill, Requirement
         return true;
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {

@@ -9,7 +9,10 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentHybridFluid;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
@@ -42,11 +45,8 @@ import java.util.List;
  * Date: 24.02.2018 / 12:28
  * TODO: Split FluidStack and GasStack into two different Requirements, combining the two makes for terrible code.
  */
-public class RequirementFluid extends ComponentRequirement<HybridFluid, RequirementTypeFluid> implements
-        ComponentRequirement.ChancedRequirement,
-        ComponentRequirement.Parallelizable,
-        ComponentRequirement.MultiComponent,
-        Asyncable {
+public class RequirementFluid extends ComponentRequirement.MultiComponentRequirement<HybridFluid, RequirementTypeFluid>
+        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
 
     public final HybridFluid required;
 
@@ -167,11 +167,10 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
     }
 
     @Override
-    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.OUTPUT && chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            return doFluidGasIO(components, context);
+            doFluidGasIO(components, context);
         }
-        return CraftCheck.skipComponent();
     }
 
     @Override
@@ -270,34 +269,6 @@ public class RequirementFluid extends ComponentRequirement<HybridFluid, Requirem
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
-    }
-
-    // Noop
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
     }
 
 }

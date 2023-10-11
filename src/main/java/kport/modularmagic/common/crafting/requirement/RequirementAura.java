@@ -50,6 +50,7 @@ public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeA
         return true;
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {

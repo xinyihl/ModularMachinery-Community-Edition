@@ -1,6 +1,9 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentHybridFluidPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeFluidPerTick;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
@@ -10,7 +13,6 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
@@ -20,9 +22,8 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementFluidPerTick extends ComponentRequirement.PerTick<HybridFluid, RequirementTypeFluidPerTick> implements
-        ComponentRequirement.Parallelizable,
-        ComponentRequirement.MultiComponent {
+public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiComponent<HybridFluid, RequirementTypeFluidPerTick>
+        implements ComponentRequirement.Parallelizable {
 
     public final FluidStack required;
 
@@ -76,16 +77,6 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
     @Override
     public JEIComponent<HybridFluid> provideJEIComponent() {
         return new JEIComponentHybridFluidPerTick(this);
-    }
-
-    @Override
-    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        super.startCrafting(components, context, chance);
-    }
-
-    @Override
-    public CraftCheck finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        return CraftCheck.success();
     }
 
     @Override
@@ -163,49 +154,5 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTick<Hybrid
         if (parallelizeUnaffected) {
             this.parallelism = 1;
         }
-    }
-
-    // Noop
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Override
-    @Nonnull
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
-    @Override
-    public void startIOTick(RecipeCraftingContext context, float durationMultiplier) {
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck resetIOTick(RecipeCraftingContext context) {
-        return CraftCheck.skipComponent();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck doIOTick(ProcessingComponent<?> component, RecipeCraftingContext context) {
-        return CraftCheck.skipComponent();
     }
 }

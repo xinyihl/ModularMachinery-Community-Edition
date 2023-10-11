@@ -40,6 +40,7 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
         return true;
     }
 
+    @Nonnull
     @Override
     public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {
