@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileAuraProvider;
 
 public class MachineComponentAuraProvider extends MachineComponent<TileAuraProvider> {
 
-    private TileAuraProvider provider;
+    private final TileAuraProvider provider;
 
     public MachineComponentAuraProvider(TileAuraProvider provider, IOType ioType) {
         super(ioType);

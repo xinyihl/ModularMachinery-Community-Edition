@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentWill;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -20,7 +21,7 @@ import kport.modularmagic.common.tile.TileWillProvider;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementWill extends ComponentRequirement<DemonWill, RequirementTypeWill> {
+public class RequirementWill extends ComponentRequirement<DemonWill, RequirementTypeWill> implements Asyncable {
 
     public double willAmount;
     public EnumDemonWillType willType;

@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileGridProvider;
 
 public class MachineComponentGridProvider extends MachineComponent<TileGridProvider> {
 
-    private TileGridProvider gridProvider;
+    private final TileGridProvider gridProvider;
 
     public MachineComponentGridProvider(TileGridProvider gridProvider, IOType ioType) {
         super(ioType);

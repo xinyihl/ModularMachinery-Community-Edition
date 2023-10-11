@@ -88,7 +88,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
             if (!coreRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
                 doRecipeTick();
-                markForUpdateSync();
+                markNoUpdateSync();
             }
 
             final boolean workingStatus = isWorking();

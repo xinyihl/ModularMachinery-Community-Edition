@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileRainbowProvider;
 
 public class MachineComponentRainbowProvider extends MachineComponent<TileRainbowProvider> {
 
-    private TileRainbowProvider rainbowProvider;
+    private final TileRainbowProvider rainbowProvider;
 
     public MachineComponentRainbowProvider(TileRainbowProvider rainbowProvider, IOType ioType) {
         super(ioType);

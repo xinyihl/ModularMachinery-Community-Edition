@@ -2,7 +2,6 @@ package kport.modularmagic.common.tile;
 
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentAspectProvider;
@@ -60,22 +59,27 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
 
     private void fillJar(EnumFacing face) {
         TileEntity te = ThaumcraftApiHelper.getConnectableTile(this.world, this.pos, face);
-        if (te != null) {
-            IEssentiaTransport ic = (IEssentiaTransport) te;
-            if (!ic.canOutputTo(face.getOpposite())) {
-                return;
-            }
+        if (te == null) {
+            return;
+        }
 
-            Aspect ta = null;
-            if (this.aspect != null && this.amount > 0) {
-                ta = this.aspect;
-            } else if (ic.getEssentiaAmount(face.getOpposite()) > 0 && ic.getSuctionAmount(face.getOpposite()) < this.getSuctionAmount(face) && this.getSuctionAmount(face) >= ic.getMinimumSuction()) {
-                ta = ic.getEssentiaType(face.getOpposite());
-            }
+        EnumFacing opposite = face.getOpposite();
+        IEssentiaTransport ic = (IEssentiaTransport) te;
+        if (!ic.canOutputTo(opposite)) {
+            return;
+        }
 
-            if (ta != null && ic.getSuctionAmount(face.getOpposite()) < this.getSuctionAmount(face)) {
-                this.addToContainer(ta, ic.takeEssentia(ta, 1, face.getOpposite()));
-            }
+        Aspect ta = null;
+        if (this.aspect != null && this.amount > 0) {
+            ta = this.aspect;
+        } else if (ic.getEssentiaAmount(opposite) > 0 && ic.getSuctionAmount(opposite) < this.getSuctionAmount(face) && this.getSuctionAmount(face) >= ic.getMinimumSuction()) {
+            ta = ic.getEssentiaType(opposite);
+        } else {
+            return;
+        }
+
+        if (ic.getSuctionAmount(opposite) < this.getSuctionAmount(face)) {
+            this.addToContainer(ta, ic.takeEssentia(ta, 1, opposite));
         }
     }
 
@@ -109,7 +113,7 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentAspectProvider provideComponent() {
             return new MachineComponentAspectProvider(this, IOType.INPUT);
         }
     }
@@ -118,7 +122,7 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentAspectProvider provideComponent() {
             return new MachineComponentAspectProvider(this, IOType.OUTPUT);
         }
     }

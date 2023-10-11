@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentAura;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -15,9 +16,10 @@ import kport.modularmagic.common.integration.jei.ingredient.Aura;
 import kport.modularmagic.common.tile.TileAuraProvider;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
-public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeAura> {
+public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeAura> implements Asyncable {
 
     public Aura aura;
     public int max;
@@ -31,8 +33,8 @@ public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeA
     }
 
     @Override
-    public boolean isValidComponent(ProcessingComponent component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+    public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
+        MachineComponent<?> cpn = component.getComponent();
         return cpn.getContainerProvider() instanceof TileAuraProvider &&
                 cpn.getComponentType() instanceof ComponentAura &&
                 cpn.ioType == getActionType();
@@ -73,7 +75,7 @@ public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeA
                     return CraftCheck.failure("error.modularmachinery.requirement.aura.less");
 
             case OUTPUT:
-                if (provider.getAura().getAmount() + this.aura.getAmount() > this.max)
+                if (ignoreOutputCheck || provider.getAura().getAmount() + this.aura.getAmount() > this.max)
                     return CraftCheck.failure("error.modularmachinery.requirement.aura.more");
         }
         return CraftCheck.success();
@@ -81,22 +83,19 @@ public class RequirementAura extends ComponentRequirement<Aura, RequirementTypeA
 
     @Override
     public ComponentRequirement<Aura, RequirementTypeAura> deepCopy() {
-        return this;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
     public ComponentRequirement<Aura, RequirementTypeAura> deepCopyModified(List<RecipeModifier> modifiers) {
-        return this;
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
+        Aura aura = new Aura(Math.round(
+                RecipeModifier.applyModifiers(modifiers, this, this.aura.getAmount(), false)),
+                this.aura.getType()
+        );
+        RequirementAura req = new RequirementAura(actionType, aura, this.max, this.min);
+        req.tag = this.tag;
+        req.ignoreOutputCheck = this.ignoreOutputCheck;
+        return req;
     }
 
     @Nonnull

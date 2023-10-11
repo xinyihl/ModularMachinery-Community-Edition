@@ -7,6 +7,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeMana;
@@ -17,7 +18,7 @@ import kport.modularmagic.common.tile.TileManaProvider;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeMana> {
+public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeMana> implements Asyncable {
 
     public int manaAmount;
 

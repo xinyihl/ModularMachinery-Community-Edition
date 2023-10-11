@@ -183,7 +183,7 @@ public class RecipeCraftingContext {
             final RequirementComponents reqComponent = requirementComponents.get(i);
 
             ComponentRequirement<?, ?> requirement = reqComponent.requirement();
-            if (!(requirement instanceof final ComponentRequirement.PerTick<?, ?> perTickRequirement)) {
+            if (!(requirement instanceof ComponentRequirement.PerTick<?, ?> perTickReq)) {
                 if (requirement.getTriggerTime() >= 1) {
                     checkAndTriggerRequirement(checkResult, currentTick, chance, reqComponent);
                     if (checkResult.isFailure()) {
@@ -195,33 +195,32 @@ public class RecipeCraftingContext {
                 continue;
             }
 
-            if (perTickRequirement instanceof ComponentRequirement.PerTickMultiComponent<?, ?> reqMulti) {
-                CraftCheck result = reqMulti.doIOTick(reqComponent.components(), this, durMultiplier);
+            if (perTickReq instanceof ComponentRequirement.PerTickMultiComponent<?, ?> reqMultiComp) {
+                CraftCheck result = reqMultiComp.doIOTick(reqComponent.components(), this, durMultiplier);
                 if (!result.isSuccess()) {
                     currentIOTickIndex = i;
                     checkResult.addError(result.getUnlocalizedMessage());
                     return checkResult;
                 }
-
                 continue;
             }
 
-            perTickRequirement.resetIOTick(this);
-            perTickRequirement.startIOTick(this, durMultiplier);
+            perTickReq.resetIOTick(this);
+            perTickReq.startIOTick(this, durMultiplier);
 
             for (ProcessingComponent<?> component : reqComponent.components()) {
                 AtomicReference<CraftCheck> result = new AtomicReference<>();
-                if (perTickRequirement instanceof Asyncable) {
-                    result.set(perTickRequirement.doIOTick(component, this));
+                if (perTickReq instanceof Asyncable) {
+                    result.set(perTickReq.doIOTick(component, this));
                 } else {
-                    Sync.doSyncAction(() -> result.set(perTickRequirement.doIOTick(component, this)));
+                    Sync.doSyncAction(() -> result.set(perTickReq.doIOTick(component, this)));
                 }
                 if (result.get().isSuccess()) {
                     break;
                 }
             }
 
-            CraftCheck result = perTickRequirement.resetIOTick(this);
+            CraftCheck result = perTickReq.resetIOTick(this);
             if (!result.isSuccess()) {
                 currentIOTickIndex = i;
                 checkResult.addError(result.getUnlocalizedMessage());
@@ -259,7 +258,7 @@ public class RecipeCraftingContext {
             return;
         }
 
-        if (canStartCrafting(res, reqComponent, new CopiedReqCompMap(), new TaggedCopiedReqCompMap())) {
+        if (canStartCrafting(res, reqComponent, new ReqCompMap(), new TaggedReqCompMap())) {
             startCrafting(chance, reqComponent);
             req.setTriggered(true);
         }
@@ -351,14 +350,14 @@ public class RecipeCraftingContext {
             }
         }
 
-        CopiedReqCompMap typeCopiedComp = new CopiedReqCompMap();
-        TaggedCopiedReqCompMap taggedTypeCopiedComp = new TaggedCopiedReqCompMap();
+        ReqCompMap typeCopiedComp = new ReqCompMap();
+        TaggedReqCompMap taggedTypeCopiedComp = new TaggedReqCompMap();
 
         int reqMaxParallelism = maxParallelism;
         for (RequirementComponents reqComponent : parallelizableList) {
             ComponentRequirement<?, ?> req = reqComponent.requirement();
             List<ProcessingComponent<?>> compList = reqComponent.components();
-            List<ProcessingComponent<?>> copiedCompList = getRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
+            List<ProcessingComponent<?>> copiedCompList = getCopiedRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
 
             ComponentRequirement.Parallelizable requirement = (ComponentRequirement.Parallelizable) req;
             reqMaxParallelism = Math.min(reqMaxParallelism, requirement.getMaxParallelism(copiedCompList, this, maxParallelism));
@@ -416,8 +415,8 @@ public class RecipeCraftingContext {
         CraftingCheckResult result = new CraftingCheckResult();
         float successfulRequirements = 0;
 
-        CopiedReqCompMap typeCopiedComp = new CopiedReqCompMap();
-        TaggedCopiedReqCompMap taggedTypeCopiedComp = new TaggedCopiedReqCompMap();
+        ReqCompMap typeCopiedComp = new ReqCompMap();
+        TaggedReqCompMap taggedTypeCopiedComp = new TaggedReqCompMap();
         for (RequirementComponents reqEntry : requirements) {
             if (canStartCrafting(result, reqEntry, typeCopiedComp, taggedTypeCopiedComp)) {
                 successfulRequirements++;
@@ -431,8 +430,8 @@ public class RecipeCraftingContext {
 
     private boolean canStartCrafting(final CraftingCheckResult result,
                                      final RequirementComponents reqComponent,
-                                     final CopiedReqCompMap typeCopiedComp,
-                                     TaggedCopiedReqCompMap taggedTypeCopiedComp)
+                                     final ReqCompMap reqCompMap,
+                                     TaggedReqCompMap taggedReqCompMap)
     {
         ComponentRequirement<?, ?> req = reqComponent.requirement();
         req.startRequirementCheck(ResultChance.GUARANTEED, this);
@@ -440,7 +439,7 @@ public class RecipeCraftingContext {
         List<ProcessingComponent<?>> compList = reqComponent.components();
         if (!compList.isEmpty()) {
             if (req instanceof ComponentRequirement.MultiComponent reqMulti) {
-                List<ProcessingComponent<?>> copiedCompList = getRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
+                List<ProcessingComponent<?>> copiedCompList = getCopiedRequirementComponents(reqCompMap, taggedReqCompMap, req, compList);
                 CraftCheck check = reqMulti.canStartCrafting(copiedCompList, this);
                 if (check.isSuccess()) {
                     return true;
@@ -472,19 +471,19 @@ public class RecipeCraftingContext {
         return false;
     }
 
-    private static List<ProcessingComponent<?>> getRequirementComponents(
-            final CopiedReqCompMap typeCopiedComp,
-            final TaggedCopiedReqCompMap taggedTypeCopiedComp,
+    private static List<ProcessingComponent<?>> getCopiedRequirementComponents(
+            final ReqCompMap reqCompMap,
+            final TaggedReqCompMap taggedReqCompMap,
             final ComponentRequirement<?, ?> req, final List<ProcessingComponent<?>> compList)
     {
         List<ProcessingComponent<?>> copiedCompList;
         if (req.tag != null) {
-            copiedCompList = taggedTypeCopiedComp.computeIfAbsent(
+            copiedCompList = taggedReqCompMap.computeIfAbsent(
                     req.actionType, reqTypeMap -> new Object2ObjectArrayMap<>()).computeIfAbsent(
                     req.requirementType, tagMap -> new Object2ObjectOpenHashMap<>()).computeIfAbsent(
                             req.tag, comp -> ((ComponentRequirement.MultiComponent) req).copyComponents(compList));
         } else {
-            copiedCompList = typeCopiedComp.computeIfAbsent(
+            copiedCompList = reqCompMap.computeIfAbsent(
                     req.actionType, reqTypeMap -> new Object2ObjectArrayMap<>()).computeIfAbsent(
                     req.requirementType, comp -> ((ComponentRequirement.MultiComponent) req).copyComponents(compList));
         }
@@ -583,9 +582,6 @@ public class RecipeCraftingContext {
         private final Map<String, Integer> unlocErrorMessagesMap = new HashMap<>();
         public float validity = 0F;
 
-        public CraftingCheckResult() {
-        }
-
         public void addError(String unlocError) {
             if (!unlocError.isEmpty()) {
                 int count = this.unlocErrorMessagesMap.getOrDefault(unlocError, 0);
@@ -633,26 +629,26 @@ public class RecipeCraftingContext {
 
     }
 
-    public static class TaggedCopiedReqCompMap
+    public static class TaggedReqCompMap
             extends EnumMap<IOType, Object2ObjectArrayMap<RequirementType<?, ?>, Map<ComponentSelectorTag, List<ProcessingComponent<?>>>>> {
-        public TaggedCopiedReqCompMap() {
+        public TaggedReqCompMap() {
             super(IOType.class);
         }
 
         @Override
-        public final TaggedCopiedReqCompMap clone() throws AssertionError {
+        public final TaggedReqCompMap clone() throws AssertionError {
             throw new AssertionError();
         }
     }
 
-    public static class CopiedReqCompMap
+    public static class ReqCompMap
             extends EnumMap<IOType, Object2ObjectArrayMap<RequirementType<?, ?>, List<ProcessingComponent<?>>>> {
-        public CopiedReqCompMap() {
+        public ReqCompMap() {
             super(IOType.class);
         }
 
         @Override
-        public final CopiedReqCompMap clone() throws AssertionError {
+        public final ReqCompMap clone() throws AssertionError {
             throw new AssertionError();
         }
     }

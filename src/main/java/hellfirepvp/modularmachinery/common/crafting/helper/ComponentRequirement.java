@@ -239,8 +239,6 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
      */
     public abstract JEIComponent<T> provideJEIComponent();
 
-
-
     public boolean isIgnoreOutputCheck() {
         return ignoreOutputCheck;
     }
@@ -444,7 +442,7 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         }
 
-        // Returns the actual result of the IOTick-check after a sufficient amount of components have been checked for the requirement
+        // Returns the actual result of the IOTick-check after a sufficient amount of components has been checked for the requirement
         // Supply a failure message if invalid!
         @Nonnull
         public CraftCheck resetIOTick(RecipeCraftingContext context) {

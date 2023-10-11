@@ -8,6 +8,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentStarlight;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -20,7 +21,7 @@ import kport.modularmagic.common.tile.TileStarlightOutput;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight, RequirementTypeStarlight> {
+public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight, RequirementTypeStarlight> implements Asyncable {
 
     public float starlightAmount;
 

@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileConstellationProvider;
 
 public class MachineComponentConstellationProvider extends MachineComponent<TileConstellationProvider> {
 
-    private TileConstellationProvider provider;
+    private final TileConstellationProvider provider;
 
     public MachineComponentConstellationProvider(TileConstellationProvider provider, IOType ioType) {
         super(ioType);

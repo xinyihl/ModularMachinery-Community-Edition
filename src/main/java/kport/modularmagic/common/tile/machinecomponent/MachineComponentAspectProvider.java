@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileAspectProvider;
 
 public class MachineComponentAspectProvider extends MachineComponent<TileAspectProvider> {
 
-    private TileAspectProvider aspectProvider;
+    private final TileAspectProvider aspectProvider;
 
     public MachineComponentAspectProvider(TileAspectProvider aspectProvider, IOType ioType) {
         super(ioType);

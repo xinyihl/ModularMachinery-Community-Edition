@@ -1,6 +1,5 @@
 package kport.modularmagic.common.integration.jei.component;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import kport.modularmagic.common.crafting.requirement.RequirementAspect;
@@ -8,6 +7,7 @@ import kport.modularmagic.common.integration.jei.recipelayoutpart.LayoutAspect;
 import thaumcraft.api.aspects.AspectList;
 
 import java.awt.*;
+import java.util.Collections;
 import java.util.List;
 
 public class JEIComponentAspect extends ComponentRequirement.JEIComponent<AspectList> {
@@ -27,7 +27,7 @@ public class JEIComponentAspect extends ComponentRequirement.JEIComponent<Aspect
     public List<AspectList> getJEIIORequirements() {
         AspectList list = new AspectList();
         list.add(requirementAspect.aspect, requirementAspect.amount);
-        return Lists.newArrayList(list);
+        return Collections.singletonList(list);
     }
 
     @Override

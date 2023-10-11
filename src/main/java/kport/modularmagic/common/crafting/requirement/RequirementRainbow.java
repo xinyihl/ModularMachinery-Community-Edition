@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentRainbow;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -17,7 +18,7 @@ import kport.modularmagic.common.tile.TileRainbowProvider;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class RequirementRainbow extends ComponentRequirement<Rainbow, RequirementTypeRainbow> {
+public class RequirementRainbow extends ComponentRequirement<Rainbow, RequirementTypeRainbow> implements Asyncable {
 
     public RequirementRainbow(IOType actionType) {
         super((RequirementTypeRainbow) RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(ModularMagicRequirements.KEY_REQUIREMENT_RAINBOW), actionType);

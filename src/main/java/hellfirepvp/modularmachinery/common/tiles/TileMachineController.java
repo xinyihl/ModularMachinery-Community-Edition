@@ -75,7 +75,7 @@ public class TileMachineController extends TileMultiblockMachineController {
             final boolean prevWorkingStatus = isWorking();
 
             if (doRecipeTick()) {
-                markForUpdateSync();
+                markNoUpdateSync();
             }
 
             final boolean workingStatus = isWorking();

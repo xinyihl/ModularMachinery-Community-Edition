@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileWillProvider;
 
 public class MachineComponentWillProvider extends MachineComponent<TileWillProvider> {
 
-    private TileWillProvider willProvider;
+    private final TileWillProvider willProvider;
 
     public MachineComponentWillProvider(TileWillProvider willProvider, IOType ioType) {
         super(ioType);

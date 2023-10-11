@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentAspect;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
@@ -17,9 +18,10 @@ import thaumcraft.api.aspects.AspectList;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
-public class RequirementAspect extends ComponentRequirement<AspectList, RequirementTypeAspect> {
+public class RequirementAspect extends ComponentRequirement<AspectList, RequirementTypeAspect> implements Asyncable {
 
     public int amount;
     public int countAmount;
@@ -33,15 +35,15 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
     }
 
     @Override
-    public boolean isValidComponent(ProcessingComponent component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+    public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
+        MachineComponent<?> cpn = component.getComponent();
         return cpn.getContainerProvider() instanceof TileAspectProvider &&
                 cpn.getComponentType() instanceof ComponentAspect &&
                 cpn.ioType == getActionType();
     }
 
     @Override
-    public boolean startCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (!canStartCrafting(component, context, Lists.newArrayList()).isSuccess())
             return false;
 
@@ -54,7 +56,7 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent component, RecipeCraftingContext context, ResultChance chance) {
+    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
         if (getActionType() == IOType.OUTPUT) {
             TileAspectProvider provider = (TileAspectProvider) component.getComponent().getContainerProvider();
             provider.addToContainer(this.aspect, this.amount);
@@ -75,7 +77,7 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
                 }
             }
             case OUTPUT -> {
-                if (provider.amount == 0 || provider.aspect == this.aspect && TileJarFillable.CAPACITY >= provider.amount + this.amount)
+                if (ignoreOutputCheck || provider.amount == 0 || provider.aspect == this.aspect && TileJarFillable.CAPACITY >= provider.amount + this.amount)
                     return CraftCheck.success();
                 else
                     return CraftCheck.failure("error.modularmachinery.requirement.aspect.out");
@@ -92,22 +94,16 @@ public class RequirementAspect extends ComponentRequirement<AspectList, Requirem
 
     @Override
     public RequirementAspect deepCopy() {
-        return this;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
     public RequirementAspect deepCopyModified(List<RecipeModifier> list) {
-        return this;
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
+        int amount = Math.round(RecipeModifier.applyModifiers(list, this, this.amount, false));
+        RequirementAspect req = new RequirementAspect(actionType, amount, aspect);
+        req.tag = this.tag;
+        req.ignoreOutputCheck = this.ignoreOutputCheck;
+        return req;
     }
 
     @Override

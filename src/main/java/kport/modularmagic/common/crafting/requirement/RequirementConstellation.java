@@ -1,12 +1,12 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.astralsorcery.common.constellation.IConstellation;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
+import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import kport.modularmagic.common.crafting.component.ComponentConstellation;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeConstellation;
@@ -15,9 +15,10 @@ import kport.modularmagic.common.integration.jei.ingredient.Constellation;
 import kport.modularmagic.common.tile.TileConstellationProvider;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.List;
 
-public class RequirementConstellation extends ComponentRequirement<Constellation, RequirementTypeConstellation> {
+public class RequirementConstellation extends ComponentRequirement<Constellation, RequirementTypeConstellation> implements Asyncable {
 
     public IConstellation constellation;
 
@@ -27,38 +28,26 @@ public class RequirementConstellation extends ComponentRequirement<Constellation
     }
 
     @Override
-    public boolean isValidComponent(ProcessingComponent component, RecipeCraftingContext ctx) {
-        MachineComponent cpn = component.getComponent();
+    public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
+        MachineComponent<?> cpn = component.getComponent();
         return cpn.getContainerProvider() instanceof TileConstellationProvider &&
                 cpn.getComponentType() instanceof ComponentConstellation &&
                 cpn.ioType == getActionType();
     }
 
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return canStartCrafting(component, context, Lists.newArrayList()).isSuccess();
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        if (getActionType() == IOType.OUTPUT)
+        if (getActionType() == IOType.OUTPUT) {
             return CraftCheck.failure("error.modularmachinery.requirement.invalid");
-
-        if (component.getComponent().getContainerProvider() == null || !(component.getComponent().getContainerProvider() instanceof TileConstellationProvider))
+        }
+        if (component.getComponent().getContainerProvider() == null || !(component.getComponent().getContainerProvider() instanceof final TileConstellationProvider provider)) {
             return CraftCheck.failure("error.modularmachinery.requirement.constellation.missingprovider");
-
-        TileConstellationProvider provider = (TileConstellationProvider) component.getComponent().getContainerProvider();
-        if (provider.isConstellationInSky(constellation))
-            return CraftCheck.success();
-        else
+        }
+        if (!provider.isConstellationInSky(constellation)) {
             return CraftCheck.failure("error.modularmachinery.requirement.constellation.less");
+        }
+        return CraftCheck.success();
     }
 
     @Nonnull
@@ -68,27 +57,17 @@ public class RequirementConstellation extends ComponentRequirement<Constellation
     }
 
     @Override
-    public ComponentRequirement deepCopy() {
-        return this;
+    public RequirementConstellation deepCopy() {
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
-    public ComponentRequirement deepCopyModified(List list) {
-        return this;
+    public RequirementConstellation deepCopyModified(List<RecipeModifier> list) {
+        return new RequirementConstellation(actionType, constellation);
     }
 
     @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
-    }
-
-    @Override
-    public JEIComponent provideJEIComponent() {
+    public JEIComponentConstellation provideJEIComponent() {
         return new JEIComponentConstellation(this);
     }
 }

@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileStarlightOutput;
 
 public class MachineComponentStarlightProviderOutput extends MachineComponent<TileStarlightOutput> {
 
-    private TileStarlightOutput starlightProvider;
+    private final TileStarlightOutput starlightProvider;
 
     public MachineComponentStarlightProviderOutput(TileStarlightOutput starlightProvider, IOType ioType) {
         super(ioType);

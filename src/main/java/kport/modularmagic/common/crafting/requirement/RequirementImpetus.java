@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
+import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentImpetus;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeImpetus;
@@ -21,7 +22,7 @@ import java.util.Locale;
 /**
  * @author youyihj
  */
-public class RequirementImpetus extends ComponentRequirement<Impetus, RequirementTypeImpetus> {
+public class RequirementImpetus extends ComponentRequirement<Impetus, RequirementTypeImpetus> implements Asyncable {
     private final int impetus;
 
     public RequirementImpetus(IOType actionType, int impetus) {
@@ -62,22 +63,25 @@ public class RequirementImpetus extends ComponentRequirement<Impetus, Requiremen
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
         switch (this.getActionType()) {
-            case INPUT:
+            case INPUT -> {
                 TileImpetusComponent.Input tileComponent = (TileImpetusComponent.Input) component.getComponent().getContainerProvider();
                 if (tileComponent.hasEnoughImpetus(this.impetus)) {
                     return CraftCheck.success();
                 } else {
                     return CraftCheck.failure("error.modularmachinery.impetus.less");
                 }
-            case OUTPUT:
+            }
+            case OUTPUT -> {
                 TileImpetusComponent.Output tileComponent1 = (TileImpetusComponent.Output) component.getComponent().getContainerProvider();
                 if (tileComponent1.hasEnoughCapacity(this.impetus)) {
                     return CraftCheck.success();
                 } else {
                     return CraftCheck.failure("error.modularmachinery.impetus.space");
                 }
-            default:
+            }
+            default -> {
                 return CraftCheck.failure("?");
+            }
         }
     }
 
@@ -90,16 +94,6 @@ public class RequirementImpetus extends ComponentRequirement<Impetus, Requiremen
     public RequirementImpetus deepCopyModified(List<RecipeModifier> modifiers) {
         float newAmount = RecipeModifier.applyModifiers(modifiers, this, this.impetus, false);
         return new RequirementImpetus(getActionType(), MathHelper.ceil(newAmount));
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
     }
 
     @Nonnull

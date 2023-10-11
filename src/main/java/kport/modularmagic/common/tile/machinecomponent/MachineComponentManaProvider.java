@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileManaProvider;
 
 public class MachineComponentManaProvider extends MachineComponent<TileManaProvider> {
 
-    TileManaProvider manaProvider;
+    private final TileManaProvider manaProvider;
 
     public MachineComponentManaProvider(IOType io, TileManaProvider manaProvider) {
         super(io);

@@ -35,6 +35,7 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -77,16 +78,7 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
 
     @Override
     public RequirementFluid deepCopy() {
-        RequirementFluid fluid = new RequirementFluid(this.requirementType, this.actionType, this.required.copy());
-        fluid.setTag(getTag());
-        fluid.triggerTime = this.triggerTime;
-        fluid.triggerRepeatable = this.triggerRepeatable;
-        fluid.chance = this.chance;
-        fluid.tagMatch = getTagMatch();
-        fluid.tagDisplay = getTagDisplay();
-        fluid.parallelizeUnaffected = this.parallelizeUnaffected;
-        fluid.ignoreOutputCheck = this.ignoreOutputCheck;
-        return fluid;
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override

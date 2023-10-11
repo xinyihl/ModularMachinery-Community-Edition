@@ -9,7 +9,7 @@ import kport.modularmagic.common.tile.TileLifeEssenceProvider;
 
 public class MachineComponentLifeEssenceProvider extends MachineComponent<TileLifeEssenceProvider> {
 
-    private TileLifeEssenceProvider lifeEssenceProvider;
+    private final TileLifeEssenceProvider lifeEssenceProvider;
 
     public MachineComponentLifeEssenceProvider(TileLifeEssenceProvider lifeEssenceProvider, IOType ioType) {
         super(ioType);
