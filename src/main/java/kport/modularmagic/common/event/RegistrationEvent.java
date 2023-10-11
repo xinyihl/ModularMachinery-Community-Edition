@@ -30,11 +30,10 @@ public class RegistrationEvent {
             if (item instanceof ItemDynamicColor)
                 ModularMagicItems.COLOR_ITEMS.add((ItemDynamicColor) item);
 
-            if (item instanceof ItemBlock) {
-                ItemBlock itemBlock = (ItemBlock) item;
+            if (item instanceof final ItemBlock itemBlock) {
                 Block block = itemBlock.getBlock();
-                ResourceLocation resloc = block.getRegistryName();
-                ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(resloc, "inventory"));
+                ResourceLocation registryName = block.getRegistryName();
+                ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(registryName, "inventory"));
             }
         }
     }
@@ -47,11 +46,11 @@ public class RegistrationEvent {
     }
 
     @SubscribeEvent
-    public static void onRequirementTypeRegister(RegistryEvent.Register event) {
-        if (event.getGenericType() != RequirementType.class)
-            return;
-
-        for (RequirementType requirement : ModularMagicRequirements.REQUIREMENTS) {
+    public static void onRequirementTypeRegister(RegistryEvent.Register<RequirementType<?, ?>> event) {
+//        if (event.getGenericType() != RequirementType.class) {
+//            return;
+//        }
+        for (RequirementType<?, ?> requirement : ModularMagicRequirements.REQUIREMENTS) {
             event.getRegistry().register(requirement);
         }
     }

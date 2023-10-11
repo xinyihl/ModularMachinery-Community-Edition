@@ -19,10 +19,11 @@ public class ModularMagicComponents {
     public static final ResourceLocation KEY_COMPONENT_WILL = new ResourceLocation(ModularMachinery.MODID, "will");
     public static final ResourceLocation KEY_COMPONENT_MANA = new ResourceLocation(ModularMachinery.MODID, "mana");
     public static final ResourceLocation KEY_COMPONENT_IMPETUS = new ResourceLocation(ModularMachinery.MODID, "impetus");
-    public static ArrayList<ComponentType> COMPONENTS = new ArrayList<>();
+
+    public static final ArrayList<ComponentType> COMPONENTS = new ArrayList<>();
 
     public static void initComponents() {
-        if (Mods.ASTRAL.isPresent()) {
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
             registerComponent(new ComponentConstellation(), KEY_COMPONENT_CONSTELLATION);
             registerComponent(new ComponentStarlight(), KEY_COMPONENT_STARLIGHT);
         }
@@ -40,11 +41,9 @@ public class ModularMagicComponents {
         if (Mods.TC6.isPresent()) {
             registerComponent(new ComponentAspect(), KEY_COMPONENT_ASPECT);
         }
-
         if (Mods.TA.isPresent()) {
             registerComponent(new ComponentImpetus(), KEY_COMPONENT_IMPETUS);
         }
-
         if (Mods.BOTANIA.isPresent()) {
             registerComponent(new ComponentMana(), KEY_COMPONENT_MANA);
         }

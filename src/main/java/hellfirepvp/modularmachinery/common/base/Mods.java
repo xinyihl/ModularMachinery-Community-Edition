@@ -47,13 +47,12 @@ public enum Mods {
             }
         }
     },
-
     BM2("bloodmagic"),
     TC6("thaumcraft"),
     TA("thaumicaugmentation"),
-    THAUM_JEI("thaumicjei"),
+    TAHUMIC_JEI("thaumicjei"),
     EXU2("extrautils2"),
-    ASTRAL("astralsorcery"),
+    ASTRAL_SORCERY("astralsorcery"),
     NATURESAURA("naturesaura"),
     BOTANIA("botania"),
 

@@ -12,6 +12,8 @@ import mezz.jei.api.JEIPlugin;
 import mezz.jei.api.ingredients.IModIngredientRegistration;
 import thaumcraft.api.aspects.AspectList;
 
+import javax.annotation.Nonnull;
+
 @JEIPlugin
 public class JeiPlugin implements IModPlugin {
 
@@ -23,19 +25,20 @@ public class JeiPlugin implements IModPlugin {
     }
 
     @Override
-    public void registerIngredients(IModIngredientRegistration registry) {
+    @SuppressWarnings("deprecation")
+    public void registerIngredients(@Nonnull IModIngredientRegistration registry) {
         if (Mods.BM2.isPresent()) {
             registry.register(DemonWill.class, Lists.newArrayList(), new DemonWillHelper<>(), new DemonWillRenderer());
             registry.register(LifeEssence.class, Lists.newArrayList(), new LifeEssenceHelper<>(), new LifeEssenceRenderer());
         }
-        if (Mods.TC6.isPresent() && !Mods.THAUM_JEI.isPresent()) {
+        if (Mods.TC6.isPresent() && !Mods.TAHUMIC_JEI.isPresent()) {
             registry.register(AspectList.class, Lists.newArrayList(), new AspectHelper<>(), new AspectRenderer());
         }
         if (Mods.EXU2.isPresent()) {
             registry.register(Grid.class, Lists.newArrayList(), new GridHelper<>(), new GridRenderer());
             registry.register(Rainbow.class, Lists.newArrayList(), new RainbowHelper<>(), new RainbowRenderer());
         }
-        if (Mods.ASTRAL.isPresent()) {
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
             registry.register(Starlight.class, Lists.newArrayList(), new StarlightHelper<>(), new StarlightRenderer());
             registry.register(Constellation.class, Lists.newArrayList(), new ConstellationHelper<>(), new ConstellationRenderer());
         }

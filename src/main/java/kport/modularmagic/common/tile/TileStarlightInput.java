@@ -95,8 +95,9 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
     }
 
     public void receiveStarlight(@Nullable IWeakConstellation type, double amount) {
-        if (amount <= 0.001)
+        if (amount <= 0.001) {
             return;
+        }
 
         this.starlightAmount = Math.min(10000, (int) (starlightAmount + (amount * 200.0D)));
         this.markDirty();

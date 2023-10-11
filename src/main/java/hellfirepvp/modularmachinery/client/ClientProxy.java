@@ -102,13 +102,13 @@ public class ClientProxy extends CommonProxy {
             colors.registerBlockColorHandler(dynamicColor::getColorMultiplier, (Block) dynamicColor);
         }
         BlockController.MACHINE_CONTROLLERS.values().forEach(block ->
-            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+                colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
-            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+                colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
         BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
-            colors.registerBlockColorHandler(block::getColorMultiplier, block)
+                colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
     }
 
@@ -118,14 +118,28 @@ public class ClientProxy extends CommonProxy {
             colors.registerItemColorHandler(dynamicColor::getColorFromItemstack, (Item) dynamicColor);
         }
         BlockController.MACHINE_CONTROLLERS.values().forEach(block ->
-            colors.registerItemColorHandler(block::getColorFromItemstack, block)
+                colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
-            colors.registerItemColorHandler(block::getColorFromItemstack, block)
+                colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
         BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
                 colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
+    }
+
+    private static void registryItemModel(final Item item, final String name) {
+        NonNullList<ItemStack> list = NonNullList.create();
+        item.getSubItems(item.getCreativeTab(), list);
+        if (!list.isEmpty()) {
+            for (ItemStack i : list) {
+                ModelLoader.setCustomModelResourceLocation(item, i.getItemDamage(),
+                        new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
+            }
+        } else {
+            ModelLoader.setCustomModelResourceLocation(item, 0,
+                    new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
+        }
     }
 
     @Override
@@ -138,12 +152,12 @@ public class ClientProxy extends CommonProxy {
             registerJEIEventHandler();
         }
 
-        if(Mods.TC6.isPresent()) {
+        if (Mods.TC6.isPresent()) {
             ClientRegistry.bindTileEntitySpecialRenderer(TileAspectProvider.Input.class, new TileAspectProviderRenderer());
             ClientRegistry.bindTileEntitySpecialRenderer(TileAspectProvider.Output.class, new TileAspectProviderRenderer());
         }
 
-        if(Mods.BM2.isPresent()) {
+        if (Mods.BM2.isPresent()) {
             ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Input.class, new TileLifeEssentiaHatchRenderer());
             ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Output.class, new TileLifeEssentiaHatchRenderer());
         }
@@ -187,20 +201,6 @@ public class ClientProxy extends CommonProxy {
         }
     }
 
-    private static void registryItemModel(final Item item, final String name) {
-        NonNullList<ItemStack> list = NonNullList.create();
-        item.getSubItems(item.getCreativeTab(), list);
-        if (!list.isEmpty()) {
-            for (ItemStack i : list) {
-                ModelLoader.setCustomModelResourceLocation(item, i.getItemDamage(),
-                        new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
-            }
-        } else {
-            ModelLoader.setCustomModelResourceLocation(item, 0,
-                    new ModelResourceLocation(ModularMachinery.MODID + ":" + name, "inventory"));
-        }
-    }
-
     @Override
     public void init() {
         super.init();
@@ -213,7 +213,7 @@ public class ClientProxy extends CommonProxy {
         ItemColors itemColors = Minecraft.getMinecraft().getItemColors();
 
         for (ItemDynamicColor item : ModularMagicItems.COLOR_ITEMS) {
-            itemColors.registerItemColorHandler(item::getColorFromItemstack,(Item)item);
+            itemColors.registerItemColorHandler(item::getColorFromItemstack, (Item) item);
         }
     }
 

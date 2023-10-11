@@ -29,6 +29,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.tiles.*;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import kport.modularmagic.common.block.*;
+import kport.modularmagic.common.tile.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResource;
@@ -143,9 +144,7 @@ public class RegistryBlocks {
 
             prepareItemBlockRegister(blockAspectProviderInput);
             prepareItemBlockRegister(blockAspectProviderOutput);
-
         }
-
 
         if (Mods.TA.isPresent()) {
             blockImpetusProviderInput = prepareRegister(new BlockImpetusProviderInput());
@@ -165,7 +164,7 @@ public class RegistryBlocks {
             prepareItemBlockRegister(blockRainbowProvider);
         }
 
-        if (Mods.ASTRAL.isPresent()) {
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
             blockStarlightProviderInput = prepareRegister(new BlockStarlightProviderInput());
             blockStarlightProviderOutput = prepareRegister(new BlockStarlightProviderOutput());
             blockConstellationProvider = prepareRegister(new BlockConstellationProvider());
@@ -183,7 +182,7 @@ public class RegistryBlocks {
             prepareItemBlockRegister(blockAuraProviderOutput);
         }
 
-        if(Mods.BOTANIA.isPresent()) {
+        if (Mods.BOTANIA.isPresent()) {
             blockManaProviderInput = prepareRegister(new BlockManaProviderInput());
             blockManaProviderOutput = prepareRegister(new BlockManaProviderOutput());
 
@@ -214,6 +213,38 @@ public class RegistryBlocks {
             registerTileWithModID(MEItemInputBus.class);
             registerTileWithModID(MEFluidOutputBus.class);
             registerTileWithModID(MEFluidInputBus.class);
+        }
+        if (Mods.BM2.isPresent()) {
+            GameRegistry.registerTileEntity(TileWillProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilewillproviderinput"));
+            GameRegistry.registerTileEntity(TileWillProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilewillprovideroutput"));
+            GameRegistry.registerTileEntity(TileLifeEssenceProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilelifeessenceproviderinput"));
+            GameRegistry.registerTileEntity(TileLifeEssenceProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilelifeessenceprovideroutput"));
+        }
+        if (Mods.TC6.isPresent()) {
+            GameRegistry.registerTileEntity(TileAspectProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tileaspectproviderinput"));
+            GameRegistry.registerTileEntity(TileAspectProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tileaspectprovideroutput"));
+        }
+        if (Mods.EXU2.isPresent()) {
+            GameRegistry.registerTileEntity(TileGridProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilegridproviderinput"));
+            GameRegistry.registerTileEntity(TileGridProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilegridprovideroutput"));
+            GameRegistry.registerTileEntity(TileRainbowProvider.class, new ResourceLocation(ModularMachinery.MODID, "tilerainbowprovider"));
+        }
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
+            GameRegistry.registerTileEntity(TileStarlightInput.class, new ResourceLocation(ModularMachinery.MODID, "tilestarlightinput"));
+            GameRegistry.registerTileEntity(TileStarlightOutput.class, new ResourceLocation(ModularMachinery.MODID, "tilestarlightoutput"));
+            GameRegistry.registerTileEntity(TileConstellationProvider.class, new ResourceLocation(ModularMachinery.MODID, "tileconstellationprovider"));
+        }
+        if (Mods.NATURESAURA.isPresent()) {
+            GameRegistry.registerTileEntity(TileAuraProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tileauraproviderinput"));
+            GameRegistry.registerTileEntity(TileAuraProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tileauraprovideroutput"));
+        }
+        if (Mods.BOTANIA.isPresent()) {
+            GameRegistry.registerTileEntity(TileManaProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilemanainput"));
+            GameRegistry.registerTileEntity(TileManaProvider.Output.class, new ResourceLocation(ModularMachinery.MODID, "tilemanaoutput"));
+        }
+        if (Mods.TA.isPresent()) {
+            GameRegistry.registerTileEntity(TileImpetusComponent.Input.class, new ResourceLocation(ModularMachinery.MODID, "impetusinput"));
+            GameRegistry.registerTileEntity(TileImpetusComponent.Output.class, new ResourceLocation(ModularMachinery.MODID, "impetusoutput"));
         }
     }
 

@@ -19,6 +19,7 @@ public class TileLifeEssentiaHatchRenderer extends TileEntitySpecialRenderer<Til
     private static final ResourceLocation TEX_ORB_6 = new ResourceLocation(ModularMachinery.MODID, "textures/blocks/orb6.png");
     private static final ResourceLocation TEX_ORB_7 = new ResourceLocation(ModularMachinery.MODID, "textures/blocks/orb7.png");
     private static final ResourceLocation TEX_ORB_8 = new ResourceLocation(ModularMachinery.MODID, "textures/blocks/orb8.png");
+
     public BloodOrbModel model;
 
     public TileLifeEssentiaHatchRenderer() {

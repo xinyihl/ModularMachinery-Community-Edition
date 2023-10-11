@@ -54,8 +54,7 @@ public class BlockStarlightProviderOutput extends BlockMachineComponent {
 
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-        if (worldIn.getTileEntity(pos) != null && worldIn.getTileEntity(pos) instanceof TileStarlightOutput) {
-            TileStarlightOutput tile = (TileStarlightOutput) worldIn.getTileEntity(pos);
+        if (worldIn.getTileEntity(pos) != null && worldIn.getTileEntity(pos) instanceof final TileStarlightOutput tile) {
             tile.onBreak();
         }
         super.breakBlock(worldIn, pos, state);

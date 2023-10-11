@@ -41,7 +41,7 @@ public class TileRainbowProvider extends TileColorableMachineComponent implement
 
     @Nullable
     @Override
-    public MachineComponent provideComponent() {
+    public MachineComponent<?> provideComponent() {
         return new MachineComponentRainbowProvider(this, IOType.INPUT);
     }
 

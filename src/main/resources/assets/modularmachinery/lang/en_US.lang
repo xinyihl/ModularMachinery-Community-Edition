@@ -225,7 +225,7 @@ tooltip.ic2.powertier.10.name=UEV
 tooltip.ic2.powertier.11.name=UIV
 tooltip.ic2.powertier.12.name=UXV
 
-tooltip.modularcontroller.machine_projector=Sneak and right-click the controller to project the structure of the machine
+tooltip.modularmachinery.machine_projector=Sneak and right-click the controller to project the structure of the machine
 
 item.modularmachinery.itemblueprint.name=Machine Blueprint
 item.modularmachinery.itemmodularium.name=Modularium
@@ -352,7 +352,7 @@ error.modularmachinery.impetus.less=Not enough Impetus
 error.modularmachinery.impetus.space=Too much Impetus
 
 info.modularmachinery.lp=LP
-ïnfo.modularmachinery.lppertick=LP per Tick
+info.modularmachinery.lppertick=LP per Tick
 info.modularmachinery.lifeessence=Life Essence
 info.modularmachinery.grid.required=Need %f GP
 info.modularmachinery.grid.produced=Produce %f GP

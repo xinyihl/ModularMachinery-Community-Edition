@@ -20,7 +20,6 @@ import hellfirepvp.modularmachinery.common.command.CommandSyntax;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.command.CommandCTReload;
 import hellfirepvp.modularmachinery.common.network.*;
 import kport.modularmagic.common.event.RegistrationEvent;
-import kport.modularmagic.common.event.StarlightEventHandler;
 import kport.modularmagic.common.network.StarlightMessage;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,7 +35,6 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
-import thaumcraft.common.tiles.essentia.TileJarFillable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -83,7 +81,6 @@ public class ModularMachinery {
 
     public ModularMachinery() {
         MinecraftForge.EVENT_BUS.register(RegistrationEvent.class);
-        new TileJarFillable();
     }
 
     @Mod.EventHandler
@@ -104,8 +101,7 @@ public class ModularMachinery {
 
         proxy.loadModData(event.getModConfigurationDirectory());
 
-        if (Mods.ASTRAL.isPresent()) {
-            MinecraftForge.EVENT_BUS.register(StarlightEventHandler.class);
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
             NET_CHANNEL.registerMessage(StarlightMessage.StarlightMessageHandler.class, StarlightMessage.class, 0, Side.SERVER);
             NET_CHANNEL.registerMessage(StarlightMessage.StarlightMessageHandler.class, StarlightMessage.class, 0, Side.CLIENT);
         }

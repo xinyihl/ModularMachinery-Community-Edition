@@ -62,7 +62,7 @@ public class BlockStarlightProviderInput extends BlockMachineComponent {
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
-            if (te != null && te instanceof TileStarlightInput) {
+            if (te instanceof TileStarlightInput) {
                 ModularMachinery.NET_CHANNEL.sendToServer(new StarlightMessage(0, te.getPos()));
 
                 Minecraft.getMinecraft().ingameGUI.setOverlayMessage("Starlight : " + ((TileStarlightInput) te).getStarlightStored(), true);
@@ -73,8 +73,7 @@ public class BlockStarlightProviderInput extends BlockMachineComponent {
 
     @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-        if (worldIn.getTileEntity(pos) != null && worldIn.getTileEntity(pos) instanceof TileStarlightInput) {
-            TileStarlightInput tile = (TileStarlightInput) worldIn.getTileEntity(pos);
+        if (worldIn.getTileEntity(pos) != null && worldIn.getTileEntity(pos) instanceof final TileStarlightInput tile) {
             tile.onBreak();
         }
         super.breakBlock(worldIn, pos, state);

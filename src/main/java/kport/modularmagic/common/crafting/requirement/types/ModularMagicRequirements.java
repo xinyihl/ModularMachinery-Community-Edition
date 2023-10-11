@@ -22,7 +22,7 @@ public class ModularMagicRequirements {
     public static final ArrayList<RequirementType<?, ?>> REQUIREMENTS = new ArrayList<>();
 
     public static void initRequirements() {
-        if (Mods.ASTRAL.isPresent()) {
+        if (Mods.ASTRAL_SORCERY.isPresent()) {
             registerRequirement(new RequirementTypeConstellation(), KEY_REQUIREMENT_CONSTELLATION);
             registerRequirement(new RequirementTypeStarlight(), KEY_REQUIREMENT_STARLIGHT);
         }

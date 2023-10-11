@@ -9,13 +9,12 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.fml.common.Optional;
 import thaumcraft.api.ThaumcraftApiHelper;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
 import thaumcraft.api.aspects.IEssentiaTransport;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
-
-import javax.annotation.Nullable;
 
 public abstract class TileAspectProvider extends TileJarFillable implements MachineComponentTile, ColorableMachineTile {
 
@@ -50,6 +49,7 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public void update() {
         if (!this.world.isRemote && this.amount < TileJarFillable.CAPACITY) {
             synchronized (this) {
@@ -61,30 +61,36 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public synchronized int takeEssentia(final Aspect aspect, final int amount, final EnumFacing face) {
         return super.takeEssentia(aspect, amount, face);
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public synchronized int addEssentia(final Aspect aspect, final int amount, final EnumFacing face) {
         return super.addEssentia(aspect, amount, face);
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public synchronized int addToContainer(final Aspect tt, final int am) {
         return super.addToContainer(tt, am);
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public synchronized boolean takeFromContainer(final Aspect tt, final int am) {
         return super.takeFromContainer(tt, am);
     }
 
     @Override
+    @Optional.Method(modid = "thaumcraft")
     public synchronized boolean takeFromContainer(final AspectList ot) {
         return super.takeFromContainer(ot);
     }
 
+    @Optional.Method(modid = "thaumcraft")
     private void fillJar(EnumFacing face) {
         TileEntity te = ThaumcraftApiHelper.getConnectableTile(this.world, this.pos, face);
         if (te == null) {
@@ -97,7 +103,7 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
             return;
         }
 
-        Aspect ta = null;
+        Aspect ta;
         if (this.aspect != null && this.amount > 0) {
             ta = this.aspect;
         } else if (ic.getEssentiaAmount(opposite) > 0 && ic.getSuctionAmount(opposite) < this.getSuctionAmount(face) && this.getSuctionAmount(face) >= ic.getMinimumSuction()) {
@@ -138,8 +144,6 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     }
 
     public static class Input extends TileAspectProvider {
-
-        @Nullable
         @Override
         public MachineComponentAspectProvider provideComponent() {
             return new MachineComponentAspectProvider(this, IOType.INPUT);
@@ -147,8 +151,6 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
     }
 
     public static class Output extends TileAspectProvider {
-
-        @Nullable
         @Override
         public MachineComponentAspectProvider provideComponent() {
             return new MachineComponentAspectProvider(this, IOType.OUTPUT);

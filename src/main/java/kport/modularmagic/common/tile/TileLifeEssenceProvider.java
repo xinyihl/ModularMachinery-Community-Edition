@@ -13,6 +13,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileInventory;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentLifeEssenceProvider;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -61,6 +62,18 @@ public abstract class TileLifeEssenceProvider extends TileInventory implements M
     public abstract int addLifeEssenceCache(int amount);
 
     public abstract int removeLifeEssenceCache(int amount);
+
+    @Override
+    public void readCustomNBT(final NBTTagCompound compound) {
+        super.readCustomNBT(compound);
+        this.lifeEssenceCache = compound.getInteger("lifeEssenceCache");
+    }
+
+    @Override
+    public void writeCustomNBT(final NBTTagCompound compound) {
+        super.writeCustomNBT(compound);
+        compound.setInteger("lifeEssenceCache", lifeEssenceCache);
+    }
 
     public static class Input extends TileLifeEssenceProvider {
 

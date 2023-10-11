@@ -44,24 +44,32 @@ public class BlocksMM {
     public static BlockMEItemInputBus meItemInputBus;
     public static BlockMEFluidOutputBus meFluidOutputBus;
     public static BlockMEFluidInputBus meFluidInputBus;
+
     public static BlockWillProviderInput blockWillProviderInput;
     public static BlockWillProviderOutput blockWillProviderOutput;
+
     public static BlockLifeEssenceProviderInput blockLifeEssenceProviderInput;
     public static BlockLifeEssenceProviderOutput blockLifeEssenceProviderOutput;
-    public static BlockGridProviderInput  blockGridProviderInput;
+
+    public static BlockGridProviderInput blockGridProviderInput;
     public static BlockGridProviderOutput blockGridProviderOutput;
-    public static BlockRainbowProvider    blockRainbowProvider;
+
+    public static BlockRainbowProvider blockRainbowProvider;
+
     public static BlockAuraProviderInput blockAuraProviderInput;
     public static BlockAuraProviderOutput blockAuraProviderOutput;
-    public static BlockStarlightProviderInput  blockStarlightProviderInput;
+
+    public static BlockStarlightProviderInput blockStarlightProviderInput;
     public static BlockStarlightProviderOutput blockStarlightProviderOutput;
-    public static BlockConstellationProvider   blockConstellationProvider;
+
+    public static BlockConstellationProvider blockConstellationProvider;
+
     public static BlockManaProviderInput blockManaProviderInput;
     public static BlockManaProviderOutput blockManaProviderOutput;
 
     public static BlockImpetusProviderInput blockImpetusProviderInput;
     public static BlockImpetusProviderOutput blockImpetusProviderOutput;
 
-    public static BlockAspectProviderInput  blockAspectProviderInput;
+    public static BlockAspectProviderInput blockAspectProviderInput;
     public static BlockAspectProviderOutput blockAspectProviderOutput;
 }
