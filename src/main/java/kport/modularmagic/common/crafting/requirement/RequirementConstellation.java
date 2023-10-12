@@ -16,6 +16,7 @@ import kport.modularmagic.common.crafting.requirement.types.RequirementTypeConst
 import kport.modularmagic.common.integration.jei.component.JEIComponentConstellation;
 import kport.modularmagic.common.integration.jei.ingredient.Constellation;
 import kport.modularmagic.common.tile.TileConstellationProvider;
+import kport.modularmagic.common.tile.machinecomponent.MachineComponentConstellationProvider;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -32,10 +33,10 @@ public class RequirementConstellation extends ComponentRequirement.MultiComponen
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cpn = component.getComponent();
-        return cpn.getContainerProvider() instanceof TileConstellationProvider &&
-                cpn.getComponentType() instanceof ComponentConstellation &&
-                cpn.ioType == getActionType();
+        MachineComponent<?> cmp = component.getComponent();
+        return cmp.getComponentType() instanceof ComponentConstellation &&
+                cmp instanceof MachineComponentConstellationProvider &&
+                cmp.ioType == getActionType();
     }
 
     @Nonnull

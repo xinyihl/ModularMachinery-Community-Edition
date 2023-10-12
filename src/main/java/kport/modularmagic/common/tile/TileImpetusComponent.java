@@ -31,6 +31,22 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
     protected volatile int impetus = 0;
     protected ImpetusNode node;
 
+    public int getImpetus() {
+        return impetus;
+    }
+
+    public synchronized int consumeImpetus(int amount) {
+        int maxConsume = Math.min(impetus, amount);
+        impetus -= maxConsume;
+        return maxConsume;
+    }
+
+    public synchronized int supplyImpetus(int amount) {
+        int maxSupply = Math.min(TileImpetusComponent.CAPACITY - impetus, amount);
+        this.impetus += maxSupply;
+        return maxSupply;
+    }
+
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
@@ -122,20 +138,11 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
             };
         }
 
-        public boolean hasEnoughImpetus(int amount) {
-            return impetus >= amount;
-        }
-
-        public synchronized void consumeImpetus(int amount) {
-            if (hasEnoughImpetus(amount)) {
-                impetus -= amount;
-            }
-        }
-
         @Override
         public synchronized void update() {
-            if (world.isRemote || impetus >= CAPACITY)
+            if (world.isRemote || impetus >= CAPACITY) {
                 return;
+            }
             ConsumeResult result = ((IImpetusConsumer) node).consume(CAPACITY - impetus, false);
             if (result.energyConsumed > 0) {
                 impetus += (int) result.energyConsumed;
@@ -154,17 +161,6 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
 
         public Output() {
             this.node = new CustomImpetusProvider(0, 2);
-        }
-
-
-        public boolean hasEnoughCapacity(int amount) {
-            return this.impetus + amount <= CAPACITY;
-        }
-
-        public synchronized void supplyImpetus(int amount) {
-            if (hasEnoughCapacity(amount)) {
-                this.impetus += amount;
-            }
         }
 
         @Nullable

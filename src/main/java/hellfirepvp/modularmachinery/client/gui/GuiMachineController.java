@@ -156,9 +156,11 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
 
         int usedTimeCache = TileMultiblockMachineController.usedTimeCache;
         float searchUsedTimeCache = TileMultiblockMachineController.searchUsedTimeCache;
-        fr.drawStringWithShadow(String.format("Avg: %sμs/t (Search Avg: %sms)",
+        String workMode = TileMultiblockMachineController.workModeCache.getDisplayName();
+        fr.drawStringWithShadow(String.format("Avg: %sμs/t (Search Avg: %sms) WorkMode: %s",
                         usedTimeCache,
-                        MiscUtils.formatFloat(searchUsedTimeCache / 1000F, 2)),
+                        MiscUtils.formatFloat(searchUsedTimeCache / 1000F, 2),
+                        workMode),
                 offsetX, offsetY, 0xFFFFFF
         );
 

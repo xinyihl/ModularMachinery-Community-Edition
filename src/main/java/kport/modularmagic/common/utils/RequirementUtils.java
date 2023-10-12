@@ -19,7 +19,7 @@ public class RequirementUtils {
             int i = json.getAsJsonPrimitive(key).getAsInt();
             return i;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' integer entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' integer entry !");
     }
 
     public static double getRequiredDouble(JsonObject json, String key, String requirement) {
@@ -27,7 +27,7 @@ public class RequirementUtils {
             double d = json.getAsJsonPrimitive(key).getAsInt();
             return d;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' double entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' double entry !");
     }
 
     public static float getRequiredFloat(JsonObject json, String key, String requirement) {
@@ -35,34 +35,31 @@ public class RequirementUtils {
             float f = json.getAsJsonPrimitive(key).getAsInt();
             return f;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' float entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' float entry !");
     }
 
     public static int getRequiredPositiveInt(JsonObject json, String key, String requirement) {
         if (json.has(key) && json.get(key).isJsonPrimitive() && json.getAsJsonPrimitive(key).isNumber()) {
             int i = json.getAsJsonPrimitive(key).getAsInt();
-            if (i > 0)
-                return i;
+            if (i > 0) return i;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' positive integer entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' positive integer entry !");
     }
 
     public static double getRequiredPositiveDouble(JsonObject json, String key, String requirement) {
         if (json.has(key) && json.get(key).isJsonPrimitive() && json.getAsJsonPrimitive(key).isNumber()) {
             double d = json.getAsJsonPrimitive(key).getAsInt();
-            if (d > 0)
-                return d;
+            if (d > 0) return d;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' positive double entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' positive double entry !");
     }
 
     public static float getRequiredPositiveFloat(JsonObject json, String key, String requirement) {
         if (json.has(key) && json.get(key).isJsonPrimitive() && json.getAsJsonPrimitive(key).isNumber()) {
             float f = json.getAsJsonPrimitive(key).getAsInt();
-            if (f > 0)
-                return f;
+            if (f > 0) return f;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' positive float entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' positive float entry !");
     }
 
     public static int getOptionalInt(JsonObject json, String key, int defaultValue) {
@@ -94,7 +91,7 @@ public class RequirementUtils {
             String s = json.getAsJsonPrimitive(key).getAsString();
             return s;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' string entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' string entry !");
     }
 
     @Nullable
@@ -111,7 +108,7 @@ public class RequirementUtils {
             boolean b = json.getAsJsonPrimitive(key).getAsBoolean();
             return b;
         }
-        throw new JsonParseException("The component \'" + requirement + "\' expects a \'" + key + "\' boolean entry !");
+        throw new JsonParseException("The component '" + requirement + "' expects a '" + key + "' boolean entry !");
     }
 
     public static boolean getOptionalBoolean(JsonObject json, String key, boolean defaultValue) {
@@ -125,28 +122,22 @@ public class RequirementUtils {
     public static Aspect getAspect(JsonObject json, String key, String requirement) {
         String s = getRequiredString(json, key, requirement);
         Aspect aspect = Aspect.getAspect(s);
-        if (aspect != null)
-            return aspect;
-        else
-            throw new JsonParseException("Invalid aspect name : " + s);
+        if (aspect != null) return aspect;
+        else throw new JsonParseException("Invalid aspect name : " + s);
     }
 
     public static IAuraType getAuraType(JsonObject json, String key, String requirement) {
         String s = getRequiredString(json, key, requirement);
         IAuraType aura = NaturesAuraAPI.AURA_TYPES.get(new ResourceLocation(s));
-        if (aura != null)
-            return aura;
-        else
-            throw new JsonParseException("Invalid aura type : " + s);
+        if (aura != null) return aura;
+        else throw new JsonParseException("Invalid aura type : " + s);
     }
 
     public static IConstellation getConstellation(JsonObject json, String key, String requirement) {
         String s = getRequiredString(json, key, requirement);
         IConstellation constellation = ConstellationRegistry.getConstellationByName("astralsorcery.constellation." + s);
-        if (constellation != null)
-            return constellation;
-        else
-            throw new JsonParseException("Invalid constellation name : " + s);
+        if (constellation != null) return constellation;
+        else throw new JsonParseException("Invalid constellation name : " + s);
     }
 
     public static EnumDemonWillType getWillType(JsonObject json, String key, String requirement) {
@@ -169,9 +160,7 @@ public class RequirementUtils {
                 willType = EnumDemonWillType.VENGEFUL;
                 break;
         }
-        if (willType != null)
-            return willType;
-        else
-            throw new JsonParseException("Invalid demon will type name : " + s);
+        if (willType != null) return willType;
+        else throw new JsonParseException("Invalid demon will type name : " + s);
     }
 }

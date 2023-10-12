@@ -22,7 +22,7 @@ import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiComponent<HybridFluid, RequirementTypeFluidPerTick>
+public class RequirementFluidPerTick extends ComponentRequirement.PerTickParallelizable<HybridFluid, RequirementTypeFluidPerTick>
         implements ComponentRequirement.Parallelizable {
 
     public final FluidStack required;
@@ -30,9 +30,6 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
     protected final HybridFluid requirementCheck;
     protected NBTTagCompound tagMatch = null, tagDisplay = null;
     protected boolean isSuccess = false;
-
-    private int parallelism = 1;
-    private boolean parallelizeUnaffected = false;
 
     public RequirementFluidPerTick(IOType actionType, FluidStack required) {
         super(RequirementTypesMM.REQUIREMENT_FLUID_PERTICK, actionType);
@@ -58,11 +55,8 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         FluidStack stack = this.required.copy();
         stack.amount = ((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) stack.amount, false)));
         RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, stack);
-        fluid.setTag(getTag());
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
-        fluid.parallelizeUnaffected = parallelizeUnaffected;
-        fluid.ignoreOutputCheck = ignoreOutputCheck;
         return fluid;
     }
 
@@ -105,11 +99,6 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         return doFluidIOInternal(components, context, maxParallelism);
     }
 
-    @Override
-    public int getParallelism() {
-        return parallelism;
-    }
-
     private CraftCheck doFluidIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         int mul = doFluidIOInternal(components, context, parallelism);
         if (mul < parallelism) {
@@ -146,20 +135,5 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickMultiCo
         HybridFluidUtils.doDrainOrFill(stack, totalIO, fluidHandlers, actionType);
 
         return (int) (totalIO / required);
-    }
-
-    @Override
-    public void setParallelism(final int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
-    }
-
-    @Override
-    public void setParallelizeUnaffected(final boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-        }
     }
 }

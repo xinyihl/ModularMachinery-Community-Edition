@@ -36,13 +36,10 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:26
  */
-public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponent<Long, RequirementTypeEnergy>
+public class RequirementEnergy extends ComponentRequirement.PerTickParallelizable<Long, RequirementTypeEnergy>
         implements ComponentRequirement.Parallelizable, Asyncable {
 
     public final long requirementPerTick;
-
-    protected int parallelism = 1;
-    protected boolean parallelizeUnaffected = false;
 
     public RequirementEnergy(IOType ioType, long requirementPerTick) {
         super(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
@@ -62,11 +59,7 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
     @Override
     public ComponentRequirement<Long, RequirementTypeEnergy> deepCopyModified(List<RecipeModifier> modifiers) {
         long requirement = Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) this.requirementPerTick, false));
-        RequirementEnergy energy = new RequirementEnergy(this.actionType, requirement);
-        energy.tag = this.tag;
-        energy.parallelizeUnaffected = this.parallelizeUnaffected;
-        energy.ignoreOutputCheck = this.ignoreOutputCheck;
-        return energy;
+        return new RequirementEnergy(this.actionType, requirement);
     }
 
     @Nonnull
@@ -127,13 +120,6 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
         }
 
         return (int) doEnergyIOInternal(components, context, max, true);
-    }
-
-    @Override
-    public void setParallelism(int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
     }
 
     private CraftCheck doEnergyIO(final List<ProcessingComponent<?>> components,
@@ -213,17 +199,5 @@ public class RequirementEnergy extends ComponentRequirement.PerTickMultiComponen
             return (float) ((total - maxRequired) / required);
         }
         return multiplier;
-    }
-
-    @Override
-    public void setParallelizeUnaffected(boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-        }
-    }
-
-    public int getParallelism() {
-        return parallelism;
     }
 }

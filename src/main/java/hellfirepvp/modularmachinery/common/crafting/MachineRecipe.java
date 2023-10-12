@@ -222,7 +222,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 this.maxThreads);
 
         for (ComponentRequirement<?, ?> requirement : this.getCraftingRequirements()) {
-            copy.addRequirement(requirement.deepCopyModified(modifiers));
+            copy.addRequirement(requirement.deepCopyModified(modifiers).postDeepCopy(requirement));
         }
         return copy;
     }
@@ -261,7 +261,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                         new ResourceLocation(parent.registryName.getNamespace(), parent.registryName.getPath() + "_sub_" + i),
                         location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.isParallelized);
                 for (ComponentRequirement<?, ?> req : parent.recipeRequirements) {
-                    rec.recipeRequirements.add(req.deepCopy());
+                    rec.recipeRequirements.add(req.deepCopy().postDeepCopy(req));
                 }
                 out.add(rec);
             }

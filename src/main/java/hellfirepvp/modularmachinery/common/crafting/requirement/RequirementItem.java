@@ -107,12 +107,12 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
     }
 
     @Override
-    public ComponentRequirement<ItemStack, RequirementTypeItem> deepCopy() {
+    public RequirementItem deepCopy() {
         return deepCopyModified(Collections.emptyList());
     }
 
     @Override
-    public ComponentRequirement<ItemStack, RequirementTypeItem> deepCopyModified(List<RecipeModifier> modifiers) {
+    public RequirementItem deepCopyModified(List<RecipeModifier> modifiers) {
         RequirementItem item;
         switch (this.requirementType) {
             case OREDICT -> {
@@ -130,13 +130,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
                 item = new RequirementItem(this.actionType, inReq);
             }
         }
-
-        item.setTag(getTag());
-        item.triggerTime = this.triggerTime;
-        item.triggerRepeatable = this.triggerRepeatable;
         item.chance = this.chance;
-        item.parallelizeUnaffected = this.parallelizeUnaffected;
-        item.ignoreOutputCheck = this.ignoreOutputCheck;
         if (this.itemChecker != null) {
             item.itemChecker = this.itemChecker;
         } else if (this.tag != null) {

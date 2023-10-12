@@ -5,13 +5,13 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import kport.modularmagic.common.crafting.component.ModularMagicComponents;
-import kport.modularmagic.common.utils.AspectJarProxy;
+import kport.modularmagic.common.crafting.helper.AspectProviderCopy;
 
-public class MachineComponentAspectProvider extends MachineComponent<AspectJarProxy> {
+public class MachineComponentAspectProvider extends MachineComponent<AspectProviderCopy> {
 
-    private final AspectJarProxy aspectProvider;
+    private final AspectProviderCopy aspectProvider;
 
-    public MachineComponentAspectProvider(AspectJarProxy aspectProvider, IOType ioType) {
+    public MachineComponentAspectProvider(AspectProviderCopy aspectProvider, IOType ioType) {
         super(ioType);
         this.aspectProvider = aspectProvider;
     }
@@ -22,7 +22,7 @@ public class MachineComponentAspectProvider extends MachineComponent<AspectJarPr
     }
 
     @Override
-    public AspectJarProxy getContainerProvider() {
+    public AspectProviderCopy getContainerProvider() {
         return aspectProvider;
     }
 }

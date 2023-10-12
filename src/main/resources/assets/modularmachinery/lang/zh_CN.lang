@@ -327,7 +327,8 @@ tile.modularmachinery.blockmefluidinputbus.name=ME机械流体输入总线
 
 error.modularmachinery.requirement.lifeessence=检查生命源质需求时发生错误！
 error.modularmachinery.requirement.lifeessence.orb=缺失或未绑定气血宝珠！
-error.modularmachinery.requirement.lifeessence.lp=LP不足！
+error.modularmachinery.requirement.lifeessence.lp.less=LP缓存不足！
+error.modularmachinery.requirement.lifeessence.lp.more=LP缓存过多！
 error.modularmachinery.requirement.will.less=意志不足！
 error.modularmachinery.requirement.will.more=意志过多！
 error.modularmachinery.requirement.aspect.less=要素不足！

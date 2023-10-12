@@ -86,12 +86,9 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
         HybridFluid hybrid = this.required.copy();
         hybrid.setAmount((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) hybrid.getAmount(), false)));
         RequirementFluid fluid = new RequirementFluid(this.requirementType, this.actionType, hybrid);
-        fluid.setTag(getTag());
         fluid.chance = RecipeModifier.applyModifiers(modifiers, this, this.chance, true);
         fluid.tagMatch = getTagMatch();
         fluid.tagDisplay = getTagDisplay();
-        fluid.parallelizeUnaffected = this.parallelizeUnaffected;
-        fluid.ignoreOutputCheck = this.ignoreOutputCheck;
         return fluid;
     }
 

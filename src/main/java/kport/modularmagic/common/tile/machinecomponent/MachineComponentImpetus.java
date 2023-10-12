@@ -5,17 +5,18 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import kport.modularmagic.common.crafting.component.ModularMagicComponents;
+import kport.modularmagic.common.crafting.helper.ImpetusProviderCopy;
 import kport.modularmagic.common.tile.TileImpetusComponent;
 
 /**
  * @author youyihj
  */
-public class MachineComponentImpetus extends MachineComponent<TileImpetusComponent> {
-    private final TileImpetusComponent provider;
+public class MachineComponentImpetus extends MachineComponent<ImpetusProviderCopy> {
+    private final ImpetusProviderCopy provider;
 
     public MachineComponentImpetus(IOType ioType, TileImpetusComponent provider) {
         super(ioType);
-        this.provider = provider;
+        this.provider = new ImpetusProviderCopy(provider);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class MachineComponentImpetus extends MachineComponent<TileImpetusCompone
     }
 
     @Override
-    public TileImpetusComponent getContainerProvider() {
+    public ImpetusProviderCopy getContainerProvider() {
         return provider;
     }
 }

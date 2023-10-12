@@ -9,7 +9,6 @@ import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import net.minecraft.util.ResourceLocation;
@@ -67,17 +66,6 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
         }
     }
 
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return true;
-    }
-
-    @Nonnull
-    @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return CraftCheck.success();
-    }
-
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
@@ -98,25 +86,13 @@ public class RequirementInterfaceNumInput extends ComponentRequirement<Float, Re
     }
 
     @Override
-    public ComponentRequirement<Float, RequirementTypeInterfaceNumInput> deepCopy() {
-        RequirementInterfaceNumInput copied = new RequirementInterfaceNumInput(type, minValue, maxValue);
-        copied.setTag(getTag());
-        return copied;
+    public RequirementInterfaceNumInput deepCopy() {
+        return new RequirementInterfaceNumInput(type, minValue, maxValue);
     }
 
     @Override
-    public ComponentRequirement<Float, RequirementTypeInterfaceNumInput> deepCopyModified(List<RecipeModifier> modifiers) {
+    public RequirementInterfaceNumInput deepCopyModified(List<RecipeModifier> modifiers) {
         return deepCopy();
-    }
-
-    @Override
-    public void startRequirementCheck(ResultChance contextChance, RecipeCraftingContext context) {
-
-    }
-
-    @Override
-    public void endRequirementCheck() {
-
     }
 
     @Nonnull

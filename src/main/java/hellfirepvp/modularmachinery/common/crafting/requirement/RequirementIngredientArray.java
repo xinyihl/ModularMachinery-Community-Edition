@@ -21,6 +21,7 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RequirementIngredientArray extends ComponentRequirement.MultiComponentRequirement<ItemStack, RequirementTypeIngredientArray>
@@ -53,17 +54,12 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
 
 
     @Override
-    public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopy() {
-        RequirementIngredientArray copied = new RequirementIngredientArray(this.ingredients);
-        copied.setTag(getTag());
-        copied.parallelizeUnaffected = this.parallelizeUnaffected;
-        copied.triggerTime = this.triggerTime;
-        copied.triggerRepeatable = this.triggerRepeatable;
-        return copied;
+    public RequirementIngredientArray deepCopy() {
+        return deepCopyModified(Collections.emptyList());
     }
 
     @Override
-    public ComponentRequirement<ItemStack, RequirementTypeIngredientArray> deepCopyModified(List<RecipeModifier> modifiers) {
+    public RequirementIngredientArray deepCopyModified(List<RecipeModifier> modifiers) {
         ArrayList<ChancedIngredientStack> newArray = new ArrayList<>(this.ingredients);
         newArray.forEach(item -> {
             switch (item.ingredientType) {
@@ -72,17 +68,11 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
                     int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, itemStack.getCount(), false));
                     itemStack.setCount(amt);
                 }
-                case ORE_DICT -> {
-                    item.count = Math.round(RecipeModifier.applyModifiers(modifiers, this, item.count, false));
-                }
+                case ORE_DICT -> item.count = Math.round(RecipeModifier.applyModifiers(modifiers, this, item.count, false));
             }
-
             item.chance = RecipeModifier.applyModifiers(modifiers, this, item.chance, true);
         });
-        RequirementIngredientArray copied = new RequirementIngredientArray(newArray);
-        copied.setTag(getTag());
-        copied.parallelizeUnaffected = this.parallelizeUnaffected;
-        return copied;
+        return new RequirementIngredientArray(newArray);
     }
 
     @Nonnull

@@ -70,8 +70,8 @@ public class RecipeCraftingContext {
     {
         this.reloadCounter = reloadCounter;
         this.activeRecipe = activeRecipe;
-        for (ComponentRequirement<?, ?> craftingRequirement : getParentRecipe().getCraftingRequirements()) {
-            this.requirements.add(this.requirements.size(), craftingRequirement.deepCopy());
+        for (ComponentRequirement<?, ?> requirement : getParentRecipe().getCraftingRequirements()) {
+            this.requirements.add(this.requirements.size(), requirement.deepCopy().postDeepCopy(requirement));
         }
 
         init(activeRecipe, controller);

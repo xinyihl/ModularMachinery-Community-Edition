@@ -92,7 +92,7 @@ public class EventHandler {
                 if (world.getWorldTime() % 15 == 0 && te instanceof final TileMultiblockMachineController ctrl) {
                     int usedTime = ctrl.usedTimeAvg();
                     int searchUsedTimeAvg = ctrl.recipeSearchUsedTimeAvg();
-                    ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime, searchUsedTimeAvg), playerMP);
+                    ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime, searchUsedTimeAvg, ctrl.getWorkMode()), playerMP);
                 }
             }
         });

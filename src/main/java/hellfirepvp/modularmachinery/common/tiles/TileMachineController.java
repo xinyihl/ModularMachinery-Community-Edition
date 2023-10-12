@@ -13,13 +13,13 @@ import github.kasuminova.mmce.common.event.recipe.RecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeFinishEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeStartEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeTickEvent;
+import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRecipeThread;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
@@ -34,6 +34,7 @@ import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>完全重构的社区版机械控制器，拥有强大的异步逻辑和极低的性能消耗。</p>
@@ -65,26 +66,56 @@ public class TileMachineController extends TileMultiblockMachineController {
             return;
         }
 
-        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
-            if (!doStructureCheck() || !isStructureFormed()) {
-                return;
+        switch (workMode) {
+            case ASYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                if (doAsyncStep()) {
+                    return;
+                }
+                doSyncStep(false);
+            }, timeRecorder.usedTimeAvg());
+            case SEMI_SYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                if (doAsyncStep()) {
+                    return;
+                }
+                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> doSyncStep(true));
+            }, timeRecorder.usedTimeAvg());
+            case SYNC -> {
+                tickExecutor = new ActionExecutor(() -> {
+                    if (doAsyncStep()) {
+                        return;
+                    }
+                    doSyncStep(false);
+                });
+                tickExecutor.run();
             }
+        }
+    }
 
-            onMachineTick(Phase.START);
+    protected boolean doAsyncStep() {
+        return !doStructureCheck() || !isStructureFormed();
+    }
 
-            final boolean prevWorkingStatus = isWorking();
+    protected void doSyncStep(boolean recordTime) {
+        long tickStart = recordTime ? System.nanoTime() : 0;
 
-            if (doRecipeTick()) {
-                markNoUpdateSync();
-            }
+        onMachineTick(Phase.START);
 
-            final boolean workingStatus = isWorking();
-            if (prevWorkingStatus != workingStatus) {
-                updateStatedMachineComponentSync(workingStatus);
-            }
+        final boolean prevWorkingStatus = isWorking();
 
-            onMachineTick(Phase.END);
-        }, timeRecorder.usedTimeAvg());
+        if (doRecipeTick()) {
+            markNoUpdateSync();
+        }
+
+        final boolean workingStatus = isWorking();
+        if (prevWorkingStatus != workingStatus) {
+            updateStatedMachineComponentSync(workingStatus);
+        }
+
+        onMachineTick(Phase.END);
+
+        if (recordTime) {
+            timeRecorder.incrementUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
+        }
     }
 
     protected boolean doRecipeTick() {
@@ -296,15 +327,23 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     @Override
     protected void onStructureFormed() {
-        if (world.getBlockState(getPos()).getBlock() != parentController) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-                if (parentController != null) {
-                    this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-                } else {
-                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-                }
-            });
-        }
+//        if (world.getBlockState(getPos()).getBlock() != parentController) {
+//            if (workMode == WorkMode.SYNC) {
+//                if (parentController != null) {
+//                    this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+//                } else {
+//                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+//                }
+//            } else {
+//                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+//                    if (parentController != null) {
+//                        this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+//                    } else {
+//                        this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
+//                    }
+//                });
+//            }
+//        }
 
         super.onStructureFormed();
     }

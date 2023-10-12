@@ -191,6 +191,14 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
      */
     public abstract ComponentRequirement<T, V> deepCopyModified(List<RecipeModifier> modifiers);
 
+    public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
+        this.tag = another.tag;
+        this.triggerTime = another.triggerTime;
+        this.triggerRepeatable = another.triggerRepeatable;
+        this.ignoreOutputCheck = another.ignoreOutputCheck;
+        return this;
+    }
+
     /**
      * <p>
      * 通常用于初始化需求的检查，允许在这个阶段初始化某些检查数据。<br/>
@@ -423,7 +431,7 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         @Nonnull
         @Override
-        public CraftCheck canStartCrafting(final ProcessingComponent<?> component, final RecipeCraftingContext context, final List<ComponentOutputRestrictor> restrictions) {
+        public final CraftCheck canStartCrafting(final ProcessingComponent<?> component, final RecipeCraftingContext context, final List<ComponentOutputRestrictor> restrictions) {
             return CraftCheck.success();
         }
     }
@@ -437,6 +445,15 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         public ParallelizableRequirement(final V requirementType, final IOType actionType) {
             super(requirementType, actionType);
+        }
+
+        @Override
+        public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
+            super.postDeepCopy(another);
+            if (another instanceof ParallelizableRequirement<?, ?> parallelizable) {
+                this.parallelizeUnaffected = parallelizable.parallelizeUnaffected;
+            }
+            return this;
         }
 
         @Override
@@ -465,6 +482,13 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         public PerTick(V requirementType, IOType actionType) {
             super(requirementType, actionType);
+        }
+
+        @Override
+        public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
+            this.tag = another.tag;
+            this.ignoreOutputCheck = another.ignoreOutputCheck;
+            return this;
         }
 
         @Nonnull
@@ -502,7 +526,7 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         @Nonnull
         @Override
-        public CraftCheck doIOTick(final ProcessingComponent<?> component, final RecipeCraftingContext context) {
+        public final CraftCheck doIOTick(final ProcessingComponent<?> component, final RecipeCraftingContext context) {
             return CraftCheck.success();
         }
 
@@ -522,5 +546,46 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          *                   List of components (not duplicated copies)
          */
         public abstract CraftCheck doIOTick(List<ProcessingComponent<?>> components, RecipeCraftingContext context, float durationMultiplier);
+    }
+
+    public abstract static class PerTickParallelizable<T, V extends RequirementType<T, ? extends PerTick<T, V>>>
+            extends PerTickMultiComponent<T, V>
+            implements Parallelizable {
+
+        protected int parallelism = 1;
+        protected boolean parallelizeUnaffected = false;
+
+        public PerTickParallelizable(final V requirementType, final IOType actionType) {
+            super(requirementType, actionType);
+        }
+
+        @Override
+        public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
+            super.postDeepCopy(another);
+            if (another instanceof PerTickParallelizable<?, ?> parallelizable) {
+                this.parallelizeUnaffected = parallelizable.parallelizeUnaffected;
+            }
+            return this;
+        }
+
+        @Override
+        public void setParallelizeUnaffected(boolean unaffected) {
+            this.parallelizeUnaffected = unaffected;
+            if (parallelizeUnaffected) {
+                this.parallelism = 1;
+            }
+        }
+
+        @Override
+        public int getParallelism() {
+            return parallelism;
+        }
+
+        @Override
+        public void setParallelism(int parallelism) {
+            if (!parallelizeUnaffected) {
+                this.parallelism = parallelism;
+            }
+        }
     }
 }

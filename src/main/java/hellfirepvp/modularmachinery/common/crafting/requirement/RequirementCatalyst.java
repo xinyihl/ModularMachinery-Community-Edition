@@ -80,12 +80,7 @@ public class RequirementCatalyst extends RequirementItem {
                 catalyst = new RequirementCatalyst(inReq);
             }
         }
-        catalyst.setTag(getTag());
-        catalyst.triggerTime = this.triggerTime;
-        catalyst.triggerRepeatable = this.triggerRepeatable;
         catalyst.chance = this.chance;
-        catalyst.parallelizeUnaffected = this.parallelizeUnaffected;
-        catalyst.ignoreOutputCheck = this.ignoreOutputCheck;
         if (this.itemChecker != null) {
             catalyst.itemChecker = this.itemChecker;
         } else if (this.tag != null) {

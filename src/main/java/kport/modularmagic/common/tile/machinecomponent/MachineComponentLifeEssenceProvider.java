@@ -5,15 +5,16 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import kport.modularmagic.common.crafting.component.ModularMagicComponents;
+import kport.modularmagic.common.crafting.helper.LifeEssenceProviderCopy;
 import kport.modularmagic.common.tile.TileLifeEssenceProvider;
 
-public class MachineComponentLifeEssenceProvider extends MachineComponent<TileLifeEssenceProvider> {
+public class MachineComponentLifeEssenceProvider extends MachineComponent<LifeEssenceProviderCopy> {
 
-    private final TileLifeEssenceProvider lifeEssenceProvider;
+    private final LifeEssenceProviderCopy lifeEssenceProvider;
 
     public MachineComponentLifeEssenceProvider(TileLifeEssenceProvider lifeEssenceProvider, IOType ioType) {
         super(ioType);
-        this.lifeEssenceProvider = lifeEssenceProvider;
+        this.lifeEssenceProvider = new LifeEssenceProviderCopy(lifeEssenceProvider);
     }
 
     @Override
@@ -22,7 +23,7 @@ public class MachineComponentLifeEssenceProvider extends MachineComponent<TileLi
     }
 
     @Override
-    public TileLifeEssenceProvider getContainerProvider() {
+    public LifeEssenceProviderCopy getContainerProvider() {
         return this.lifeEssenceProvider;
     }
 }

@@ -8,6 +8,7 @@ import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFinishEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeStartEvent;
 import github.kasuminova.mmce.common.event.recipe.FactoryRecipeTickEvent;
+import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.util.concurrent.SequentialTaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -17,7 +18,6 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.lib.BlocksMM;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
@@ -35,6 +35,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.TimeUnit;
 
 public class TileFactoryController extends TileMultiblockMachineController {
     private final Map<String, FactoryRecipeThread> coreRecipeThreads = new LinkedHashMap<>();
@@ -69,35 +70,65 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
-            if (!doStructureCheck() || !isStructureFormed()) {
-                return;
+        switch (workMode) {
+            case ASYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                if (doAsyncStep()) {
+                    return;
+                }
+                doSyncStep(false);
+            }, timeRecorder.usedTimeAvg());
+            case SEMI_SYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                if (doAsyncStep()) {
+                    return;
+                }
+                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> doSyncStep(true));
+            }, timeRecorder.usedTimeAvg());
+            case SYNC -> {
+                tickExecutor = new ActionExecutor(() -> {
+                    if (doAsyncStep()) {
+                        return;
+                    }
+                    doSyncStep(false);
+                });
+                tickExecutor.run();
             }
+        }
+    }
 
-            onMachineTick(Phase.START);
+    protected boolean doAsyncStep() {
+        return !doStructureCheck() || !isStructureFormed();
+    }
 
-            final boolean prevWorkingStatus = isWorking();
+    protected void doSyncStep(boolean recordTime) {
+        long tickStart = recordTime ? System.nanoTime() : 0;
 
-            executeSeqTask();
+        onMachineTick(Phase.START);
 
-            if (hasIdleThread()) {
-                searchAndStartRecipe();
-            }
+        final boolean prevWorkingStatus = isWorking();
 
-            updateCoreThread();
+        executeSeqTask();
 
-            if (!coreRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
-                doRecipeTick();
-                markNoUpdateSync();
-            }
+        if (hasIdleThread()) {
+            searchAndStartRecipe();
+        }
 
-            final boolean workingStatus = isWorking();
-            if (prevWorkingStatus != workingStatus) {
-                updateStatedMachineComponentSync(workingStatus);
-            }
+        updateCoreThread();
 
-            onMachineTick(Phase.END);
-        }, timeRecorder.usedTimeAvg());
+        if (!coreRecipeThreads.isEmpty() || !recipeThreadList.isEmpty()) {
+            doRecipeTick();
+            markNoUpdateSync();
+        }
+
+        final boolean workingStatus = isWorking();
+        if (prevWorkingStatus != workingStatus) {
+            updateStatedMachineComponentSync(workingStatus);
+        }
+
+        onMachineTick(Phase.END);
+
+        if (recordTime) {
+            timeRecorder.incrementUsedTime((int) TimeUnit.MICROSECONDS.convert(System.nanoTime() - tickStart, TimeUnit.NANOSECONDS));
+        }
     }
 
     @Override
@@ -237,17 +268,27 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     protected void onStructureFormed() {
-        if (world.getBlockState(getPos()).getBlock() != parentController) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-                if (parentController != null) {
-                    this.world.setBlockState(pos, parentController.getDefaultState()
-                            .withProperty(BlockController.FACING, this.controllerRotation));
-                } else {
-                    this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
-                            .withProperty(BlockController.FACING, this.controllerRotation));
-                }
-            });
-        }
+//        if (world.getBlockState(getPos()).getBlock() != parentController) {
+//            if (workMode == WorkMode.SYNC) {
+//                if (parentController != null) {
+//                    this.world.setBlockState(pos, parentController.getDefaultState()
+//                            .withProperty(BlockController.FACING, this.controllerRotation));
+//                } else {
+//                    this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
+//                            .withProperty(BlockController.FACING, this.controllerRotation));
+//                }
+//            } else {
+//                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+//                    if (parentController != null) {
+//                        this.world.setBlockState(pos, parentController.getDefaultState()
+//                                .withProperty(BlockController.FACING, this.controllerRotation));
+//                    } else {
+//                        this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
+//                                .withProperty(BlockController.FACING, this.controllerRotation));
+//                    }
+//                });
+//            }
+//        }
 
         super.onStructureFormed();
 

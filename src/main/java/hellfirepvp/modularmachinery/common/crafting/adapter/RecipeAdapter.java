@@ -75,7 +75,9 @@ public abstract class RecipeAdapter implements IForgeRegistryEntry<RecipeAdapter
                                                  List<ComponentRequirement<?, ?>> additionalRequirements,
                                                  Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
                                                  List<String> recipeTooltips) {
-        additionalRequirements.stream().map(ComponentRequirement::deepCopy).forEach(recipe::addRequirement);
+        additionalRequirements.stream()
+                .map((ComponentRequirement<?, ?> requirement) -> requirement.deepCopy().postDeepCopy(requirement))
+                .forEach(recipe::addRequirement);
         eventHandlers.forEach((clazz, handlers) -> handlers.forEach(handler -> recipe.addRecipeEventHandler(clazz, handler)));
         recipeTooltips.forEach(recipe::addTooltip);
     }

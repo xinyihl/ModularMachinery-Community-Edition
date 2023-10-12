@@ -16,6 +16,7 @@ import kport.modularmagic.common.crafting.requirement.types.RequirementTypeAura;
 import kport.modularmagic.common.integration.jei.component.JEIComponentAura;
 import kport.modularmagic.common.integration.jei.ingredient.Aura;
 import kport.modularmagic.common.tile.TileAuraProvider;
+import kport.modularmagic.common.tile.machinecomponent.MachineComponentAuraProvider;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
@@ -50,10 +51,10 @@ public class RequirementAura extends ComponentRequirement.ParallelizableRequirem
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cpn = component.getComponent();
-        return cpn.getContainerProvider() instanceof TileAuraProvider &&
-                cpn.getComponentType() instanceof ComponentAura &&
-                cpn.ioType == getActionType();
+        MachineComponent<?> cmp = component.getComponent();
+        return cmp.getComponentType() instanceof ComponentAura &&
+                cmp instanceof MachineComponentAuraProvider &&
+                cmp.ioType == getActionType();
     }
 
     @Nonnull
@@ -188,11 +189,7 @@ public class RequirementAura extends ComponentRequirement.ParallelizableRequirem
                 RecipeModifier.applyModifiers(modifiers, this, this.aura.getAmount(), false)),
                 this.aura.getType()
         );
-        RequirementAura req = new RequirementAura(actionType, aura, this.max, this.min);
-        req.tag = this.tag;
-        req.ignoreOutputCheck = this.ignoreOutputCheck;
-        req.parallelizeUnaffected = this.parallelizeUnaffected;
-        return req;
+        return new RequirementAura(actionType, aura, this.max, this.min);
     }
 
     @Nonnull

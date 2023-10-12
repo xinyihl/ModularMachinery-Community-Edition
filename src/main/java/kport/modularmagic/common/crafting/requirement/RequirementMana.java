@@ -36,7 +36,7 @@ public class RequirementMana extends ComponentRequirement<Mana, RequirementTypeM
             return false;
         }
         TileManaProvider provider = (TileManaProvider) component.getComponent().getContainerProvider();
-        provider.recieveMana(-manaAmount);
+        provider.reduceMana(manaAmount);
         return true;
     }
 

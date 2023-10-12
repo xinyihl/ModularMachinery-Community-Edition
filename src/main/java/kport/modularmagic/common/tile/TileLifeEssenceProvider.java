@@ -141,11 +141,6 @@ public abstract class TileLifeEssenceProvider extends TileInventory implements M
 
         @Override
         public synchronized int addLifeEssenceCache(int amount) {
-            SoulNetwork soulNetwork = getSoulNetwork();
-            if (soulNetwork == null) {
-                return 0;
-            }
-
             int orbCapacity = getOrbCapacity();
             if (orbCapacity <= 0) {
                 return 0;

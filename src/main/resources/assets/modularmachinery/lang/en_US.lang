@@ -329,7 +329,8 @@ tile.modularmachinery.blockmefluidinputbus.name=ME Machinery Fluid Input Bus
 
 error.modularmachinery.requirement.lifeessence=Error while checking Life Essence requirement
 error.modularmachinery.requirement.lifeessence.orb=Missing or Unbound Blood Orb
-error.modularmachinery.requirement.lifeessence.lp=Not enough LP
+error.modularmachinery.requirement.lifeessence.lp.less=Not enough LP cache
+error.modularmachinery.requirement.lifeessence.lp.more=Too many LP cache
 error.modularmachinery.requirement.will.less=Not enough will
 error.modularmachinery.requirement.will.more=Too much will
 error.modularmachinery.requirement.aspect.less=Not enough aspect

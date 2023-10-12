@@ -1,13 +1,16 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
-import hellfirepvp.modularmachinery.common.crafting.helper.*;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
+import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
+import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentImpetus;
+import kport.modularmagic.common.crafting.helper.ImpetusProviderCopy;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeImpetus;
 import kport.modularmagic.common.integration.jei.component.JEIComponentImpetus;
 import kport.modularmagic.common.integration.jei.ingredient.Impetus;
@@ -16,18 +19,28 @@ import kport.modularmagic.common.tile.machinecomponent.MachineComponentImpetus;
 import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
  * @author youyihj
  */
-public class RequirementImpetus extends ComponentRequirement<Impetus, RequirementTypeImpetus> implements Asyncable {
+public class RequirementImpetus extends ComponentRequirement.ParallelizableRequirement<Impetus, RequirementTypeImpetus> implements Asyncable {
     private final int impetus;
 
     public RequirementImpetus(IOType actionType, int impetus) {
         super(RequirementTypeImpetus.INSTANCE, actionType);
         this.impetus = impetus;
+    }
+
+    @Nonnull
+    private static List<ImpetusProviderCopy> convertImpetus(final List<ProcessingComponent<?>> components) {
+        List<ImpetusProviderCopy> impetusCopies = new ArrayList<>();
+        for (final ProcessingComponent<?> component : components) {
+            impetusCopies.add((ImpetusProviderCopy) component.providedComponent());
+        }
+        return impetusCopies;
     }
 
     @Override
@@ -38,51 +51,129 @@ public class RequirementImpetus extends ComponentRequirement<Impetus, Requiremen
                 cmp.getIOType() == this.getActionType();
     }
 
+    @Nonnull
     @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (!this.canStartCrafting(component, context, Lists.newArrayList()).isSuccess()) {
-            return false;
-        } else if (this.getActionType() == IOType.INPUT) {
-            TileImpetusComponent.Input tileComponent = (TileImpetusComponent.Input) component.getComponent().getContainerProvider();
-            tileComponent.consumeImpetus(this.impetus);
+    @SuppressWarnings("unchecked")
+    public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (final ProcessingComponent<?> component : components) {
+            list.add(new ProcessingComponent<>((
+                    MachineComponent<Object>) component.component(),
+                    new ImpetusProviderCopy(((ImpetusProviderCopy) component.providedComponent()).getOriginal()),
+                    component.tag())
+            );
         }
-        return true;
+        return list;
     }
 
     @Nonnull
     @Override
-    public CraftCheck finishCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        if (this.getActionType() == IOType.OUTPUT) {
-            TileImpetusComponent.Output tileComponent = (TileImpetusComponent.Output) component.getComponent().getContainerProvider();
-            tileComponent.supplyImpetus(this.impetus);
-        }
-        return CraftCheck.success();
-    }
+    public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
+        List<ImpetusProviderCopy> impetusCopies = convertImpetus(components);
 
-    @Nonnull
-    @Override
-    public CraftCheck canStartCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, List<ComponentOutputRestrictor> restrictions) {
-        switch (this.getActionType()) {
+        switch (getActionType()) {
             case INPUT -> {
-                TileImpetusComponent.Input tileComponent = (TileImpetusComponent.Input) component.getComponent().getContainerProvider();
-                if (tileComponent.hasEnoughImpetus(this.impetus)) {
-                    return CraftCheck.success();
-                } else {
+                int taken = consumeAll(impetusCopies, context, parallelism, true);
+                if (taken < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.impetus.less");
                 }
             }
             case OUTPUT -> {
-                TileImpetusComponent.Output tileComponent1 = (TileImpetusComponent.Output) component.getComponent().getContainerProvider();
-                if (tileComponent1.hasEnoughCapacity(this.impetus)) {
-                    return CraftCheck.success();
-                } else {
-                    return CraftCheck.failure("error.modularmachinery.impetus.space");
+                if (!ignoreOutputCheck) {
+                    int added = supplyAll(impetusCopies, context, parallelism, true);
+                    if (added < parallelism) {
+                        return CraftCheck.failure("error.modularmachinery.impetus.space");
+                    }
                 }
             }
-            default -> {
-                return CraftCheck.failure("?");
+        }
+
+        return CraftCheck.success();
+    }
+
+    @Override
+    public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (this.getActionType() == IOType.INPUT) {
+            consumeAll(convertImpetus(components), context, parallelism, false);
+        }
+    }
+
+    @Override
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (this.getActionType() == IOType.OUTPUT) {
+            supplyAll(convertImpetus(components), context, parallelism, false);
+        }
+    }
+
+    @Override
+    public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
+        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+            return maxParallelism;
+        }
+
+        switch (actionType) {
+            case INPUT -> {
+                return consumeAll(convertImpetus(components), context, maxParallelism, true);
+            }
+            case OUTPUT -> {
+                return supplyAll(convertImpetus(components), context, maxParallelism, true);
             }
         }
+
+        return 0;
+    }
+
+    private int supplyAll(final List<ImpetusProviderCopy> impetusCopies,
+                          final RecipeCraftingContext context,
+                          final float maxMultiplier,
+                          final boolean simulate) {
+        int toSupply = Math.round(RecipeModifier.applyModifiers(context, this, (float) this.impetus, false));
+        int maxSupply = (int) (toSupply * maxMultiplier);
+
+        int totalSupplied = 0;
+        for (final ImpetusProviderCopy impetusProviderCopy : impetusCopies) {
+            if (simulate) {
+                totalSupplied += impetusProviderCopy.supplyImpetus(maxSupply - totalSupplied);
+            } else {
+                totalSupplied += impetusProviderCopy.getOriginal().supplyImpetus(maxSupply - totalSupplied);
+            }
+            if (totalSupplied >= maxSupply) {
+                break;
+            }
+        }
+
+        if (totalSupplied < maxSupply) {
+            return totalSupplied / toSupply;
+        }
+        return totalSupplied;
+    }
+
+    private int consumeAll(final List<ImpetusProviderCopy> impetusCopies,
+                           final RecipeCraftingContext context,
+                           final float maxMultiplier,
+                           final boolean simulate) {
+        int toConsume = Math.round(RecipeModifier.applyModifiers(context, this, (float) this.impetus, false));
+        int maxConsume = (int) (toConsume * maxMultiplier);
+
+        int totalConsumed = 0;
+        for (final ImpetusProviderCopy impetusProviderCopy : impetusCopies) {
+            if (simulate) {
+                int impetus = impetusProviderCopy.getImpetus();
+                totalConsumed += impetusProviderCopy.consumeImpetus(Math.min(impetus, maxConsume - totalConsumed));
+            } else {
+                TileImpetusComponent original = impetusProviderCopy.getOriginal();
+                int impetus = original.getImpetus();
+                totalConsumed += original.consumeImpetus(Math.min(impetus, maxConsume - totalConsumed));
+            }
+            if (totalConsumed >= maxConsume) {
+                break;
+            }
+        }
+
+        if (totalConsumed < maxConsume) {
+            return totalConsumed / toConsume;
+        }
+        return totalConsumed;
     }
 
     @Override

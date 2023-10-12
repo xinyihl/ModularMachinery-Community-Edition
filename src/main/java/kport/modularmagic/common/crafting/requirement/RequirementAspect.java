@@ -11,12 +11,14 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentAspect;
+import kport.modularmagic.common.crafting.helper.AspectProviderCopy;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeAspect;
 import kport.modularmagic.common.integration.jei.component.JEIComponentAspect;
-import kport.modularmagic.common.utils.AspectJarProxy;
+import kport.modularmagic.common.tile.machinecomponent.MachineComponentAspectProvider;
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.api.aspects.AspectList;
+import thaumcraft.common.tiles.essentia.TileJarFillable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -37,20 +39,20 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
     }
 
     @Nonnull
-    private static List<AspectJarProxy> convertJars(final List<ProcessingComponent<?>> components) {
-        List<AspectJarProxy> jars = new ArrayList<>();
+    private static List<AspectProviderCopy> convertJars(final List<ProcessingComponent<?>> components) {
+        List<AspectProviderCopy> jars = new ArrayList<>();
         for (final ProcessingComponent<?> component : components) {
-            jars.add((AspectJarProxy) component.providedComponent());
+            jars.add((AspectProviderCopy) component.providedComponent());
         }
         return jars;
     }
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cpn = component.getComponent();
-        return cpn.getContainerProvider() instanceof AspectJarProxy &&
-                cpn.getComponentType() instanceof ComponentAspect &&
-                cpn.ioType == getActionType();
+        MachineComponent<?> cmp = component.getComponent();
+        return cmp.getComponentType() instanceof ComponentAspect &&
+                cmp instanceof MachineComponentAspectProvider &&
+                cmp.ioType == getActionType();
     }
 
     @Nonnull
@@ -61,7 +63,7 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
         for (final ProcessingComponent<?> component : components) {
             list.add(new ProcessingComponent<>((
                     MachineComponent<Object>) component.component(),
-                    new AspectJarProxy(((AspectJarProxy) component.providedComponent()).getOriginal()),
+                    new AspectProviderCopy(((AspectProviderCopy) component.providedComponent()).getOriginal()),
                     component.tag())
             );
         }
@@ -71,7 +73,7 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        List<AspectJarProxy> jars = convertJars(components);
+        List<AspectProviderCopy> jars = convertJars(components);
 
         switch (getActionType()) {
             case INPUT -> {
@@ -96,16 +98,14 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
     @Override
     public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.INPUT) {
-            List<AspectJarProxy> jars = convertJars(components);
-            takeAll(jars, context, parallelism, false);
+            takeAll(convertJars(components), context, parallelism, false);
         }
     }
 
     @Override
     public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.OUTPUT) {
-            List<AspectJarProxy> jars = convertJars(components);
-            addAll(jars, context, parallelism, false);
+            addAll(convertJars(components), context, parallelism, false);
         }
     }
 
@@ -115,20 +115,19 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
             return maxParallelism;
         }
 
-        List<AspectJarProxy> jars = convertJars(components);
         switch (actionType) {
             case INPUT -> {
-                return takeAll(jars, context, maxParallelism, true);
+                return takeAll(convertJars(components), context, maxParallelism, true);
             }
             case OUTPUT -> {
-                return addAll(jars, context, maxParallelism, true);
+                return addAll(convertJars(components), context, maxParallelism, true);
             }
         }
 
         return 0;
     }
 
-    private int addAll(final List<AspectJarProxy> jars,
+    private int addAll(final List<AspectProviderCopy> jars,
                        final RecipeCraftingContext context,
                        final float maxMultiplier,
                        final boolean simulate) {
@@ -136,7 +135,7 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
         int maxAdd = (int) (toAdd * maxMultiplier);
 
         int totalAdded = 0;
-        for (final AspectJarProxy jar : jars) {
+        for (final AspectProviderCopy jar : jars) {
             if (simulate) {
                 totalAdded += jar.addToContainer(aspect, maxAdd - totalAdded);
             } else {
@@ -153,7 +152,7 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
         return totalAdded;
     }
 
-    private int takeAll(final List<AspectJarProxy> jars,
+    private int takeAll(final List<AspectProviderCopy> jars,
                         final RecipeCraftingContext context,
                         final float maxMultiplier,
                         final boolean simulate) {
@@ -161,15 +160,16 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
         int maxTake = (int) (toTake * maxMultiplier);
 
         int totalTaken = 0;
-        for (final AspectJarProxy jar : jars) {
+        for (final AspectProviderCopy jar : jars) {
             if (simulate) {
                 int jarAmount = jar.getAmount();
                 if (jar.takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
                     totalTaken += jarAmount;
                 }
             } else {
-                int jarAmount = jar.getOriginal().amount;
-                if (jar.getOriginal().takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
+                TileJarFillable original = jar.getOriginal();
+                int jarAmount = original.amount;
+                if (original.takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
                     totalTaken += jarAmount;
                 }
             }
@@ -198,11 +198,7 @@ public class RequirementAspect extends ComponentRequirement.ParallelizableRequir
     @Override
     public RequirementAspect deepCopyModified(List<RecipeModifier> list) {
         int amount = Math.round(RecipeModifier.applyModifiers(list, this, this.amount, false));
-        RequirementAspect req = new RequirementAspect(actionType, amount, aspect);
-        req.tag = this.tag;
-        req.ignoreOutputCheck = this.ignoreOutputCheck;
-        req.parallelizeUnaffected = this.parallelizeUnaffected;
-        return req;
+        return new RequirementAspect(actionType, amount, aspect);
     }
 
     @Override

@@ -1,15 +1,15 @@
-package kport.modularmagic.common.utils;
+package kport.modularmagic.common.crafting.helper;
 
 import thaumcraft.api.aspects.Aspect;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
-public class AspectJarProxy {
+public class AspectProviderCopy {
     private final TileJarFillable original;
 
     private Aspect aspect;
     private int amount;
 
-    public AspectJarProxy(TileJarFillable jar) {
+    public AspectProviderCopy(TileJarFillable jar) {
         this.original = jar;
         this.aspect = jar.aspect;
         this.amount = jar.amount;
@@ -48,7 +48,7 @@ public class AspectJarProxy {
         return aspect;
     }
 
-    public AspectJarProxy setAspect(Aspect aspect) {
+    public AspectProviderCopy setAspect(Aspect aspect) {
         this.aspect = aspect;
         return this;
     }
@@ -57,7 +57,7 @@ public class AspectJarProxy {
         return amount;
     }
 
-    public AspectJarProxy setAmount(int amount) {
+    public AspectProviderCopy setAmount(int amount) {
         this.amount = amount;
         return this;
     }

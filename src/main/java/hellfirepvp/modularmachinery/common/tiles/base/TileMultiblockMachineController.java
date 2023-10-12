@@ -47,6 +47,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
@@ -72,6 +73,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public static int usedTimeCache = 0;
     public static int searchUsedTimeCache = 0;
+    public static WorkMode workModeCache = WorkMode.ASYNC;
 
     protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
     protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
@@ -96,7 +98,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected TaggedPositionBlockArray foundPattern = null;
 
     protected Map<String, DynamicPattern.Status> foundDynamicPatterns = new HashMap<>();
+
     protected ActionExecutor tickExecutor = null;
+    protected WorkMode workMode = WorkMode.ASYNC;
 
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
@@ -247,7 +251,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public int currentRecipeSearchDelay() {
-        return Math.min(20 + this.recipeResearchRetryCounter * 10, 150);
+        return Math.min(20 + this.recipeResearchRetryCounter * 5, 100);
     }
 
     public boolean isStructureFormed() {
@@ -411,7 +415,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
 
-        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> updateStatedMachineComponent(working));
+        if (workMode == WorkMode.SYNC) {
+            updateStatedMachineComponent(working);
+        } else {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> updateStatedMachineComponent(working));
+        }
     }
 
     protected void updateStatedMachineComponent(final boolean working) {
@@ -453,7 +461,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         new MachineStructureUpdateEvent(this).postEvent();
 
         if (this.foundMachine.getMachineColor() != Config.machineColor) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
+            if (workMode == WorkMode.SYNC) {
+                distributeCasingColor();
+            } else {
+                ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
+            }
         }
 
         if (!foundDynamicPatterns.isEmpty()) {
@@ -1045,6 +1057,30 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @ZenMethod
     public int getTicksExisted() {
         return ticksExisted;
+    }
+
+    public WorkMode getWorkMode() {
+        return workMode;
+    }
+
+    public void setWorkMode(final WorkMode workMode) {
+        this.workMode = workMode;
+    }
+
+    public enum WorkMode {
+        ASYNC(TextFormatting.GREEN      + "ASYNC"     + TextFormatting.WHITE),
+        SEMI_SYNC(TextFormatting.YELLOW + "SEMI-SYNC" + TextFormatting.WHITE),
+        SYNC(TextFormatting.RED         + "SYNC"      + TextFormatting.WHITE);
+
+        private final String displayName;
+
+        WorkMode(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
     }
 
     public enum Type {

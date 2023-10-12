@@ -14,6 +14,7 @@ import kport.modularmagic.common.crafting.requirement.types.RequirementTypeGrid;
 import kport.modularmagic.common.integration.jei.component.JEIComponentGrid;
 import kport.modularmagic.common.integration.jei.ingredient.Grid;
 import kport.modularmagic.common.tile.TileGridProvider;
+import kport.modularmagic.common.tile.machinecomponent.MachineComponentGridProvider;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
@@ -30,10 +31,10 @@ public class RequirementGrid extends ComponentRequirement.PerTick<Grid, Requirem
 
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
-        MachineComponent<?> cpn = component.getComponent();
-        return cpn.getContainerProvider() instanceof TileGridProvider &&
-                cpn.getComponentType() instanceof ComponentGrid &&
-                cpn.ioType == getActionType();
+        MachineComponent<?> cmp = component.getComponent();
+        return cmp.getComponentType() instanceof ComponentGrid &&
+                cmp instanceof MachineComponentGridProvider &&
+                cmp.ioType == getActionType();
     }
 
     @Nonnull
@@ -80,10 +81,7 @@ public class RequirementGrid extends ComponentRequirement.PerTick<Grid, Requirem
     @Override
     public RequirementGrid deepCopyModified(List<RecipeModifier> list) {
         float power = RecipeModifier.applyModifiers(list, this, this.power, false);
-        RequirementGrid req = new RequirementGrid(actionType, power);
-        req.tag = this.tag;
-        req.ignoreOutputCheck = this.ignoreOutputCheck;
-        return req;
+        return new RequirementGrid(actionType, power);
     }
 
     @Override
