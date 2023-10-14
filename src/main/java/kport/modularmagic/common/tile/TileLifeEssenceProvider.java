@@ -96,12 +96,11 @@ public abstract class TileLifeEssenceProvider extends TileInventory implements M
             }
 
             int prev = lifeEssenceCache;
-            lifeEssenceCache += soulNetwork.syphon(new SoulTicket(maxCapacity - lifeEssenceCache));
+            lifeEssenceCache += soulNetwork.syphon(new SoulTicket(Math.min(maxCapacity - lifeEssenceCache, soulNetwork.getCurrentEssence())));
             if (prev != lifeEssenceCache) {
                 markNoUpdate();
             }
         }
-
 
         @Override
         public int addLifeEssenceCache(final int amount) {

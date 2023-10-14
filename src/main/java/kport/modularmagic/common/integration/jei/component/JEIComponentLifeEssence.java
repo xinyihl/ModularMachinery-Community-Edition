@@ -25,7 +25,7 @@ public class JEIComponentLifeEssence extends ComponentRequirement.JEIComponent<L
 
     @Override
     public List<LifeEssence> getJEIIORequirements() {
-        LifeEssence lifeEssence = new LifeEssence(requirementLifeEssence.essenceAmount, requirementLifeEssence.isPerTick);
+        LifeEssence lifeEssence = new LifeEssence(requirementLifeEssence.essenceAmount, requirementLifeEssence.perTick);
         return Lists.newArrayList(lifeEssence);
     }
 

@@ -46,10 +46,10 @@ public class RegistrationEvent {
     }
 
     @SubscribeEvent
-    public static void onRequirementTypeRegister(RegistryEvent.Register<RequirementType<?, ?>> event) {
-//        if (event.getGenericType() != RequirementType.class) {
-//            return;
-//        }
+    public static void onRequirementTypeRegister(RegistryEvent.Register event) {
+        if (event.getGenericType() != RequirementType.class) {
+            return;
+        }
         for (RequirementType<?, ?> requirement : ModularMagicRequirements.REQUIREMENTS) {
             event.getRegistry().register(requirement);
         }

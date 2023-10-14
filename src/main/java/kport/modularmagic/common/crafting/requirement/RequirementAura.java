@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RequirementAura extends ComponentRequirement.ParallelizableRequirement<Aura, RequirementTypeAura>
+public class RequirementAura extends ComponentRequirement.MultiCompParallelizable<Aura, RequirementTypeAura>
         implements Asyncable, ComponentRequirement.Parallelizable {
 
     public Aura aura;

@@ -347,6 +347,7 @@ error.modularmachinery.requirement.aura.invalid=Invalid Aura type in this world
 error.modularmachinery.requirement.aura.less=Not enough Aura
 error.modularmachinery.requirement.aura.more=Too much Aura
 error.modularmachinery.requirement.mana.less=Not enough Mana
+error.modularmachinery.requirement.mana.space=Too much mana
 error.modularmachinery.requirement.invalid=Invalid IO Type
 error.modularmachinery.component.invalid=Invalid Hatch
 error.modularmachinery.impetus.less=Not enough Impetus

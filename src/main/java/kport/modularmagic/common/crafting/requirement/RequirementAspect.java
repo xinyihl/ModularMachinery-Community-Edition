@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementAspect extends ComponentRequirement.ParallelizableRequirement<AspectList, RequirementTypeAspect>
+public class RequirementAspect extends ComponentRequirement.MultiCompParallelizable<AspectList, RequirementTypeAspect>
         implements Asyncable, ComponentRequirement.Parallelizable {
 
     public int amount;

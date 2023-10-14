@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Optional;
 import org.lwjgl.opengl.GL11;
 import thaumcraft.api.blocks.BlocksTC;
 import thaumcraft.client.lib.RenderCubes;
@@ -17,6 +18,7 @@ import thaumcraft.client.lib.UtilsFX;
 import thaumcraft.common.config.ModConfig;
 import thaumcraft.common.tiles.essentia.TileJarFillable;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 
 public class TileAspectProviderRenderer extends TileEntitySpecialRenderer<TileAspectProvider> {
@@ -24,7 +26,8 @@ public class TileAspectProviderRenderer extends TileEntitySpecialRenderer<TileAs
     private static final ResourceLocation TEX_LABEL = new ResourceLocation("thaumcraft", "textures/models/label.png");
 
     @Override
-    public void render(TileAspectProvider tile, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+    @Optional.Method(modid = "thaumcraft")
+    public void render(@Nonnull TileAspectProvider tile, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         super.render(tile, x, y, z, partialTicks, destroyStage, alpha);
         GlStateManager.pushMatrix();
         GlStateManager.disableCull();

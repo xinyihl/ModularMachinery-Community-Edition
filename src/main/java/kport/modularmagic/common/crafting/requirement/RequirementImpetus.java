@@ -26,7 +26,7 @@ import java.util.Locale;
 /**
  * @author youyihj
  */
-public class RequirementImpetus extends ComponentRequirement.ParallelizableRequirement<Impetus, RequirementTypeImpetus> implements Asyncable {
+public class RequirementImpetus extends ComponentRequirement.MultiCompParallelizable<Impetus, RequirementTypeImpetus> implements Asyncable {
     private final int impetus;
 
     public RequirementImpetus(IOType actionType, int impetus) {
@@ -35,7 +35,7 @@ public class RequirementImpetus extends ComponentRequirement.ParallelizableRequi
     }
 
     @Nonnull
-    private static List<ImpetusProviderCopy> convertImpetus(final List<ProcessingComponent<?>> components) {
+    private static List<ImpetusProviderCopy> convertImpetusProviders(final List<ProcessingComponent<?>> components) {
         List<ImpetusProviderCopy> impetusCopies = new ArrayList<>();
         for (final ProcessingComponent<?> component : components) {
             impetusCopies.add((ImpetusProviderCopy) component.providedComponent());
@@ -69,7 +69,7 @@ public class RequirementImpetus extends ComponentRequirement.ParallelizableRequi
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        List<ImpetusProviderCopy> impetusCopies = convertImpetus(components);
+        List<ImpetusProviderCopy> impetusCopies = convertImpetusProviders(components);
 
         switch (getActionType()) {
             case INPUT -> {
@@ -94,14 +94,14 @@ public class RequirementImpetus extends ComponentRequirement.ParallelizableRequi
     @Override
     public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (this.getActionType() == IOType.INPUT) {
-            consumeAll(convertImpetus(components), context, parallelism, false);
+            consumeAll(convertImpetusProviders(components), context, parallelism, false);
         }
     }
 
     @Override
     public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (this.getActionType() == IOType.OUTPUT) {
-            supplyAll(convertImpetus(components), context, parallelism, false);
+            supplyAll(convertImpetusProviders(components), context, parallelism, false);
         }
     }
 
@@ -113,10 +113,10 @@ public class RequirementImpetus extends ComponentRequirement.ParallelizableRequi
 
         switch (actionType) {
             case INPUT -> {
-                return consumeAll(convertImpetus(components), context, maxParallelism, true);
+                return consumeAll(convertImpetusProviders(components), context, maxParallelism, true);
             }
             case OUTPUT -> {
-                return supplyAll(convertImpetus(components), context, maxParallelism, true);
+                return supplyAll(convertImpetusProviders(components), context, maxParallelism, true);
             }
         }
 

@@ -15,7 +15,8 @@ public class RequirementTypeMana extends RequirementType<Mana, RequirementMana> 
     @Override
     public ComponentRequirement<Mana, ? extends RequirementType<Mana, RequirementMana>> createRequirement(IOType type, JsonObject json) {
         int amount = RequirementUtils.getRequiredInt(json, "amount", ModularMagicRequirements.KEY_REQUIREMENT_MANA.toString());
-        return new RequirementMana(type, amount);
+        boolean perTick = RequirementUtils.getOptionalBoolean(json, "perTick", false);
+        return new RequirementMana(type, amount, perTick);
     }
 
     @Nullable

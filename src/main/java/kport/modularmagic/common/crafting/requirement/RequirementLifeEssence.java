@@ -26,17 +26,17 @@ import java.util.List;
 public class RequirementLifeEssence extends ComponentRequirement.PerTickParallelizable<LifeEssence, RequirementTypeLifeEssence> {
 
     public int essenceAmount;
-    public boolean isPerTick;
+    public boolean perTick;
 
     public RequirementLifeEssence(IOType actionType, int essenceAmount, boolean perTick) {
         super((RequirementTypeLifeEssence) RegistriesMM.REQUIREMENT_TYPE_REGISTRY.getValue(ModularMagicRequirements.KEY_REQUIREMENT_LIFE_ESSENCE), actionType);
 
         this.essenceAmount = essenceAmount;
-        this.isPerTick = perTick;
+        this.perTick = perTick;
     }
 
     @Nonnull
-    private static List<LifeEssenceProviderCopy> convertLifeEssence(final List<ProcessingComponent<?>> components) {
+    private static List<LifeEssenceProviderCopy> convertLifeEssenceProviders(final List<ProcessingComponent<?>> components) {
         List<LifeEssenceProviderCopy> lifeEssenceCopies = new ArrayList<>();
         for (final ProcessingComponent<?> component : components) {
             lifeEssenceCopies.add((LifeEssenceProviderCopy) component.providedComponent());
@@ -72,14 +72,14 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         switch (getActionType()) {
             case INPUT -> {
-                int taken = removeAll(convertLifeEssence(components), context, parallelism, true);
+                int taken = removeAll(convertLifeEssenceProviders(components), context, parallelism, true);
                 if (taken < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp.less");
                 }
             }
             case OUTPUT -> {
                 if (!ignoreOutputCheck) {
-                    int added = addAll(convertLifeEssence(components), context, parallelism, true);
+                    int added = addAll(convertLifeEssenceProviders(components), context, parallelism, true);
                     if (added < parallelism) {
                         return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp.more");
                     }
@@ -92,19 +92,19 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
     @Override
     public CraftCheck doIOTick(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final float durationMultiplier) {
-        if (!isPerTick) {
+        if (!perTick) {
             return CraftCheck.success();
         }
 
         switch (getActionType()) {
             case INPUT -> {
-                int taken = removeAll(convertLifeEssence(components), context, parallelism, false);
+                int taken = removeAll(convertLifeEssenceProviders(components), context, parallelism, false);
                 if (taken < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp.less");
                 }
             }
             case OUTPUT -> {
-                int added = addAll(convertLifeEssence(components), context, parallelism, false);
+                int added = addAll(convertLifeEssenceProviders(components), context, parallelism, false);
                 if (added < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.lifeessence.lp.more");
                 }
@@ -116,15 +116,15 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
     @Override
     public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        if (!isPerTick && actionType == IOType.INPUT) {
-            removeAll(convertLifeEssence(components), context, parallelism, false);
+        if (!perTick && actionType == IOType.INPUT) {
+            removeAll(convertLifeEssenceProviders(components), context, parallelism, false);
         }
     }
 
     @Override
     public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        if (!isPerTick && actionType == IOType.INPUT) {
-            addAll(convertLifeEssence(components), context, parallelism, false);
+        if (!perTick && actionType == IOType.INPUT) {
+            addAll(convertLifeEssenceProviders(components), context, parallelism, false);
         }
     }
 
@@ -136,10 +136,10 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
         switch (actionType) {
             case INPUT -> {
-                return removeAll(convertLifeEssence(components), context, maxParallelism, true);
+                return removeAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
             }
             case OUTPUT -> {
-                return addAll(convertLifeEssence(components), context, maxParallelism, true);
+                return addAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
             }
         }
 
@@ -192,12 +192,12 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
         int maxRemove = (int) (toRemove * maxMultiplier);
 
         int totalRemoved = 0;
-        for (final LifeEssenceProviderCopy impetusCopy : lifeEssenceCopies) {
+        for (final LifeEssenceProviderCopy lifeEssenceProviderCopy : lifeEssenceCopies) {
             if (simulate) {
-                int impetus = impetusCopy.getLifeEssenceCache();
-                totalRemoved += impetusCopy.removeLifeEssenceCache(Math.min(impetus, maxRemove - totalRemoved));
+                int impetus = lifeEssenceProviderCopy.getLifeEssenceCache();
+                totalRemoved += lifeEssenceProviderCopy.removeLifeEssenceCache(Math.min(impetus, maxRemove - totalRemoved));
             } else {
-                TileLifeEssenceProvider original = impetusCopy.getOriginal();
+                TileLifeEssenceProvider original = lifeEssenceProviderCopy.getOriginal();
                 int impetus = original.getLifeEssenceCache();
                 totalRemoved += original.removeLifeEssenceCache(Math.min(impetus, maxRemove - totalRemoved));
             }
@@ -225,7 +225,8 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
     @Override
     public RequirementLifeEssence deepCopyModified(List<RecipeModifier> list) {
-        return this;
+        int essenceAmount = Math.round(RecipeModifier.applyModifiers(list, this, this.essenceAmount, false));
+        return new RequirementLifeEssence(actionType, essenceAmount, perTick);
     }
 
     @Override

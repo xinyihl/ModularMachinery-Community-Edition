@@ -12,6 +12,10 @@ public class ManaProviderCopy {
         this.original = original;
     }
 
+    public TileManaProvider getOriginal() {
+        return original;
+    }
+
     public int getCurrentMana() {
         return mana;
     }

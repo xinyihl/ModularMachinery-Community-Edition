@@ -587,7 +587,27 @@ public class RecipeCraftingContext {
     }
 
     public static class CraftingCheckResult {
-        private static final CraftingCheckResult SUCCESS = new CraftingCheckResult();
+        private static final CraftingCheckResult SUCCESS = new CraftingCheckResult() {
+            @Override
+            public void addError(final String ignored) {
+                throw new IllegalStateException("Cannot add error on SUCCESS result!");
+            }
+
+            @Override
+            public void overrideError(final String ignored) {
+                throw new IllegalStateException("Cannot add error on SUCCESS result!");
+            }
+
+            @Override
+            public List<String> getUnlocalizedErrorMessages() {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public String getFirstErrorMessage(final String defaultMessage) {
+                return defaultMessage;
+            }
+        };
 
         private final Map<String, Integer> unlocErrorMessagesMap = new HashMap<>();
         public float validity = 0F;

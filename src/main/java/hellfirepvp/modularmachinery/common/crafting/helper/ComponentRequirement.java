@@ -436,21 +436,21 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         }
     }
 
-    public abstract static class ParallelizableRequirement<T, V extends RequirementType<T, ? extends ComponentRequirement<T, V>>>
+    public abstract static class MultiCompParallelizable<T, V extends RequirementType<T, ? extends ComponentRequirement<T, V>>>
             extends MultiComponentRequirement<T, V>
             implements Parallelizable {
 
         protected int parallelism = 1;
         protected boolean parallelizeUnaffected = false;
 
-        public ParallelizableRequirement(final V requirementType, final IOType actionType) {
+        public MultiCompParallelizable(final V requirementType, final IOType actionType) {
             super(requirementType, actionType);
         }
 
         @Override
         public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
             super.postDeepCopy(another);
-            if (another instanceof ParallelizableRequirement<?, ?> parallelizable) {
+            if (another instanceof ComponentRequirement.MultiCompParallelizable<?, ?> parallelizable) {
                 this.parallelizeUnaffected = parallelizable.parallelizeUnaffected;
             }
             return this;

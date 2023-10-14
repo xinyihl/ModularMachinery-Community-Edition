@@ -782,7 +782,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         event.postEvent();
 
         if (event.isFailure()) {
-            result.overrideError(event.getFailureReason());
+            RecipeCraftingContext.CraftingCheckResult failure = new RecipeCraftingContext.CraftingCheckResult();
+            failure.addError(event.getFailureReason());
+            return failure;
         }
 
         return result;

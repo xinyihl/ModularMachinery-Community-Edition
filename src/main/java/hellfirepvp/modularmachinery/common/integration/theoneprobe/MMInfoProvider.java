@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
@@ -17,6 +18,7 @@ import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import io.netty.util.internal.ThrowableUtil;
 import mcjty.theoneprobe.api.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -44,11 +46,14 @@ public class MMInfoProvider implements IProbeInfoProvider {
         TileEntity tileEntity = world.getTileEntity(data.getPos());
         if (tileEntity == null) return;
         //判断是否为机械控制器
-        if (tileEntity instanceof TileMultiblockMachineController) {
-            processMultiblockMachineTOP((TileMultiblockMachineController) tileEntity, probeInfo, player);
-        }
-        if (tileEntity instanceof TileParallelController) {
-            processParallelControllerTOP((TileParallelController) tileEntity, probeInfo);
+        if (tileEntity instanceof TileMultiblockMachineController machineController) {
+            try {
+                processMultiblockMachineTOP(machineController, probeInfo, player);
+            } catch (Exception e) {
+                ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+            }
+        } else if (tileEntity instanceof TileParallelController parallelController) {
+            processParallelControllerTOP(parallelController, probeInfo);
         }
     }
 
