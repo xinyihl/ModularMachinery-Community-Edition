@@ -165,12 +165,11 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:mantle-74924:2713386"))
     implementation(rfg.deobf("curse.maven:tx-loader-706505:4515357"))
     implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
-    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
-    //Because GTCEu 2.4 and above and NCo crashed, this is to use GTCEu 2.3.4 for testing
-    //Rendering errors occur when the GTCEu version is tested running, so just compileOnly
-    compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:3859788"))
 
-    //Modular Magic compact
+//    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
+    implementation(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
+
+    // Modular Magic compact
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     compileOnly(rfg.deobf("curse.maven:blood-magic-224791:2822288"))
     compileOnly(rfg.deobf("curse.maven:thaumcraft-223628:2629023"))
@@ -178,8 +177,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:naturesaura-306626:2882138"))
     compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
     compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
-//    compileOnly(rfg.deobf("curse.maven:guideapi-228832:2645992"))
-//    compileOnly(rfg.deobf("curse.maven:patchouli-306770:3162874"))
+    compileOnly(rfg.deobf("curse.maven:guideapi-228832:2645992"))
+    compileOnly(rfg.deobf("curse.maven:patchouli-306770:3162874"))
     compileOnly(rfg.deobf("curse.maven:thaumic-augmentation-319441:4486505"))
 }
 
