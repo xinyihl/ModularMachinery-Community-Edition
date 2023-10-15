@@ -25,8 +25,8 @@ public class GTFluidHatchProxy implements MachineComponentProxy<GTFluidHatchProx
     }
 
     @Nullable
-    protected static GTFluidHatchMachineComponent getGtItemBusMachineComponent(final MultiblockAbility<IFluidTank> ability,
-                                                                               final List<IFluidTank> abilities) {
+    protected static GTFluidHatchMachineComponent getGtFluidHatchMachineComponent(final MultiblockAbility<IFluidTank> ability,
+                                                                                  final List<IFluidTank> abilities) {
         if (ability == MultiblockAbility.IMPORT_FLUIDS) {
             return new GTFluidHatchMachineComponent(IOType.INPUT, abilities.get(0));
         }
@@ -57,16 +57,16 @@ public class GTFluidHatchProxy implements MachineComponentProxy<GTFluidHatchProx
         List<IFluidTank> abilities = new ArrayList<>();
         if (metaTE instanceof MetaTileEntityFluidHatch itemBus) {
             itemBus.registerAbilities(abilities);
-            return getGtItemBusMachineComponent(itemBus.getAbility(), abilities);
+            return getGtFluidHatchMachineComponent(itemBus.getAbility(), abilities);
         }
         if (metaTE instanceof MetaTileEntityMEInputHatch meInputHatch) {
             meInputHatch.registerAbilities(abilities);
-            return getGtItemBusMachineComponent(meInputHatch.getAbility(), abilities);
+            return getGtFluidHatchMachineComponent(meInputHatch.getAbility(), abilities);
         }
         // TODO: Not fully supported, only 1 slots.
         if (metaTE instanceof MetaTileEntityMEOutputHatch meOutputHatch) {
             meOutputHatch.registerAbilities(abilities);
-            return getGtItemBusMachineComponent(meOutputHatch.getAbility(), abilities);
+            return getGtFluidHatchMachineComponent(meOutputHatch.getAbility(), abilities);
         }
         return null;
     }
