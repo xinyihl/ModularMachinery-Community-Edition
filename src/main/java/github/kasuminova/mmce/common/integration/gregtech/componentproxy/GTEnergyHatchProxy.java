@@ -3,9 +3,12 @@ package github.kasuminova.mmce.common.integration.gregtech.componentproxy;
 import github.kasuminova.mmce.common.integration.gregtech.handlerproxy.GTEnergyHandlerProxy;
 import github.kasuminova.mmce.common.machine.component.MachineComponentProxy;
 import gregtech.api.capability.IEnergyContainer;
+import gregtech.api.capability.ILaserContainer;
+import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityEnergyHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityLaserHatch;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
@@ -22,8 +25,9 @@ public class GTEnergyHatchProxy implements MachineComponentProxy<GTEnergyHatchPr
 
     @Override
     public boolean isSupported(final TileEntity te) {
-        if (te instanceof MetaTileEntityHolder metaTE) {
-            return metaTE.getMetaTileEntity() instanceof MetaTileEntityEnergyHatch;
+        if (te instanceof MetaTileEntityHolder metaTEHolder) {
+            MetaTileEntity metaTE = metaTEHolder.getMetaTileEntity();
+            return metaTE instanceof MetaTileEntityEnergyHatch || metaTE instanceof MetaTileEntityLaserHatch;
         }
         return false;
     }
@@ -31,22 +35,36 @@ public class GTEnergyHatchProxy implements MachineComponentProxy<GTEnergyHatchPr
     @Nullable
     @Override
     public GTEnergyHatchMachineComponent proxyComponent(final TileEntity te) {
-        if (!(te instanceof MetaTileEntityHolder metaTE)) {
-            return null;
-        }
-        if (!(metaTE.getMetaTileEntity() instanceof MetaTileEntityEnergyHatch energyHatch)) {
+        if (!(te instanceof MetaTileEntityHolder metaTEHolder)) {
             return null;
         }
 
-        MultiblockAbility<IEnergyContainer> ability = energyHatch.getAbility();
-        ArrayList<IEnergyContainer> list = new ArrayList<>(2);
-        if (ability == MultiblockAbility.INPUT_ENERGY) {
-            energyHatch.registerAbilities(list);
-            return new GTEnergyHatchMachineComponent(IOType.INPUT, list.get(0));
+        MetaTileEntity metaTE = metaTEHolder.getMetaTileEntity();
+        if (metaTE instanceof MetaTileEntityEnergyHatch energyHatch) {
+            ArrayList<IEnergyContainer> list = new ArrayList<>(2);
+            MultiblockAbility<IEnergyContainer> ability = energyHatch.getAbility();
+            if (ability == MultiblockAbility.INPUT_ENERGY) {
+                energyHatch.registerAbilities(list);
+                return new GTEnergyHatchMachineComponent(IOType.INPUT, list.get(0));
+            }
+            if (ability == MultiblockAbility.OUTPUT_ENERGY) {
+                energyHatch.registerAbilities(list);
+                return new GTEnergyHatchMachineComponent(IOType.OUTPUT, list.get(0));
+            }
+            return null;
         }
-        if (ability == MultiblockAbility.OUTPUT_ENERGY) {
-            energyHatch.registerAbilities(list);
-            return new GTEnergyHatchMachineComponent(IOType.OUTPUT, list.get(0));
+        if (metaTE instanceof MetaTileEntityLaserHatch laserHatch) {
+            ArrayList<ILaserContainer> list = new ArrayList<>(2);
+            MultiblockAbility<ILaserContainer> ability = laserHatch.getAbility();
+            if (ability == MultiblockAbility.INPUT_LASER) {
+                laserHatch.registerAbilities(list);
+                return new GTEnergyHatchMachineComponent(IOType.INPUT, list.get(0));
+            }
+            if (ability == MultiblockAbility.OUTPUT_LASER) {
+                laserHatch.registerAbilities(list);
+                return new GTEnergyHatchMachineComponent(IOType.OUTPUT, list.get(0));
+            }
+            return null;
         }
 
         return null;
