@@ -41,6 +41,35 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         System.arraycopy(accessibleFrom, 0,  this.accessibleSides, 0, accessibleFrom.length);
     }
 
+    public IItemHandlerImpl(IItemHandlerModifiable handler) {
+        int slots = handler.getSlots();
+        int[] inSlots = new int[slots];
+        for (int i = 0; i < slots; i++) {
+            inSlots[i] = i;
+        }
+
+        int[] outSlots = new int[slots];
+        for (int i = 0; i < slots; i++) {
+            outSlots[i] = i;
+        }
+
+        this.inSlots = inSlots;
+        this.outSlots = outSlots;
+
+        this.accessibleSides = EnumFacing.VALUES;
+        this.inventory = new SlotStackHolder[slots];
+        for (int i = 0; i < slots; i++) {
+            SlotStackHolder holder = new SlotStackHolder(i);
+            ItemStack stackInSlot = handler.getStackInSlot(i);
+            if (stackInSlot.isEmpty()) {
+                holder.itemStack = ItemStack.EMPTY;
+            } else {
+                holder.itemStack = stackInSlot.copy();
+            }
+            this.inventory[i] = holder;
+        }
+    }
+
     public IItemHandlerImpl copy() {
         IItemHandlerImpl copy = new IItemHandlerImpl(inSlots, outSlots, accessibleSides);
         for (int i = 0; i < inventory.length; i++) {

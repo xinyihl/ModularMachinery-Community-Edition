@@ -545,11 +545,22 @@ public class ItemUtils {
     public static List<ProcessingComponent<?>> copyItemHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            list.add(new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component(),
-                    ((IItemHandlerImpl) component.getProvidedComponent()).copy(),
-                    component.getTag())
-            );
+            Object provided = component.getProvidedComponent();
+            IItemHandlerImpl handler = null;
+
+            if (provided instanceof IItemHandlerImpl handlerMM) {
+                handler = handlerMM.copy();
+            } else if (provided instanceof IItemHandlerModifiable handlerDefault) {
+                handler = new IItemHandlerImpl(handlerDefault);
+            }
+
+            if (handler != null) {
+                list.add(new ProcessingComponent<>(
+                        (MachineComponent<Object>) component.component(),
+                        handler,
+                        component.getTag())
+                );
+            }
         }
         return list;
     }

@@ -139,7 +139,7 @@ public class TileItemInputBus extends TileItemBus implements MachineComponentTil
 
     @Nullable
     @Override
-    public MachineComponent<?> provideComponent() {
+    public MachineComponent.ItemBus provideComponent() {
         return new MachineComponent.ItemBus(IOType.INPUT) {
             @Override
             public IOInventory getContainerProvider() {

@@ -12,6 +12,7 @@ import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
 import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import github.kasuminova.mmce.common.helper.IMachineController;
+import github.kasuminova.mmce.common.machine.component.MachineComponentProxyRegistry;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
@@ -602,14 +603,26 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
         TileEntity te = getWorld().getTileEntity(realPos);
+        MachineComponent<?> component;
         if (!(te instanceof MachineComponentTile)) {
-            return;
+            if (te == null) {
+                return;
+            }
+            MachineComponent<?> proxiedComponent = MachineComponentProxyRegistry.INSTANCE.proxy(te);
+            if (proxiedComponent == null) {
+                return;
+            }
+            component = proxiedComponent;
+        } else {
+            component = ((MachineComponentTile) te).provideComponent();
         }
 
         ComponentSelectorTag tag = this.foundPattern.getTag(pos);
-        MachineComponent<?> component = ((MachineComponentTile) te).provideComponent();
         if (component == null) {
             return;
+        }
+        if (!component.isAsyncSupported()) {
+            workMode = WorkMode.SEMI_SYNC;
         }
 
         addComponent(component, tag, found);

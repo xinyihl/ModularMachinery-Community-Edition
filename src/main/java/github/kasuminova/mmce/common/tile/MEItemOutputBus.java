@@ -39,7 +39,7 @@ public class MEItemOutputBus extends MEItemBus {
 
     @Nullable
     @Override
-    public MachineComponent<IOInventory> provideComponent() {
+    public MachineComponent.ItemBus provideComponent() {
         return new MachineComponent.ItemBus(IOType.OUTPUT) {
             @Override
             public IOInventory getContainerProvider() {

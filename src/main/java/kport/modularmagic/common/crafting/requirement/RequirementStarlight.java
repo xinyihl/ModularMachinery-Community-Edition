@@ -1,6 +1,5 @@
 package kport.modularmagic.common.crafting.requirement;
 
-import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.helper.*;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
@@ -8,7 +7,6 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
-import hellfirepvp.modularmachinery.common.util.ResultChance;
 import kport.modularmagic.common.crafting.component.ComponentStarlight;
 import kport.modularmagic.common.crafting.requirement.types.ModularMagicRequirements;
 import kport.modularmagic.common.crafting.requirement.types.RequirementTypeStarlight;
@@ -47,11 +45,6 @@ public class RequirementStarlight extends ComponentRequirement.PerTick<Starlight
                             .setStarlightProduced(this.starlightAmount / 4000));
         }
         return CraftCheck.success();
-    }
-
-    @Override
-    public boolean startCrafting(ProcessingComponent<?> component, RecipeCraftingContext context, ResultChance chance) {
-        return canStartCrafting(component, context, Lists.newArrayList()).isSuccess();
     }
 
     @Nonnull

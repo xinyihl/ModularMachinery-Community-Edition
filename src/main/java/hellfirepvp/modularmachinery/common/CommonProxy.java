@@ -18,6 +18,7 @@ import github.kasuminova.mmce.common.handler.EventHandler;
 import github.kasuminova.mmce.common.handler.UpgradeEventHandler;
 import github.kasuminova.mmce.common.handler.UpgradeMachineEventHandler;
 import github.kasuminova.mmce.common.integration.ModIntegrationAE2;
+import github.kasuminova.mmce.common.integration.gregtech.ModIntegrationGTCEU;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
@@ -155,6 +156,10 @@ public class CommonProxy implements IGuiHandler {
         if (Mods.TOP.isPresent()) {
             ModIntegrationTOP.registerProvider();
             ModularMachinery.log.info("[ModularMachinery-CE] TheOneProbe integration is enabled! Stop looking at the dark controller gui!");
+        }
+        if (Mods.GREGTECH.isPresent()) {
+            ModIntegrationGTCEU.initialize();
+            ModularMachinery.log.info("[ModularMachinery-CE] GregTech CEu component proxy integration is enabled! Why not use multiblock tweaker?");
         }
     }
 

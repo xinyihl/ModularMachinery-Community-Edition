@@ -74,7 +74,7 @@ public class MEItemInputBus extends MEItemBus {
 
     @Nullable
     @Override
-    public MachineComponent<IOInventory> provideComponent() {
+    public MachineComponent.ItemBus provideComponent() {
         return new MachineComponent.ItemBus(IOType.INPUT) {
             @Override
             public IOInventory getContainerProvider() {

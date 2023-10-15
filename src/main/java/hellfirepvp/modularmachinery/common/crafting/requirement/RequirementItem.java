@@ -22,12 +22,12 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
-import hellfirepvp.modularmachinery.common.util.IItemHandlerImpl;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -222,9 +222,9 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
                                  final List<AdvancedItemModifier> itemModifiers,
                                  final ResultChance chance)
     {
-        List<IItemHandlerImpl> handlers = new ArrayList<>();
+        List<IItemHandlerModifiable> handlers = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            IItemHandlerImpl providedComponent = (IItemHandlerImpl) component.getProvidedComponent();
+            IItemHandlerModifiable providedComponent = (IItemHandlerModifiable) component.getProvidedComponent();
             handlers.add(providedComponent);
         }
 
@@ -247,7 +247,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         return ItemUtils.copyItemHandlerComponents(components);
     }
 
-    public int consumeAllItems(final List<IItemHandlerImpl> handlers,
+    public int consumeAllItems(final List<IItemHandlerModifiable> handlers,
                                final RecipeCraftingContext context,
                                final int maxMultiplier,
                                final List<AdvancedItemModifier> itemModifiers,
@@ -290,7 +290,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
                     return maxMultiplier;
                 }
 
-                for (final IItemHandlerImpl handler : handlers) {
+                for (final IItemHandlerModifiable handler : handlers) {
                     if (itemChecker != null) {
                         consumed += ItemUtils.consumeAll(
                                 handler, stack, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
@@ -327,7 +327,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
 
                 maxConsume = toConsume * maxMultiplier;
 
-                for (final IItemHandlerImpl handler : handlers) {
+                for (final IItemHandlerModifiable handler : handlers) {
                     if (itemChecker != null) {
                         consumed += ItemUtils.consumeAll(
                                 handler, oreDictName, oreDictItemAmount, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
@@ -345,7 +345,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         return consumed / toConsume;
     }
 
-    public int insertAllItems(final List<IItemHandlerImpl> handlers,
+    public int insertAllItems(final List<IItemHandlerModifiable> handlers,
                               final RecipeCraftingContext context,
                               final int maxMultiplier,
                               final List<AdvancedItemModifier> itemModifiers,
@@ -394,7 +394,7 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         }
 
         int maxInsert = toInsert * maxMultiplier;
-        for (final IItemHandlerImpl handler : handlers) {
+        for (final IItemHandlerModifiable handler : handlers) {
             inserted += ItemUtils.insertAll(stack, handler, maxInsert - inserted);
             if (inserted >= maxInsert) {
                 break;

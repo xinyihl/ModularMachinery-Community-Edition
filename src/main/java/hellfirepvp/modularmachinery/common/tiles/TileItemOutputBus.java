@@ -148,7 +148,7 @@ public class TileItemOutputBus extends TileItemBus implements MachineComponentTi
 
     @Nullable
     @Override
-    public MachineComponent<IOInventory> provideComponent() {
+    public MachineComponent.ItemBus provideComponent() {
         return new MachineComponent.ItemBus(IOType.OUTPUT) {
             @Override
             public IOInventory getContainerProvider() {

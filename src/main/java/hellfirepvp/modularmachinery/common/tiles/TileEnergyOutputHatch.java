@@ -277,7 +277,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
 
     @Nullable
     @Override
-    public MachineComponent<IEnergyHandlerAsync> provideComponent() {
+    public MachineComponent.EnergyHatch provideComponent() {
         return new MachineComponent.EnergyHatch(IOType.OUTPUT) {
             @Override
             public IEnergyHandlerAsync getContainerProvider() {

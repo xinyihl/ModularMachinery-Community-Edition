@@ -21,6 +21,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandler;
+import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerImpl;
 import net.minecraft.util.ResourceLocation;
 
@@ -178,9 +179,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTickParallelizabl
                     long current = handler.getCurrentEnergy();
                     long toConsume = (long) Math.min(current, maxRequired);
                     if (!simulate) {
-                        handler.setCurrentEnergy(current - toConsume);
+                        if (handler instanceof IEnergyHandlerAsync handlerAsync) {
+                            if (handlerAsync.extractEnergy(toConsume)) {
+                                maxRequired -= toConsume;
+                            }
+                        } else {
+                            handler.setCurrentEnergy(current - toConsume);
+                            maxRequired -= toConsume;
+                        }
+                    } else {
+                        maxRequired -= toConsume;
                     }
-                    maxRequired -= toConsume;
                 }
             }
             case OUTPUT -> {
@@ -188,9 +197,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTickParallelizabl
                     long remaining = handler.getRemainingCapacity();
                     long toReceive = (long) Math.min(remaining, maxRequired);
                     if (!simulate) {
-                        handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
+                        if (handler instanceof IEnergyHandlerAsync handlerAsync) {
+                            if (handlerAsync.receiveEnergy(toReceive)) {
+                                maxRequired -= toReceive;
+                            }
+                        } else {
+                            handler.setCurrentEnergy(handler.getCurrentEnergy() + toReceive);
+                            maxRequired -= toReceive;
+                        }
+                    } else {
+                        maxRequired -= toReceive;
                     }
-                    maxRequired -= toReceive;
                 }
             }
         }

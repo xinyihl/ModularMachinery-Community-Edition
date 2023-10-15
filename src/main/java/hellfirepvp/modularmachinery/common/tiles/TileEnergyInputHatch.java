@@ -143,7 +143,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
 
     @Nullable
     @Override
-    public MachineComponent<IEnergyHandlerAsync> provideComponent() {
+    public MachineComponent.EnergyHatch provideComponent() {
         return new MachineComponent.EnergyHatch(IOType.INPUT) {
             @Override
             public IEnergyHandlerAsync getContainerProvider() {

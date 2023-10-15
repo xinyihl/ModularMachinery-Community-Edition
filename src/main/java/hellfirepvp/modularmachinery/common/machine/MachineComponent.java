@@ -11,8 +11,8 @@ package hellfirepvp.modularmachinery.common.machine;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.util.IEnergyHandlerAsync;
-import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -33,11 +33,15 @@ public abstract class MachineComponent<T> {
         return ioType;
     }
 
+    public boolean isAsyncSupported() {
+        return true;
+    }
+
     public abstract ComponentType getComponentType();
 
     public abstract T getContainerProvider();
 
-    public abstract static class ItemBus extends MachineComponent<IOInventory> {
+    public abstract static class ItemBus extends MachineComponent<IItemHandlerModifiable> {
 
         public ItemBus(IOType ioType) {
             super(ioType);
@@ -49,7 +53,6 @@ public abstract class MachineComponent<T> {
         }
 
     }
-
 
     public abstract static class FluidHatch extends MachineComponent<IFluidHandler> {
 
