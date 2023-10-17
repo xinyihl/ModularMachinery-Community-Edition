@@ -98,6 +98,6 @@ public abstract class MachineUpgrade {
         if (!(obj instanceof final MachineUpgrade another)) {
             return false;
         }
-        return type.equals((another).type) && parentBus == another.parentBus;
+        return type.equals((another).type);
     }
 }
