@@ -175,7 +175,11 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
         if (tank.getTank() instanceof HybridGasTank) {
             GasStack gasContent = ((HybridGasTank) tank.getTank()).getGas();
             if (gasContent != null && gasContent.amount > 0) {
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+                int gascolor = gasContent.getGas().getTint();
+                float red = (gascolor >> 16 & 0xFF) / 255F;
+                float green = (gascolor >> 8 & 0xFF) / 255F;
+                float blue = (gascolor & 0xFF) / 255F;
+                GlStateManager.color(red, green, blue, 1.0F);
                 float percFilled = ((float) gasContent.amount) / ((float) tank.getTank().getCapacity());
                 percFilled = MathHelper.clamp(percFilled, 0F, 1F);
                 int pxFilled = MathHelper.ceil(percFilled * 61F);
