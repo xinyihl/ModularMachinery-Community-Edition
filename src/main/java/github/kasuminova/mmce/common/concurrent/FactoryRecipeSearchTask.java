@@ -11,13 +11,9 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import net.minecraft.util.ResourceLocation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class FactoryRecipeSearchTask extends RecipeSearchTask {
     private final FactoryRecipeThread thread;
-    private final List<MachineRecipe> filtered = new ArrayList<>();
-    private final ActiveMachineRecipe[] running;
+    private final Object2IntArrayMap<ResourceLocation> runningRecipes = new Object2IntArrayMap<>();
     private final TileFactoryController factory;
 
     public FactoryRecipeSearchTask(
@@ -28,16 +24,20 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
             FactoryRecipeThread thread,
             ActiveMachineRecipe[] running)
     {
-        super(controller, currentMachine, maxParallelism, recipeList);
+        super(controller, currentMachine, maxParallelism, recipeList, thread);
         this.factory = controller;
-        this.running = running;
+
+        for (ActiveMachineRecipe recipe : running) {
+            ResourceLocation registryName = recipe.getRecipe().getRegistryName();
+            int prevCount = runningRecipes.getInt(registryName);
+            runningRecipes.put(registryName, prevCount + 1);
+        }
+
         this.thread = thread;
     }
 
     @Override
     protected RecipeCraftingContext computeTask() {
-        filterRecipe();
-
         TileFactoryController factory = this.factory;
         DynamicMachine foundMachine = factory.getFoundMachine();
         if (foundMachine == null) return null;
@@ -46,9 +46,13 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
         RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
         float validity = 0F;
 
-        for (MachineRecipe recipe : filtered) {
+        for (MachineRecipe recipe : recipeList) {
+            if (!canCheck(recipe)) {
+                continue;
+            }
+
             ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, maxParallelism);
-            RecipeCraftingContext context = factory.createContext(activeRecipe);
+            RecipeCraftingContext context = thread != null ? thread.createContext(activeRecipe) : controller.createContext(activeRecipe);
             RecipeCraftingContext.CraftingCheckResult result = factory.onCheck(context);
 
             if (result.isSuccess()) {
@@ -79,32 +83,15 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
         return null;
     }
 
-    private void filterRecipe() {
-        Object2IntArrayMap<ResourceLocation> activeRecipeCountMap = new Object2IntArrayMap<>();
-        activeRecipeCountMap.defaultReturnValue(0);
-
-        for (ActiveMachineRecipe recipe : running) {
-            ResourceLocation registryName = recipe.getRecipe().getRegistryName();
-            int prevCount = activeRecipeCountMap.getInt(registryName);
-            activeRecipeCountMap.put(registryName, prevCount + 1);
+    private boolean canCheck(MachineRecipe recipe) {
+        // If the recipe specifies a thread name, determine if the thread name matches.
+        String recipeRequiredName = recipe.getThreadName();
+        if (!recipeRequiredName.isEmpty() && (thread == null || !thread.getThreadName().equals(recipeRequiredName))) {
+            return false;
         }
-
-        for (MachineRecipe recipe : recipeList) {
-            // If the recipe specifies a thread name, determine if the thread name matches.
-            String recipeRequiredName = recipe.getThreadName();
-            if (!recipeRequiredName.isEmpty() && (thread == null || !thread.getThreadName().equals(recipeRequiredName))) {
-                continue;
-            }
-            // If the number of running identical recipes in the factory exceeds
-            // the maximum number defined by the recipe, then this recipe is not checked.
-            int maxThreads = recipe.getMaxThreads();
-            if (maxThreads != -1 && activeRecipeCountMap.getInt(recipe.getRegistryName()) >= maxThreads){
-                continue;
-            }
-
-            filtered.add(recipe);
-        }
-
-        activeRecipeCountMap.clear();
+        // If the number of running identical recipes in the factory exceeds
+        // the maximum number defined by the recipe, then this recipe is not checked.
+        int maxThreads = recipe.getMaxThreads();
+        return maxThreads == -1 || runningRecipes.getInt(recipe.getRegistryName()) < maxThreads;
     }
 }

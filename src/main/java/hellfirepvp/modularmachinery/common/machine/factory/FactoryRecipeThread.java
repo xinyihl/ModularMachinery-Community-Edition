@@ -84,6 +84,7 @@ public class FactoryRecipeThread extends RecipeThread {
 
     public void tryRestartRecipe() {
         activeRecipe.reset();
+        activeRecipe.setMaxParallelism(1);
         activeRecipe.setMaxParallelism(factory.getAvailableParallelism());
         RecipeCraftingContext context = getContext().reset();
         flushContextModifier();

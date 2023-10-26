@@ -41,7 +41,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:35
  */
-public class RequirementItem extends ComponentRequirement.MultiComponentRequirement<ItemStack, RequirementTypeItem>
+public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeItem>
         implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
 
     public final ItemRequirementType requirementType;
@@ -62,9 +62,6 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
 
     public AdvancedItemChecker itemChecker = null;
     public float chance = 1F;
-
-    protected int parallelism = 1;
-    protected boolean parallelizeUnaffected = false;
 
     public RequirementItem(IOType ioType, ItemStack item) {
         super(RequirementTypesMM.REQUIREMENT_ITEM, ioType);
@@ -198,11 +195,6 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
         }
 
         return doItemIOInternal(components, context, maxParallelism, Collections.emptyList(), ResultChance.GUARANTEED);
-    }
-
-    @Override
-    public int getParallelism() {
-        return parallelism;
     }
 
     private CraftCheck doItemIO(List<ProcessingComponent<?>> components, RecipeCraftingContext context, List<AdvancedItemModifier> itemModifiers, ResultChance chance) {
@@ -395,28 +387,15 @@ public class RequirementItem extends ComponentRequirement.MultiComponentRequirem
 
         int maxInsert = toInsert * maxMultiplier;
         for (final IItemHandlerModifiable handler : handlers) {
-            inserted += ItemUtils.insertAll(stack, handler, maxInsert - inserted);
+            synchronized (handler) {
+                inserted += ItemUtils.insertAll(stack, handler, maxInsert - inserted);
+            }
             if (inserted >= maxInsert) {
                 break;
             }
         }
 
         return inserted / toInsert;
-    }
-
-    @Override
-    public void setParallelism(int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
-    }
-
-    @Override
-    public void setParallelizeUnaffected(boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-        }
     }
 
     public enum ItemRequirementType {

@@ -261,8 +261,14 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
             return offsetY;
         }
 
-        for (FactoryRecipeThread queueThread : factory.getFactoryRecipeThreadList()) {
-            ActiveMachineRecipe activeRecipe = queueThread.getActiveRecipe();
+        for (FactoryRecipeThread thread : factory.getFactoryRecipeThreadList()) {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
+            if (activeRecipe != null) {
+                parallelism += (activeRecipe.getParallelism() - 1);
+            }
+        }
+        for (final FactoryRecipeThread thread : factory.getCoreRecipeThreads().values()) {
+            ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
             if (activeRecipe != null) {
                 parallelism += (activeRecipe.getParallelism() - 1);
             }

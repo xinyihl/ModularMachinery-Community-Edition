@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 
 public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
@@ -14,12 +15,14 @@ public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
     protected final int maxParallelism;
     protected final Iterable<MachineRecipe> recipeList;
     protected CraftingStatus status = CraftingStatus.IDLE;
+    private final RecipeThread thread;
 
-    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList) {
+    public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList, final RecipeThread thread) {
         this.controller = controller;
         this.currentMachine = currentMachine;
         this.maxParallelism = maxParallelism;
         this.recipeList = recipeList;
+        this.thread = thread;
     }
 
     @Override
@@ -33,7 +36,7 @@ public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
 
         for (MachineRecipe recipe : recipeList) {
             ActiveMachineRecipe activeRecipe = new ActiveMachineRecipe(recipe, maxParallelism);
-            RecipeCraftingContext context = controller.createContext(activeRecipe);
+            RecipeCraftingContext context = thread != null ? thread.createContext(activeRecipe) : controller.createContext(activeRecipe);
             RecipeCraftingContext.CraftingCheckResult result = controller.onCheck(context);
             if (result.isSuccess()) {
                 //并发检查

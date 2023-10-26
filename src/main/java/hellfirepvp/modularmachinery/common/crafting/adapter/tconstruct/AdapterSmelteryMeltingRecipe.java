@@ -48,7 +48,6 @@ public class AdapterSmelteryMeltingRecipe extends RecipeAdapter {
                 ActiveMachineRecipe machineRecipe = event.getActiveRecipe();
                 machineRecipe.getDataCompound().setInteger("temperatureRequired", meltingRecipe.temperature);
             });
-            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             // Item Input
             List<ItemStack> inputs = meltingRecipe.input.getInputs();

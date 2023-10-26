@@ -4,7 +4,6 @@ import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
-import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
@@ -56,8 +55,6 @@ public class AdapterNCOInfuser extends AdapterNCOMachine {
                             modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, WORK_TIME, false))),
                     incId, false
             );
-
-            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             for (IItemIngredient iItemIngredient : basicRecipe.getItemIngredients()) {
                 ItemStack stack = iItemIngredient.getStack();

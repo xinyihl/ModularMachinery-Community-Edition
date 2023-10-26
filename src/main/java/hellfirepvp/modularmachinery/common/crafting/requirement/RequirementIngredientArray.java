@@ -24,15 +24,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementIngredientArray extends ComponentRequirement.MultiComponentRequirement<ItemStack, RequirementTypeIngredientArray>
+public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeIngredientArray>
         implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
 
     public final List<ChancedIngredientStack> ingredients;
 
     public float chance = 1.0F;
-
-    protected int parallelism = 1;
-    protected boolean parallelizeUnaffected = false;
 
     /**
      * <p>物品组输入，仅消耗组内的其中一个</p>
@@ -111,11 +108,6 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
         }
 
         return doItemIOInternal(component, context, maxParallelism, ResultChance.GUARANTEED);
-    }
-
-    @Override
-    public int getParallelism() {
-        return parallelism;
     }
 
     @Nonnull
@@ -200,20 +192,5 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompon
         }
 
         return totalConsumed;
-    }
-
-    @Override
-    public void setParallelism(int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
-    }
-
-    @Override
-    public void setParallelizeUnaffected(boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-        }
     }
 }

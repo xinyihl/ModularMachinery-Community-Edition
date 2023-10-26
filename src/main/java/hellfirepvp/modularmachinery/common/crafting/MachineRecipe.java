@@ -21,6 +21,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementEnergy;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementType;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.integration.crafttweaker.RecipeAdapterBuilder;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
@@ -60,12 +61,13 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     protected final boolean voidPerTickFailure;
     protected final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
     protected final List<String> tooltipList;
-    protected final boolean isParallelized;
-    protected final String threadName;
-    protected final int maxThreads;
+
+    protected boolean parallelized;
+    protected String threadName;
+    protected int maxThreads;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
-                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized) {
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean parallelized) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -74,7 +76,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = tickTime;
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
-        this.isParallelized = isParallelized;
+        this.parallelized = parallelized;
         this.recipeEventHandlers = new HashMap<>();
         this.tooltipList = new ArrayList<>();
         this.threadName = "";
@@ -82,7 +84,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     }
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
-                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean isParallelized,
+                         int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean parallelized,
                          Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList,
                          String threadName, int maxThreads) {
         this.sortId = counter;
@@ -93,7 +95,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = tickTime;
         this.configuredPriority = configuredPriority;
         this.voidPerTickFailure = voidPerTickFailure;
-        this.isParallelized = isParallelized;
+        this.parallelized = parallelized;
         this.recipeEventHandlers = recipeEventHandlers;
         this.tooltipList = tooltipList;
         this.threadName = threadName;
@@ -109,11 +111,26 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tickTime = preparedRecipe.getTotalProcessingTickTime();
         this.configuredPriority = preparedRecipe.getPriority();
         this.voidPerTickFailure = preparedRecipe.voidPerTickFailure();
-        this.isParallelized = preparedRecipe.isParallelized();
+        this.parallelized = preparedRecipe.isParallelized();
         this.recipeEventHandlers = preparedRecipe.getRecipeEventHandlers();
         this.tooltipList = preparedRecipe.getTooltipList();
         this.threadName = preparedRecipe.getThreadName();
         this.maxThreads = preparedRecipe.getMaxThreads();
+    }
+
+    public void mergeAdapter(final RecipeAdapterBuilder adapterBuilder) {
+        this.parallelized = adapterBuilder.isParallelized();
+        this.tooltipList.addAll(adapterBuilder.getTooltipList());
+        if (!this.getThreadName().isEmpty()) {
+            this.threadName = adapterBuilder.getThreadName();
+        }
+        if (adapterBuilder.getMaxThreads() != -1) {
+            this.maxThreads = adapterBuilder.getMaxThreads();
+        }
+        for (final ComponentRequirement<?, ?> requirement : adapterBuilder.getComponents()) {
+            addRequirement(requirement);
+        }
+        adapterBuilder.getRecipeEventHandlers().forEach((clazz, actions) -> actions.forEach(action -> addRecipeEventHandler(clazz, action)));
     }
 
     public void addTooltip(String tooltip) {
@@ -138,7 +155,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     }
 
     public boolean isParallelized() {
-        return isParallelized;
+        return parallelized;
     }
 
     @Nullable
@@ -215,7 +232,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, this.tickTime, false)),
                 this.configuredPriority,
                 this.doesCancelRecipeOnPerTickFailure(),
-                this.isParallelized,
+                this.parallelized,
                 this.recipeEventHandlers,
                 this.tooltipList,
                 this.threadName,
@@ -259,7 +276,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 ResourceLocation location = recipeOwnerList.get(i);
                 MachineRecipe rec = new MachineRecipe(parent.recipeFilePath + "_sub_" + i,
                         new ResourceLocation(parent.registryName.getNamespace(), parent.registryName.getPath() + "_sub_" + i),
-                        location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.isParallelized);
+                        location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.parallelized);
                 for (ComponentRequirement<?, ?> req : parent.recipeRequirements) {
                     rec.recipeRequirements.add(req.deepCopy().postDeepCopy(req));
                 }
@@ -358,7 +375,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
             String registryName = elementRegistryName.getAsJsonPrimitive().getAsString();
             int recipeTime = elementTime.getAsJsonPrimitive().getAsInt();
-            MachineRecipe recipe = new MachineRecipe(RecipeLoader.currentlyReadingPath,
+            MachineRecipe recipe = new MachineRecipe(RecipeLoader.CURRENTLY_READING_PATH.get(),
                     new ResourceLocation(ModularMachinery.MODID, registryName),
                     parentName, recipeTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
 
@@ -402,12 +419,12 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             JsonObject requirement = json.getAsJsonObject();
 
             if (!requirement.has("type") || !requirement.get("type").isJsonPrimitive() ||
-                !requirement.get("type").getAsJsonPrimitive().isString()) {
+                    !requirement.get("type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'type' of a requirement is missing or isn't a string!");
             }
             String type = requirement.getAsJsonPrimitive("type").getAsString();
             if (!requirement.has("io-type") || !requirement.get("io-type").isJsonPrimitive() ||
-                !requirement.get("io-type").getAsJsonPrimitive().isString()) {
+                    !requirement.get("io-type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'io-type' of a requirement is missing or isn't a string!");
             }
             String ioType = requirement.getAsJsonPrimitive("io-type").getAsString();
@@ -417,7 +434,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 requirementType = IntegrationTypeHelper.searchRequirementType(type);
                 if (requirementType != null) {
                     ModularMachinery.log.info("[Modular Machinery]: Deprecated requirement name '"
-                                              + type + "'! Consider using " + requirementType.getRegistryName().toString());
+                            + type + "'! Consider using " + requirementType.getRegistryName().toString());
                 }
             }
             if (requirementType == null) {

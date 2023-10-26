@@ -24,6 +24,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -33,7 +35,7 @@ import java.util.*;
  * Date: 27.06.2017 / 23:23
  */
 public class RecipeLoader {
-    public static final List<RecipeAdapterAccessor> RECIPE_ADAPTER_ACCESSORS = new LinkedList<>();
+    public static final Collection<RecipeAdapterAccessor> RECIPE_ADAPTER_ACCESSORS = new ConcurrentLinkedQueue<>();
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(MachineRecipe.MachineRecipeContainer.class, new MachineRecipe.Deserializer())
             .registerTypeHierarchyAdapter(ComponentRequirement.class, new MachineRecipe.ComponentDeserializer())
@@ -42,8 +44,9 @@ public class RecipeLoader {
             .registerTypeHierarchyAdapter(RecipeRunnableCommand.class, new RecipeRunnableCommand.Deserializer())
             .create();
 
-    public static String currentlyReadingPath = null;
-    private static Map<String, Exception> failedAttempts = new HashMap<>();
+    public static final ThreadLocal<String> CURRENTLY_READING_PATH = new ThreadLocal<>();
+
+    private static Map<String, Exception> failedAttempts = new ConcurrentHashMap<>();
 
     public static Map<FileType, List<File>> discoverDirectory(File directory) {
         Map<FileType, List<File>> candidates = new EnumMap<>(FileType.class);
@@ -54,7 +57,11 @@ public class RecipeLoader {
         directories.add(directory);
         while (!directories.isEmpty()) {
             File dir = directories.remove(0);
-            for (File f : dir.listFiles()) {
+            File[] files = dir.listFiles();
+            if (files == null) {
+                continue;
+            }
+            for (File f : files) {
                 if (f.isDirectory()) {
                     directories.addLast(f);
                 } else {
@@ -69,21 +76,23 @@ public class RecipeLoader {
         return candidates;
     }
 
-    public static List<MachineRecipe> loadRecipes(List<File> recipeCandidates, List<PreparedRecipe> preparedRecipes) {
+    public static Collection<MachineRecipe> loadRecipes(List<File> recipeCandidates, List<PreparedRecipe> preparedRecipes) {
         RECIPE_ADAPTER_ACCESSORS.clear();
 
-        List<MachineRecipe> loadedRecipes = Lists.newArrayList();
-        for (File f : recipeCandidates) {
-            currentlyReadingPath = f.getPath();
+        ConcurrentLinkedQueue<MachineRecipe> loadedRecipes = new ConcurrentLinkedQueue<>();
+        recipeCandidates.parallelStream().forEach(f -> {
+            CURRENTLY_READING_PATH.set(f.getPath());
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()), StandardCharsets.UTF_8)) {
                 MachineRecipe.MachineRecipeContainer container = JsonUtils.fromJson(GSON, isr, MachineRecipe.MachineRecipeContainer.class);
-                loadedRecipes.addAll(container.getRecipes());
+                synchronized (loadedRecipes) {
+                    loadedRecipes.addAll(container.getRecipes());
+                }
             } catch (Exception exc) {
                 failedAttempts.put(f.getPath(), exc);
             } finally {
-                currentlyReadingPath = null;
+                CURRENTLY_READING_PATH.remove();
             }
-        }
+        });
         for (PreparedRecipe recipe : preparedRecipes) {
             recipe.loadNeedAfterInitActions();
             loadedRecipes.add(convertPreparedRecipe(recipe));
@@ -92,7 +101,7 @@ public class RecipeLoader {
     }
 
     public static List<MachineRecipe> loadAdapterRecipes(List<File> adapterCandidates, List<RecipeAdapterBuilder> adapterBuilders) {
-        List<MachineRecipe> loadedRecipes = Lists.newArrayList();
+        List<MachineRecipe> loadedRecipes = new LinkedList<>();
         for (File f : adapterCandidates) {
             try (InputStreamReader isr = new InputStreamReader(Files.newInputStream(f.toPath()), StandardCharsets.UTF_8)) {
                 RecipeAdapterAccessor accessor = JsonUtils.fromJson(GSON, isr, RecipeAdapterAccessor.class);
@@ -113,6 +122,9 @@ public class RecipeLoader {
             if (recipes.isEmpty()) {
                 ModularMachinery.log.warn("Adapter with name " + accessor.getAdapterKey().toString() + " didn't provide have any recipes!");
             } else {
+                for (final MachineRecipe recipe : recipes) {
+                    recipe.mergeAdapter(builder);
+                }
                 loadedRecipes.addAll(recipes);
             }
             RECIPE_ADAPTER_ACCESSORS.add(accessor);

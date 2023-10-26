@@ -25,6 +25,7 @@ import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
 import github.kasuminova.mmce.common.util.concurrent.Action;
+import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.container.*;
@@ -133,6 +134,7 @@ public class CommonProxy implements IGuiHandler {
         MinecraftForge.EVENT_BUS.register(AssemblyEventHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(new UpgradeEventHandler());
+        MinecraftForge.EVENT_BUS.register(MMWorldEventListener.INSTANCE);
         ModularMachinery.EVENT_BUS.register(new UpgradeMachineEventHandler());
 
         ModularMachinery.EXECUTE_MANAGER.init();

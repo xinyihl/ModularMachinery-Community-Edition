@@ -46,15 +46,13 @@ import java.util.List;
  * Date: 24.02.2018 / 12:28
  * TODO: Split FluidStack and GasStack into two different Requirements, combining the two makes for terrible code.
  */
-public class RequirementFluid extends ComponentRequirement.MultiComponentRequirement<HybridFluid, RequirementTypeFluid>
+public class RequirementFluid extends ComponentRequirement.MultiCompParallelizable<HybridFluid, RequirementTypeFluid>
         implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
 
     public final HybridFluid required;
 
     public float chance = 1F;
 
-    private int parallelism = 1;
-    private boolean parallelizeUnaffected = false;
     private NBTTagCompound tagMatch = null, tagDisplay = null;
 
     public RequirementFluid(IOType ioType, FluidStack fluid) {
@@ -186,11 +184,6 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
         return doFluidGasIOInternal(components, context, maxParallelism);
     }
 
-    @Override
-    public int getParallelism() {
-        return parallelism;
-    }
-
     private CraftCheck doFluidGasIO(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
         int mul = doFluidGasIOInternal(components, context, parallelism);
         if (mul < parallelism) {
@@ -250,21 +243,6 @@ public class RequirementFluid extends ComponentRequirement.MultiComponentRequire
         HybridFluidUtils.doDrainOrFill(stack, totalIO, fluidHandlers, actionType);
 
         return (int) (totalIO / required);
-    }
-
-    @Override
-    public void setParallelism(int parallelism) {
-        if (!parallelizeUnaffected) {
-            this.parallelism = parallelism;
-        }
-    }
-
-    @Override
-    public void setParallelizeUnaffected(boolean unaffected) {
-        this.parallelizeUnaffected = unaffected;
-        if (parallelizeUnaffected) {
-            this.parallelism = 1;
-        }
     }
 
 }

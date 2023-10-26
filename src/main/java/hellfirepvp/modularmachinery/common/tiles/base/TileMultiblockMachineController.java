@@ -18,6 +18,8 @@ import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import github.kasuminova.mmce.common.util.TimeRecorder;
 import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
+import github.kasuminova.mmce.common.world.MMWorldEventListener;
+import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -60,7 +62,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
@@ -68,7 +69,7 @@ import java.util.stream.IntStream;
 @SuppressWarnings("unused")
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
-    public static int structureCheckDelay = 30, maxStructureCheckDelay = 100;
+    public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
 
@@ -83,7 +84,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected final Map<String, List<MachineUpgrade>> foundUpgrades = new ConcurrentHashMap<>();
     protected final List<TileUpgradeBus.UpgradeBusProvider> foundUpgradeBuses = new ArrayList<>();
     protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
-    protected final List<ProcessingComponent<?>> foundComponents = new CopyOnWriteArrayList<>();
+    protected final Map<TileEntity, ProcessingComponent<?>> foundComponents = new ConcurrentHashMap<>();
 
     protected final TimeRecorder timeRecorder = new TimeRecorder();
 
@@ -107,6 +108,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected int recipeResearchRetryCounter = 0;
 
     protected int lastStrongPower = -1;
+
+    protected int lastStructureCheckTick = -1;
+
+    protected long executeGroupId = -1;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -138,8 +143,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 false, "When enabled, the customData will be cleared when multiblock structure check failed.");
     }
 
-    public static <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, List<ProcessingComponent<?>> components) {
-        components.add(new ProcessingComponent<>(component, component.getContainerProvider(), tag));
+    public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
+        MachineComponentManager.INSTANCE.checkComponentShared(te, this);
+        components.put(te, new ProcessingComponent<>(component, component.getContainerProvider(), tag));
     }
 
     @Override
@@ -168,6 +174,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             lastStrongPower = getWorld().getStrongPower(getPos());
         }
         return lastStrongPower;
+    }
+
+    public void setExecuteGroupId(final long executeGroupId) {
+        this.executeGroupId = executeGroupId;
+    }
+
+    public long getExecuteGroupId() {
+        return executeGroupId;
     }
 
     protected void addRecipeResearchUsedTime(int time) {
@@ -238,16 +252,26 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected boolean canCheckStructure() {
-        if (isStructureFormed() && foundComponents.isEmpty()) {
+        if (lastStructureCheckTick == -1 || (isStructureFormed() && foundComponents.isEmpty())) {
             return true;
         }
         if (!delayedStructureCheck) {
             return ticksExisted % structureCheckDelay == 0;
         }
         if (isStructureFormed()) {
-            return ticksExisted % Math.min(structureCheckDelay + currentRecipeSearchDelay(), maxStructureCheckDelay) == 0;
+            if (ticksExisted % Math.min(structureCheckDelay + currentRecipeSearchDelay(), maxStructureCheckDelay) == 0) {
+                return true;
+            } else {
+                return MMWorldEventListener.INSTANCE.isChunkChanged(getWorld(), getPos());
+            }
         } else {
-            return ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0;
+            if (ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0) {
+                return true;
+            } else if (lastStructureCheckTick + structureCheckDelay < ticksExisted) {
+                return MMWorldEventListener.INSTANCE.isChunkChanged(getWorld(), getPos());
+            } else {
+                return false;
+            }
         }
     }
 
@@ -396,14 +420,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (!checkStructure()) {
             if (getControllerStatus() != CraftingStatus.CHUNK_UNLOADED) {
                 setControllerStatus(CraftingStatus.CHUNK_UNLOADED);
-                markForUpdateSync();
+                markNoUpdateSync();
             }
             return false;
         }
         if (!isStructureFormed()) {
             if (getControllerStatus() != CraftingStatus.MISSING_STRUCTURE) {
                 setControllerStatus(CraftingStatus.MISSING_STRUCTURE);
-                markForUpdateSync();
+                markNoUpdateSync();
             }
             return false;
         }
@@ -474,7 +498,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         resetStructureCheckCounter();
-        markForUpdateSync();
+        markNoUpdateSync();
     }
 
     private void addDynamicPatternToBlockArray() {
@@ -496,6 +520,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (!canCheckStructure()) {
             return true;
         }
+
+        lastStructureCheckTick = ticksExisted;
 
         if (isStructureFormed()) {
             BlockPos ctrlPos = getPos();
@@ -586,17 +612,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
-        List<ProcessingComponent<?>> found = new ArrayList<>();
+        Map<TileEntity, ProcessingComponent<?>> found = new HashMap<>();
 
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
-
-        this.foundComponents.addAll(found);
-        foundModifiers.clear();
+        this.foundComponents.putAll(found);
+        this.foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
     }
 
-    private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final List<ProcessingComponent<?>> found) {
+    private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final Map<TileEntity, ProcessingComponent<?>> found) {
         BlockPos realPos = ctrlPos.add(pos);
 
         if (!getWorld().isBlockLoaded(realPos)) {
@@ -625,7 +650,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             workMode = WorkMode.SEMI_SYNC;
         }
 
-        addComponent(component, tag, found);
+        addComponent(component, tag, te, found);
         if (component instanceof TileParallelController.ParallelControllerProvider) {
             this.foundParallelControllers.add((TileParallelController.ParallelControllerProvider) component);
             return;
@@ -844,7 +869,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return foundParallelControllers;
     }
 
-    public List<ProcessingComponent<?>> getFoundComponents() {
+    public Map<TileEntity, ProcessingComponent<?>> getFoundComponents() {
         return foundComponents;
     }
 
@@ -939,6 +964,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void incrementRecipeSearchRetryCount() {
         recipeResearchRetryCounter++;
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
     }
 
     @Override
@@ -1080,6 +1111,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void setWorkMode(final WorkMode workMode) {
         this.workMode = workMode;
+    }
+
+    public enum StructureCheckMode {
+        FULL, OPTIONAL
     }
 
     public enum WorkMode {

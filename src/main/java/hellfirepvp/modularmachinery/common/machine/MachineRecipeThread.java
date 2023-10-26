@@ -63,7 +63,7 @@ public class MachineRecipeThread extends RecipeThread {
                 controller,
                 controller.getFoundMachine(),
                 controller.getMaxParallelism(),
-                RecipeRegistry.getRecipesFor(controller.getFoundMachine()));
+                RecipeRegistry.getRecipesFor(controller.getFoundMachine()), this);
         ModularMachinery.EXECUTE_MANAGER.submitForkJoinTask(searchTask);
     }
 

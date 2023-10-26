@@ -54,7 +54,6 @@ public class DynamicMachineRecipeAdapter extends RecipeAdapter {
                     (res) -> new ResourceLocation(ModularMachinery.MODID, res.getPath() + ".copy." + newIdentifier + "_" + incId),
                     owningMachineName,
                     modifiers);
-            RecipeAdapter.addAdditionalRequirements(newRecipe, additionalRequirements, eventHandlers, recipeTooltips);
             newRecipeList.add(newRecipe);
         }
 

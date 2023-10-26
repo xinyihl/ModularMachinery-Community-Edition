@@ -60,7 +60,7 @@ public class RecipeCraftingContext {
     private TileMultiblockMachineController controller = null;
     private ControllerCommandSender commandSender = null;
 
-    private List<ProcessingComponent<?>> typeComponents = new ArrayList<>();
+    private Collection<ProcessingComponent<?>> typeComponents = new ArrayList<>();
 
     private int currentIOTickIndex = 0;
 
@@ -112,7 +112,7 @@ public class RecipeCraftingContext {
         this.commandSender = new ControllerCommandSender(this.controller);
 
         reset();
-        updateComponents(ctrl.getFoundComponents());
+        updateComponents(ctrl.getFoundComponents().values());
         return this;
     }
 
@@ -364,7 +364,11 @@ public class RecipeCraftingContext {
             List<ProcessingComponent<?>> copiedCompList = getCopiedRequirementComponents(typeCopiedComp, taggedTypeCopiedComp, req, compList);
 
             ComponentRequirement.Parallelizable requirement = (ComponentRequirement.Parallelizable) req;
-            reqMaxParallelism = Math.min(reqMaxParallelism, requirement.getMaxParallelism(copiedCompList, this, maxParallelism));
+            reqMaxParallelism = Math.min(reqMaxParallelism, requirement.getMaxParallelism(copiedCompList, this, reqMaxParallelism));
+
+            if (reqMaxParallelism <= 0) {
+                return 0;
+            }
         }
 
         return reqMaxParallelism;
@@ -386,7 +390,7 @@ public class RecipeCraftingContext {
             int maxParallelism = getMaxParallelism(parallelizable);
             setParallelism(Math.max(1, maxParallelism));
 
-            if (parallelizable.size() >= requirementComponents.size() && maxParallelism > 0) {
+            if (maxParallelism > 0 && parallelizable.size() >= requirementComponents.size()) {
                 return CraftingCheckResult.SUCCESS;
             }
         }
@@ -396,14 +400,15 @@ public class RecipeCraftingContext {
     public CraftingCheckResult canRestartCrafting() {
         permanentModifierList.clear();
         int currentParallelism = activeRecipe.getParallelism();
+        int maxParallelism = activeRecipe.getMaxParallelism();
 
-        if (currentParallelism >= activeRecipe.getMaxParallelism()) {
-            setParallelism(currentParallelism);
+        if (currentParallelism > maxParallelism) {
+            setParallelism(maxParallelism);
             CraftingCheckResult result = canStartCrafting(req -> true);
             if (!result.isSuccess()) {
                 setParallelism(1);
             } else {
-                return result;
+                return CraftingCheckResult.SUCCESS;
             }
         }
 
@@ -500,7 +505,7 @@ public class RecipeCraftingContext {
         return copiedCompList;
     }
 
-    public void updateComponents(List<ProcessingComponent<?>> components) {
+    public void updateComponents(Collection<ProcessingComponent<?>> components) {
         this.typeComponents = components;
         updateRequirementComponents();
     }

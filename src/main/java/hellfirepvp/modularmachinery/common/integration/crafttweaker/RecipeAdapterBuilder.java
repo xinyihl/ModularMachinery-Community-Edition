@@ -29,11 +29,7 @@ public class RecipeAdapterBuilder extends RecipePrimer {
         if (machineLoc.getNamespace().equals("minecraft")) {
             machineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
         }
-        ResourceLocation parentMachineLoc = new ResourceLocation(parentMachineName);
-        if (parentMachineLoc.getNamespace().equals("minecraft")) {
-            parentMachineLoc = new ResourceLocation(ModularMachinery.MODID, machineLoc.getPath());
-        }
-        return new RecipeAdapterBuilder(machineLoc, parentMachineLoc);
+        return new RecipeAdapterBuilder(machineLoc, new ResourceLocation(parentMachineName));
     }
 
     //----------------------------------------------------------------------------------------------

@@ -44,8 +44,6 @@ public class AdapterIC2Compressor extends RecipeAdapter {
                     owningMachineName,
                     workTime, incId, false);
 
-            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
-
             int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, machineRecipe.getInput().getAmount(), false));
 
             if (inAmount > 0) {

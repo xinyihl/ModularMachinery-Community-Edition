@@ -39,7 +39,6 @@ public class AdapterSmelteryAlloyRecipe extends RecipeAdapter {
                             modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, WORK_TIME, false)),
                     incId, false
             );
-            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             // Fluid Input
             List<FluidStack> inputs = alloyRecipe.getFluids();

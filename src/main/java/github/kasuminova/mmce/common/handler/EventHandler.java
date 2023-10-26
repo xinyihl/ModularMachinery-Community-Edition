@@ -81,11 +81,10 @@ public class EventHandler {
             return;
         }
 
-        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-            if (event.player instanceof EntityPlayerMP) {
-                EntityPlayerMP playerMP = (EntityPlayerMP) player;
+        if (event.player instanceof EntityPlayerMP playerMP) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
                 if (teSync.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
-                    teSync.notifyUpdate();
+                    playerMP.connection.sendPacket(teSync.getUpdatePacket());
                 }
 
                 World world = event.player.getEntityWorld();
@@ -94,8 +93,8 @@ public class EventHandler {
                     int searchUsedTimeAvg = ctrl.recipeSearchUsedTimeAvg();
                     ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime, searchUsedTimeAvg, ctrl.getWorkMode()), playerMP);
                 }
-            }
-        });
+            });
+        }
     }
 
     @SubscribeEvent

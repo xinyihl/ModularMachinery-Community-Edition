@@ -194,7 +194,7 @@ public class ItemUtils {
         }
 
         int inserted = 0;
-        for (int i = 0; i < handler.getSlots() && stack.getCount() > 0; i++) {
+        for (int i = 0; i < handler.getSlots(); i++) {
             int maxStackSize = handler.getSlotLimit(i);
             ItemStack in = handler.getStackInSlot(i);
             int count = in.getCount();
@@ -228,8 +228,7 @@ public class ItemUtils {
             int slot = content.getKey();
             ItemStack stack = content.getValue();
             int count = stack.getCount();
-
-            if (count >= 1) {
+            if (count > 1) {
                 if (stack.getItem().hasContainerItem(stack)) {
                     continue; //uh... rip. we won't consume 16 buckets at once.
                 }

@@ -1,13 +1,11 @@
 package github.kasuminova.mmce.common.concurrent;
 
-import github.kasuminova.mmce.common.util.concurrent.Action;
-import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
-import github.kasuminova.mmce.common.util.concurrent.CustomForkJoinWorkerThreadFactory;
-import github.kasuminova.mmce.common.util.concurrent.CustomThreadFactory;
+import github.kasuminova.mmce.common.util.concurrent.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -42,6 +40,7 @@ public class TaskExecutor {
     private final MpscLinkedAtomicQueue<ActionExecutor> submitted = new MpscLinkedAtomicQueue<>();
 
     private final MpscLinkedAtomicQueue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
+    private final Long2ObjectOpenHashMap<ExecuteGroup> executeGroups = new Long2ObjectOpenHashMap<>();
 
     private final MpscLinkedAtomicQueue<ForkJoinTask<?>> forkJoinTasks = new MpscLinkedAtomicQueue<>();
 
@@ -79,6 +78,8 @@ public class TaskExecutor {
             totalExecuted += executed;
             executedCount++;
         }
+
+        executeGroups.clear();
     }
 
     /**
@@ -179,6 +180,20 @@ public class TaskExecutor {
         return actionExecutor;
     }
 
+    public ActionExecutor addExecuteGroupTask(final Action action, final long groupId) {
+        ExecuteGroup group;
+        synchronized (executeGroups) {
+            group = executeGroups.get(groupId);
+            if (group == null) {
+                group = new ExecuteGroup(groupId);
+                executeGroups.put(groupId, group);
+            }
+        }
+
+        ActionExecutor actionExecutor = new ActionExecutor(action);
+        return group.offer(actionExecutor);
+    }
+
     public <T> ForkJoinTask<T> submitForkJoinTask(final ForkJoinTask<T> task) {
         forkJoinTasks.offer(task);
         return task;
@@ -212,6 +227,24 @@ public class TaskExecutor {
         while ((forkJoinTask = forkJoinTasks.poll()) != null) {
             FORK_JOIN_POOL.submit(forkJoinTask);
         }
+
+        synchronized (executeGroups) {
+            for (final ExecuteGroup group : executeGroups.values()) {
+                if (group.isSubmitted()) {
+                    continue;
+                }
+                ActionExecutor groupExecutor = new ActionExecutor(() -> {
+                    ActionExecutor actionExecutor;
+                    while ((actionExecutor = group.poll()) != null) {
+                        actionExecutor.run();
+                    }
+                    group.setSubmitted(false);
+                });
+                group.setSubmitted(true);
+                THREAD_POOL.execute(groupExecutor);
+                submitted.offer(groupExecutor);
+            }
+        }
     }
 
     public class TaskSubmitter implements Runnable {
@@ -236,10 +269,10 @@ public class TaskExecutor {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 if (inTick) {
-                    if (!executors.isEmpty()) {
+                    if (!executors.isEmpty() || !executeGroups.isEmpty() || !forkJoinTasks.isEmpty()) {
                         submitTask();
                     } else {
-                        LockSupport.parkNanos(10000L);
+                        LockSupport.parkNanos(10_000L);
                     }
                 } else {
                     LockSupport.park();

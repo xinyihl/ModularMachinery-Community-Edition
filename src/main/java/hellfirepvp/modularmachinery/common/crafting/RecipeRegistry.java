@@ -25,6 +25,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -73,7 +74,7 @@ public class RecipeRegistry {
         Map<RecipeLoader.FileType, List<File>> potentialRecipes = RecipeLoader.discoverDirectory(CommonProxy.dataHolder.getRecipeDirectory());
         barRecipes.step("Loading Adapters");
 
-        List<MachineRecipe> recipes = RecipeLoader.loadAdapterRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.ADAPTER, Lists.newArrayList()), earlyRecipeAdapters);
+        Collection<MachineRecipe> recipes = RecipeLoader.loadAdapterRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.ADAPTER, Lists.newArrayList()), earlyRecipeAdapters);
         DataLoadProfiler.StatusLine sl = profiler.createLine("Load-Phase: ");
         DataLoadProfiler.Status success = sl.appendStatus("%s adapter-recipes loaded");
         DataLoadProfiler.Status failed = sl.appendStatus("%s adapter-recipes failed");
@@ -99,7 +100,7 @@ public class RecipeRegistry {
         return validRecipes;
     }
 
-    private static Map<DynamicMachine, List<MachineRecipe>> loadAndValidateRecipes(List<MachineRecipe> recipes,
+    private static Map<DynamicMachine, List<MachineRecipe>> loadAndValidateRecipes(Collection<MachineRecipe> recipes,
                                                                                    DataLoadProfiler profiler,
                                                                                    Map<ResourceLocation, MachineRecipe> sharedLoadRegistry) {
         DataLoadProfiler.StatusLine unknown = profiler.createLine("");
@@ -183,7 +184,7 @@ public class RecipeRegistry {
     }
 
     public void loadRecipeRegistry(@Nullable ICommandSender sender, boolean doRegister) {
-        Map<ResourceLocation, MachineRecipe> sharedLoadRegistry = new HashMap<>();
+        Map<ResourceLocation, MachineRecipe> sharedLoadRegistry = new ConcurrentHashMap<>();
 
         Map<DynamicMachine, List<MachineRecipe>> recipes = loadRecipes(sender, sharedLoadRegistry);
         if (doRegister) {
@@ -203,7 +204,7 @@ public class RecipeRegistry {
         Map<RecipeLoader.FileType, List<File>> potentialRecipes = RecipeLoader.discoverDirectory(CommonProxy.dataHolder.getRecipeDirectory());
         barRecipes.step("Loading Recipes");
 
-        List<MachineRecipe> recipes = RecipeLoader.loadRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.RECIPE, Lists.newArrayList()), earlyRecipes);
+        Collection<MachineRecipe> recipes = RecipeLoader.loadRecipes(potentialRecipes.getOrDefault(RecipeLoader.FileType.RECIPE, new ArrayList<>()), earlyRecipes);
         DataLoadProfiler.StatusLine sl = profiler.createLine("Load-Phase: ");
         DataLoadProfiler.Status success = sl.appendStatus("%s recipes loaded");
         DataLoadProfiler.Status failed = sl.appendStatus("%s recipes failed");

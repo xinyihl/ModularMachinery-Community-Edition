@@ -58,7 +58,7 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
             ItemStack input = smelting.getKey();
             ItemStack output = smelting.getValue();
             int tickTime = Math.round(Math.max(1, RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, 120, false)));
-            float experience = furnaceRecipes.getSmeltingExperience(input);
+            float experience = furnaceRecipes.getSmeltingExperience(output);
 
             MachineRecipe recipe = createRecipeShell(
                     new ResourceLocation("minecraft", "smelting_recipe_" + incId),
@@ -84,8 +84,6 @@ public class AdapterMinecraftFurnace extends RecipeAdapter {
             if (inEnergy > 0) {
                 recipe.addRequirement(new RequirementEnergy(IOType.INPUT, inEnergy));
             }
-
-            RecipeAdapter.addAdditionalRequirements(recipe, additionalRequirements, eventHandlers, recipeTooltips);
 
             smeltingRecipes.add(recipe);
             incId++;

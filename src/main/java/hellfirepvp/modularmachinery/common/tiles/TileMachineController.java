@@ -33,7 +33,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,18 +66,40 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         switch (workMode) {
-            case ASYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
-                if (doAsyncStep()) {
-                    return;
+            case ASYNC -> {
+                if (executeGroupId == -1) {
+                    tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                        if (doAsyncStep()) {
+                            return;
+                        }
+                        doSyncStep(false);
+                    }, timeRecorder.usedTimeAvg());
+                } else {
+                    tickExecutor = ModularMachinery.EXECUTE_MANAGER.addExecuteGroupTask(() -> {
+                        if (doAsyncStep()) {
+                            return;
+                        }
+                        doSyncStep(false);
+                    }, executeGroupId);
                 }
-                doSyncStep(false);
-            }, timeRecorder.usedTimeAvg());
-            case SEMI_SYNC -> tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
-                if (doAsyncStep()) {
-                    return;
+            }
+            case SEMI_SYNC -> {
+                if (executeGroupId == -1) {
+                    tickExecutor = ModularMachinery.EXECUTE_MANAGER.addTask(() -> {
+                        if (doAsyncStep()) {
+                            return;
+                        }
+                        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> doSyncStep(true));
+                    }, timeRecorder.usedTimeAvg());
+                } else {
+                    tickExecutor = ModularMachinery.EXECUTE_MANAGER.addExecuteGroupTask(() -> {
+                        if (doAsyncStep()) {
+                            return;
+                        }
+                        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> doSyncStep(true));
+                    }, executeGroupId);
                 }
-                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> doSyncStep(true));
-            }, timeRecorder.usedTimeAvg());
+            }
             case SYNC -> {
                 tickExecutor = new ActionExecutor(() -> {
                     if (doAsyncStep()) {
@@ -194,7 +215,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         if (ctx == null) {
             return;
         }
-        ctx.updateComponents(Collections.unmodifiableList(foundComponents));
+        ctx.updateComponents(foundComponents.values());
     }
 
     @Override
