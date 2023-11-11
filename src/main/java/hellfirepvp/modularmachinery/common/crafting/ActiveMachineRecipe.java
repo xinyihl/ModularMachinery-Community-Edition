@@ -65,6 +65,7 @@ public class ActiveMachineRecipe {
 
     public void reset() {
         this.tick = 0;
+        this.parallelism = 1;
         this.maxParallelism = 1;
         this.data = new NBTTagCompound();
     }
@@ -130,7 +131,7 @@ public class ActiveMachineRecipe {
     public void calculateExtraParallelism(final RecipeCraftingContext context) {
         float totalTick = RecipeModifier.applyModifiers(
                 context, RequirementTypesMM.REQUIREMENT_DURATION, null, this.recipe.getRecipeTotalTickTime(), false);
-        if (totalTick < 0) {
+        if (totalTick < 0F) {
             this.totalTick = 1;
         } else if (totalTick < 1) {
             int extraParallelism = (int) (1F / totalTick);

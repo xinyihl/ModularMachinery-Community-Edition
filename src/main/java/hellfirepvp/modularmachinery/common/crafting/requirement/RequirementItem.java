@@ -252,52 +252,38 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
             default -> 0;
         };
 
+        int maxConsume = toConsume * maxMultiplier;
+
         if (toConsume <= 0) {
             return maxMultiplier;
         }
 
-        int maxConsume;
+        ItemStack stack = ItemStack.EMPTY;
 
-        ItemStack stack;
         switch (this.requirementType) {
             case ITEMSTACKS -> {
                 stack = required.copy();
                 if (tag != null) {
                     stack.setTagCompound(tag);
                 }
+
                 if (!itemModifiers.isEmpty()) {
                     stack.setCount(toConsume);
 
                     for (final AdvancedItemModifier modifier : itemModifiers) {
                         stack = modifier.apply(context.getMachineController(), stack);
                     }
-                    toConsume *= stack.getCount();
-                    if (toConsume <= 0) {
-                        return maxMultiplier;
-                    }
-                }
-                maxConsume = toConsume * maxMultiplier;
 
-                if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                    return maxMultiplier;
-                }
-
-                for (final IItemHandlerModifiable handler : handlers) {
-                    if (itemChecker != null) {
-                        consumed += ItemUtils.consumeAll(
-                                handler, stack, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
-                    } else {
-                        consumed += ItemUtils.consumeAll(
-                                handler, stack, maxMultiplier - (consumed / toConsume), tag);
-                    }
-                    if (consumed >= maxConsume) {
-                        break;
-                    }
+                    toConsume = stack.getCount();
                 }
             }
             case OREDICT -> {
                 if (!itemModifiers.isEmpty()) {
                     stack = ItemUtils.getOredictItem(context, oreDictName, tag);
+                    if (stack.isEmpty()) {
+                        return maxMultiplier;
+                    }
+
                     stack.setCount(toConsume);
 
                     if (tag != null) {
@@ -307,25 +293,40 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
                     for (final AdvancedItemModifier modifier : itemModifiers) {
                         stack = modifier.apply(context.getMachineController(), stack);
                     }
-                    toConsume *= stack.getCount();
-                    if (toConsume <= 0) {
-                        return maxMultiplier;
+
+                    toConsume = stack.getCount();
+                }
+            }
+        }
+
+        if (toConsume <= 0) {
+            return maxMultiplier;
+        }
+
+        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            return maxMultiplier;
+        }
+
+        switch (this.requirementType) {
+            case ITEMSTACKS -> {
+                for (final IItemHandlerModifiable handler : handlers) {
+                    stack.setCount(maxConsume - consumed);
+                    if (itemChecker != null) {
+                        consumed += ItemUtils.consumeAll(handler, stack, itemChecker, context.getMachineController());
+                    } else {
+                        consumed += ItemUtils.consumeAll(handler, stack, tag);
+                    }
+                    if (consumed >= maxConsume) {
+                        break;
                     }
                 }
-
-                if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                    return maxMultiplier;
-                }
-
-                maxConsume = toConsume * maxMultiplier;
-
+            }
+            case OREDICT -> {
                 for (final IItemHandlerModifiable handler : handlers) {
                     if (itemChecker != null) {
-                        consumed += ItemUtils.consumeAll(
-                                handler, oreDictName, oreDictItemAmount, maxMultiplier - (consumed / toConsume), itemChecker, context.getMachineController());
+                        consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, itemChecker, context.getMachineController());
                     } else {
-                        consumed += ItemUtils.consumeAll(
-                                handler, oreDictName, oreDictItemAmount, maxMultiplier - (consumed / toConsume), tag);
+                        consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, tag);
                     }
                     if (consumed >= maxConsume) {
                         break;

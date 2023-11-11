@@ -50,6 +50,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -262,13 +263,19 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             if (ticksExisted % Math.min(structureCheckDelay + currentRecipeSearchDelay(), maxStructureCheckDelay) == 0) {
                 return true;
             } else {
-                return MMWorldEventListener.INSTANCE.isChunkChanged(getWorld(), getPos());
+                BlockPos pos = getPos();
+                Vec3i min = foundPattern.getMin();
+                Vec3i max = foundPattern.getMax();
+                return MMWorldEventListener.INSTANCE.isAreaChanged(getWorld(), pos.add(min), pos.add(max));
             }
         } else {
             if (ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0) {
                 return true;
             } else if (lastStructureCheckTick + structureCheckDelay < ticksExisted) {
-                return MMWorldEventListener.INSTANCE.isChunkChanged(getWorld(), getPos());
+                BlockPos pos = getPos();
+                Vec3i min = foundPattern.getMin();
+                Vec3i max = foundPattern.getMax();
+                return MMWorldEventListener.INSTANCE.isAreaChanged(getWorld(), pos.add(min), pos.add(max));
             } else {
                 return false;
             }
@@ -432,6 +439,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return false;
         }
         updateComponents();
+        new MachineStructureUpdateEvent(this).postEvent();
         return true;
     }
 
@@ -540,9 +548,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         if (this.foundMachine != null && this.foundPattern != null && this.controllerRotation != null && this.foundReplacements != null) {
-            new MachineStructureUpdateEvent(this).postEvent();
             return true;
         }
+
         resetMachine(false);
 
         // First, check blueprint machine.

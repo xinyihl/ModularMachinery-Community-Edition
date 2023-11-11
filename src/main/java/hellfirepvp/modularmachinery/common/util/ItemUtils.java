@@ -156,36 +156,36 @@ public class ItemUtils {
         return cAmt <= 0;
     }
 
-    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
+    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, itemChecker, controller);
         if (toConsume.getCount() <= 0 || contents.isEmpty()) {
             return 0;
         }
-        return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
+        return consumeAllInternal(handler, contents, toConsume.getCount());
     }
 
-    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
+    public static int consumeAll(IItemHandlerModifiable handler, ItemStack toConsume, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventory(handler, toConsume, false, matchNBTTag);
         if (toConsume.getCount() <= 0 || contents.isEmpty()) {
             return 0;
         }
-        return consumeAllInternal(handler, contents, maxMultiplier * toConsume.getCount());
+        return consumeAllInternal(handler, contents, toConsume.getCount());
     }
 
-    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
+    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, AdvancedItemChecker itemChecker, TileMultiblockMachineController controller) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, itemChecker, controller);
         if (amount <= 0 || contents.isEmpty()) {
             return 0;
         }
-        return consumeAllInternal(handler, contents, maxMultiplier * amount);
+        return consumeAllInternal(handler, contents, amount);
     }
 
-    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, int maxMultiplier, @Nullable NBTTagCompound matchNBTTag) {
+    public static int consumeAll(IItemHandlerModifiable handler, String oreName, int amount, @Nullable NBTTagCompound matchNBTTag) {
         Map<Integer, ItemStack> contents = findItemsIndexedInInventoryOreDict(handler, oreName, matchNBTTag);
         if (amount <= 0 || contents.isEmpty()) {
             return 0;
         }
-        return consumeAllInternal(handler, contents, maxMultiplier * amount);
+        return consumeAllInternal(handler, contents, amount);
     }
 
     public static int insertAll(@Nonnull ItemStack stack, IItemHandlerModifiable handler, int maxInsert) {

@@ -9,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -17,16 +18,14 @@ import net.minecraftforge.fml.relauncher.Side;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class MMWorldEventListener implements IWorldEventListener {
 
     public static final MMWorldEventListener INSTANCE = new MMWorldEventListener();
 
-    private final Map<World, Set<ChunkPos>> changedChunksWorldsLastTick = new HashMap<>();
-    private final Map<World, Set<ChunkPos>> changedChunksWorlds = new HashMap<>();
+    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunksLastTick = new HashMap<>();
+    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunks = new HashMap<>();
 
     private MMWorldEventListener() {
     }
@@ -47,8 +46,8 @@ public class MMWorldEventListener implements IWorldEventListener {
         if (world.isRemote) {
             return;
         }
-        changedChunksWorlds.remove(world);
-        changedChunksWorldsLastTick.remove(world);
+        worldChangedChunks.remove(world);
+        worldChangedChunksLastTick.remove(world);
         MachineComponentManager.INSTANCE.removeWorld(world);
     }
 
@@ -59,14 +58,30 @@ public class MMWorldEventListener implements IWorldEventListener {
         }
         World world = event.world;
 
-        Set<ChunkPos> changedChunks = changedChunksWorlds.computeIfAbsent(world, v -> new HashSet<>());
-        changedChunksWorldsLastTick.put(world, changedChunks);
-        changedChunksWorlds.put(world, new HashSet<>());
+        Map<ChunkPos, StructureBoundingBox> changedChunks = worldChangedChunks.computeIfAbsent(world, v -> new HashMap<>());
+        worldChangedChunksLastTick.put(world, changedChunks);
+        worldChangedChunks.put(world, new HashMap<>());
     }
 
-    public boolean isChunkChanged(@Nonnull final World worldIn,
-                                  @Nonnull final BlockPos pos) {
-        return changedChunksWorldsLastTick.computeIfAbsent(worldIn, v -> new HashSet<>()).contains(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4));
+    public boolean isAreaChanged(@Nonnull final World worldIn,
+                                 @Nonnull final BlockPos min,
+                                 @Nonnull final BlockPos max) {
+        int minChunkX = min.getX() >> 4;
+        int maxChunkX = max.getX() >> 4;
+        int minChunkZ = min.getZ() >> 4;
+        int maxChunkZ = max.getZ() >> 4;
+
+        StructureBoundingBox structureArea = new StructureBoundingBox(min, max);
+
+        for (int chunkX = minChunkX; chunkX < maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ < maxChunkZ; chunkZ++) {
+                StructureBoundingBox changedArea = worldChangedChunksLastTick.computeIfAbsent(worldIn, v -> new HashMap<>()).get(new ChunkPos(chunkX, chunkZ));
+                if (changedArea != null && changedArea.intersectsWith(structureArea)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
@@ -74,7 +89,15 @@ public class MMWorldEventListener implements IWorldEventListener {
                                   @Nonnull final BlockPos pos,
                                   @Nonnull final IBlockState oldState,
                                   @Nonnull final IBlockState newState, final int flags) {
-        changedChunksWorlds.computeIfAbsent(worldIn, v -> new HashSet<>()).add(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4));
+        Map<ChunkPos, StructureBoundingBox> chunkPosHeightSetMap = worldChangedChunks.computeIfAbsent(worldIn, v -> new HashMap<>());
+        chunkPosHeightSetMap.compute(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4), (chunkPos, heightSet) -> {
+            if (heightSet != null) {
+                heightSet.expandTo(new StructureBoundingBox(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ()));
+                return heightSet;
+            } else {
+                return new StructureBoundingBox(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
+            }
+        });
     }
 
     // Noop

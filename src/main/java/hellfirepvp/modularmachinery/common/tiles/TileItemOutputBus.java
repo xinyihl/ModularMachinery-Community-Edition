@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * Date: 07.07.2017 / 18:41
  */
 public class TileItemOutputBus extends TileItemBus implements MachineComponentTile {
-    public static int minWorkDelay = 10;
+    public static int minWorkDelay = 5;
     public static int maxWorkDelay = 60;
 
     public TileItemOutputBus() {

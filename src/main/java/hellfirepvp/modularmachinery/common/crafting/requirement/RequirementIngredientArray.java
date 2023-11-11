@@ -139,11 +139,15 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                                final int maxMultiplier,
                                final ResultChance chance)
     {
-        int totalConsumed = 0;
+        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
+            return maxMultiplier;
+        }
+
+        int ingredientConsumed = 0;
 
         for (final ChancedIngredientStack ingredient : ingredients) {
             int toConsume = Math.round(RecipeModifier.applyModifiers(context, this, ingredient.count, false));
-            int maxConsume = maxMultiplier - totalConsumed;
+            int maxConsume = toConsume * (maxMultiplier - ingredientConsumed);
             int consumed = 0;
 
             AdvancedItemChecker checker;
@@ -152,16 +156,15 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                 case ITEMSTACK -> {
                     checker = ingredient.itemChecker;
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
-                    if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                        return maxMultiplier;
-                    }
+
                     for (final IItemHandlerImpl handler : handlers) {
+                        stack.setCount(maxConsume - consumed);
                         if (checker != null) {
                             consumed += ItemUtils.consumeAll(
-                                    handler, stack, maxConsume - (consumed / toConsume), checker, context.getMachineController()) / toConsume;
+                                    handler, stack, checker, context.getMachineController()) / toConsume;
                         } else {
                             consumed += ItemUtils.consumeAll(
-                                    handler, stack, maxConsume - (consumed / toConsume), ingredient.tag);
+                                    handler, stack, ingredient.tag);
                         }
                         if (consumed >= maxConsume) {
                             break;
@@ -170,16 +173,14 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                 }
                 case ORE_DICT -> {
                     checker = ingredient.itemChecker;
-                    if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-                        return maxMultiplier;
-                    }
+
                     for (final IItemHandlerImpl handler : handlers) {
                         if (checker != null) {
                             consumed += ItemUtils.consumeAll(
-                                    handler, ingredient.oreDictName, toConsume, maxConsume - (consumed / toConsume), checker, context.getMachineController());
+                                    handler, ingredient.oreDictName, maxConsume - consumed, checker, context.getMachineController());
                         } else {
                             consumed += ItemUtils.consumeAll(
-                                    handler, ingredient.oreDictName, toConsume, maxConsume - (consumed / toConsume), ingredient.tag);
+                                    handler, ingredient.oreDictName, maxConsume - consumed, ingredient.tag);
                         }
                         if (consumed >= maxConsume) {
                             break;
@@ -188,9 +189,9 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                 }
             }
 
-            totalConsumed += (consumed / toConsume);
+            ingredientConsumed += (consumed / toConsume);
         }
 
-        return totalConsumed;
+        return ingredientConsumed;
     }
 }
