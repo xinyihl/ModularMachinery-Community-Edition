@@ -1,5 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -20,6 +21,7 @@ import net.minecraft.util.math.MathHelper;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -36,11 +38,11 @@ public class RequirementImpetus extends ComponentRequirement.MultiCompParalleliz
 
     @Nonnull
     private static List<ImpetusProviderCopy> convertImpetusProviders(final List<ProcessingComponent<?>> components) {
-        List<ImpetusProviderCopy> impetusCopies = new ArrayList<>();
-        for (final ProcessingComponent<?> component : components) {
-            impetusCopies.add((ImpetusProviderCopy) component.providedComponent());
+        if (components.size() == 1) {
+            return Collections.singletonList((ImpetusProviderCopy) components.get(0).getProvidedComponent());
+        } else {
+            return Lists.transform(components, component -> component != null ? (ImpetusProviderCopy) component.getProvidedComponent() : null);
         }
-        return impetusCopies;
     }
 
     @Override

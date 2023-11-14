@@ -1,5 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -37,11 +38,11 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
     @Nonnull
     private static List<LifeEssenceProviderCopy> convertLifeEssenceProviders(final List<ProcessingComponent<?>> components) {
-        List<LifeEssenceProviderCopy> lifeEssenceCopies = new ArrayList<>();
-        for (final ProcessingComponent<?> component : components) {
-            lifeEssenceCopies.add((LifeEssenceProviderCopy) component.providedComponent());
+        if (components.size() == 1) {
+            return Collections.singletonList((LifeEssenceProviderCopy) components.get(0).getProvidedComponent());
+        } else {
+            return Lists.transform(components, component -> component != null ? (LifeEssenceProviderCopy) component.getProvidedComponent() : null);
         }
-        return lifeEssenceCopies;
     }
 
     @Override

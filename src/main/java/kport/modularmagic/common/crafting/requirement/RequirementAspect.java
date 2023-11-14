@@ -1,5 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -40,11 +41,11 @@ public class RequirementAspect extends ComponentRequirement.MultiCompParalleliza
 
     @Nonnull
     private static List<AspectProviderCopy> convertJars(final List<ProcessingComponent<?>> components) {
-        List<AspectProviderCopy> jars = new ArrayList<>();
-        for (final ProcessingComponent<?> component : components) {
-            jars.add((AspectProviderCopy) component.providedComponent());
+        if (components.size() == 1) {
+            return Collections.singletonList((AspectProviderCopy) components.get(0).getProvidedComponent());
+        } else {
+            return Lists.transform(components, component -> component != null ? (AspectProviderCopy) component.getProvidedComponent() : null);
         }
-        return jars;
     }
 
     @Override
@@ -136,11 +137,15 @@ public class RequirementAspect extends ComponentRequirement.MultiCompParalleliza
 
         int totalAdded = 0;
         for (final AspectProviderCopy jar : jars) {
+            int notAdded;
+
             if (simulate) {
-                totalAdded += jar.addToContainer(aspect, maxAdd - totalAdded);
+                notAdded = jar.addToContainer(aspect, maxAdd - totalAdded);
             } else {
-                totalAdded += jar.getOriginal().addToContainer(aspect, maxAdd - totalAdded);
+                notAdded = jar.getOriginal().addToContainer(aspect, maxAdd - totalAdded);
             }
+
+            totalAdded += maxAdd - totalAdded - notAdded;
             if (totalAdded >= maxAdd) {
                 break;
             }
@@ -162,14 +167,14 @@ public class RequirementAspect extends ComponentRequirement.MultiCompParalleliza
         int totalTaken = 0;
         for (final AspectProviderCopy jar : jars) {
             if (simulate) {
-                int jarAmount = jar.getAmount();
-                if (jar.takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
+                int jarAmount = Math.min(jar.getAmount(), maxTake - totalTaken);
+                if (jar.takeFromContainer(aspect, jarAmount)) {
                     totalTaken += jarAmount;
                 }
             } else {
                 TileJarFillable original = jar.getOriginal();
-                int jarAmount = original.amount;
-                if (original.takeFromContainer(aspect, Math.min(jarAmount, maxTake - totalTaken))) {
+                int jarAmount = Math.min(original.amount, maxTake - totalTaken);
+                if (original.takeFromContainer(aspect, jarAmount)) {
                     totalTaken += jarAmount;
                 }
             }

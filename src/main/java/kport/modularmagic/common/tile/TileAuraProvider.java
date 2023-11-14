@@ -9,6 +9,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineCompon
 import kport.modularmagic.common.integration.jei.ingredient.Aura;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentAuraProvider;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 import javax.annotation.Nullable;
 
@@ -36,9 +37,9 @@ public abstract class TileAuraProvider extends TileColorableMachineComponent imp
         return new Aura(amount, type);
     }
 
-    public BlockPos getChunkPos() {
+    public ChunkPos getChunkPos() {
         BlockPos pos = getPos();
-        return new BlockPos(pos.getX() >> 4, 0, pos.getZ() >> 4);
+        return new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
     }
 
     public static class Input extends TileAuraProvider {

@@ -1,5 +1,6 @@
 package kport.modularmagic.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -37,11 +38,11 @@ public class RequirementMana extends ComponentRequirement.PerTickParallelizable<
 
     @Nonnull
     private static List<ManaProviderCopy> convertManaProviders(final List<ProcessingComponent<?>> components) {
-        List<ManaProviderCopy> manaProviderCopies = new ArrayList<>();
-        for (final ProcessingComponent<?> component : components) {
-            manaProviderCopies.add((ManaProviderCopy) component.providedComponent());
+        if (components.size() == 1) {
+            return Collections.singletonList((ManaProviderCopy) components.get(0).getProvidedComponent());
+        } else {
+            return Lists.transform(components, component -> component != null ? (ManaProviderCopy) component.getProvidedComponent() : null);
         }
-        return manaProviderCopies;
     }
 
     @Override

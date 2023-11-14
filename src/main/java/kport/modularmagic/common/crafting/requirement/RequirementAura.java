@@ -17,13 +17,10 @@ import kport.modularmagic.common.integration.jei.component.JEIComponentAura;
 import kport.modularmagic.common.integration.jei.ingredient.Aura;
 import kport.modularmagic.common.tile.TileAuraProvider;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentAuraProvider;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RequirementAura extends ComponentRequirement.MultiCompParallelizable<Aura, RequirementTypeAura>
         implements Asyncable, ComponentRequirement.Parallelizable {
@@ -40,8 +37,8 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
     }
 
     @Nonnull
-    private static Map<BlockPos, TileAuraProvider> buildChunkAuraProviderMap(final List<ProcessingComponent<?>> components) {
-        Map<BlockPos, TileAuraProvider> chunkAuraProviders = new HashMap<>();
+    private static Map<ChunkPos, TileAuraProvider> buildChunkAuraProviderMap(final List<ProcessingComponent<?>> components) {
+        Map<ChunkPos, TileAuraProvider> chunkAuraProviders = new HashMap<>();
         for (final ProcessingComponent<?> component : components) {
             TileAuraProvider provider = (TileAuraProvider) component.getComponent().getContainerProvider();
             chunkAuraProviders.putIfAbsent(provider.getChunkPos(), provider);
@@ -66,16 +63,16 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context) {
-        Map<BlockPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
+        Map<ChunkPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
         switch (actionType) {
             case INPUT -> {
-                int removed = removeAll(chunkAuraProviders, context, parallelism, true);
+                int removed = removeAll(chunkAuraProviders.values(), context, parallelism, true);
                 if (removed < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.aura.less");
                 }
             }
             case OUTPUT -> {
-                int added = addAll(chunkAuraProviders, context, parallelism, true);
+                int added = addAll(chunkAuraProviders.values(), context, parallelism, true);
                 if (added < parallelism) {
                     return CraftCheck.failure("error.modularmachinery.requirement.aura.more");
                 }
@@ -87,16 +84,16 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
     @Override
     public void startCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.INPUT) {
-            Map<BlockPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
-            removeAll(chunkAuraProviders, context, parallelism, false);
+            Map<ChunkPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
+            removeAll(chunkAuraProviders.values(), context, parallelism, false);
         }
     }
 
     @Override
     public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
         if (actionType == IOType.OUTPUT) {
-            Map<BlockPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
-            addAll(chunkAuraProviders, context, parallelism, false);
+            Map<ChunkPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
+            addAll(chunkAuraProviders.values(), context, parallelism, false);
         }
     }
 
@@ -106,23 +103,23 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
             return maxParallelism;
         }
 
-        Map<BlockPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
+        Map<ChunkPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
         switch (actionType) {
             case INPUT -> {
-                return removeAll(chunkAuraProviders, context, parallelism, true);
+                return removeAll(chunkAuraProviders.values(), context, parallelism, true);
             }
             case OUTPUT -> {
                 if (ignoreOutputCheck) {
                     return maxParallelism;
                 }
-                return addAll(chunkAuraProviders, context, parallelism, true);
+                return addAll(chunkAuraProviders.values(), context, parallelism, true);
             }
         }
 
         return 0;
     }
 
-    private int addAll(final Map<BlockPos, TileAuraProvider> chunkAuraProviders,
+    private int addAll(final Collection<TileAuraProvider> chunkAuraProviders,
                        final RecipeCraftingContext context,
                        final float maxMultiplier,
                        final boolean simulate) {
@@ -130,7 +127,7 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
         int maxAdd = (int) (toAdd * maxMultiplier);
 
         int totalAdded = 0;
-        for (final TileAuraProvider auraProvider : chunkAuraProviders.values()) {
+        for (final TileAuraProvider auraProvider : chunkAuraProviders) {
             Aura aura = auraProvider.getAura();
             if (aura.getType() == this.aura.getType() && aura.getAmount() < max) {
                 int added = max - aura.getAmount();
@@ -150,7 +147,7 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
         return totalAdded;
     }
 
-    private int removeAll(final Map<BlockPos, TileAuraProvider> chunkAuraProviders,
+    private int removeAll(final Collection<TileAuraProvider> chunkAuraProviders,
                           final RecipeCraftingContext context,
                           final float maxMultiplier,
                           final boolean simulate) {
@@ -158,7 +155,7 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
         int maxRemove = (int) (toRemove * maxMultiplier);
 
         int totalRemoved = 0;
-        for (final TileAuraProvider auraProvider : chunkAuraProviders.values()) {
+        for (final TileAuraProvider auraProvider : chunkAuraProviders) {
             Aura aura = auraProvider.getAura();
             if (aura.getType() == this.aura.getType() && aura.getAmount() > min) {
                 int removed = aura.getAmount() - min;
