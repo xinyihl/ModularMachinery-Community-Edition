@@ -35,7 +35,7 @@ import static net.minecraft.client.gui.GuiScreen.*;
  * Date: 30.03.2018 / 16:50
  */
 public class MiscUtils {
-    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,###");
+    private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,###.##");
 
     public static <K, V, N> Map<K, N> remap(Map<K, V> map, Function<V, N> remapFct) {
         return map.entrySet()

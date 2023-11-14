@@ -1,19 +1,14 @@
 package hellfirepvp.modularmachinery.common.command;
 
-import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
-import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
-import java.util.Queue;
 
 import static github.kasuminova.mmce.common.concurrent.TaskExecutor.*;
 
@@ -50,49 +45,32 @@ public class CommandPerformanceReport extends CommandBase {
 
         long executedAvgPerExecution = executedCount == 0 ? 0 : totalExecuted / executedCount;
         double usedTimeAvgPerExecution = executedCount == 0 ? 0 : (double) (totalUsedTime / executedCount) / 1000;
-        double taskUsedTimeAvg = totalExecuted == 0 ? 0 : (double) (taskUsedTime / totalExecuted) / 1000;
-        float efficiency = executedCount == 0 || taskUsedTimeAvg == 0 ? 100 : (float) ((taskUsedTime / executedCount) / taskUsedTimeAvg) * 100;
+        double taskUsedTimeAvg = totalExecuted == 0 ? 0 : (double) (taskUsedTime / executedCount) / 1000;
         long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
-        long createdContexts = RecipeCraftingContextPool.getCreatedContexts();
-        long cacheHitCount = RecipeCraftingContextPool.getCacheHitCount();
-        long cacheRecycledCount = RecipeCraftingContextPool.getCacheRecycledCount();
-        long ctxPoolTotalSize = RecipeCraftingContextPool.getPoolTotalSize();
-        int ctxPools = RecipeCraftingContextPool.getPools();
-        Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> ctxMaxPoolSize = RecipeCraftingContextPool.getMaxPoolSize();
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".title", MiscUtils.formatDecimal(executedCount)));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".title",
+                TextFormatting.GREEN + MiscUtils.formatDecimal(executedCount) + TextFormatting.WHITE));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_executed", MiscUtils.formatDecimal(totalExecuted)));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".tasks_avg_per_execution", executedAvgPerExecution));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_executed",
+                TextFormatting.BLUE + MiscUtils.formatDecimal(totalExecuted) + TextFormatting.WHITE));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".tasks_avg_per_execution",
+                TextFormatting.BLUE + String.valueOf(executedAvgPerExecution) + TextFormatting.WHITE));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_used_time", totalUsedTime / 1000));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg_per_execution", usedTimeAvgPerExecution));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_used_time",
+                TextFormatting.BLUE + String.valueOf(totalUsedTime / 1000) + TextFormatting.WHITE));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg_per_execution",
+                TextFormatting.YELLOW + String.format("%.2f", usedTimeAvgPerExecution) + TextFormatting.WHITE));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time", MiscUtils.formatDecimal((long) ((double) taskUsedTime / 1000L))));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time",
+                TextFormatting.BLUE + MiscUtils.formatDecimal(((double) taskUsedTime / 1000L)) + TextFormatting.WHITE));
         sender.sendMessage(new TextComponentString(""));
 
-        String efficiencyMsg = efficiency >= 100 ?
-                TextFormatting.GREEN + String.valueOf(efficiency) + TextFormatting.WHITE : efficiency >= 50 ?
-                TextFormatting.YELLOW + String.valueOf(efficiency) + TextFormatting.WHITE :
-                TextFormatting.RED + String.valueOf(efficiency) + TextFormatting.WHITE;
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time_avg", taskUsedTimeAvg, efficiencyMsg));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg", usedTimeAvg));
-
-        sender.sendMessage(new TextComponentString(""));
-
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".ctx_created", MiscUtils.formatDecimal(createdContexts)));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".ctx_cache_hit_count", MiscUtils.formatDecimal(cacheHitCount)));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".ctx_cache_recycled_count", MiscUtils.formatDecimal(cacheRecycledCount)));
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".ctx_pool_total",
-                ctxPoolTotalSize, ctxPools));
-        if (ctxMaxPoolSize != null) {
-            sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".ctx_pool_recipe_max",
-                    ctxMaxPoolSize.getValue().size(), ctxMaxPoolSize.getKey().getPath()));
-        }
-
-        sender.sendMessage(new TextComponentString(""));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time_avg",
+                TextFormatting.YELLOW + String.format("%.2f", taskUsedTimeAvg) + TextFormatting.WHITE));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg",
+                TextFormatting.BLUE + String.valueOf(usedTimeAvg) + TextFormatting.WHITE));
     }
 }

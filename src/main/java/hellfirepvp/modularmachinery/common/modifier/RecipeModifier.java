@@ -24,9 +24,7 @@ import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -132,25 +130,27 @@ public class RecipeModifier {
             return value;
         }
 
-        List<RecipeModifier> applicable = new ArrayList<>();
-        for (RecipeModifier recipeModifier : modifiers) {
-            if (recipeModifier.target != null && recipeModifier.target.equals(target)) {
-                if (ioType == null || recipeModifier.ioTarget == ioType) {
-                    if (recipeModifier.affectsChance() == isChance) {
-                        applicable.add(recipeModifier);
-                    }
-                }
-            }
-        }
         float add = 0F;
         float mul = 1F;
-        for (RecipeModifier mod : applicable) {
-            if (mod.operation == OPERATION_ADD) {
-                add += mod.modifier;
-            } else if (mod.operation == OPERATION_MULTIPLY) {
-                mul *= mod.modifier;
-            } else {
-                throw new IllegalArgumentException("Unknown modifier operation: " + mod.operation);
+
+        for (RecipeModifier mod : modifiers) {
+            if (mod.target == null) {
+                continue;
+            }
+            if (!mod.target.equals(target)) {
+                continue;
+            }
+            if (ioType != null && mod.ioTarget != ioType) {
+                continue;
+            }
+            if (mod.affectsChance() != isChance) {
+                continue;
+            }
+
+            switch (mod.operation) {
+                case OPERATION_ADD -> add += mod.modifier;
+                case OPERATION_MULTIPLY -> mul *= mod.modifier;
+                default -> throw new IllegalArgumentException("Unknown modifier operation: " + mod.operation);
             }
         }
         return (value + add) * mul;
