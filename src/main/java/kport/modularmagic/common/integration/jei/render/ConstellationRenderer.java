@@ -31,6 +31,10 @@ public class ConstellationRenderer implements IIngredientRenderer<Constellation>
 
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable Constellation ingredient) {
+        if (ingredient == null) {
+            return;
+        }
+
         GlStateManager.pushMatrix();
         GlStateManager.pushAttrib();
 

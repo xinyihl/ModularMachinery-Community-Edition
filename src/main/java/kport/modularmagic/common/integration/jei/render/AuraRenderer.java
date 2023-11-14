@@ -22,6 +22,9 @@ public class AuraRenderer implements IIngredientRenderer<Aura> {
 
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable Aura ingredient) {
+        if (ingredient == null) {
+            return;
+        }
 
         if (aura == null || auraType == null || auraType != ingredient.getType()) {
             auraType = ingredient.getType();

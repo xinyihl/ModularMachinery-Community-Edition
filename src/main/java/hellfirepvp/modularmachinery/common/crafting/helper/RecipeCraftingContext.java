@@ -566,7 +566,7 @@ public class RecipeCraftingContext {
     }
 
     public void updateModifierApplier(RequirementType<?, ?> reqType) {
-        addModifierApplier(reqType, modifiers.computeIfAbsent(reqType, v -> new ArrayList<>()));
+        addModifierApplier(reqType, modifiers.computeIfAbsent(reqType, v -> new LinkedList<>()));
     }
 
     public void addModifierApplier(final RequirementType<?, ?> reqType, final List<RecipeModifier> recipeModifiers) {

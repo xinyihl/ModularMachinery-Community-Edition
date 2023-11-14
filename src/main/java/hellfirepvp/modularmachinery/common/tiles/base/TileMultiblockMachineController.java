@@ -269,16 +269,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 return MMWorldEventListener.INSTANCE.isAreaChanged(getWorld(), pos.add(min), pos.add(max));
             }
         } else {
-            if (ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0) {
-                return true;
-            } else if (lastStructureCheckTick + structureCheckDelay < ticksExisted) {
-                BlockPos pos = getPos();
-                Vec3i min = foundPattern.getMin();
-                Vec3i max = foundPattern.getMax();
-                return MMWorldEventListener.INSTANCE.isAreaChanged(getWorld(), pos.add(min), pos.add(max));
-            } else {
-                return false;
-            }
+            return ticksExisted % Math.min(structureCheckDelay + this.structureCheckCounter * 5, maxStructureCheckDelay) == 0;
         }
     }
 

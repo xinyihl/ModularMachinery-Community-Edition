@@ -10,23 +10,23 @@ command.modularmachinery.get_blueprint.success=Blueprints have been given.
 command.modularmachinery.reload=/mm-reload
 command.modularmachinery.reload_client=/mm-reload_client
 command.modularmachinery.performance_report=/mm-performance_report [reset]
-command.modularmachinery.performance_report.title=Modular Machinery - Concurrent Performance Reporting (%s Executions Counted)
+command.modularmachinery.performance_report.title=Modular Machinery - Concurrent Performance Reporting (§a%s§f Executions Counted)
 command.modularmachinery.performance_report.reset=Performance report has been reset.
-command.modularmachinery.performance_report.total_executed=Total executed: %s
-command.modularmachinery.performance_report.tasks_avg_per_execution=Avg of tasks per execution: %s
-command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext Total pool size: %s, Number of pools: %s
-command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext Maximum recipe Pool Size: %s, Name: %s
-command.modularmachinery.performance_report.ctx_created=Created RecipeCraftingContext: %s
-command.modularmachinery.performance_report.ctx_cache_hit_count=RecipeCraftingContext Pool Cache Hit Count: %s
-command.modularmachinery.performance_report.ctx_cache_recycled_count=RecipeCraftingContext Pool Cache Recycled Count: %s
+command.modularmachinery.performance_report.total_executed=Total executed: §9%s§f
+command.modularmachinery.performance_report.tasks_avg_per_execution=Avg of tasks per execution: §e%s§f
+command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext Total pool size: §9%s§f, Number of pools: §9%s§f
+command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext Maximum recipe Pool Size: §9%s§f, Name: §9%s§f
+command.modularmachinery.performance_report.ctx_created=Created RecipeCraftingContext: §9%s§f
+command.modularmachinery.performance_report.ctx_cache_hit_count=RecipeCraftingContext Pool Cache Hit Count: §9%s§f
+command.modularmachinery.performance_report.ctx_cache_recycled_count=RecipeCraftingContext Pool Cache Recycled Count: §9%s§f
 
-command.modularmachinery.performance_report.total_used_time=Total used time: %s ms
-command.modularmachinery.performance_report.used_time_avg_per_execution=Avg spent per execution: %.2f ms
+command.modularmachinery.performance_report.total_used_time=Total used time: §9%s§f ms
+command.modularmachinery.performance_report.used_time_avg_per_execution=Avg spent per execution: §e%.2f§f ms
 
-command.modularmachinery.performance_report.task_used_time=Parallel operation used time: %s ms
+command.modularmachinery.performance_report.task_used_time=Parallel operation used time: §9%s§f ms
 
-command.modularmachinery.performance_report.task_used_time_avg=Parallel operation used time avg: %s ms
-command.modularmachinery.performance_report.used_time_avg=Single task used time average: %s µs
+command.modularmachinery.performance_report.task_used_time_avg=Parallel operation used time avg: §e%.2f§f ms (Efficiency: %s%%)
+command.modularmachinery.performance_report.used_time_avg=Single task used time average: §9%s§f µs
 
 gui.controller.blueprint=Blueprint Found: %s
 gui.controller.blueprint.none=None

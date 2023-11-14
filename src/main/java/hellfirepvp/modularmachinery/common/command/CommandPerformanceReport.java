@@ -9,6 +9,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -48,13 +49,13 @@ public class CommandPerformanceReport extends CommandBase {
         }
 
         long executedAvgPerExecution = executedCount == 0 ? 0 : totalExecuted / executedCount;
-        float usedTimeAvgPerExecution = executedCount == 0 ? 0 : (float) (totalUsedTime / executedCount) / 1000;
-        long taskUsedTimeAvg = totalExecuted == 0 ? 0 : (taskUsedTime / totalExecuted) / 1000;
+        double usedTimeAvgPerExecution = executedCount == 0 ? 0 : (double) (totalUsedTime / executedCount) / 1000;
+        double taskUsedTimeAvg = totalExecuted == 0 ? 0 : (double) (taskUsedTime / totalExecuted) / 1000;
+        float efficiency = executedCount == 0 || taskUsedTimeAvg == 0 ? 100 : (float) ((taskUsedTime / executedCount) / taskUsedTimeAvg) * 100;
         long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
         long createdContexts = RecipeCraftingContextPool.getCreatedContexts();
         long cacheHitCount = RecipeCraftingContextPool.getCacheHitCount();
         long cacheRecycledCount = RecipeCraftingContextPool.getCacheRecycledCount();
-//        long cacheRemovedCount = RecipeCraftingContextPool.getCacheRemovedCount();
         long ctxPoolTotalSize = RecipeCraftingContextPool.getPoolTotalSize();
         int ctxPools = RecipeCraftingContextPool.getPools();
         Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> ctxMaxPoolSize = RecipeCraftingContextPool.getMaxPoolSize();
@@ -70,10 +71,14 @@ public class CommandPerformanceReport extends CommandBase {
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg_per_execution", usedTimeAvgPerExecution));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time", taskUsedTime / 1000));
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time", MiscUtils.formatDecimal((long) ((double) taskUsedTime / 1000L))));
         sender.sendMessage(new TextComponentString(""));
 
-        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time_avg", taskUsedTimeAvg));
+        String efficiencyMsg = efficiency >= 100 ?
+                TextFormatting.GREEN + String.valueOf(efficiency) + TextFormatting.WHITE : efficiency >= 50 ?
+                TextFormatting.YELLOW + String.valueOf(efficiency) + TextFormatting.WHITE :
+                TextFormatting.RED + String.valueOf(efficiency) + TextFormatting.WHITE;
+        sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time_avg", taskUsedTimeAvg, efficiencyMsg));
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg", usedTimeAvg));
 
         sender.sendMessage(new TextComponentString(""));

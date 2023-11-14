@@ -181,12 +181,14 @@ public class TaskExecutor {
     }
 
     public ActionExecutor addExecuteGroupTask(final Action action, final long groupId) {
-        ExecuteGroup group;
-        synchronized (executeGroups) {
-            group = executeGroups.get(groupId);
-            if (group == null) {
-                group = new ExecuteGroup(groupId);
-                executeGroups.put(groupId, group);
+        ExecuteGroup group = executeGroups.get(groupId);
+        if (group == null) {
+            synchronized (executeGroups) {
+                group = executeGroups.get(groupId);
+                if (group == null) {
+                    group = new ExecuteGroup(groupId);
+                    executeGroups.put(groupId, group);
+                }
             }
         }
 

@@ -10,23 +10,23 @@ command.modularmachinery.get_blueprint.success=已给予机械蓝图。
 command.modularmachinery.reload=/mm-reload
 command.modularmachinery.reload_client=/mm-reload_client
 command.modularmachinery.performance_report=/mm-performance_report [reset]
-command.modularmachinery.performance_report.title=模块化机械 - 并行性能报告（已统计 %s 次执行）
+command.modularmachinery.performance_report.title=模块化机械 - 并行性能报告（已统计 §a%s§f 次执行）
 command.modularmachinery.performance_report.reset=性能报告数据已重置。
-command.modularmachinery.performance_report.total_executed=已执行的任务数量: %s
-command.modularmachinery.performance_report.tasks_avg_per_execution=平均每次执行的任务数: %s
-command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext 池总大小: %s，池数量：%s
-command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext 最大配方池大小: %s，配方名：%s
-command.modularmachinery.performance_report.ctx_created=已创建的 RecipeCraftingContext 数量: %s
-command.modularmachinery.performance_report.ctx_cache_hit_count=RecipeCraftingContext 池缓存命中次数: %s
-command.modularmachinery.performance_report.ctx_cache_recycled_count=RecipeCraftingContext 回收入池的次数: %s
+command.modularmachinery.performance_report.total_executed=已执行的任务数量: §9%s§f
+command.modularmachinery.performance_report.tasks_avg_per_execution=平均每次执行的任务数: §e%s§f
+command.modularmachinery.performance_report.ctx_pool_total=RecipeCraftingContext 池总大小: §9%s§f，池数量：§9%s§f
+command.modularmachinery.performance_report.ctx_pool_recipe_max=RecipeCraftingContext 最大配方池大小: §9%s§f，配方名：§9%s§f
+command.modularmachinery.performance_report.ctx_created=已创建的 RecipeCraftingContext 数量: §9%s§f
+command.modularmachinery.performance_report.ctx_cache_hit_count=RecipeCraftingContext 池缓存命中次数: §9%s§f
+command.modularmachinery.performance_report.ctx_cache_recycled_count=RecipeCraftingContext 回收入池的次数: §9%s§f
 
-command.modularmachinery.performance_report.total_used_time=总耗时: %s 毫秒
-command.modularmachinery.performance_report.used_time_avg_per_execution=每次执行平均耗时: %.2f 毫秒
+command.modularmachinery.performance_report.total_used_time=总耗时: §9%s§f 毫秒
+command.modularmachinery.performance_report.used_time_avg_per_execution=每次执行平均耗时: §e%.2f§f 毫秒
 
-command.modularmachinery.performance_report.task_used_time=并行操作总耗时: %s 毫秒
+command.modularmachinery.performance_report.task_used_time=并行操作总耗时: §9%s§f 毫秒
 
-command.modularmachinery.performance_report.task_used_time_avg=并行操作平均耗时: %.2f 毫秒
-command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时: %s 微秒
+command.modularmachinery.performance_report.task_used_time_avg=并行操作平均耗时: §e%.2f§f 毫秒（效率：%s%%）
+command.modularmachinery.performance_report.used_time_avg=单个任务平均耗时: §9%s§f 微秒
 
 gui.controller.blueprint=找到蓝图：%s
 gui.controller.blueprint.none=无

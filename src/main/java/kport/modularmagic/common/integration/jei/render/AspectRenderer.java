@@ -23,6 +23,10 @@ public class AspectRenderer implements IIngredientRenderer<AspectList> {
 
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable AspectList ingredient) {
+        if (ingredient == null) {
+            return;
+        }
+
         GlStateManager.pushMatrix();
         GlStateManager.enableBlend();
 

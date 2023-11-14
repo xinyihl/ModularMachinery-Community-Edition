@@ -6,10 +6,11 @@ import net.minecraft.util.math.MathHelper;
 public class ManaProviderCopy {
     private final TileManaProvider original;
 
-    private int mana = 0;
+    private int mana;
 
     public ManaProviderCopy(final TileManaProvider original) {
         this.original = original;
+        this.mana = original.getCurrentMana();
     }
 
     public TileManaProvider getOriginal() {

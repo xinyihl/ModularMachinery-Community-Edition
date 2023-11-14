@@ -275,6 +275,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
                     }
 
                     toConsume = stack.getCount();
+                    maxConsume = toConsume * maxMultiplier;
                 }
             }
             case OREDICT -> {
@@ -295,6 +296,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
                     }
 
                     toConsume = stack.getCount();
+                    maxConsume = toConsume * maxMultiplier;
                 }
             }
         }

@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.util;
 
+import com.google.common.collect.Lists;
 import github.kasuminova.mmce.common.util.MultiFluidTank;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -12,6 +13,8 @@ import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class HybridFluidUtils {
@@ -135,18 +138,17 @@ public class HybridFluidUtils {
 
     @Nonnull
     public static List<IFluidHandler> castFluidHandlerComponents(final List<ProcessingComponent<?>> components) {
-        List<IFluidHandler> fluidHandlers = new ArrayList<>();
-        for (ProcessingComponent<?> component : components) {
-            IFluidHandler providedComponent = (IFluidHandler) component.getProvidedComponent();
-            fluidHandlers.add(providedComponent);
+        if (components.size() == 1) {
+            return Collections.singletonList((IFluidHandler) components.get(0).getProvidedComponent());
+        } else {
+            return Lists.transform(components, component -> component != null ? (IFluidHandler) component.getProvidedComponent() : null);
         }
-        return fluidHandlers;
     }
 
     @Nonnull
     @Optional.Method(modid = "mekanism")
     public static List<HybridGasTank> castGasHandlerComponents(final List<ProcessingComponent<?>> components) {
-        List<HybridGasTank> list = new ArrayList<>();
+        List<HybridGasTank> list = new LinkedList<>();
         for (ProcessingComponent<?> component : components) {
             Object providedComponent = component.getProvidedComponent();
             if (providedComponent instanceof final HybridGasTank hybridGasTank) {

@@ -163,7 +163,6 @@ public class ClientProxy extends CommonProxy {
         }
 
         super.preInit();
-
     }
 
     @SubscribeEvent

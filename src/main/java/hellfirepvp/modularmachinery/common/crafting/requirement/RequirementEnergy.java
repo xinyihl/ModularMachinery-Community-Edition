@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
@@ -148,10 +149,11 @@ public class RequirementEnergy extends ComponentRequirement.PerTickParallelizabl
         long required = (long) RecipeModifier.applyModifiers(context, this, (double) this.requirementPerTick, false);
         long maxRequired = (long) (required * maxMultiplier);
 
-        List<IEnergyHandler> handlers = new ArrayList<>();
-        for (ProcessingComponent<?> component : components) {
-            IEnergyHandler providedComponent = (IEnergyHandler) component.getProvidedComponent();
-            handlers.add(providedComponent);
+        List<IEnergyHandler> handlers;
+        if (components.size() == 1) {
+            handlers = Collections.singletonList((IEnergyHandler) components.get(0).getProvidedComponent());
+        } else {
+            handlers = Lists.transform(components, component -> component != null ? (IEnergyHandler) component.getProvidedComponent() : null);
         }
 
         float consumed = consumeOrInsertEnergy(handlers, maxRequired, required, maxMultiplier, true);
