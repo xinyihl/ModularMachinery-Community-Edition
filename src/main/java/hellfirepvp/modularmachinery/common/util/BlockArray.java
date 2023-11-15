@@ -347,7 +347,7 @@ public class BlockArray {
 
         for (BlockPos pos : pattern.keySet()) {
             BlockInformation info = pattern.get(pos);
-            outPattern.put(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
+            out.addBlock(MiscUtils.rotateYCCW(pos), info.copyRotateYCCW());
         }
 
         return out;

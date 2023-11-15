@@ -52,15 +52,13 @@ public class MMWorldEventListener implements IWorldEventListener {
     }
 
     @SubscribeEvent
-    public void onWorldTick(TickEvent.WorldTickEvent event) {
+    public void onServerTickStart(TickEvent.ServerTickEvent event) {
         if (event.side != Side.SERVER || event.phase != TickEvent.Phase.START) {
             return;
         }
-        World world = event.world;
 
-        Map<ChunkPos, StructureBoundingBox> changedChunks = worldChangedChunks.computeIfAbsent(world, v -> new HashMap<>());
-        worldChangedChunksLastTick.put(world, changedChunks);
-        worldChangedChunks.put(world, new HashMap<>());
+        worldChangedChunksLastTick.putAll(worldChangedChunks);
+        worldChangedChunks.clear();
     }
 
     public boolean isAreaChanged(@Nonnull final World worldIn,
@@ -73,8 +71,8 @@ public class MMWorldEventListener implements IWorldEventListener {
 
         StructureBoundingBox structureArea = new StructureBoundingBox(min, max);
 
-        for (int chunkX = minChunkX; chunkX < maxChunkX; chunkX++) {
-            for (int chunkZ = minChunkZ; chunkZ < maxChunkZ; chunkZ++) {
+        for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
                 StructureBoundingBox changedArea = worldChangedChunksLastTick.computeIfAbsent(worldIn, v -> new HashMap<>()).get(new ChunkPos(chunkX, chunkZ));
                 if (changedArea != null && changedArea.intersectsWith(structureArea)) {
                     return true;
@@ -90,14 +88,14 @@ public class MMWorldEventListener implements IWorldEventListener {
                                   @Nonnull final IBlockState oldState,
                                   @Nonnull final IBlockState newState, final int flags) {
         Map<ChunkPos, StructureBoundingBox> chunkPosHeightSetMap = worldChangedChunks.computeIfAbsent(worldIn, v -> new HashMap<>());
-        chunkPosHeightSetMap.compute(new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4), (chunkPos, heightSet) -> {
-            if (heightSet != null) {
-                heightSet.expandTo(new StructureBoundingBox(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ()));
-                return heightSet;
-            } else {
-                return new StructureBoundingBox(pos.getX(), pos.getY(), pos.getZ(), pos.getX(), pos.getY(), pos.getZ());
-            }
-        });
+        ChunkPos chunkPos = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
+        StructureBoundingBox changedArea = chunkPosHeightSetMap.get(chunkPos);
+
+        if (changedArea == null) {
+            chunkPosHeightSetMap.put(chunkPos, new StructureBoundingBox(pos, pos));
+        } else {
+            changedArea.expandTo(new StructureBoundingBox(pos, pos));
+        }
     }
 
     // Noop

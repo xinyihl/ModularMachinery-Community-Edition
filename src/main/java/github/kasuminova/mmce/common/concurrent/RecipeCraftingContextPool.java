@@ -10,13 +10,9 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RecipeCraftingContextPool {
     private static final Map<ResourceLocation, Queue<RecipeCraftingContext>> POOL = new ConcurrentHashMap<>();
-    private static final AtomicLong CREATED_CONTEXTS = new AtomicLong(0);
-    private static final AtomicLong CACHE_HIT_COUNT = new AtomicLong(0);
-    private static final AtomicLong CACHE_RECYCLED_COUNT = new AtomicLong(0);
 
     private static int reloadCounter = 0;
 
@@ -25,7 +21,6 @@ public class RecipeCraftingContextPool {
                                                   @Nonnull final TileMultiblockMachineController ctrl)
     {
         if (POOL.isEmpty()) {
-            CREATED_CONTEXTS.incrementAndGet();
             return new RecipeCraftingContext(reloadCounter, activeRecipe, ctrl);
         }
 
@@ -34,11 +29,8 @@ public class RecipeCraftingContextPool {
 
         RecipeCraftingContext ctx;
         if ((ctx = queue.poll()) != null) {
-            CACHE_HIT_COUNT.incrementAndGet();
             return ctx.init(activeRecipe, ctrl);
         }
-
-        CREATED_CONTEXTS.incrementAndGet();
         return new RecipeCraftingContext(reloadCounter, activeRecipe, ctrl);
     }
 
@@ -47,58 +39,15 @@ public class RecipeCraftingContextPool {
             ctx.destroy();
             return;
         }
-        CACHE_RECYCLED_COUNT.incrementAndGet();
         POOL.computeIfAbsent(ctx.getParentRecipe().getRegistryName(), q -> new ConcurrentLinkedQueue<>())
                 .offer(ctx.resetAll());
     }
 
-    public static long getPoolTotalSize() {
-        long total = 0;
-        for (final Queue<RecipeCraftingContext> queue : POOL.values()) {
-            total += queue.size();
-        }
-        return total;
-    }
-
-    public static int getPools() {
-        return POOL.size();
-    }
-
-    public static long getCreatedContexts() {
-        return CREATED_CONTEXTS.get();
-    }
-
-    public static long getCacheHitCount() {
-        return CACHE_HIT_COUNT.get();
-    }
-
-    public static long getCacheRecycledCount() {
-        return CACHE_RECYCLED_COUNT.get();
-    }
-
-    public static Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> getMaxPoolSize() {
-        Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> max = null;
-        long maxSize = 0;
-
-        for (final Map.Entry<ResourceLocation, Queue<RecipeCraftingContext>> entry : POOL.entrySet()) {
-            int size = entry.getValue().size();
-            if (size > maxSize) {
-                max = entry;
-                maxSize = size;
-            }
-        }
-
-        return max;
-    }
-
-    public static void clear() {
+    public static void onReload() {
         for (final Queue<RecipeCraftingContext> queue : POOL.values()) {
             queue.clear();
         }
 
         reloadCounter++;
-        CREATED_CONTEXTS.set(0);
-        CACHE_HIT_COUNT.set(0);
-        CACHE_RECYCLED_COUNT.set(0);
     }
 }

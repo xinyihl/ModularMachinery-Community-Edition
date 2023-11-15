@@ -95,7 +95,7 @@ public class ModIntegrationCrafttweaker {
         MachineModifier.loadAll();
         MMEvents.registryAll();
 
-        RecipeCraftingContextPool.clear();
+        RecipeCraftingContextPool.onReload();
         RecipeRegistry.getRegistry().loadRecipeRegistry(null, true);
         for (Action action : FactoryRecipeThread.WAIT_FOR_ADD) {
             action.doAction();

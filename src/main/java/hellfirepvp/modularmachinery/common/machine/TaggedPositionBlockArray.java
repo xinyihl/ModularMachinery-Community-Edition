@@ -69,7 +69,7 @@ public class TaggedPositionBlockArray extends BlockArray {
         TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
 
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
-            out.pattern.put(MiscUtils.rotateYCCW(entry.getKey()), entry.getValue().copyRotateYCCW());
+            out.addBlock(MiscUtils.rotateYCCW(entry.getKey()), entry.getValue().copyRotateYCCW());
         }
 
         for (final Map.Entry<BlockPos, ComponentSelectorTag> entry : taggedPositions.entrySet()) {
