@@ -4,6 +4,7 @@ import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.client.ControllerAnimationEvent;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import github.kasuminova.mmce.common.event.machine.*;
 import github.kasuminova.mmce.common.event.recipe.*;
@@ -12,6 +13,8 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -90,10 +93,29 @@ public class MMEvents {
 
     @ZenMethod
     public static void onControllerGUIRender(String machineRegistryName, IEventHandler<ControllerGUIRenderEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return;
+        }
         WAIT_FOR_REGISTER_LIST.add(() -> {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
                 machine.addMachineEventHandler(ControllerGUIRenderEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "geckolib3")
+    public static void onControllerAnimation(String machineRegistryName, IEventHandler<ControllerAnimationEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return;
+        }
+        WAIT_FOR_REGISTER_LIST.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(ControllerAnimationEvent.class, function);
             } else {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }

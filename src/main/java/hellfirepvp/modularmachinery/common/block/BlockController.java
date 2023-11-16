@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.block;
 
+import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.data.Config;
@@ -18,6 +19,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -47,8 +49,11 @@ import java.util.Map;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 20:48
  */
+@SuppressWarnings("deprecation")
 public class BlockController extends BlockMachineComponent implements ItemDynamicColor {
     public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
+    public static final PropertyBool FORMED = PropertyBool.create("formed");
+
     public static final Map<DynamicMachine, BlockController> MACHINE_CONTROLLERS = new HashMap<>();
     public static final Map<DynamicMachine, BlockController> MOC_MACHINE_CONTROLLERS = new HashMap<>();
 
@@ -61,7 +66,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         setSoundType(SoundType.METAL);
         setHarvestLevel("pickaxe", 1);
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
-        setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH));
+        setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(FORMED, false));
     }
 
     public BlockController(DynamicMachine parentMachine) {
@@ -126,7 +131,21 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @Nonnull
     @Override
     public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
+        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getModel(parentMachine) != null) {
+            if (state.getValue(FORMED)) {
+                return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+            }
+        }
         return EnumBlockRenderType.MODEL;
+    }
+
+    @Override
+    public boolean isOpaqueCube(@Nonnull final IBlockState state) {
+//        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getModel(parentMachine) != null) {
+//            return !state.getValue(FORMED);
+//        }
+//        return true;
+        return false;
     }
 
     @Nonnull
@@ -162,7 +181,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @Nonnull
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING);
+        return new BlockStateContainer(this, FACING, FORMED);
     }
 
     @Override

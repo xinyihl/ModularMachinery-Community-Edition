@@ -6,6 +6,7 @@ import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
 import github.kasuminova.mmce.common.event.Phase;
+import github.kasuminova.mmce.common.event.client.ControllerAnimationEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
@@ -21,6 +22,7 @@ import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -28,7 +30,6 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -57,6 +58,13 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.CapabilityItemHandler;
+import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.PlayState;
+import software.bernie.geckolib3.core.builder.AnimationBuilder;
+import software.bernie.geckolib3.core.controller.AnimationController;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
+import software.bernie.geckolib3.core.manager.AnimationData;
+import software.bernie.geckolib3.core.manager.AnimationFactory;
 import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
@@ -68,7 +76,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
-public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController {
+public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController, IAnimatable {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;
     public static boolean delayedStructureCheck = true;
@@ -113,6 +121,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected int lastStructureCheckTick = -1;
 
     protected long executeGroupId = -1;
+
+    protected Object animationFactory = null;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -291,6 +301,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 customData = new NBTTagCompound();
                 customModifiers.clear();
             }
+
+            if (workMode == WorkMode.SYNC) {
+                notifyStructureFormedState(false);
+            } else {
+                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> notifyStructureFormedState(false));
+            }
         }
         updateStatedMachineComponentSync(false);
 
@@ -467,7 +483,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
             getWorld().setBlockState(realPos, blockState.withProperty(
                     BlockStatedMachineComponent.WORKING_STATE,
-                    working ? WorkingState.WORKING : WorkingState.IDLE));
+                    working ? WorkingState.WORKING : WorkingState.IDLE), 2);
         });
 
         timeRecorder.addUsedTime((int) (System.nanoTime() / 1000 - start));
@@ -484,20 +500,28 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         new MachineStructureFormedEvent(this).postEvent();
         new MachineStructureUpdateEvent(this).postEvent();
 
-        if (this.foundMachine.getMachineColor() != Config.machineColor) {
-            if (workMode == WorkMode.SYNC) {
-                distributeCasingColor();
-            } else {
-                ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
-            }
-        }
-
         if (!foundDynamicPatterns.isEmpty()) {
             addDynamicPatternToBlockArray();
         }
 
+        if (workMode == WorkMode.SYNC) {
+            distributeCasingColor();
+            notifyStructureFormedState(true);
+        } else {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+                distributeCasingColor();
+                notifyStructureFormedState(true);
+            });
+        }
+
         resetStructureCheckCounter();
         markNoUpdateSync();
+    }
+
+    public void notifyStructureFormedState(boolean formed) {
+        IBlockState state = world.getBlockState(getPos());
+        IBlockState newState = state.withProperty(BlockController.FORMED, formed);
+        world.setBlockState(getPos(), newState, 3);
     }
 
     private void addDynamicPatternToBlockArray() {
@@ -573,6 +597,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         // Finally, check all registered machinery.
         checkAllPatterns();
+
+        if (!isStructureFormed()) {
+            resetMachine(true);
+        }
         return true;
     }
 
@@ -1110,6 +1138,43 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void setWorkMode(final WorkMode workMode) {
         this.workMode = workMode;
+    }
+
+    @Override
+    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    public void registerControllers(final AnimationData data) {
+        data.addAnimationController(new AnimationController<>(this, "controller", 0, this::animationPredicate));
+    }
+
+    @Override
+    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    public AnimationFactory getFactory() {
+        return (AnimationFactory) (animationFactory == null ? animationFactory = new AnimationFactory(this) : animationFactory);
+    }
+
+    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    public PlayState animationPredicate(AnimationEvent<TileMultiblockMachineController> event) {
+        if (!isStructureFormed()) {
+            return PlayState.STOP;
+        }
+
+        ControllerAnimationEvent eventMM = new ControllerAnimationEvent(this, event);
+        eventMM.postEvent();
+
+        AnimationBuilder animationBuilder = new AnimationBuilder();
+        for (final ControllerAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
+            animationBuilder.addAnimation(animation.animationName(), () ->
+                    animation.loopFunction().apply(TileMultiblockMachineController.this));
+        }
+        event.getController().setAnimation(animationBuilder);
+
+        return switch (eventMM.getPlayState()) {
+            case 0:
+                yield PlayState.CONTINUE;
+            case 1:
+            default:
+                yield PlayState.STOP;
+        };
     }
 
     public enum StructureCheckMode {

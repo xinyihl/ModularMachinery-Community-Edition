@@ -87,6 +87,10 @@ public class MMWorldEventListener implements IWorldEventListener {
                                   @Nonnull final BlockPos pos,
                                   @Nonnull final IBlockState oldState,
                                   @Nonnull final IBlockState newState, final int flags) {
+        if ((flags != 1 && flags != 3) || oldState == newState) {
+            return;
+        }
+
         Map<ChunkPos, StructureBoundingBox> chunkPosHeightSetMap = worldChangedChunks.computeIfAbsent(worldIn, v -> new HashMap<>());
         ChunkPos chunkPos = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
         StructureBoundingBox changedArea = chunkPosHeightSetMap.get(chunkPos);

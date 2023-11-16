@@ -310,7 +310,7 @@ public class RegistryBlocks {
         for (DynamicMachine machine : waitForLoadMachines) {
             if (machine.isHasFactory() || Config.enableFactoryControllerByDefault) {
                 BlockFactoryController factoryBlock = prepareRegisterWithCustomName(new BlockFactoryController(machine));
-                BlockFactoryController.FACOTRY_CONTROLLERS.put(machine, factoryBlock);
+                BlockFactoryController.FACTORY_CONTROLLERS.put(machine, factoryBlock);
 
                 ItemBlockMachineComponent factoryBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(factoryBlock) {
                     @Nonnull
@@ -414,7 +414,7 @@ public class RegistryBlocks {
         for (BlockController controller : BlockController.MACHINE_CONTROLLERS.values()) {
             writeMachineControllerModelInternal(resourceManager, controller);
         }
-        for (BlockFactoryController controller : BlockFactoryController.FACOTRY_CONTROLLERS.values()) {
+        for (BlockFactoryController controller : BlockFactoryController.FACTORY_CONTROLLERS.values()) {
             writeFactoryControllerModelInternal(resourceManager, controller);
         }
     }

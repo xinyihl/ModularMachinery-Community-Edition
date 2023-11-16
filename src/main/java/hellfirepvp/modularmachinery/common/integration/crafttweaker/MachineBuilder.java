@@ -8,6 +8,7 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
+import github.kasuminova.mmce.common.event.client.ControllerAnimationEvent;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
@@ -31,6 +32,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -369,7 +372,23 @@ public class MachineBuilder {
      */
     @ZenMethod
     public MachineBuilder addGUIRenderHandler(IEventHandler<ControllerGUIRenderEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return this;
+        }
         machine.addMachineEventHandler(ControllerGUIRenderEvent.class, function);
+        return this;
+    }
+
+    /**
+     * 添加控制器 GeckoLib 模型动画事件监听器。
+     */
+    @ZenMethod
+    @Optional.Method(modid = "geckolib3")
+    public MachineBuilder addControllerAnimationHandler(IEventHandler<ControllerAnimationEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return this;
+        }
+        machine.addMachineEventHandler(ControllerAnimationEvent.class, function);
         return this;
     }
 

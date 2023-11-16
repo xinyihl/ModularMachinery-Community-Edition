@@ -12,6 +12,8 @@ import github.kasuminova.mmce.client.gui.GuiMEFluidInputBus;
 import github.kasuminova.mmce.client.gui.GuiMEFluidOutputBus;
 import github.kasuminova.mmce.client.gui.GuiMEItemInputBus;
 import github.kasuminova.mmce.client.gui.GuiMEItemOutputBus;
+import github.kasuminova.mmce.client.renderer.MachineControllerRenderer;
+import github.kasuminova.mmce.client.resource.GeoModelExternalLoader;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
@@ -50,6 +52,7 @@ import net.minecraft.client.renderer.block.model.ModelBakery;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.BlockColors;
 import net.minecraft.client.renderer.color.ItemColors;
+import net.minecraft.client.resources.IReloadableResourceManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -107,7 +110,7 @@ public class ClientProxy extends CommonProxy {
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
                 colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
-        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
+        BlockFactoryController.FACTORY_CONTROLLERS.values().forEach(block ->
                 colors.registerBlockColorHandler(block::getColorMultiplier, block)
         );
     }
@@ -123,7 +126,7 @@ public class ClientProxy extends CommonProxy {
         BlockController.MOC_MACHINE_CONTROLLERS.values().forEach(block ->
                 colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
-        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(block ->
+        BlockFactoryController.FACTORY_CONTROLLERS.values().forEach(block ->
                 colors.registerItemColorHandler(block::getColorFromItemstack, block)
         );
     }
@@ -160,6 +163,12 @@ public class ClientProxy extends CommonProxy {
         if (Mods.BM2.isPresent()) {
             ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Input.class, new TileLifeEssentiaHatchRenderer());
             ClientRegistry.bindTileEntitySpecialRenderer(TileLifeEssenceProvider.Output.class, new TileLifeEssentiaHatchRenderer());
+        }
+
+        if (Mods.GECKOLIB.isPresent()) {
+            ClientRegistry.bindTileEntitySpecialRenderer(TileMachineController.class, MachineControllerRenderer.INSTANCE);
+            ClientRegistry.bindTileEntitySpecialRenderer(TileFactoryController.class, MachineControllerRenderer.INSTANCE);
+            ((IReloadableResourceManager) Minecraft.getMinecraft().getResourceManager()).registerReloadListener(GeoModelExternalLoader.INSTANCE);
         }
 
         super.preInit();
@@ -221,6 +230,9 @@ public class ClientProxy extends CommonProxy {
         super.postInit();
         if (Mods.ZEN_UTILS.isPresent()) {
             ClientCommandHandler.instance.registerCommand(new CommandCTReloadClient());
+        }
+        if (Mods.GECKOLIB.isPresent()) {
+            GeoModelExternalLoader.INSTANCE.onReload();
         }
     }
 

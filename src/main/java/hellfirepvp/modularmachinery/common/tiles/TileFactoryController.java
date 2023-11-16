@@ -566,7 +566,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return;
         }
 
-        parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
+        parentController = BlockFactoryController.FACTORY_CONTROLLERS.get(parentMachine);
 
         if (compound.hasKey("status")) {
             controllerStatus = CraftingStatus.deserialize(compound.getCompoundTag("status"));
@@ -610,7 +610,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             ResourceLocation rl = new ResourceLocation(compound.getString("parentMachine"));
             parentMachine = MachineRegistry.getRegistry().getMachine(rl);
             if (parentMachine != null) {
-                parentController = BlockFactoryController.FACOTRY_CONTROLLERS.get(parentMachine);
+                parentController = BlockFactoryController.FACTORY_CONTROLLERS.get(parentMachine);
             } else {
                 ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
             }

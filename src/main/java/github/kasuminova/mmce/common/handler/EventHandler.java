@@ -19,7 +19,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -27,27 +26,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SuppressWarnings("MethodMayBeStatic")
 public class EventHandler {
-    /**
-     * <p>当玩家对某些方块实体右击时更新方块实体，以避免某些消息不同步的问题。</p>
-     * <p>Update the controller's information when the player interacts with the controller,
-     * Avoid the problem of some messages being out of sync.</p>
-     */
-    @SubscribeEvent
-    public void onPlayerRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        World world = event.getWorld();
-        if (world.isRemote) {
-            return;
-        }
-
-        TileEntity te = world.getTileEntity(event.getPos());
-        if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof final TileEntitySynchronized teSync)) {
-            return;
-        }
-
-        // 触发更新，并使其同步至客户端。
-        teSync.notifyUpdate();
-    }
-
     /**
      * <p>针对某些容易消耗大量带宽的方块实体提供选择性更新功能，以缓解网络压力。</p>
      * <p>Provide selective updates for certain square entities that tend to consume a lot of bandwidth to relieve network pressure.</p>

@@ -55,7 +55,7 @@ public enum Mods {
     ASTRAL_SORCERY("astralsorcery"),
     NATURESAURA("naturesaura"),
     BOTANIA("botania"),
-
+    GECKOLIB("geckolib3"),
     ;
 
     public final String modid;

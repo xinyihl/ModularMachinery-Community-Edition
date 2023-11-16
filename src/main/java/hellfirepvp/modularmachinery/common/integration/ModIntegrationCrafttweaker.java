@@ -9,9 +9,12 @@
 package hellfirepvp.modularmachinery.common.integration;
 
 import crafttweaker.mc1120.events.ScriptRunEvent;
+import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
+import github.kasuminova.mmce.client.resource.GeoModelExternalLoader;
 import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import github.kasuminova.mmce.common.util.concurrent.Action;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
@@ -68,6 +71,10 @@ public class ModIntegrationCrafttweaker {
         // Reset RecipeAdapterIncId
         RegistriesMM.ADAPTER_REGISTRY.getValuesCollection().forEach(RecipeAdapter::resetIncId);
 
+        if (Mods.GECKOLIB.isPresent()) {
+            DynamicMachineModelRegistry.INSTANCE.onReload();
+        }
+
         for (DynamicMachine loadedMachine : MachineRegistry.getLoadedMachines()) {
             loadedMachine.getMachineEventHandlers().clear();
             loadedMachine.getSmartInterfaceTypes().clear();
@@ -89,6 +96,11 @@ public class ModIntegrationCrafttweaker {
         boolean isServer = server != null && server.isDedicatedServer();
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
+
+        if (Mods.GECKOLIB.isPresent()) {
+            GeoModelExternalLoader.INSTANCE.onReload();
+        }
+
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
                 BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
 

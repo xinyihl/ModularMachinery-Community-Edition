@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r51-dev"
+version = "1.12.2-1.11.1-r52-dev"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -123,6 +123,10 @@ repositories {
         }
     }
     maven {
+        name = "GeckoLib"
+        url = uri("https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/")
+    }
+    maven {
         name = "GTNH Maven"
         url = uri("http://jenkins.usrv.eu:8081/nexus/content/groups/public/")
         isAllowInsecureProtocol = true
@@ -142,6 +146,9 @@ dependencies {
         isTransitive = false // We only care about the 1 annotation class
     }
     testCompileOnly("me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0")
+
+    // Mixins
+    implementation("zone.rong:mixinbooter:7.1")
 
     // Adds NotEnoughItems and its dependencies (CCL&CCC) to runClient/runServer
 //    runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.3.39-GTNH:dev")
@@ -168,6 +175,9 @@ dependencies {
 
 //    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
     implementation(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
+
+    // GeckoLib
+    implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))
 
     // Modular Magic compact
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))

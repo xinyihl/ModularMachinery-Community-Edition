@@ -213,7 +213,7 @@ public class ModIntegrationJEI implements IModPlugin {
                 registry.addRecipeCatalyst(new ItemStack(controller),
                         getCategoryStringFor(controller.getParentMachine()))
         );
-        BlockFactoryController.FACOTRY_CONTROLLERS.values().forEach(controller ->
+        BlockFactoryController.FACTORY_CONTROLLERS.values().forEach(controller ->
                 registry.addRecipeCatalyst(new ItemStack(controller),
                         getCategoryStringFor(controller.getParentMachine()))
         );
