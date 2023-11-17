@@ -1,6 +1,6 @@
 package kport.modularmagic.common.block;
 
-import com.rwtema.extrautils2.power.PowerManager;
+import com.rwtema.extrautils2.power.Freq;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import kport.modularmagic.common.tile.TileRainbowProvider;
@@ -16,11 +16,10 @@ import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class BlockRainbowProvider extends BlockMachineComponent {
-
-    private int frequency;
 
     public BlockRainbowProvider() {
         super(Material.IRON);
@@ -31,35 +30,38 @@ public class BlockRainbowProvider extends BlockMachineComponent {
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
-    @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
+    @Nonnull
+    public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
         return EnumBlockRenderType.MODEL;
     }
 
+    @Nonnull
     @Override
     public BlockRenderLayer getRenderLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
     @Override
-    public boolean hasTileEntity(IBlockState state) {
-        return true;
-    }
-
-    @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
-        if (placer instanceof EntityPlayerMP) {
-            EntityPlayerMP player = (EntityPlayerMP) placer;
-            this.frequency = PowerManager.instance.assignedValuesPlayer.get(player).hashCode();
-        }
-
+    public void onBlockPlacedBy(@Nonnull World worldIn,
+                                @Nonnull BlockPos pos,
+                                @Nonnull IBlockState state,
+                                @Nonnull EntityLivingBase placer,
+                                @Nonnull ItemStack stack)
+    {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
+
+        if (placer instanceof final EntityPlayerMP player) {
+            TileEntity te = worldIn.getTileEntity(pos);
+            if (te instanceof TileRainbowProvider rainbowProvider) {
+                rainbowProvider.setFrequency(Freq.getBasePlayerFreq(player));
+            }
+        }
     }
 
     @Nullable
     @Override
     public TileEntity createTileEntity(World world, IBlockState state) {
-        return new TileRainbowProvider(this.frequency);
+        return new TileRainbowProvider();
     }
 
     @Nullable

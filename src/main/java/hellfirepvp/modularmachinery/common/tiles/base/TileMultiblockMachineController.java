@@ -76,6 +76,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
+@net.minecraftforge.fml.common.Optional.Interface(iface = "software.bernie.geckolib3.core.IAnimatable", modid = "geckolib3")
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController, IAnimatable {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;

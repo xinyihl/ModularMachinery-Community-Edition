@@ -16,10 +16,6 @@ public class TileRainbowProvider extends TileColorableMachineComponent implement
 
     private int frequency;
 
-    public TileRainbowProvider(int frequency) {
-        this.frequency = frequency;
-    }
-
     public boolean rainbow() {
         PowerManager.PowerFreq freq = PowerManager.instance.getPowerFreqRaw(this.frequency);
         if (freq == null) {
@@ -43,6 +39,14 @@ public class TileRainbowProvider extends TileColorableMachineComponent implement
     @Override
     public MachineComponent<?> provideComponent() {
         return new MachineComponentRainbowProvider(this, IOType.INPUT);
+    }
+
+    public int getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(final int frequency) {
+        this.frequency = frequency;
     }
 
     @Override

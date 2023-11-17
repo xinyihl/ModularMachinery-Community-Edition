@@ -71,21 +71,23 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
 
         Map<ResourceLocation, GeoModel> oldGeoModels = this.geoModels;
         Map<ResourceLocation, AnimationFile> oldAnimations = this.animations;
-        this.animations = animations;
-        this.geoModels = geoModels;
-        oldGeoModels.clear();
-        oldAnimations.clear();
+        synchronized (this) {
+            this.animations = animations;
+            this.geoModels = geoModels;
+            oldGeoModels.clear();
+            oldAnimations.clear();
+        }
 
         ModularMachinery.log.info("[MM-GeoModelExternalLoader] Loaded {} animation files.", animations.size());
         ModularMachinery.log.info("[MM-GeoModelExternalLoader] Loaded {} model files.", geoModels.size());
     }
 
-    public GeoModel getModel(ResourceLocation location) {
+    public synchronized GeoModel getModel(ResourceLocation location) {
         GeoModel geoModel = geoModels.get(location);
         return Preconditions.checkNotNull(geoModel, "Model file not found: " + location.toString());
     }
 
-    public AnimationFile getAnimation(ResourceLocation location) {
+    public synchronized AnimationFile getAnimation(ResourceLocation location) {
         AnimationFile geoModel = animations.get(location);
         return Preconditions.checkNotNull(geoModel, "Animation file not found: " + location.toString());
     }
@@ -96,8 +98,7 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
 
     @Override
     public void onResourceManagerReload(@Nonnull final IResourceManager resourceManager, final Predicate<IResourceType> resourcePredicate) {
-        if (resourcePredicate.test(VanillaResourceType.MODELS))
-        {
+        if (resourcePredicate.test(VanillaResourceType.MODELS)) {
             loadAllModelAndAnimations(resourceManager);
         }
     }

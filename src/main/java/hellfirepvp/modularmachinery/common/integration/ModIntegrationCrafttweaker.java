@@ -14,6 +14,7 @@ import github.kasuminova.mmce.client.resource.GeoModelExternalLoader;
 import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import github.kasuminova.mmce.common.util.concurrent.Action;
+import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
@@ -71,7 +72,7 @@ public class ModIntegrationCrafttweaker {
         // Reset RecipeAdapterIncId
         RegistriesMM.ADAPTER_REGISTRY.getValuesCollection().forEach(RecipeAdapter::resetIncId);
 
-        if (Mods.GECKOLIB.isPresent()) {
+        if (Mods.GECKOLIB.isPresent() && FMLCommonHandler.instance().getSide().isClient()) {
             DynamicMachineModelRegistry.INSTANCE.onReload();
         }
 
@@ -97,8 +98,8 @@ public class ModIntegrationCrafttweaker {
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
 
-        if (Mods.GECKOLIB.isPresent()) {
-            GeoModelExternalLoader.INSTANCE.onReload();
+        if (Mods.GECKOLIB.isPresent() && FMLCommonHandler.instance().getSide().isClient()) {
+            ClientProxy.clientScheduler.addRunnable(GeoModelExternalLoader.INSTANCE::onReload, 0);
         }
 
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->

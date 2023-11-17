@@ -1,22 +1,17 @@
 package kport.modularmagic.common.tile;
 
-import com.rwtema.extrautils2.backend.XUBlock;
 import com.rwtema.extrautils2.network.XUPacketBuffer;
 import com.rwtema.extrautils2.power.IWorldPowerMultiplier;
 import com.rwtema.extrautils2.power.PowerManager;
 import com.rwtema.extrautils2.tile.TilePower;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import kport.modularmagic.common.tile.machinecomponent.MachineComponentGridProvider;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -66,16 +61,11 @@ public abstract class TileGridProvider extends TilePower implements IWorldPowerM
 
     @Override
     public void update() {
-        if (this.tick > 0)
+        if (this.tick > 0) {
             this.tick--;
-        else if (this.power != 0)
+        } else if (this.power != 0) {
             this.power = 0;
-    }
-
-    @Override
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack, XUBlock xuBlock) {
-        super.onBlockPlacedBy(worldIn, pos, state, placer, stack, xuBlock);
-        PowerManager.instance.addPowerHandler(this);
+        }
     }
 
     @Override
@@ -113,7 +103,7 @@ public abstract class TileGridProvider extends TilePower implements IWorldPowerM
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentGridProvider provideComponent() {
             return new MachineComponentGridProvider(this, IOType.INPUT);
         }
     }
@@ -127,7 +117,7 @@ public abstract class TileGridProvider extends TilePower implements IWorldPowerM
 
         @Nullable
         @Override
-        public MachineComponent provideComponent() {
+        public MachineComponentGridProvider provideComponent() {
             return new MachineComponentGridProvider(this, IOType.OUTPUT);
         }
     }

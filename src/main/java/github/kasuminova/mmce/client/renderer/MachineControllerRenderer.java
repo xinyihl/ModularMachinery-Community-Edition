@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Optional;
 import org.lwjgl.opengl.GL11;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.GeoCube;
@@ -22,6 +23,7 @@ import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
+@Optional.Interface(iface = "software.bernie.geckolib3.renderers.geo.IGeoRenderer", modid = "geckolib3")
 public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> implements IGeoRenderer<TileMultiblockMachineController> {
 
     public static final MachineControllerRenderer INSTANCE = new MachineControllerRenderer();
@@ -34,6 +36,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         this.render(te, x, y, z, partialTicks, destroyStage);
     }
 
+    @Optional.Method(modid = "geckolib3")
     public void render(TileMultiblockMachineController tile, double x, double y, double z, float partialTicks, int destroyStage) {
         MachineControllerModel modelProvider = DynamicMachineModelRegistry.INSTANCE.getModel(tile.getFoundMachine());
         if (modelProvider == null) {
@@ -66,6 +69,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     }
 
     @Override
+    @Optional.Method(modid = "geckolib3")
     public void renderCube(final BufferBuilder builder, final GeoCube cube, final float red, final float green, final float blue, final float alpha) {
         MATRIX_STACK.moveToPivot(cube);
         MATRIX_STACK.rotate(cube);
@@ -104,6 +108,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     }
 
     @Override
+    @Optional.Method(modid = "geckolib3")
     public AnimatedGeoModel<TileMultiblockMachineController> getGeoModelProvider() {
         return null;
     }
