@@ -56,6 +56,14 @@ public enum Mods {
     NATURESAURA("naturesaura"),
     BOTANIA("botania"),
     GECKOLIB("geckolib3"),
+    /**
+     * Hmmm... Use MBD's client-side transparent block rendering feature instead of reimplementing one.
+     */
+    MBD("multiblocked"),
+    /**
+     * An add-on mod that provides the ability to hide block rendering similar to Multiblocked.
+     */
+    COMPONENT_MODEL_HIDER("component_model_hider")
     ;
 
     public final String modid;

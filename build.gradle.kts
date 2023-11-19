@@ -179,6 +179,9 @@ dependencies {
     // GeckoLib
     implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))
 
+    // Multiblocked
+    compileOnly(rfg.deobf("curse.maven:multiblocked-604054:4753960"))
+
     // Modular Magic compact
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
     compileOnly(rfg.deobf("curse.maven:blood-magic-224791:2822288"))

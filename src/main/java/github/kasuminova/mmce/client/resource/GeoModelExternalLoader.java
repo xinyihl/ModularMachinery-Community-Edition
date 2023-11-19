@@ -71,23 +71,21 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
 
         Map<ResourceLocation, GeoModel> oldGeoModels = this.geoModels;
         Map<ResourceLocation, AnimationFile> oldAnimations = this.animations;
-        synchronized (this) {
-            this.animations = animations;
-            this.geoModels = geoModels;
-            oldGeoModels.clear();
-            oldAnimations.clear();
-        }
+        this.animations = animations;
+        this.geoModels = geoModels;
+        oldGeoModels.clear();
+        oldAnimations.clear();
 
         ModularMachinery.log.info("[MM-GeoModelExternalLoader] Loaded {} animation files.", animations.size());
         ModularMachinery.log.info("[MM-GeoModelExternalLoader] Loaded {} model files.", geoModels.size());
     }
 
-    public synchronized GeoModel getModel(ResourceLocation location) {
+    public GeoModel getModel(ResourceLocation location) {
         GeoModel geoModel = geoModels.get(location);
         return Preconditions.checkNotNull(geoModel, "Model file not found: " + location.toString());
     }
 
-    public synchronized AnimationFile getAnimation(ResourceLocation location) {
+    public AnimationFile getAnimation(ResourceLocation location) {
         AnimationFile geoModel = animations.get(location);
         return Preconditions.checkNotNull(geoModel, "Animation file not found: " + location.toString());
     }

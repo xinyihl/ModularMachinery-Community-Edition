@@ -72,7 +72,7 @@ public class ModIntegrationCrafttweaker {
         // Reset RecipeAdapterIncId
         RegistriesMM.ADAPTER_REGISTRY.getValuesCollection().forEach(RecipeAdapter::resetIncId);
 
-        if (Mods.GECKOLIB.isPresent() && FMLCommonHandler.instance().getSide().isClient()) {
+        if (FMLCommonHandler.instance().getSide().isClient() && Mods.GECKOLIB.isPresent()) {
             DynamicMachineModelRegistry.INSTANCE.onReload();
         }
 
@@ -98,7 +98,7 @@ public class ModIntegrationCrafttweaker {
 
         MachineRegistry.reloadMachine(MachineBuilder.WAIT_FOR_LOAD);
 
-        if (Mods.GECKOLIB.isPresent() && FMLCommonHandler.instance().getSide().isClient()) {
+        if (FMLCommonHandler.instance().getSide().isClient() && Mods.GECKOLIB.isPresent()) {
             ClientProxy.clientScheduler.addRunnable(GeoModelExternalLoader.INSTANCE::onReload, 0);
         }
 

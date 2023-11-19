@@ -131,7 +131,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     @Nonnull
     @Override
     public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
-        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getModel(parentMachine) != null) {
+        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(parentMachine) != null) {
             if (state.getValue(FORMED)) {
                 return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
             }

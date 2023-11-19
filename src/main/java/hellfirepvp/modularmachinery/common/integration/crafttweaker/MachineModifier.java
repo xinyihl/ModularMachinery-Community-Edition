@@ -98,7 +98,7 @@ public class MachineModifier {
     }
 
     @ZenMethod
-    public static void registerMachineGeoModel(String machineName, String modelLocation, String textureLocation, String animationFileLocation) {
+    public static void setMachineGeoModel(String machineName, String modelName) {
         if (FMLCommonHandler.instance().getSide().isServer()) {
             return;
         }
@@ -110,21 +110,13 @@ public class MachineModifier {
                 return;
             }
 
-            ResourceLocation modelLocationRL = new ResourceLocation(modelLocation);
-            ResourceLocation textureLocationRL = new ResourceLocation(textureLocation);
-            ResourceLocation animationFileLocationRL = new ResourceLocation(animationFileLocation);
-
-            if (modelLocationRL.getNamespace().equals("minecraft")) {
-                modelLocationRL = new ResourceLocation(ModularMachinery.MODID, modelLocationRL.getPath());
-            }
-            if (textureLocationRL.getNamespace().equals("minecraft")) {
-                textureLocationRL = new ResourceLocation(ModularMachinery.MODID, textureLocationRL.getPath());
-            }
-            if (animationFileLocationRL.getNamespace().equals("minecraft")) {
-                animationFileLocationRL = new ResourceLocation(ModularMachinery.MODID, animationFileLocationRL.getPath());
+            MachineControllerModel model = DynamicMachineModelRegistry.INSTANCE.getMachineModel(modelName);
+            if (model == null) {
+                CraftTweakerAPI.logError("Could not find geo model `" + modelName + "`!");
+                return;
             }
 
-            DynamicMachineModelRegistry.INSTANCE.registerGeoModel(machine, new MachineControllerModel(modelLocationRL, textureLocationRL, animationFileLocationRL));
+            DynamicMachineModelRegistry.INSTANCE.registerMachineDefaultModel(machine, model);
         });
     }
 

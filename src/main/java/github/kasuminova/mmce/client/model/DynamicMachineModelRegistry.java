@@ -12,14 +12,23 @@ public class DynamicMachineModelRegistry {
     private DynamicMachineModelRegistry() {
     }
 
-    private final Map<DynamicMachine, MachineControllerModel> machineModelRegistry = new HashMap<>();
+    private final Map<String, MachineControllerModel> machineModelRegistry = new HashMap<>();
+    private final Map<DynamicMachine, MachineControllerModel> machineDefaultModel = new HashMap<>();
 
-    public void registerGeoModel(DynamicMachine machine, MachineControllerModel model) {
-        machineModelRegistry.put(machine, model);
+    public void registerMachineModel(String modelName, MachineControllerModel model) {
+        machineModelRegistry.put(modelName, model);
     }
 
-    public MachineControllerModel getModel(DynamicMachine machine) {
-        return machineModelRegistry.get(machine);
+    public MachineControllerModel getMachineModel(String modelName) {
+        return machineModelRegistry.get(modelName);
+    }
+
+    public void registerMachineDefaultModel(DynamicMachine machine, MachineControllerModel model) {
+        machineDefaultModel.put(machine, model);
+    }
+
+    public MachineControllerModel getMachineDefaultModel(DynamicMachine machine) {
+        return machineDefaultModel.get(machine);
     }
 
     public Collection<MachineControllerModel> getAllModels() {
@@ -27,6 +36,7 @@ public class DynamicMachineModelRegistry {
     }
 
     public void onReload() {
+        machineDefaultModel.clear();
         machineModelRegistry.clear();
     }
 }

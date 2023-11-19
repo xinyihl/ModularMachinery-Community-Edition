@@ -59,6 +59,8 @@ public class DynamicMachine extends AbstractMachine {
 
     private final Map<String, FactoryRecipeThread> coreThreadPreset = new LinkedHashMap<>();
 
+    private boolean hideComponentsWhenFormed = false;
+
     public DynamicMachine(String registryName) {
         super(registryName);
     }
@@ -143,6 +145,14 @@ public class DynamicMachine extends AbstractMachine {
 
     public List<MultiBlockModifierReplacement> getMultiBlockModifiers() {
         return multiBlockModifiers;
+    }
+
+    public boolean isHideComponentsWhenFormed() {
+        return hideComponentsWhenFormed;
+    }
+
+    public void setHideComponentsWhenFormed(final boolean hideComponentsWhenFormed) {
+        this.hideComponentsWhenFormed = hideComponentsWhenFormed;
     }
 
     @Nonnull
@@ -336,6 +346,11 @@ public class DynamicMachine extends AbstractMachine {
                 machine.setFactoryOnly(DynamicMachinePreDeserializer.getFactoryOnly(root));
             }
 
+            // Hide Components When Formed
+            if (root.has("hide-components-when-formed")) {
+                machine.setHideComponentsWhenFormed(getHideComponentsWhenFormed(root));
+            }
+
             // Parts
             addParts(parts, machine.pattern);
             // Remove Controller Position
@@ -419,6 +434,14 @@ public class DynamicMachine extends AbstractMachine {
                 }
                 return element.getAsString();
             }
+        }
+
+        public static boolean getHideComponentsWhenFormed(JsonObject root) throws JsonParseException {
+            JsonElement elementBlueprint = root.get("hide-components-when-formed");
+            if (!elementBlueprint.isJsonPrimitive() || !elementBlueprint.getAsJsonPrimitive().isBoolean()) {
+                throw new JsonParseException("'hide-components-when-formed' has to be either 'true' or 'false'!");
+            }
+            return elementBlueprint.getAsJsonPrimitive().getAsBoolean();
         }
 
         private static void addDynamicPatternParts(final JsonObject jsonPattern, final String name, final TaggedPositionBlockArray pattern) {

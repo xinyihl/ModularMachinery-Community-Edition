@@ -1,6 +1,5 @@
 package github.kasuminova.mmce.client.renderer;
 
-import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import github.kasuminova.mmce.client.model.MachineControllerModel;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.Minecraft;
@@ -38,7 +37,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
 
     @Optional.Method(modid = "geckolib3")
     public void render(TileMultiblockMachineController tile, double x, double y, double z, float partialTicks, int destroyStage) {
-        MachineControllerModel modelProvider = DynamicMachineModelRegistry.INSTANCE.getModel(tile.getFoundMachine());
+        MachineControllerModel modelProvider = tile.getCurrentModel();
         if (modelProvider == null) {
             return;
         }

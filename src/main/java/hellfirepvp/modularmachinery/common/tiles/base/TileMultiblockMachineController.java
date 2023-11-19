@@ -5,8 +5,12 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
+import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
+import github.kasuminova.mmce.client.model.MachineControllerModel;
+import github.kasuminova.mmce.client.world.BlockModelHider;
 import github.kasuminova.mmce.common.event.Phase;
-import github.kasuminova.mmce.common.event.client.ControllerAnimationEvent;
+import github.kasuminova.mmce.common.event.client.ControllerModelAnimationEvent;
+import github.kasuminova.mmce.common.event.client.ControllerModelGetEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
@@ -57,6 +61,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
@@ -1007,6 +1012,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
 
         readMachineNBT(compound);
+
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            BlockModelHider.hideOrShowBlocks(this);
+        }
     }
 
     @Override
@@ -1159,11 +1168,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return PlayState.STOP;
         }
 
-        ControllerAnimationEvent eventMM = new ControllerAnimationEvent(this, event);
+        ControllerModelAnimationEvent eventMM = new ControllerModelAnimationEvent(this, event);
         eventMM.postEvent();
 
         AnimationBuilder animationBuilder = new AnimationBuilder();
-        for (final ControllerAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
+        for (final ControllerModelAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
             animationBuilder.addAnimation(animation.animationName(), () ->
                     animation.loopFunction().apply(TileMultiblockMachineController.this));
         }
@@ -1176,6 +1185,26 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             default:
                 yield PlayState.STOP;
         };
+    }
+
+    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    public MachineControllerModel getCurrentModel() {
+        String modelName = getCurrentModelName();
+        if (modelName == null || modelName.isEmpty()) {
+            MachineControllerModel model = DynamicMachineModelRegistry.INSTANCE.getMachineModel(modelName);
+            if (model != null) {
+                return model;
+            }
+        }
+
+        return DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(foundMachine);
+    }
+
+    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    public String getCurrentModelName() {
+        ControllerModelGetEvent event = new ControllerModelGetEvent(this);
+        event.postEvent();
+        return event.getModelName();
     }
 
     public enum StructureCheckMode {

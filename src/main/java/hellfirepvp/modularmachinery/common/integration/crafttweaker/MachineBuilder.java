@@ -8,8 +8,8 @@ import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
-import github.kasuminova.mmce.common.event.client.ControllerAnimationEvent;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
+import github.kasuminova.mmce.common.event.client.ControllerModelAnimationEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
@@ -384,11 +384,11 @@ public class MachineBuilder {
      */
     @ZenMethod
     @Optional.Method(modid = "geckolib3")
-    public MachineBuilder addControllerAnimationHandler(IEventHandler<ControllerAnimationEvent> function) {
+    public MachineBuilder addControllerAnimationHandler(IEventHandler<ControllerModelAnimationEvent> function) {
         if (FMLCommonHandler.instance().getSide().isServer()) {
             return this;
         }
-        machine.addMachineEventHandler(ControllerAnimationEvent.class, function);
+        machine.addMachineEventHandler(ControllerModelAnimationEvent.class, function);
         return this;
     }
 

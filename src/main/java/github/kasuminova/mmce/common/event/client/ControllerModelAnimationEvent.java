@@ -18,16 +18,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ZenRegister
-@ZenClass("mods.modularmachinery.ControllerAnimationEvent")
-public class ControllerAnimationEvent extends MachineEvent {
+@ZenClass("mods.modularmachinery.ControllerModelAnimationEvent")
+public class ControllerModelAnimationEvent extends MachineEvent {
     private final List<AnimationCT> animations = new ArrayList<>();
     private final AnimationEvent<TileMultiblockMachineController> event;
+    private final String currentModelName;
 
     private int playState = 0;
 
-    public ControllerAnimationEvent(final TileMultiblockMachineController controller, final AnimationEvent<TileMultiblockMachineController> event) {
+    public ControllerModelAnimationEvent(final TileMultiblockMachineController controller, final AnimationEvent<TileMultiblockMachineController> event) {
         super(controller);
         this.event = event;
+        this.currentModelName = controller.getCurrentModelName();
     }
 
     @ZenMethod
@@ -61,6 +63,11 @@ public class ControllerAnimationEvent extends MachineEvent {
     public void setAnimation(String animationName, IFunction<IMachineController, Boolean> loopFunction) {
         animations.clear();
         addAnimation(animationName, loopFunction);
+    }
+
+    @ZenGetter("currentModelName")
+    public String getCurrentModelName() {
+        return currentModelName;
     }
 
     @ZenGetter("transitionLengthTicks")
