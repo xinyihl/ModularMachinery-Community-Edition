@@ -11,21 +11,33 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Optional;
 import org.lwjgl.opengl.GL11;
+import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.IAnimatableModel;
+import software.bernie.geckolib3.core.controller.AnimationController;
 import software.bernie.geckolib3.core.util.Color;
-import software.bernie.geckolib3.geo.render.built.GeoCube;
-import software.bernie.geckolib3.geo.render.built.GeoModel;
-import software.bernie.geckolib3.geo.render.built.GeoQuad;
-import software.bernie.geckolib3.geo.render.built.GeoVertex;
+import software.bernie.geckolib3.geo.render.built.*;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
 
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 @Optional.Interface(iface = "software.bernie.geckolib3.renderers.geo.IGeoRenderer", modid = "geckolib3")
 public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> implements IGeoRenderer<TileMultiblockMachineController> {
-
     public static final MachineControllerRenderer INSTANCE = new MachineControllerRenderer();
+
+    static {
+        AnimationController.addModelFetcher((IAnimatable object) -> {
+            if (object instanceof TileMultiblockMachineController ctrl) {
+                MachineControllerModel currentModel = ctrl.getCurrentModel();
+                if (currentModel != null) {
+                    return (IAnimatableModel) currentModel;
+                }
+            }
+            return null;
+        });
+    }
 
     private MachineControllerRenderer() {
     }
@@ -65,6 +77,33 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         render(model, tile, partialTicks, (float) renderColor.getRed() / 255f, (float) renderColor.getGreen() / 255f,
                 (float) renderColor.getBlue() / 255f, (float) renderColor.getAlpha() / 255);
         GlStateManager.popMatrix();
+    }
+
+    public void renderRecursively(BufferBuilder builder, GeoBone bone, float red, float green, float blue, float alpha) {
+        MATRIX_STACK.push();
+
+        MATRIX_STACK.translate(bone);
+        MATRIX_STACK.moveToPivot(bone);
+        MATRIX_STACK.rotate(bone);
+        MATRIX_STACK.scale(bone);
+        MATRIX_STACK.moveBackFromPivot(bone);
+
+        if (!bone.isHidden()) {
+//            GlStateManager.pushMatrix();
+            for (GeoCube cube : bone.childCubes) {
+                MATRIX_STACK.push();
+                renderCube(builder, cube, red, green, blue, alpha);
+                MATRIX_STACK.pop();
+            }
+//            GlStateManager.popMatrix();
+        }
+        if (!bone.childBonesAreHiddenToo()) {
+            for (GeoBone childBone : bone.childBones) {
+                renderRecursively(builder, childBone, red, green, blue, alpha);
+            }
+        }
+
+        MATRIX_STACK.pop();
     }
 
     @Override

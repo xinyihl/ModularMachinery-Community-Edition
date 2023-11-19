@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.world;
 
+import github.kasuminova.mmce.client.world.BlockModelHider;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -44,6 +45,7 @@ public class MMWorldEventListener implements IWorldEventListener {
     public void onWorldUnloaded(WorldEvent.Unload event) {
         World world = event.getWorld();
         if (world.isRemote) {
+            BlockModelHider.onWorldUnload(world);
             return;
         }
         worldChangedChunks.remove(world);

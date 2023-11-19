@@ -26,6 +26,7 @@ import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -193,12 +194,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return lastStrongPower;
     }
 
-    public void setExecuteGroupId(final long executeGroupId) {
-        this.executeGroupId = executeGroupId;
-    }
-
     public long getExecuteGroupId() {
         return executeGroupId;
+    }
+
+    public void setExecuteGroupId(final long executeGroupId) {
+        this.executeGroupId = executeGroupId;
     }
 
     protected void addRecipeResearchUsedTime(int time) {
@@ -526,7 +527,17 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void notifyStructureFormedState(boolean formed) {
         IBlockState state = world.getBlockState(getPos());
-        IBlockState newState = state.withProperty(BlockController.FORMED, formed);
+
+        IBlockState newState;
+        // Old version block state compatibility.
+        if (!state.getProperties().containsKey(BlockController.FORMED)) {
+            newState = state.getBlock().getDefaultState()
+                    .withProperty(BlockController.FACING, state.getValue(BlockController.FACING))
+                    .withProperty(BlockController.FORMED, formed);
+        } else {
+            newState = state.withProperty(BlockController.FORMED, formed);
+        }
+
         world.setBlockState(getPos(), newState, 3);
     }
 
@@ -562,8 +573,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 resetMachine(true);
             } else if (
                     !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
-                    !matchesDynamicPattern(foundMachine))
-            {
+                            !matchesDynamicPattern(foundMachine)) {
                 resetMachine(true);
             }
         }
@@ -1003,6 +1013,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public void invalidate() {
         super.invalidate();
         foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
+
+        resetMachine(true);
+
+        if (getWorld().isRemote) {
+            BlockModelHider.hideOrShowBlocks(this);
+        }
     }
 
     @Override
@@ -1014,7 +1030,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         readMachineNBT(compound);
 
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            BlockModelHider.hideOrShowBlocks(this);
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                if (getWorld().isRemote) {
+                    BlockModelHider.hideOrShowBlocks(this);
+                    notifyStructureFormedState(isStructureFormed());
+                }
+            }, 1);
         }
     }
 
@@ -1212,9 +1233,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public enum WorkMode {
-        ASYNC(TextFormatting.GREEN      + "ASYNC"     + TextFormatting.WHITE),
+        ASYNC(TextFormatting.GREEN + "ASYNC" + TextFormatting.WHITE),
         SEMI_SYNC(TextFormatting.YELLOW + "SEMI-SYNC" + TextFormatting.WHITE),
-        SYNC(TextFormatting.RED         + "SYNC"      + TextFormatting.WHITE);
+        SYNC(TextFormatting.RED + "SYNC" + TextFormatting.WHITE);
 
         private final String displayName;
 

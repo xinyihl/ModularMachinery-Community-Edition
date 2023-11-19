@@ -10,6 +10,7 @@ import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import github.kasuminova.mmce.common.event.client.ControllerModelAnimationEvent;
+import github.kasuminova.mmce.common.event.client.ControllerModelGetEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
@@ -384,11 +385,24 @@ public class MachineBuilder {
      */
     @ZenMethod
     @Optional.Method(modid = "geckolib3")
-    public MachineBuilder addControllerAnimationHandler(IEventHandler<ControllerModelAnimationEvent> function) {
+    public MachineBuilder addControllerModelAnimationHandler(IEventHandler<ControllerModelAnimationEvent> function) {
         if (FMLCommonHandler.instance().getSide().isServer()) {
             return this;
         }
         machine.addMachineEventHandler(ControllerModelAnimationEvent.class, function);
+        return this;
+    }
+
+    /**
+     * 添加控制器 GeckoLib 模型获取事件监听器。
+     */
+    @ZenMethod
+    @Optional.Method(modid = "geckolib3")
+    public MachineBuilder addControllerModelGetHandler(IEventHandler<ControllerModelGetEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return this;
+        }
+        machine.addMachineEventHandler(ControllerModelGetEvent.class, function);
         return this;
     }
 

@@ -1,8 +1,12 @@
 {
     "variants": {
-        "facing=north": { "model": "modularmachinery:blockcontroller" },
-        "facing=south": { "model": "modularmachinery:blockcontroller", "y": 180 },
-        "facing=west":  { "model": "modularmachinery:blockcontroller", "y": 270 },
-        "facing=east":  { "model": "modularmachinery:blockcontroller", "y": 90 }
+        "facing=north,formed=false": { "model": "modularmachinery:blockcontroller" },
+        "facing=south,formed=false": { "model": "modularmachinery:blockcontroller", "y": 180 },
+        "facing=west,formed=false": { "model": "modularmachinery:blockcontroller", "y": 270 },
+        "facing=east,formed=false": { "model": "modularmachinery:blockcontroller", "y": 90 },
+        "facing=north,formed=true": { "model": "modularmachinery:blockcontroller" },
+        "facing=south,formed=true": { "model": "modularmachinery:blockcontroller", "y": 180 },
+        "facing=west,formed=true": { "model": "modularmachinery:blockcontroller", "y": 270 },
+        "facing=east,formed=true": { "model": "modularmachinery:blockcontroller", "y": 90 }
     }
 }

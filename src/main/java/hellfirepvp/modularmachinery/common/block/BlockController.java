@@ -141,10 +141,6 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Override
     public boolean isOpaqueCube(@Nonnull final IBlockState state) {
-//        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getModel(parentMachine) != null) {
-//            return !state.getValue(FORMED);
-//        }
-//        return true;
         return false;
     }
 

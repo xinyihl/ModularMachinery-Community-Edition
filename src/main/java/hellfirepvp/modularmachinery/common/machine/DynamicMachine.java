@@ -199,6 +199,8 @@ public class DynamicMachine extends AbstractMachine {
 
         dynamicPatterns.clear();
         dynamicPatterns.putAll(another.dynamicPatterns);
+
+        hideComponentsWhenFormed = another.hideComponentsWhenFormed;
     }
 
     public static class ModifierReplacementMap extends HashMap<BlockPos, List<BlockArray.BlockInformation>> {

@@ -6,6 +6,7 @@ import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import github.kasuminova.mmce.common.event.client.ControllerModelAnimationEvent;
+import github.kasuminova.mmce.common.event.client.ControllerModelGetEvent;
 import github.kasuminova.mmce.common.event.machine.*;
 import github.kasuminova.mmce.common.event.recipe.*;
 import github.kasuminova.mmce.common.util.concurrent.Action;
@@ -108,7 +109,7 @@ public class MMEvents {
 
     @ZenMethod
     @Optional.Method(modid = "geckolib3")
-    public static void onControllerAnimation(String machineRegistryName, IEventHandler<ControllerModelAnimationEvent> function) {
+    public static void onControllerModelAnimation(String machineRegistryName, IEventHandler<ControllerModelAnimationEvent> function) {
         if (FMLCommonHandler.instance().getSide().isServer()) {
             return;
         }
@@ -116,6 +117,22 @@ public class MMEvents {
             DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
             if (machine != null) {
                 machine.addMachineEventHandler(ControllerModelAnimationEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "geckolib3")
+    public static void onControllerModelGet(String machineRegistryName, IEventHandler<ControllerModelGetEvent> function) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return;
+        }
+        WAIT_FOR_REGISTER_LIST.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(ControllerModelGetEvent.class, function);
             } else {
                 CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
             }
