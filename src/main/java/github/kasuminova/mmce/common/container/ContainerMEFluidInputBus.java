@@ -25,7 +25,7 @@ public class ContainerMEFluidInputBus extends ContainerFluidConfigurable {
     public ContainerMEFluidInputBus(final MEFluidInputBus owner, final EntityPlayer player) {
         super(player.inventory, owner);
         this.owner = owner;
-        this.tankSync = new FluidSyncHelper(owner.getConfig(), MEFluidBus.TANK_SLOT_AMOUNT);
+        this.tankSync = new FluidSyncHelper(owner.getTanks(), MEFluidBus.TANK_SLOT_AMOUNT);
     }
 
     public MEFluidInputBus getOwner() {

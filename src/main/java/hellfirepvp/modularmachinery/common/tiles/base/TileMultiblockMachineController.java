@@ -539,7 +539,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             newState = state.withProperty(BlockController.FORMED, formed);
         }
 
-        world.setBlockState(getPos(), newState, 3);
+        if (world.isRemote) {
+            world.setBlockState(getPos(), newState, 8);
+        } else {
+            world.setBlockState(getPos(), newState, 3);
+        }
     }
 
     private void addDynamicPatternToBlockArray() {
