@@ -3,8 +3,6 @@ package github.kasuminova.mmce.common.event.client;
 import com.github.bsideup.jabel.Desugar;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
-import github.kasuminova.mmce.common.helper.IMachineController;
-import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.IFunction;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import software.bernie.geckolib3.core.builder.Animation;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
@@ -34,17 +32,12 @@ public class ControllerModelAnimationEvent extends MachineEvent {
 
     @ZenMethod
     public void addAnimation(String animationName) {
-        animations.add(new AnimationCT(animationName, param -> true));
+        animations.add(new AnimationCT(animationName, false));
     }
 
     @ZenMethod
     public void addAnimation(String animationName, boolean loop) {
-        animations.add(new AnimationCT(animationName, param -> loop));
-    }
-
-    @ZenMethod
-    public void addAnimation(String animationName, IFunction<IMachineController, Boolean> loopFunction) {
-        animations.add(new AnimationCT(animationName, loopFunction));
+        animations.add(new AnimationCT(animationName, loop));
     }
 
     @ZenMethod
@@ -57,12 +50,6 @@ public class ControllerModelAnimationEvent extends MachineEvent {
     public void setAnimation(String animationName, boolean loop) {
         animations.clear();
         addAnimation(animationName, loop);
-    }
-
-    @ZenMethod
-    public void setAnimation(String animationName, IFunction<IMachineController, Boolean> loopFunction) {
-        animations.clear();
-        addAnimation(animationName, loopFunction);
     }
 
     @ZenGetter("currentModelName")
@@ -141,6 +128,6 @@ public class ControllerModelAnimationEvent extends MachineEvent {
     }
 
     @Desugar
-    public record AnimationCT(String animationName, IFunction<IMachineController, Boolean> loopFunction) {
+    public record AnimationCT(String animationName, boolean loop) {
     }
 }

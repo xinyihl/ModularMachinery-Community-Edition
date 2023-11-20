@@ -67,6 +67,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
+import software.bernie.geckolib3.core.builder.ILoopType;
 import software.bernie.geckolib3.core.controller.AnimationController;
 import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
@@ -1036,6 +1037,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                     notifyStructureFormedState(isStructureFormed());
                 }
             }, 1);
+            if (!isStructureFormed()) {
+                animationFactory = null;
+            }
         }
     }
 
@@ -1194,8 +1198,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         AnimationBuilder animationBuilder = new AnimationBuilder();
         for (final ControllerModelAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
-            animationBuilder.addAnimation(animation.animationName(), () ->
-                    animation.loopFunction().apply(TileMultiblockMachineController.this));
+            animationBuilder.addAnimation(animation.animationName(),
+                    animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.PLAY_ONCE);
         }
         event.getController().setAnimation(animationBuilder);
 

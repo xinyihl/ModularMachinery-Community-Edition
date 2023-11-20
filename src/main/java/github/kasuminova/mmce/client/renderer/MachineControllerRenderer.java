@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.client.renderer;
 
 import github.kasuminova.mmce.client.model.MachineControllerModel;
+import github.kasuminova.mmce.client.util.MatrixStack;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -25,7 +26,10 @@ import javax.vecmath.Vector4f;
 @SuppressWarnings({"unchecked", "rawtypes"})
 @Optional.Interface(iface = "software.bernie.geckolib3.renderers.geo.IGeoRenderer", modid = "geckolib3")
 public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> implements IGeoRenderer<TileMultiblockMachineController> {
+
     public static final MachineControllerRenderer INSTANCE = new MachineControllerRenderer();
+
+    private static final MatrixStack MATRIX_STACK = new MatrixStack();
 
     static {
         AnimationController.addModelFetcher((IAnimatable object) -> {
@@ -40,6 +44,23 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     }
 
     private MachineControllerRenderer() {
+    }
+
+    protected static void rotateBlock(EnumFacing facing) {
+        switch (facing) {
+            case SOUTH -> GlStateManager.rotate(180, 0, 1, 0);
+            case WEST -> GlStateManager.rotate(90, 0, 1, 0);
+            /* There is no need to rotate by 0 */
+            case NORTH -> {
+            }
+            case EAST -> GlStateManager.rotate(270, 0, 1, 0);
+            case UP -> GlStateManager.rotate(90, 1, 0, 0);
+            case DOWN -> GlStateManager.rotate(90, -1, 0, 0);
+        }
+    }
+
+    private static EnumFacing getFacing(TileMultiblockMachineController tile) {
+        return tile.getControllerRotation();
     }
 
     @Override
@@ -89,13 +110,11 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         MATRIX_STACK.moveBackFromPivot(bone);
 
         if (!bone.isHidden()) {
-//            GlStateManager.pushMatrix();
             for (GeoCube cube : bone.childCubes) {
                 MATRIX_STACK.push();
                 renderCube(builder, cube, red, green, blue, alpha);
                 MATRIX_STACK.pop();
             }
-//            GlStateManager.popMatrix();
         }
         if (!bone.childBonesAreHiddenToo()) {
             for (GeoBone childBone : bone.childBones) {
@@ -114,7 +133,6 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         MATRIX_STACK.moveBackFromPivot(cube);
 
         for (GeoQuad quad : cube.quads) {
-            // 你知道我为什么 NPE，来找我吧~
             if (quad == null) {
                 continue;
             }
@@ -149,33 +167,6 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     @Optional.Method(modid = "geckolib3")
     public AnimatedGeoModel<TileMultiblockMachineController> getGeoModelProvider() {
         return null;
-    }
-
-    protected void rotateBlock(EnumFacing facing) {
-        switch (facing) {
-            case SOUTH:
-                GlStateManager.rotate(180, 0, 1, 0);
-                break;
-            case WEST:
-                GlStateManager.rotate(90, 0, 1, 0);
-                break;
-            case NORTH:
-                /* There is no need to rotate by 0 */
-                break;
-            case EAST:
-                GlStateManager.rotate(270, 0, 1, 0);
-                break;
-            case UP:
-                GlStateManager.rotate(90, 1, 0, 0);
-                break;
-            case DOWN:
-                GlStateManager.rotate(90, -1, 0, 0);
-                break;
-        }
-    }
-
-    private EnumFacing getFacing(TileMultiblockMachineController tile) {
-        return tile.getControllerRotation();
     }
 
     @Override

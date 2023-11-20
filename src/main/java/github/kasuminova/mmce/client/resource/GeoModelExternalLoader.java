@@ -29,8 +29,8 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
     private final AnimationFileLoader animationFileLoader = new AnimationFileLoader();
     private final MolangParser molangParser = new MolangParser();
 
-    private Map<ResourceLocation, GeoModel> geoModels = new HashMap<>();
-    private Map<ResourceLocation, AnimationFile> animations = new HashMap<>();
+    private volatile Map<ResourceLocation, GeoModel> geoModels = new HashMap<>();
+    private volatile Map<ResourceLocation, AnimationFile> animations = new HashMap<>();
 
     private GeoModelExternalLoader() {
     }
@@ -71,8 +71,10 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
 
         Map<ResourceLocation, GeoModel> oldGeoModels = this.geoModels;
         Map<ResourceLocation, AnimationFile> oldAnimations = this.animations;
-        this.animations = animations;
-        this.geoModels = geoModels;
+        synchronized (this) {
+            this.animations = animations;
+            this.geoModels = geoModels;
+        }
         oldGeoModels.clear();
         oldAnimations.clear();
 
@@ -80,12 +82,12 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
         ModularMachinery.log.info("[MM-GeoModelExternalLoader] Loaded {} model files.", geoModels.size());
     }
 
-    public GeoModel getModel(ResourceLocation location) {
+    public synchronized GeoModel getModel(ResourceLocation location) {
         GeoModel geoModel = geoModels.get(location);
         return Preconditions.checkNotNull(geoModel, "Model file not found: " + location.toString());
     }
 
-    public AnimationFile getAnimation(ResourceLocation location) {
+    public synchronized AnimationFile getAnimation(ResourceLocation location) {
         AnimationFile geoModel = animations.get(location);
         return Preconditions.checkNotNull(geoModel, "Animation file not found: " + location.toString());
     }
