@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r52-dev"
+version = "1.12.2-1.11.1-r53-dev"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -116,6 +116,9 @@ repositories {
         url = uri("https://maven.blamejared.com/")
     }
     maven {
+        url = uri("https://repo.spongepowered.org/maven")
+    }
+    maven {
         name = "OvermindDL1 Maven"
         url = uri("https://gregtech.overminddl1.com/")
         mavenContent {
@@ -180,7 +183,7 @@ dependencies {
     implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))
 
     // Multiblocked
-    compileOnly(rfg.deobf("curse.maven:multiblocked-604054:4753960"))
+    implementation(rfg.deobf("curse.maven:multiblocked-604054:4753960"))
 
     // Modular Magic compact
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))

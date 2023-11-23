@@ -55,6 +55,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.text.TextFormatting;
@@ -540,7 +541,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         if (world.isRemote) {
-            world.setBlockState(getPos(), newState, 8);
+            world.setBlockState(getPos(), newState, 2);
         } else {
             world.setBlockState(getPos(), newState, 3);
         }
@@ -1036,10 +1037,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         if (FMLCommonHandler.instance().getSide().isClient()) {
             ClientProxy.clientScheduler.addRunnable(() -> {
-                if (getWorld().isRemote) {
-                    BlockModelHider.hideOrShowBlocks(this);
-                    notifyStructureFormedState(isStructureFormed());
-                }
+                BlockModelHider.hideOrShowBlocks(this);
+                notifyStructureFormedState(isStructureFormed());
             }, 1);
             if (!isStructureFormed()) {
                 animationFactory = null;
@@ -1177,6 +1176,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void setWorkMode(final WorkMode workMode) {
         this.workMode = workMode;
+    }
+
+    @Nonnull
+    @Override
+    public AxisAlignedBB getRenderBoundingBox() {
+        if (!isStructureFormed()) {
+            return super.getRenderBoundingBox();
+        }
+        BlockPos pos = getPos();
+        return new AxisAlignedBB(pos.add(foundPattern.getMin()), pos.add(foundPattern.getMax()));
     }
 
     @Override

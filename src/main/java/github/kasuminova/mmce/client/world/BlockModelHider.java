@@ -47,6 +47,7 @@ public class BlockModelHider {
         MultiblockWorldSavedData.clearDisabled();
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Optional.Method(modid = "multiblocked")
     private static void hideOrShowBlocksMBD(TileMultiblockMachineController ctrl) {
         DynamicMachine foundMachine = ctrl.getFoundMachine();
@@ -69,6 +70,7 @@ public class BlockModelHider {
         }
     }
 
+    @SuppressWarnings("DuplicatedCode")
     @Optional.Method(modid = "component_model_hider")
     private static void hideOrShowBlocksPlugin(TileMultiblockMachineController ctrl) {
         DynamicMachine foundMachine = ctrl.getFoundMachine();

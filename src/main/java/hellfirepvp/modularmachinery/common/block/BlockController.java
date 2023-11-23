@@ -133,10 +133,28 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
         if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(parentMachine) != null) {
             if (state.getValue(FORMED)) {
-                return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+                return EnumBlockRenderType.INVISIBLE;
             }
         }
         return EnumBlockRenderType.MODEL;
+    }
+
+    @Override
+    public boolean doesSideBlockRendering(@Nonnull final IBlockState state, @Nonnull final IBlockAccess blockAccess, @Nonnull final BlockPos pos, @Nonnull final EnumFacing face) {
+        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(parentMachine) != null) {
+            return !state.getValue(FORMED);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(@Nonnull final IBlockState state, @Nonnull final IBlockAccess blockAccess, @Nonnull final BlockPos pos, @Nonnull final EnumFacing side) {
+        if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(parentMachine) != null) {
+            if (state.getValue(FORMED)) {
+                return false;
+            }
+        }
+        return super.shouldSideBeRendered(state, blockAccess, pos, side);
     }
 
     @Override
