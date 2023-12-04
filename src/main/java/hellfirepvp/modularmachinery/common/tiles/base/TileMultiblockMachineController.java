@@ -90,6 +90,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
+    public static boolean enableSecuritySystem = false;
 
     public static int usedTimeCache = 0;
     public static int searchUsedTimeCache = 0;
@@ -121,6 +122,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected ActionExecutor tickExecutor = null;
     protected WorkMode workMode = WorkMode.ASYNC;
+
+    protected UUID owner = null;
 
     protected int structureCheckCounter = 0;
     protected int recipeResearchRetryCounter = 0;
@@ -161,6 +164,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         //当结构检查失败时，是否清空自定义数据
         cleanCustomDataOnStructureCheckFailed = config.getBoolean("clean-custom-data-on-structure-check-failed", "general",
                 false, "When enabled, the customData will be cleared when multiblock structure check failed.");
+
+        enableSecuritySystem = config.getBoolean("enable-security-system", "general", false,
+                "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
@@ -529,16 +535,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void notifyStructureFormedState(boolean formed) {
         IBlockState state = world.getBlockState(getPos());
-
-        IBlockState newState;
-        // Old version block state compatibility.
-        if (!state.getProperties().containsKey(BlockController.FORMED)) {
-            newState = state.getBlock().getDefaultState()
-                    .withProperty(BlockController.FACING, state.getValue(BlockController.FACING))
-                    .withProperty(BlockController.FORMED, formed);
-        } else {
-            newState = state.withProperty(BlockController.FORMED, formed);
+        if (!(state.getBlock() instanceof BlockController)) {
+            // So what's the controller here?
+            return;
         }
+
+        IBlockState newState = state.getBlock().getDefaultState()
+                .withProperty(BlockController.FACING, controllerRotation)
+                .withProperty(BlockController.FORMED, formed);
 
         if (world.isRemote) {
             world.setBlockState(getPos(), newState, 2);
@@ -1033,6 +1037,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.inventory = IOInventory.deserialize(this, compound.getCompoundTag("items"));
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
 
+        if (compound.hasKey("owner")) {
+            String ownerUUIDStr = compound.getString("owner");
+            try {
+                this.owner = UUID.fromString(ownerUUIDStr);
+            } catch (Exception e) {
+                ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
+            }
+        }
+
         readMachineNBT(compound);
 
         if (FMLCommonHandler.instance().getSide().isClient()) {
@@ -1052,11 +1065,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         compound.setTag("items", this.inventory.writeNBT());
 
+        if (this.owner != null) {
+            compound.setString("owner", this.owner.toString());
+        }
+
         if (this.parentMachine != null) {
             compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());
         }
         if (this.controllerRotation != null) {
-            compound.setInteger("rotation", this.controllerRotation.getHorizontalIndex());
+            compound.setByte("rotation", (byte) this.controllerRotation.getHorizontalIndex());
         }
         if (this.foundMachine != null) {
             compound.setString("machine", this.foundMachine.getRegistryName().toString());
@@ -1102,7 +1119,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return;
         }
         this.foundMachine = machine;
-        this.controllerRotation = EnumFacing.byHorizontalIndex(compound.getInteger("rotation"));
+        this.controllerRotation = EnumFacing.byHorizontalIndex(compound.getByte("rotation"));
 
         TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {
@@ -1176,6 +1193,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void setWorkMode(final WorkMode workMode) {
         this.workMode = workMode;
+    }
+
+    public UUID getOwner() {
+        return owner;
+    }
+
+    public void setOwner(final UUID owner) {
+        this.owner = owner;
     }
 
     @Nonnull

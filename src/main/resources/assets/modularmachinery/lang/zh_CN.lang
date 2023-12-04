@@ -75,6 +75,9 @@ gui.preview.error.too_large.tip.1=仅显示结构所需材料。
 gui.preview.error.too_large.tip.2=使用结构投影仪右击控制器以查看结构投影。
 
 top.recipe.progress=进度
+top.machine.owner=所有者：
+top.machine.owner.self=你
+top.machine.owner.unknown=未知
 top.machine.working=工作中
 top.machine.structure.found=结构已形成
 top.machine.structure.none=结构不完整
@@ -137,6 +140,9 @@ message.reloaded=模块化机械：已完成重载！JEI 中的配方变化需�
 message.cleared.recipes=模块化机械：已清理 %s 个旧配方。
 message.reloaded.recipes=模块化机械：已重载 %s 个配方。
 message.reloaded.machines=模块化机械：已重载 %s 个机械结构。
+
+tooltip.item.controller.owner.self=§a你是控制器的所有者。
+tooltip.item.controller.owner.not_self=§c你不是控制器的所有者。
 
 tooltip.machinery.empty=空
 

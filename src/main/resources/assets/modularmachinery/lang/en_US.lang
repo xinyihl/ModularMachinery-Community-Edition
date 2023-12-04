@@ -76,11 +76,14 @@ gui.preview.error.too_large.tip.1=Only the ingredients required for the structur
 gui.preview.error.too_large.tip.2=Use the Structure Projector to right-click the controller to view the structure projection.
 
 top.recipe.progress=Progress
+top.machine.owner=Owner:
+top.machine.owner.self=You
+top.machine.owner.unknown=Unknown
 top.machine.working=Processing
 top.machine.structure.found=Structure formed
 top.machine.structure.none=Missing structure
-top.max_parallelism=Max Parallelism：
-top.parallelism=Parallelism：
+top.max_parallelism=Max Parallelism:
+top.parallelism=Parallelism:
 top.factory.thread=Thread #
 top.factory.thread.running=Threads Running
 top.factory.thread.max=Threads max
@@ -138,6 +141,9 @@ message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a r
 message.cleared.recipes=Modular Machinery: Cleared %s recipes.
 message.reloaded.recipes=Modular Machinery: Reloaded %s recipes.
 message.reloaded.machines=Modular Machinery: Reloaded %s machines.
+
+tooltip.item.controller.owner.self=§aYou are the owner of the controller.
+tooltip.item.controller.owner.not_self=§cYou are not the owner of the controller.
 
 tooltip.machinery.empty=Empty
 

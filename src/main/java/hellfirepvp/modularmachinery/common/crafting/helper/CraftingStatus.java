@@ -33,7 +33,7 @@ public class CraftingStatus {
     }
 
     public static CraftingStatus deserialize(NBTTagCompound tag) {
-        TileMachineController.Type type = TileMultiblockMachineController.Type.values()[tag.getInteger("type")];
+        TileMachineController.Type type = TileMultiblockMachineController.Type.values()[tag.getByte("type")];
         String unlocMessage = tag.getString("message");
         return new CraftingStatus(type, unlocMessage);
     }
@@ -56,7 +56,7 @@ public class CraftingStatus {
 
     public NBTTagCompound serialize() {
         NBTTagCompound tag = new NBTTagCompound();
-        tag.setInteger("type", this.status.ordinal());
+        tag.setByte("type", (byte) this.status.ordinal());
         tag.setString("message", this.unlocalizedMessage);
         return tag;
     }

@@ -331,13 +331,13 @@ public class DynamicPattern {
                 return null;
             }
 
-            return new Status(pattern, EnumFacing.values()[tag.getInteger("facing")], tag.getInteger("size"));
+            return new Status(pattern, EnumFacing.values()[tag.getByte("facing")], tag.getShort("size"));
         }
 
         public NBTTagCompound writeToNBT(NBTTagCompound tag) {
             tag.setString("pattern", pattern.name);
-            tag.setInteger("size", size);
-            tag.setInteger("facing", matchFacing.getIndex());
+            tag.setShort("size", (short) size);
+            tag.setByte("facing", (byte) matchFacing.getIndex());
             return tag;
         }
 

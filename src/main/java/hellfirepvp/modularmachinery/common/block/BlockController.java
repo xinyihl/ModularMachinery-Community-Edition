@@ -12,11 +12,13 @@ import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.data.Config;
+import hellfirepvp.modularmachinery.common.item.ItemBlockController;
 import hellfirepvp.modularmachinery.common.item.ItemDynamicColor;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
@@ -27,7 +29,9 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
@@ -38,9 +42,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -104,6 +106,30 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         if (this.getRegistryName().getNamespace().equals("modularcontroller") && !Config.disableMocDeprecatedTip) {
             tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.0"));
             tooltip.add(I18n.format("tile.modularmachinery.machinecontroller.deprecated.tip.1"));
+        }
+    }
+
+    @Override
+    public void getDrops(@Nonnull final NonNullList<ItemStack> drops, @Nonnull final IBlockAccess world, @Nonnull final BlockPos pos, @Nonnull final IBlockState state, final int fortune) {
+        Random rand = world instanceof World ? ((World)world).rand : RANDOM;
+
+        TileEntity te = world.getTileEntity(pos);
+        if (te instanceof TileMultiblockMachineController ctrl && ctrl.getOwner() != null) {
+            UUID ownerUUID = ctrl.getOwner();
+            Item dropped = getItemDropped(state, rand, fortune);
+            if (dropped instanceof ItemBlockController) {
+                ItemStack stackCtrl = new ItemStack(dropped, 1);
+                if (ownerUUID != null) {
+                    NBTTagCompound tag = new NBTTagCompound();
+                    tag.setString("owner", ownerUUID.toString());
+                    stackCtrl.setTagCompound(tag);
+                }
+                drops.add(stackCtrl);
+            } else {
+                ModularMachinery.log.warn("Cannot get controller drops at World: " + world + ", Pos: " + MiscUtils.posToString(pos));
+            }
+        } else {
+            super.getDrops(drops, world, pos, state, fortune);
         }
     }
 

@@ -55,7 +55,7 @@ public class AdapterIC2Compressor extends RecipeAdapter {
             int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, 1, false));
             if (outAmount > 0) {
                 for (ItemStack output : machineRecipe.getOutput()) {
-                    recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(output, inAmount)));
+                    recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(output, outAmount)));
                 }
             }
 

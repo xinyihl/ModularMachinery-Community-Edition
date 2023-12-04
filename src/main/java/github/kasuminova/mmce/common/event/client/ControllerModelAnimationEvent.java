@@ -1,7 +1,9 @@
 package github.kasuminova.mmce.common.event.client;
 
 import com.github.bsideup.jabel.Desugar;
+import crafttweaker.annotations.ModOnly;
 import crafttweaker.annotations.ZenRegister;
+import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import software.bernie.geckolib3.core.builder.Animation;
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ZenRegister
+@ModOnly("geckolib3")
 @ZenClass("mods.modularmachinery.ControllerModelAnimationEvent")
 public class ControllerModelAnimationEvent extends MachineEvent {
     private final List<AnimationCT> animations = new ArrayList<>();
@@ -27,7 +30,11 @@ public class ControllerModelAnimationEvent extends MachineEvent {
     public ControllerModelAnimationEvent(final TileMultiblockMachineController controller, final AnimationEvent<TileMultiblockMachineController> event) {
         super(controller);
         this.event = event;
-        this.currentModelName = controller.getCurrentModelName();
+        String currentModelName = controller.getCurrentModelName();
+        if (currentModelName.isEmpty()) {
+            currentModelName = DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(controller.getFoundMachine()).getModelName();
+        }
+        this.currentModelName = currentModelName;
     }
 
     @ZenMethod

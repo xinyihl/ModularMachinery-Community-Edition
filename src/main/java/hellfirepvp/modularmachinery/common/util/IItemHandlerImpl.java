@@ -297,14 +297,14 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         return max;
     }
 
-    protected static class SlotStackHolder {
+    public static class SlotStackHolder {
 
-        protected final int slotId;
+        public final int slotId;
 
         @Nonnull
-        protected volatile ItemStack itemStack = ItemStack.EMPTY;
+        public volatile ItemStack itemStack = ItemStack.EMPTY;
 
-        protected SlotStackHolder(int slotId) {
+        public SlotStackHolder(int slotId) {
             this.slotId = slotId;
         }
 

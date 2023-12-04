@@ -82,8 +82,8 @@ public class RecipeModifier {
         if (compound.hasKey("target") && compound.hasKey("ioTarget") && compound.hasKey("operation") && compound.hasKey("value") && compound.hasKey("chance")) {
             return RecipeModifierBuilder.newBuilder()
                     .setRequirementType(compound.getString("target"))
-                    .setIOType(compound.getInteger("ioTarget") == 0 ? IO_INPUT : IO_OUTPUT)
-                    .setOperation(compound.getInteger("operation"))
+                    .setIOType(compound.getByte("ioTarget") == 0 ? IO_INPUT : IO_OUTPUT)
+                    .setOperation(compound.getByte("operation"))
                     .setValue(compound.getFloat("value"))
                     .isAffectChance(compound.getBoolean("chance"))
                     .build();
@@ -159,8 +159,8 @@ public class RecipeModifier {
     public NBTTagCompound serialize() {
         NBTTagCompound compound = new NBTTagCompound();
         compound.setString("target", (target == null || target.getRegistryName() == null) ? "" : target.getRegistryName().toString());
-        compound.setInteger("ioTarget", ioTarget == IOType.INPUT ? 0 : 1);
-        compound.setInteger("operation", operation);
+        compound.setByte("ioTarget", (byte) (ioTarget == IOType.INPUT ? 0 : 1));
+        compound.setByte("operation", (byte) operation);
         compound.setFloat("value", modifier);
         compound.setBoolean("chance", chance);
 

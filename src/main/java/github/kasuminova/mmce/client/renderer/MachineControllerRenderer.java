@@ -2,14 +2,16 @@ package github.kasuminova.mmce.client.renderer;
 
 import github.kasuminova.mmce.client.model.MachineControllerModel;
 import github.kasuminova.mmce.client.util.MatrixStack;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Optional;
 import org.lwjgl.opengl.GL11;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -17,30 +19,30 @@ import software.bernie.geckolib3.core.IAnimatableModel;
 import software.bernie.geckolib3.core.controller.AnimationController;
 import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.*;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
-import software.bernie.geckolib3.renderers.geo.IGeoRenderer;
 
 import javax.vecmath.Vector3f;
 import javax.vecmath.Vector4f;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 @Optional.Interface(iface = "software.bernie.geckolib3.renderers.geo.IGeoRenderer", modid = "geckolib3")
-public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> implements IGeoRenderer<TileMultiblockMachineController> {
+public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> {
 
     public static final MachineControllerRenderer INSTANCE = new MachineControllerRenderer();
 
     private static final MatrixStack MATRIX_STACK = new MatrixStack();
 
     static {
-        AnimationController.addModelFetcher((IAnimatable object) -> {
-            if (object instanceof TileMultiblockMachineController ctrl) {
-                MachineControllerModel currentModel = ctrl.getCurrentModel();
-                if (currentModel != null) {
-                    return (IAnimatableModel) currentModel;
+        if (Mods.GECKOLIB.isPresent()) {
+            AnimationController.addModelFetcher((IAnimatable object) -> {
+                if (object instanceof TileMultiblockMachineController ctrl) {
+                    MachineControllerModel currentModel = ctrl.getCurrentModel();
+                    if (currentModel != null) {
+                        return (IAnimatableModel) currentModel;
+                    }
                 }
-            }
-            return null;
-        });
+                return null;
+            });
+        }
     }
 
     private MachineControllerRenderer() {
@@ -63,6 +65,14 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         return tile.getControllerRotation();
     }
 
+    public static Color getRenderColor(TileMultiblockMachineController animatable, float partialTicks) {
+        return Color.ofRGBA(255, 255, 255, 255);
+    }
+
+    public static int getUniqueID(TileMultiblockMachineController animatable) {
+        return animatable.hashCode();
+    }
+
     @Override
     public void render(TileMultiblockMachineController te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
         this.render(te, x, y, z, partialTicks, destroyStage);
@@ -76,7 +86,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         }
 
         GeoModel model = modelProvider.getModel();
-        modelProvider.setLivingAnimations(tile, this.getUniqueID(tile));
+        modelProvider.setLivingAnimations(tile, MachineControllerRenderer.getUniqueID(tile));
 
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         int lx = light % 65536;
@@ -100,6 +110,28 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         GlStateManager.popMatrix();
     }
 
+    @Optional.Method(modid = "geckolib3")
+    public void render(GeoModel model, TileMultiblockMachineController animatable, float partialTicks, float red, float green, float blue,
+                       float alpha) {
+        GlStateManager.disableCull();
+        GlStateManager.enableRescaleNormal();
+
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+
+        builder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+
+        // Render all top level bones
+        for (GeoBone group : model.topLevelBones) {
+            renderRecursively(builder, group, red, green, blue, alpha);
+        }
+
+        Tessellator.getInstance().draw();
+
+        GlStateManager.disableRescaleNormal();
+        GlStateManager.enableCull();
+    }
+
+    @Optional.Method(modid = "geckolib3")
     public void renderRecursively(BufferBuilder builder, GeoBone bone, float red, float green, float blue, float alpha) {
         MATRIX_STACK.push();
 
@@ -125,7 +157,6 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         MATRIX_STACK.pop();
     }
 
-    @Override
     @Optional.Method(modid = "geckolib3")
     public void renderCube(final BufferBuilder builder, final GeoCube cube, final float red, final float green, final float blue, final float alpha) {
         MATRIX_STACK.moveToPivot(cube);
@@ -161,16 +192,5 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
                         .color(red, green, blue, alpha).normal(normal.getX(), normal.getY(), normal.getZ()).endVertex();
             }
         }
-    }
-
-    @Override
-    @Optional.Method(modid = "geckolib3")
-    public AnimatedGeoModel<TileMultiblockMachineController> getGeoModelProvider() {
-        return null;
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(TileMultiblockMachineController instance) {
-        return null;
     }
 }

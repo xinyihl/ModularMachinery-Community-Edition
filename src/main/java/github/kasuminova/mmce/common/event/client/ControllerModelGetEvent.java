@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.event.client;
 
+import crafttweaker.annotations.ModOnly;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
@@ -8,6 +9,7 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenSetter;
 
 @ZenRegister
+@ModOnly("geckolib3")
 @ZenClass("mods.modularmachinery.ControllerModelGetEvent")
 public class ControllerModelGetEvent extends MachineEvent {
     private String modelName = "";

@@ -19,10 +19,7 @@ import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.*;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.MachineBuilder;
-import hellfirepvp.modularmachinery.common.item.ItemBlockCustomName;
-import hellfirepvp.modularmachinery.common.item.ItemBlockMEMachineComponent;
-import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponent;
-import hellfirepvp.modularmachinery.common.item.ItemBlockMachineComponentCustomName;
+import hellfirepvp.modularmachinery.common.item.*;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
@@ -294,15 +291,7 @@ public class RegistryBlocks {
                 BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController("modularcontroller", machine));
                 BlockController.MOC_MACHINE_CONTROLLERS.put(machine, ctrlBlock);
 
-                ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
-                    @Nonnull
-                    @Override
-                    @SideOnly(Side.CLIENT)
-                    public String getItemStackDisplayName(@Nonnull ItemStack stack) {
-                        return ctrlBlock.getLocalizedName();
-                    }
-                }.setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
-
+                ItemBlockController ctrlBlockItem = (ItemBlockController) new ItemBlockController(ctrlBlock).setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
                 prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
             }
         }
@@ -312,16 +301,8 @@ public class RegistryBlocks {
                 BlockFactoryController factoryBlock = prepareRegisterWithCustomName(new BlockFactoryController(machine));
                 BlockFactoryController.FACTORY_CONTROLLERS.put(machine, factoryBlock);
 
-                ItemBlockMachineComponent factoryBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(factoryBlock) {
-                    @Nonnull
-                    @Override
-                    @SideOnly(Side.CLIENT)
-                    public String getItemStackDisplayName(ItemStack stack) {
-                        return factoryBlock.getLocalizedName();
-                    }
-                }.setRegistryName(Objects.requireNonNull(factoryBlock.getRegistryName()));
-
-                prepareItemBlockRegisterWithCustomName(factoryBlockItem);
+                ItemBlockController ctrlBlockItem = (ItemBlockController) new ItemBlockController(factoryBlock).setRegistryName(Objects.requireNonNull(factoryBlock.getRegistryName()));
+                prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
             }
 
             if (machine.isFactoryOnly()) {
@@ -331,15 +312,7 @@ public class RegistryBlocks {
             BlockController ctrlBlock = prepareRegisterWithCustomName(new BlockController(machine));
             BlockController.MACHINE_CONTROLLERS.put(machine, ctrlBlock);
 
-            ItemBlockMachineComponent ctrlBlockItem = (ItemBlockMachineComponent) new ItemBlockMachineComponent(ctrlBlock) {
-                @Nonnull
-                @Override
-                @SideOnly(Side.CLIENT)
-                public String getItemStackDisplayName(ItemStack stack) {
-                    return ctrlBlock.getLocalizedName();
-                }
-            }.setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
-
+            ItemBlockController ctrlBlockItem = (ItemBlockController) new ItemBlockController(ctrlBlock).setRegistryName(Objects.requireNonNull(ctrlBlock.getRegistryName()));
             prepareItemBlockRegisterWithCustomName(ctrlBlockItem);
         }
     }

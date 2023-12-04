@@ -572,7 +572,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             controllerStatus = CraftingStatus.deserialize(compound.getCompoundTag("status"));
         }
 
-        extraThreadCount = compound.getInteger("extraThreadCount");
+        extraThreadCount = compound.getByte("extraThreadCount");
 
         recipeThreadList.clear();
         coreRecipeThreads.clear();
@@ -640,7 +640,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
         compound.setTag("status", controllerStatus.serialize());
         compound.setInteger("totalParallelism", getMaxParallelism());
-        compound.setInteger("extraThreadCount", extraThreadCount);
+        compound.setShort("extraThreadCount", (short) extraThreadCount);
     }
 
     @Override

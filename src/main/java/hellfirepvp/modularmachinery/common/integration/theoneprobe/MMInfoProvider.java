@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.integration.theoneprobe;
 
+import com.mojang.authlib.GameProfile;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.util.EnergyDisplayUtil;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -22,6 +23,7 @@ import io.netty.util.internal.ThrowableUtil;
 import mcjty.theoneprobe.api.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
@@ -29,6 +31,7 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -67,6 +70,23 @@ public class MMInfoProvider implements IProbeInfoProvider {
     }
 
     private static void processMultiblockMachineTOP(TileMultiblockMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
+        UUID ownerUUID = machine.getOwner();
+        if (ownerUUID != null) {
+            MinecraftServer server = machine.getWorld().getMinecraftServer();
+            if (server != null) {
+                if (ownerUUID.equals(player.getGameProfile().getId())) {
+                    probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.GREEN + "{*top.machine.owner.self*}");
+                } else {
+                    GameProfile ownerProfile = server.getPlayerProfileCache().getProfileByUUID(ownerUUID);
+                    if (ownerProfile == null) {
+                        probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.YELLOW + "{*top.machine.owner.unknown*}(UUID: " + ownerUUID + ")");
+                    } else {
+                        probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.RED + ownerProfile.getName());
+                    }
+                }
+            }
+        }
+
         //是否形成结构
         if (machine.isStructureFormed()) {
             probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
