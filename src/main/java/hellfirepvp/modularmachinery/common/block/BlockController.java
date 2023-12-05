@@ -110,8 +110,12 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     }
 
     @Override
+    public void dropBlockAsItemWithChance(@Nonnull final World worldIn, @Nonnull final BlockPos pos, @Nonnull final IBlockState state, final float chance, final int fortune) {
+    }
+
+    @Override
     public void getDrops(@Nonnull final NonNullList<ItemStack> drops, @Nonnull final IBlockAccess world, @Nonnull final BlockPos pos, @Nonnull final IBlockState state, final int fortune) {
-        Random rand = world instanceof World ? ((World)world).rand : RANDOM;
+        Random rand = world instanceof World ? ((World) world).rand : RANDOM;
 
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof TileMultiblockMachineController ctrl && ctrl.getOwner() != null) {
@@ -135,9 +139,10 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Override
     public void breakBlock(World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
+        Random rand = worldIn.rand;
         TileEntity te = worldIn.getTileEntity(pos);
-        if (te instanceof TileMachineController) {
-            IOInventory inv = ((TileMultiblockMachineController) te).getInventory();
+        if (te instanceof TileMultiblockMachineController ctrl) {
+            IOInventory inv = ctrl.getInventory();
             for (int i = 0; i < inv.getSlots(); i++) {
                 ItemStack stack = inv.getStackInSlot(i);
                 if (!stack.isEmpty()) {
@@ -145,7 +150,22 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
                     inv.setStackInSlot(i, ItemStack.EMPTY);
                 }
             }
+
+            UUID ownerUUID = ctrl.getOwner();
+            Item dropped = getItemDropped(state, rand, damageDropped(state));
+            if (dropped instanceof ItemBlockController) {
+                ItemStack stackCtrl = new ItemStack(dropped, 1);
+                if (ownerUUID != null) {
+                    NBTTagCompound tag = new NBTTagCompound();
+                    tag.setString("owner", ownerUUID.toString());
+                    stackCtrl.setTagCompound(tag);
+                }
+                spawnAsEntity(worldIn, pos, stackCtrl);
+            } else {
+                ModularMachinery.log.warn("Cannot get controller drops at World: " + worldIn + ", Pos: " + MiscUtils.posToString(pos));
+            }
         }
+
         super.breakBlock(worldIn, pos, state);
     }
 
