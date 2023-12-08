@@ -106,8 +106,11 @@ public class EventHandler {
         if (!(event.getState().getBlock() instanceof BlockController)) {
             return;
         }
-        World world = event.getWorld();
         EntityPlayer player = event.getPlayer();
+        if (player.isCreative()) {
+            return;
+        }
+        World world = event.getWorld();
         TileEntity te = world.getTileEntity(event.getPos());
         if (te instanceof TileMultiblockMachineController ctrl) {
             UUID ownerUUID = ctrl.getOwner();
@@ -117,8 +120,36 @@ public class EventHandler {
 
             UUID playerUUID = player.getGameProfile().getId();
             if (!playerUUID.equals(ownerUUID)) {
-//                GameProfile profileByUUID = world.getMinecraftServer().getPlayerProfileCache().getProfileByUUID(ownerUUID);
                 event.setCanceled(true);
+            }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    @SubscribeEvent
+    public void onBlockPlaced(BlockEvent.PlaceEvent event) {
+        if (!TileMultiblockMachineController.enableSecuritySystem) {
+            return;
+        }
+        EntityPlayer player = event.getPlayer();
+        if (player.isCreative()) {
+            return;
+        }
+        ItemStack itemInHand = event.getItemInHand();
+        if (!(itemInHand.getItem() instanceof ItemBlockController)) {
+            return;
+        }
+        NBTTagCompound stackTag = itemInHand.getTagCompound();
+        if (stackTag != null && stackTag.hasKey("owner")) {
+            String ownerUUIDStr = stackTag.getString("owner");
+            try {
+                UUID ownerUUID = UUID.fromString(ownerUUIDStr);
+                UUID playerUUID = player.getGameProfile().getId();
+                if (!playerUUID.equals(ownerUUID)) {
+                    event.setCanceled(true);
+                }
+            } catch (Exception e) {
+                ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
             }
         }
     }

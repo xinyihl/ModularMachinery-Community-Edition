@@ -535,8 +535,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void notifyStructureFormedState(boolean formed) {
         IBlockState state = world.getBlockState(getPos());
-        if (!(state.getBlock() instanceof BlockController)) {
-            // So what's the controller here?
+        if (controllerRotation == null || !(state.getBlock() instanceof BlockController)) {
+            // Where is the controller?
             return;
         }
 
@@ -1023,8 +1023,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public void invalidate() {
         super.invalidate();
         foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
-
-        resetMachine(true);
 
         if (getWorld().isRemote) {
             BlockModelHider.hideOrShowBlocks(this);

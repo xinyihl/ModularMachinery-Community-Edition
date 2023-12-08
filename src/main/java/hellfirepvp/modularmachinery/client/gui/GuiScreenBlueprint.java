@@ -159,14 +159,14 @@ public class GuiScreenBlueprint extends GuiScreen {
         int showUsesKeyCode = KeyBindings.showUses.getKeyCode();
         int bookmarkKeyCode = KeyBindings.bookmark.getKeyCode();
 
-        if ((showRecipeKeyCode != 0 && Keyboard.isKeyDown(showRecipeKeyCode)) || Mouse.isButtonDown(0)) {
+        if ((showRecipeKeyCode > 0 && showRecipeKeyCode <= 255 && Keyboard.isKeyDown(showRecipeKeyCode)) || Mouse.isButtonDown(0)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.OUTPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
             }, 0);
             return;
         }
-        if ((showUsesKeyCode != 0 && Keyboard.isKeyDown(showUsesKeyCode)) || Mouse.isButtonDown(1)) {
+        if ((showUsesKeyCode > 0 && showUsesKeyCode <= 255 && Keyboard.isKeyDown(showUsesKeyCode)) || Mouse.isButtonDown(1)) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 IFocus<ItemStack> focus = ModIntegrationJEI.recipeRegistry.createFocus(IFocus.Mode.INPUT, stack);
                 ModIntegrationJEI.jeiRuntime.getRecipesGui().show(focus);
@@ -174,7 +174,7 @@ public class GuiScreenBlueprint extends GuiScreen {
             return;
         }
 
-        if (Keyboard.isKeyDown(bookmarkKeyCode)) {
+        if (bookmarkKeyCode > 0 && bookmarkKeyCode <= 255 && Keyboard.isKeyDown(bookmarkKeyCode)) {
             ModIntegrationJEI.addItemStackToBookmarkList(stack);
         }
     }
