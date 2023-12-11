@@ -1,8 +1,6 @@
 package github.kasuminova.mmce.common.upgrade;
 
 import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.item.IItemStack;
-import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.UpgradeEventHandlerCT;
 import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
 import net.minecraft.item.ItemStack;
@@ -20,15 +18,14 @@ public abstract class MachineUpgrade {
 
     protected final UpgradeType type;
     protected final Map<Class<?>, List<UpgradeEventHandlerCT>> eventProcessor = new HashMap<>();
-    protected int stackSize = 1;
+
     protected TileUpgradeBus parentBus = null;
 
-    protected ItemStack parentStack = ItemStack.EMPTY;
+    protected int stackSize = 1;
 
     public MachineUpgrade(final UpgradeType type) {
         this.type = type;
     }
-
 
     public void readNBT(NBTTagCompound tag) {
 
@@ -44,15 +41,6 @@ public abstract class MachineUpgrade {
     public abstract List<String> getDescriptions();
 
     public abstract List<String> getBusGUIDescriptions();
-
-    public ItemStack getParentStack() {
-        return parentStack;
-    }
-
-    @ZenGetter("parentStack")
-    public IItemStack getParentStackCT() {
-        return CraftTweakerMC.getIItemStack(parentStack);
-    }
 
     public void addEventHandler(Class<?> eventClass, UpgradeEventHandlerCT handler) {
         eventProcessor.computeIfAbsent(eventClass, v -> new ArrayList<>()).add(handler);

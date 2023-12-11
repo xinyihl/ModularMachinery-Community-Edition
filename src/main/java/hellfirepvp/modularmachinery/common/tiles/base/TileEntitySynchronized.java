@@ -110,11 +110,11 @@ public class TileEntitySynchronized extends TileEntity {
      * <p>*** 只能保证 MMCE 自身对世界的线程安全 ***</p>
      */
     public void markForUpdateSync() {
-        if (this instanceof SelectiveUpdateTileEntity) {
-            markNoUpdateSync();
+        if (inUpdateTask) {
             return;
         }
-        if (inUpdateTask) {
+        if (this instanceof SelectiveUpdateTileEntity) {
+            markNoUpdateSync();
             return;
         }
         ModularMachinery.EXECUTE_MANAGER.addTEUpdateTask(this);

@@ -16,6 +16,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentItem;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeItem;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -33,6 +34,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -41,8 +43,9 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:35
  */
-public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeItem>
+public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<IngredientItemStack, RequirementTypeItem>
         implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
+    public static final Random RD = new Random();
 
     public final ItemRequirementType requirementType;
 
@@ -63,6 +66,9 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     public AdvancedItemChecker itemChecker = null;
     public float chance = 1F;
 
+    public int minAmount = 1;
+    public int maxAmount = 1;
+
     public RequirementItem(IOType ioType, ItemStack item) {
         super(RequirementTypesMM.REQUIREMENT_ITEM, ioType);
         this.requirementType = ItemRequirementType.ITEMSTACKS;
@@ -70,6 +76,8 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         this.oreDictName = null;
         this.oreDictItemAmount = 0;
         this.fuelBurntime = 0;
+        this.minAmount = item.getCount();
+        this.maxAmount = item.getCount();
     }
 
     public RequirementItem(IOType ioType, String oreDictName, int oreDictAmount) {
@@ -79,8 +87,11 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         this.oreDictItemAmount = oreDictAmount;
         this.required = ItemStack.EMPTY;
         this.fuelBurntime = 0;
+        this.minAmount = oreDictAmount;
+        this.maxAmount = oreDictAmount;
     }
 
+    @Deprecated
     public RequirementItem(IOType actionType, int fuelBurntime) {
         super(RequirementTypesMM.REQUIREMENT_ITEM, actionType);
         this.requirementType = ItemRequirementType.FUEL;
@@ -110,23 +121,20 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
 
     @Override
     public RequirementItem deepCopyModified(List<RecipeModifier> modifiers) {
-        RequirementItem item;
-        switch (this.requirementType) {
-            case OREDICT -> {
-                int inOreAmt = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.oreDictItemAmount, false));
-                item = new RequirementItem(this.actionType, this.oreDictName, inOreAmt);
-            }
-            case FUEL -> {
-                int inFuel = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.fuelBurntime, false));
-                item = new RequirementItem(this.actionType, inFuel);
-            }
+        float modValue = RecipeModifier.applyModifiers(modifiers, this, 1F, false);
+
+        RequirementItem item = switch (this.requirementType) {
+            case OREDICT -> new RequirementItem(this.actionType, this.oreDictName, Math.round(this.oreDictItemAmount * modValue));
+            case FUEL -> new RequirementItem(this.actionType, Math.round(this.fuelBurntime * modValue));
             default -> {
                 ItemStack inReq = this.required.copy();
-                int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, inReq.getCount(), false));
-                inReq.setCount(amt);
-                item = new RequirementItem(this.actionType, inReq);
+                inReq.setCount(Math.round(inReq.getCount() * modValue));
+                yield new RequirementItem(this.actionType, inReq);
             }
-        }
+        };
+
+        item.minAmount = Math.round(minAmount * modValue);
+        item.maxAmount = Math.round(maxAmount * modValue);
         item.chance = this.chance;
         if (this.itemChecker != null) {
             item.itemChecker = this.itemChecker;
@@ -143,7 +151,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     }
 
     @Override
-    public JEIComponent<ItemStack> provideJEIComponent() {
+    public JEIComponent<IngredientItemStack> provideJEIComponent() {
         return new JEIComponentItem(this);
     }
 
@@ -170,14 +178,14 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
 
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        if (actionType == IOType.INPUT) {
+        if (actionType == IOType.INPUT && chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
             doItemIO(components, context, itemModifierList, chance);
         }
     }
 
     @Override
     public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        if (actionType == IOType.OUTPUT) {
+        if (actionType == IOType.OUTPUT && chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
             doItemIO(components, context, itemModifierList, chance);
         }
     }
@@ -230,7 +238,6 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
                 yield insertAllItems(handlers, context, maxMultiplier, itemModifiers, chance);
             }
         };
-
     }
 
     @Nonnull
@@ -246,11 +253,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
                                final ResultChance chance)
     {
         int consumed = 0;
-        int toConsume = switch (this.requirementType) {
-            case ITEMSTACKS -> Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
-            case OREDICT -> Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
-            default -> 0;
-        };
+        int toConsume = applyModifierAmount(context, chance != ResultChance.GUARANTEED || minAmount != maxAmount);
 
         int maxConsume = toConsume * maxMultiplier;
 
@@ -305,10 +308,6 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
             return maxMultiplier;
         }
 
-        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            return maxMultiplier;
-        }
-
         switch (this.requirementType) {
             case ITEMSTACKS -> {
                 for (final IItemHandlerModifiable handler : handlers) {
@@ -351,11 +350,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         }
 
         int inserted = 0;
-        int toInsert = switch (this.requirementType) {
-            case ITEMSTACKS -> Math.round(RecipeModifier.applyModifiers(context, this, required.getCount(), false));
-            case OREDICT -> Math.round(RecipeModifier.applyModifiers(context, this, oreDictItemAmount, false));
-            default -> 0;
-        };
+        int toInsert = applyModifierAmount(context, chance != ResultChance.GUARANTEED || minAmount != maxAmount);
 
         if (toInsert <= 0) {
             return maxMultiplier;
@@ -384,10 +379,6 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
             stack.setCount(1);
         }
 
-        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            return maxMultiplier;
-        }
-
         int maxInsert = toInsert * maxMultiplier;
         for (final IItemHandlerModifiable handler : handlers) {
             synchronized (handler) {
@@ -399,6 +390,19 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         }
 
         return inserted / toInsert;
+    }
+
+    public IngredientItemStack asIngredientItemStack(ItemStack stack) {
+        return new IngredientItemStack(stack, minAmount, maxAmount, chance);
+    }
+
+    protected int applyModifierAmount(final RecipeCraftingContext context, boolean randomAmount) {
+        if (randomAmount) {
+            int amount = minAmount + RD.nextInt((maxAmount - minAmount) + 1);
+            return Math.round(RecipeModifier.applyModifiers(context, this, amount, false));
+        } else {
+            return Math.round(RecipeModifier.applyModifiers(context, this, maxAmount, false));
+        }
     }
 
     public enum ItemRequirementType {

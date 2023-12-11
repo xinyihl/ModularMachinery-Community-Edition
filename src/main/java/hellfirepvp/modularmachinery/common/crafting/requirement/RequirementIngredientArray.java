@@ -1,13 +1,16 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
+import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentIngredientArray;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeIngredientArray;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
@@ -17,17 +20,19 @@ import hellfirepvp.modularmachinery.common.util.IItemHandlerImpl;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeIngredientArray>
-        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable {
+public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<IngredientItemStack, RequirementTypeIngredientArray>
+        implements ComponentRequirement.ChancedRequirement {
 
-    public final List<ChancedIngredientStack> ingredients;
+    protected final List<ChancedIngredientStack> ingredients;
 
     public float chance = 1.0F;
 
@@ -41,6 +46,12 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
         this.ingredients = ingredients;
     }
 
+    public RequirementIngredientArray(List<ChancedIngredientStack> ingredients, IOType ioType) {
+        super(RequirementTypesMM.REQUIREMENT_INGREDIENT_ARRAY, ioType);
+
+        this.ingredients = ingredients;
+    }
+
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component();
@@ -49,7 +60,6 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                 cmp.ioType == actionType;
     }
 
-
     @Override
     public RequirementIngredientArray deepCopy() {
         return deepCopyModified(Collections.emptyList());
@@ -57,19 +67,25 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
 
     @Override
     public RequirementIngredientArray deepCopyModified(List<RecipeModifier> modifiers) {
-        ArrayList<ChancedIngredientStack> newArray = new ArrayList<>(this.ingredients);
-        newArray.forEach(item -> {
-            switch (item.ingredientType) {
+        ArrayList<ChancedIngredientStack> copiedIngredients = new ArrayList<>(this.ingredients);
+
+        ingredients.forEach(item -> {
+            ChancedIngredientStack copied = item.copy();
+
+            switch (copied.ingredientType) {
                 case ITEMSTACK -> {
-                    ItemStack itemStack = item.itemStack;
-                    int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, itemStack.getCount(), false));
+                    ItemStack itemStack = copied.itemStack;
+                    int amt = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, itemStack.getCount(), false));
                     itemStack.setCount(amt);
                 }
-                case ORE_DICT -> item.count = Math.round(RecipeModifier.applyModifiers(modifiers, this, item.count, false));
+                case ORE_DICT -> copied.count = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.count, false));
             }
-            item.chance = RecipeModifier.applyModifiers(modifiers, this, item.chance, true);
+            copied.chance = RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.chance, true);
+
+            copiedIngredients.add(copied);
         });
-        return new RequirementIngredientArray(newArray);
+
+        return new RequirementIngredientArray(copiedIngredients);
     }
 
     @Nonnull
@@ -81,7 +97,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
     }
 
     @Override
-    public JEIComponent<ItemStack> provideJEIComponent() {
+    public JEIComponent<IngredientItemStack> provideJEIComponent() {
         return new JEIComponentIngredientArray(this);
     }
 
@@ -92,7 +108,16 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
 
     @Override
     public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        doItemIO(components, context, chance);
+        if (actionType == IOType.INPUT && chance.canWork(RecipeModifier.applyModifiers(context, RequirementTypesMM.REQUIREMENT_ITEM, actionType, this.chance, true))) {
+            doItemIO(components, context, chance);
+        }
+    }
+
+    @Override
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        if (actionType == IOType.OUTPUT && chance.canWork(RecipeModifier.applyModifiers(context, RequirementTypesMM.REQUIREMENT_ITEM, actionType, this.chance, true))) {
+            doItemIO(components, context, chance);
+        }
     }
 
     @Nonnull
@@ -131,7 +156,16 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
             handlers.add(providedComponent);
         }
 
-        return consumeAllItems(handlers, context, maxMultiplier, chance);
+        return switch (actionType) {
+            case INPUT -> consumeAllItems(handlers, context, maxMultiplier, chance);
+            case OUTPUT -> {
+                if (ignoreOutputCheck) {
+                    insertAllItems(handlers, context, maxMultiplier, chance);
+                    yield maxMultiplier;
+                }
+                yield insertAllItems(handlers, context, maxMultiplier, chance);
+            }
+        };
     }
 
     public int consumeAllItems(final List<IItemHandlerImpl> handlers,
@@ -139,14 +173,10 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                                final int maxMultiplier,
                                final ResultChance chance)
     {
-        if (!chance.canWork(RecipeModifier.applyModifiers(context, this, this.chance, true))) {
-            return maxMultiplier;
-        }
-
         int ingredientConsumed = 0;
 
         for (final ChancedIngredientStack ingredient : ingredients) {
-            int toConsume = Math.round(RecipeModifier.applyModifiers(context, this, ingredient.count, false));
+            int toConsume = applyModifierAmount(context, ingredient.count, ingredient.minCount, ingredient.maxCount, chance != ResultChance.GUARANTEED);
             int maxConsume = toConsume * (maxMultiplier - ingredientConsumed);
             int consumed = 0;
 
@@ -193,5 +223,111 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
         }
 
         return ingredientConsumed;
+    }
+
+    public int insertAllItems(final List<IItemHandlerImpl> handlers,
+                              final RecipeCraftingContext context,
+                              final int maxMultiplier,
+                              final ResultChance chance)
+    {
+        ChancedIngredientStack selected = chance == ResultChance.GUARANTEED ? selectMaxCountStack() : selectRandomStack();
+        if (selected == null) {
+            return 0;
+        }
+
+        int inserted = 0;
+        int toInsert = applyModifierAmount(context, selected.count, selected.minCount, selected.maxCount, chance != ResultChance.GUARANTEED);
+
+        if (toInsert <= 0) {
+            return maxMultiplier;
+        }
+
+        ItemStack stack;
+        NBTTagCompound tag = selected.tag;
+        switch (selected.ingredientType) {
+            case ITEMSTACK -> stack = ItemUtils.copyStackWithSize(selected.itemStack, 1);
+            case ORE_DICT -> stack = ItemUtils.getOredictItem(context, selected.oreDictName, tag);
+            default -> {
+                return 0;
+            }
+        }
+        if (tag != null) {
+            stack.setTagCompound(tag);
+        }
+
+        if (!selected.itemModifierList.isEmpty()) {
+            for (final AdvancedItemModifier modifier : selected.itemModifierList) {
+                stack = modifier.apply(context.getMachineController(), stack);
+            }
+            toInsert *= stack.getCount();
+            if (toInsert <= 0) {
+                return maxMultiplier;
+            }
+            stack.setCount(1);
+        }
+
+        int maxInsert = toInsert * maxMultiplier;
+        for (final IItemHandlerModifiable handler : handlers) {
+            synchronized (handler) {
+                inserted += ItemUtils.insertAll(stack, handler, maxInsert - inserted);
+            }
+            if (inserted >= maxInsert) {
+                break;
+            }
+        }
+
+        return inserted / toInsert;
+    }
+
+    protected int applyModifierAmount(final RecipeCraftingContext context, int defaultCount, int minAmount, int maxAmount, boolean randomAmount) {
+        if (randomAmount) {
+            int amount = minAmount + RequirementItem.RD.nextInt((maxAmount - minAmount) + 1);
+            return Math.round(RecipeModifier.applyModifiers(context, RequirementTypesMM.REQUIREMENT_ITEM, actionType, amount, false));
+        } else {
+            return Math.round(RecipeModifier.applyModifiers(context, RequirementTypesMM.REQUIREMENT_ITEM, actionType, maxAmount, false));
+        }
+    }
+
+    protected ChancedIngredientStack selectRandomStack() {
+        float totalChance = 0;
+        for (final ChancedIngredientStack ingredient : ingredients) {
+            totalChance += ingredient.chance;
+        }
+        float randomChance = RequirementItem.RD.nextFloat() * totalChance;
+
+        float chanceCount = 0;
+        ChancedIngredientStack selected = null;
+        for (final ChancedIngredientStack ingredient : ingredients) {
+            chanceCount += ingredient.chance;
+            if (chanceCount >= randomChance) {
+                selected = ingredient;
+                break;
+            }
+        }
+
+        if (selected == null) {
+            ModularMachinery.log.warn("[MM-RequirementIngredientArray] Invalid selected stack! totalChance: " + totalChance + ", randomChance: " + randomChance);
+        }
+
+        return selected;
+    }
+
+    protected ChancedIngredientStack selectMaxCountStack() {
+        ChancedIngredientStack selected = null;
+        for (final ChancedIngredientStack ingredient : ingredients) {
+            if (selected == null) {
+                selected = ingredient;
+                continue;
+            }
+
+            if (ingredient.maxCount > selected.maxCount) {
+                selected = ingredient;
+            }
+        }
+        return selected;
+    }
+
+    public List<ChancedIngredientStack> getIngredients() {
+        return Collections.unmodifiableList(ingredients);
     }
 }

@@ -166,6 +166,9 @@ tooltip.machinery.chance.out=有 %s 概率产出
 tooltip.machinery.chance.in.never=不被消耗
 tooltip.machinery.chance.out.never=不产出
 
+tooltip.machinery.min_max_amount.input=消耗数量：%s ~ %s
+tooltip.machinery.min_max_amount.output=产出数量：%s ~ %s
+
 tooltip.machinery.energy.in=能量消耗：
 tooltip.machinery.energy.out=能量产出：
 tooltip.machinery.energy.tick=%s %s/t

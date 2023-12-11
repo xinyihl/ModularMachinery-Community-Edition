@@ -1,9 +1,9 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementCatalyst;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -20,12 +20,12 @@ public class JEIComponentCatalyst extends JEIComponentItem {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public RecipeLayoutPart<ItemStack> getLayoutPart(Point offset) {
+    public RecipeLayoutPart<IngredientItemStack> getLayoutPart(Point offset) {
         return new RecipeLayoutPart.Item(offset);
     }
 
     @Override
-    public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
+    public void onJEIHoverTooltip(int slotIndex, boolean input, IngredientItemStack ingredient, List<String> tooltip) {
         super.onJEIHoverTooltip(slotIndex, input, ingredient, tooltip);
 
         List<String> toolTipList = requirement.getToolTipList();

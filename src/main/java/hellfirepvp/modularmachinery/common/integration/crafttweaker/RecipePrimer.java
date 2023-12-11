@@ -66,7 +66,8 @@ public class RecipePrimer implements PreparedRecipe {
     private final List<Action> needAfterInitActions = new LinkedList<>();
     private final List<String> toolTipList = new ArrayList<>();
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
-    private boolean isParallelized = Config.recipeParallelizeEnabledByDefault;
+
+    private boolean parallelized = Config.recipeParallelizeEnabledByDefault;
     private int maxThreads = -1;
     private String threadName = "";
     private ComponentRequirement<?, ?> lastComponent = null;
@@ -81,8 +82,8 @@ public class RecipePrimer implements PreparedRecipe {
 
     @ZenMethod
     public RecipePrimer setParallelizeUnaffected(boolean unaffected) {
-        if (lastComponent instanceof ComponentRequirement.Parallelizable) {
-            ((ComponentRequirement.Parallelizable) lastComponent).setParallelizeUnaffected(unaffected);
+        if (lastComponent instanceof ComponentRequirement.Parallelizable parallelizable) {
+            parallelizable.setParallelizeUnaffected(unaffected);
         } else {
             CraftTweakerAPI.logWarning("[ModularMachinery] Target " + lastComponent.getClass() + " cannot be parallelized!");
         }
@@ -91,15 +92,15 @@ public class RecipePrimer implements PreparedRecipe {
 
     @ZenMethod
     public RecipePrimer setParallelized(boolean isParallelized) {
-        this.isParallelized = isParallelized;
+        this.parallelized = isParallelized;
         return this;
     }
 
     @ZenMethod
     public RecipePrimer setChance(float chance) {
         if (lastComponent != null) {
-            if (lastComponent instanceof ComponentRequirement.ChancedRequirement) {
-                ((ComponentRequirement.ChancedRequirement) lastComponent).setChance(chance);
+            if (lastComponent instanceof ComponentRequirement.ChancedRequirement chancedReq) {
+                chancedReq.setChance(chance);
             } else {
                 CraftTweakerAPI.logWarning("[ModularMachinery] Cannot set chance for not-chance-based Component: " + lastComponent.getClass());
             }
@@ -118,13 +119,13 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer setPreViewNBT(IData nbt) {
         if (lastComponent != null) {
-            if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).previewDisplayTag = CraftTweakerMC.getNBTCompound(nbt);
+            if (lastComponent instanceof RequirementItem reqItem) {
+                reqItem.previewDisplayTag = CraftTweakerMC.getNBTCompound(nbt);
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] setNBT(String nbtString) only can be applied to Item!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item` or `Catalyst`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] setNBT(String nbtString) only can be applied to Item!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item` or `Catalyst`!");
         }
         return this;
     }
@@ -132,13 +133,13 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer setNBTChecker(AdvancedItemCheckerCT checker) {
         if (lastComponent != null) {
-            if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).setItemChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
+            if (lastComponent instanceof RequirementItem reqItem) {
+                reqItem.setItemChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to Item or Catalyst!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item` or `Catalyst`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to Item or Catalyst!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item` or `Catalyst`!");
         }
         return this;
     }
@@ -146,13 +147,32 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addItemModifier(AdvancedItemModifierCT modifier) {
         if (lastComponent != null) {
-            if (lastComponent instanceof RequirementItem) {
-                ((RequirementItem) lastComponent).addItemModifier((controller, stack) -> CraftTweakerMC.getItemStack(modifier.apply(controller, CraftTweakerMC.getIItemStackMutable(stack))));
+            if (lastComponent instanceof RequirementItem reqItem) {
+                reqItem.addItemModifier((controller, stack) -> CraftTweakerMC.getItemStack(modifier.apply(controller, CraftTweakerMC.getIItemStackMutable(stack))));
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to Item or Catalyst!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item` or `Catalyst`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to Item or Catalyst!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item` or `Catalyst`!");
+        }
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer setMinMaxAmount(int min, int max) {
+        if (lastComponent != null) {
+            if (lastComponent instanceof RequirementItem reqItem) {
+                if (min < max) {
+                    reqItem.minAmount = min;
+                    reqItem.maxAmount = max;
+                } else {
+                    CraftTweakerAPI.logWarning("[ModularMachinery] `min` cannot larger than `max`!");
+                }
+            } else {
+                CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item` or `Catalyst`!");
+            }
+        } else {
+            CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item` or `Catalyst`!");
         }
         return this;
     }
@@ -549,6 +569,18 @@ public class RecipePrimer implements PreparedRecipe {
         return this;
     }
 
+    /**
+     * <p>随机选择给定的一组物品中的其中一个输出。</p>
+     * <p>虽然都使用 IngredientArrayPrimer 作为参数，但是输出的工作机制要<strong>稍有不同</strong>。</p>
+     * <p>每个 Ingredient 的 chance 代表整个物品列表的随机选择权重，权重越高，输出概率越大。</p>
+     * <p>同样，setMinMaxAmount() 也能够起作用。</p>
+     */
+    @ZenMethod
+    public RecipePrimer addRandomItemOutput(IngredientArrayPrimer ingredientArrayPrimer) {
+        appendComponent(new RequirementIngredientArray(ingredientArrayPrimer.getIngredientStackList(), IOType.OUTPUT));
+        return this;
+    }
+
     //----------------------------------------------------------------------------------------------
     // ITEM output
     //----------------------------------------------------------------------------------------------
@@ -768,7 +800,7 @@ public class RecipePrimer implements PreparedRecipe {
 
     @Override
     public boolean isParallelized() {
-        return isParallelized;
+        return parallelized;
     }
 
     @Override

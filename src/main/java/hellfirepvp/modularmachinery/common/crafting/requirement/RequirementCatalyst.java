@@ -4,6 +4,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentCatalyst;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
@@ -105,7 +106,7 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
-    public JEIComponent<ItemStack> provideJEIComponent() {
+    public JEIComponent<IngredientItemStack> provideJEIComponent() {
         return new JEIComponentCatalyst(this);
     }
 }

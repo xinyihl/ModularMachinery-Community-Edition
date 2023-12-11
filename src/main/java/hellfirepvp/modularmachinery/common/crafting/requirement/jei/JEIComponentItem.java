@@ -8,9 +8,11 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
@@ -24,8 +26,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,7 +39,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 08.04.2018 / 12:44
  */
-public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStack> {
+public class JEIComponentItem extends ComponentRequirement.JEIComponent<IngredientItemStack> {
 
     private final RequirementItem requirement;
 
@@ -44,12 +48,12 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
     }
 
     @Override
-    public Class<ItemStack> getJEIRequirementClass() {
-        return ItemStack.class;
+    public Class<IngredientItemStack> getJEIRequirementClass() {
+        return IngredientItemStack.class;
     }
 
     @Override
-    public List<ItemStack> getJEIIORequirements() {
+    public List<IngredientItemStack> getJEIIORequirements() {
         switch (requirement.requirementType) {
             case ITEMSTACKS -> {
                 ItemStack stack = ItemUtils.copyStackWithSize(requirement.required, requirement.required.getCount());
@@ -59,7 +63,7 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                     requirement.previewDisplayTag = requirement.tag.copy();
                     stack.setTagCompound(requirement.previewDisplayTag.copy());
                 }
-                return Lists.newArrayList(stack);
+                return Collections.singletonList(requirement.asIngredientItemStack(stack));
             }
             case OREDICT -> {
                 NonNullList<ItemStack> stacks = OreDictionary.getOres(requirement.oreDictName);
@@ -71,16 +75,16 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
                         out.add(oreDictIn);
                     }
                 }
-                NonNullList<ItemStack> stacksOut = NonNullList.create();
+                NonNullList<IngredientItemStack> stacksOut = NonNullList.create();
                 for (ItemStack itemStack : out) {
                     ItemStack copy = itemStack.copy();
                     copy.setCount(requirement.oreDictItemAmount);
-                    stacksOut.add(copy);
+                    stacksOut.add(requirement.asIngredientItemStack(copy));
                 }
                 return stacksOut;
             }
             case FUEL -> {
-                return FuelItemHelper.getFuelItems();
+                return Lists.transform(FuelItemHelper.getFuelItems(), IngredientItemStackTransformer.INSTANCE);
             }
         }
         return new ArrayList<>(0);
@@ -88,21 +92,33 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
 
     @Override
     @SideOnly(Side.CLIENT)
-    public RecipeLayoutPart<ItemStack> getLayoutPart(Point offset) {
+    public RecipeLayoutPart<IngredientItemStack> getLayoutPart(Point offset) {
         return new RecipeLayoutPart.Item(offset);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
+    public void onJEIHoverTooltip(int slotIndex, boolean input, IngredientItemStack ingredient, List<String> tooltip) {
         if (requirement.requirementType == RequirementItem.ItemRequirementType.FUEL) {
-            int burn = TileEntityFurnace.getItemBurnTime(ingredient);
-            if (burn > 0) {
-                tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.fuel.item", burn));
-            }
-            tooltip.add(I18n.format("tooltip.machinery.fuel"));
+            addFuelTooltip(ingredient, tooltip);
         }
         addChanceTooltip(input, tooltip, requirement.chance);
+        addMinMaxTooltip(input, ingredient, tooltip);
+    }
+
+    public static void addFuelTooltip(final IngredientItemStack ingredient, final List<String> tooltip) {
+        int burn = TileEntityFurnace.getItemBurnTime(ingredient.stack());
+        if (burn > 0) {
+            tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.fuel.item", burn));
+        }
+        tooltip.add(I18n.format("tooltip.machinery.fuel"));
+    }
+
+    public static void addMinMaxTooltip(final boolean input, final IngredientItemStack ingredient, final List<String> tooltip) {
+        if (ingredient.min() != ingredient.max()) {
+            String key = input ? "tooltip.machinery.min_max_amount.input" : "tooltip.machinery.min_max_amount.output";
+            tooltip.add(I18n.format(key, ingredient.min(), ingredient.max()));
+        }
     }
 
     public static void addChanceTooltip(final boolean input, final List<String> tooltip, final float chance) {
@@ -110,17 +126,26 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStac
             String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
             String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
 
-            String chanceStr = MiscUtils.formatFloat(chance * 100F, 2);
             if (chance == 0F) {
                 tooltip.add(I18n.format(keyNever));
             } else {
-                if (chance < 0.0001F) {
-                    chanceStr = "< 0.01";
-                }
-                chanceStr += "%";
+                String chanceStr = chance < 0.0001F ? "< 0.01%" : MiscUtils.formatFloat(chance * 100F, 2) + "%";
                 tooltip.add(I18n.format(keyChance, chanceStr));
             }
         }
     }
 
+    public static class IngredientItemStackTransformer implements Function<ItemStack, IngredientItemStack> {
+
+        public static final IngredientItemStackTransformer INSTANCE = new IngredientItemStackTransformer();
+
+        private IngredientItemStackTransformer() {
+        }
+
+        @Nullable
+        @Override
+        public IngredientItemStack apply(@Nullable final ItemStack input) {
+            return input == null ? null : new IngredientItemStack(input, input.getCount(), input.getCount(), 1.0F);
+        }
+    }
 }

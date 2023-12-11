@@ -60,6 +60,19 @@ public class IngredientArrayPrimer {
     }
 
     @ZenMethod
+    public IngredientArrayPrimer setMinMaxAmount(int min, int max) {
+        if (lastIngredientStack != null) {
+            if (min < max) {
+                lastIngredientStack.minCount = min;
+                lastIngredientStack.maxCount = max;
+            } else {
+                CraftTweakerAPI.logWarning("[ModularMachinery] `min` cannot larger than `max`!");
+            }
+        }
+        return this;
+    }
+
+    @ZenMethod
     public IngredientArrayPrimer setChance(float chance) {
         if (lastIngredientStack != null) {
             lastIngredientStack.chance = chance;

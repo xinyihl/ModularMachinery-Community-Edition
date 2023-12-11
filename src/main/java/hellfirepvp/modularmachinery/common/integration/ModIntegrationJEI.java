@@ -15,10 +15,7 @@ import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
-import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
-import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidGas;
-import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidRenderer;
-import hellfirepvp.modularmachinery.common.integration.ingredient.HybridStackHelper;
+import hellfirepvp.modularmachinery.common.integration.ingredient.*;
 import hellfirepvp.modularmachinery.common.integration.preview.CategoryStructurePreview;
 import hellfirepvp.modularmachinery.common.integration.preview.StructurePreviewWrapper;
 import hellfirepvp.modularmachinery.common.integration.recipe.CategoryDynamicRecipe;
@@ -43,10 +40,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.Optional;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -154,6 +148,7 @@ public class ModIntegrationJEI implements IModPlugin {
             exc.printStackTrace();
             throw exc;
         }
+        registry.register(() -> IngredientItemStack.class, new ArrayList<>(), new IngredientItemStackHelper(), new IngredientItemStackRenderer());
     }
 
     @Optional.Method(modid = "mekanism")

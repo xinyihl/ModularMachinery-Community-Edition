@@ -184,6 +184,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         if (isNotWorking(thread, status)) {
+            markForUpdateSync();
             return true;
         }
 
@@ -250,6 +251,7 @@ public class TileMachineController extends TileMultiblockMachineController {
         ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
         activeRecipe.start(recipeThread.getContext());
         resetRecipeSearchRetryCount();
+        markForUpdateSync();
     }
 
     /**
@@ -276,6 +278,7 @@ public class TileMachineController extends TileMultiblockMachineController {
      */
     public void onFinished() {
         new RecipeFinishEvent(this, recipeThread).postEvent();
+        markForUpdateSync();
     }
 
     @Override

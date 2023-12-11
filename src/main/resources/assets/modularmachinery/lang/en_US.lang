@@ -167,6 +167,9 @@ tooltip.machinery.chance.out=Production Chance: %s
 tooltip.machinery.chance.in.never=Doesn't get consumed.
 tooltip.machinery.chance.out.never=Is never produced.
 
+tooltip.machinery.min_max_amount.input=Consumption: %s ~ %s
+tooltip.machinery.min_max_amount.output=Quantity output: %s ~ %s
+
 tooltip.machinery.energy.in=Required Energy:
 tooltip.machinery.energy.out=Produced Energy:
 tooltip.machinery.energy.tick=%s %s/t

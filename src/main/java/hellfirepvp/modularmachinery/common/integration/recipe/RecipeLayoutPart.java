@@ -11,10 +11,10 @@ package hellfirepvp.modularmachinery.common.integration.recipe;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidRenderer;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStackRenderer;
 import mezz.jei.api.ingredients.IIngredientRenderer;
-import mezz.jei.plugins.vanilla.ingredients.item.ItemStackRenderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Optional;
 
 import java.awt.*;
@@ -234,7 +234,7 @@ public abstract class RecipeLayoutPart<T> {
 
     }
 
-    public static class Item extends RecipeLayoutPart<ItemStack> {
+    public static class Item extends RecipeLayoutPart<IngredientItemStack> {
 
         public Item(Point offset) {
             super(offset);
@@ -251,8 +251,8 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         @Override
-        public Class<ItemStack> getLayoutTypeClass() {
-            return ItemStack.class;
+        public Class<IngredientItemStack> getLayoutTypeClass() {
+            return IngredientItemStack.class;
         }
 
         @Override
@@ -302,8 +302,8 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         @Override
-        public IIngredientRenderer<ItemStack> provideIngredientRenderer() {
-            return new ItemStackRenderer();
+        public IIngredientRenderer<IngredientItemStack> provideIngredientRenderer() {
+            return new IngredientItemStackRenderer();
         }
 
         @Override

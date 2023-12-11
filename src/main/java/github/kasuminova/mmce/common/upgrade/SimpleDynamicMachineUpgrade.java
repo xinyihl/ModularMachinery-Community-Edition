@@ -2,12 +2,14 @@ package github.kasuminova.mmce.common.upgrade;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.data.IData;
+import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.IFunction;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
+import stanhebben.zenscript.annotations.ZenMethod;
 import stanhebben.zenscript.annotations.ZenSetter;
 
 import java.util.Arrays;
@@ -73,6 +75,27 @@ public class SimpleDynamicMachineUpgrade extends DynamicMachineUpgrade {
     @ZenSetter("customData")
     public void setCustomData(final IData customData) {
         this.customData = CraftTweakerMC.getNBTCompound(customData);
+    }
+
+    @ZenGetter("parentStack")
+    public IItemStack getParentStackCT() {
+        return CraftTweakerMC.getIItemStack(parentStack);
+    }
+
+    @ZenMethod
+    public void decrementItemDurability(final int durability) {
+        if (valid && parentBus != null && busInventoryIndex != -1 && !parentStack.isEmpty() && parentStack.isItemStackDamageable()) {
+            int maxDamage = parentStack.getMaxDamage();
+            int itemDamage = parentStack.getItemDamage();
+
+            if (itemDamage + durability >= maxDamage) {
+                parentBus.getInventory().setStackInSlot(busInventoryIndex, ItemStack.EMPTY);
+            } else {
+                ItemStack copied = parentStack.copy();
+                copied.setItemDamage(itemDamage + durability);
+                parentBus.getInventory().setStackInSlot(busInventoryIndex, copied);
+            }
+        }
     }
 
     public void setDescriptionHandler(final IFunction<SimpleDynamicMachineUpgrade, String[]> handler) {

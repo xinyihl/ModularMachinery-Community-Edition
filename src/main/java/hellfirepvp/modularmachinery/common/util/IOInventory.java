@@ -17,6 +17,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
+import java.util.function.Consumer;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -28,7 +29,7 @@ import javax.annotation.Nonnull;
 public class IOInventory extends IItemHandlerImpl {
 
     private final TileEntitySynchronized owner;
-    private InventoryUpdateListener listener = null;
+    private Consumer<Integer> listener = null;
 
     private IOInventory(TileEntitySynchronized owner) {
         this.owner = owner;
@@ -49,7 +50,7 @@ public class IOInventory extends IItemHandlerImpl {
         return inv;
     }
 
-    public IOInventory setListener(InventoryUpdateListener listener) {
+    public IOInventory setListener(Consumer<Integer> listener) {
         this.listener = listener;
         return this;
     }
@@ -63,7 +64,7 @@ public class IOInventory extends IItemHandlerImpl {
         super.setStackInSlot(slot, stack);
         owner.markForUpdateSync();
         if (listener != null) {
-            listener.onChange();
+            listener.accept(slot);
         }
     }
 
@@ -74,7 +75,7 @@ public class IOInventory extends IItemHandlerImpl {
         ItemStack inserted = insertItemInternal(slot, stack, simulate);
         if (!simulate) {
             if (listener != null) {
-                listener.onChange();
+                listener.accept(slot);
             }
             owner.markForUpdateSync();
         }
@@ -87,7 +88,7 @@ public class IOInventory extends IItemHandlerImpl {
         ItemStack extracted = super.extractItem(slot, amount, simulate);
         if (!simulate) {
             if (listener != null) {
-                listener.onChange();
+                listener.accept(slot);
             }
             owner.markForUpdateSync();
         }
@@ -159,10 +160,6 @@ public class IOInventory extends IItemHandlerImpl {
         for (int index = 0; index < sides.length; index++) {
             final int facingIndex = sides[index];
             this.accessibleSides[index] = EnumFacing.values()[facingIndex];
-        }
-
-        if (listener != null) {
-            listener.onChange();
         }
     }
 

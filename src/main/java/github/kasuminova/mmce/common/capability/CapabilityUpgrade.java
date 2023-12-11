@@ -4,6 +4,7 @@ import github.kasuminova.mmce.common.upgrade.DynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -54,7 +55,7 @@ public class CapabilityUpgrade {
                 continue;
             }
 
-            upgrade = upgrade.copy(upgrade.getParentStack());
+            upgrade = upgrade.copy(ItemStack.EMPTY);
             upgrades.add(upgrade);
             if (upgrade instanceof DynamicMachineUpgrade) {
                 NBTTagCompound upgradeTag = tag.getCompoundTag(upgradeType);

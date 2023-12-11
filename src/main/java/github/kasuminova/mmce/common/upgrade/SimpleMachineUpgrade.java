@@ -32,7 +32,6 @@ public class SimpleMachineUpgrade extends MachineUpgrade {
         upgrade.descriptions.addAll(descriptions);
         upgrade.busGuiDescriptionHandler = busGuiDescriptionHandler;
         upgrade.eventProcessor.putAll(eventProcessor);
-        upgrade.parentStack = owner;
         return upgrade;
     }
 

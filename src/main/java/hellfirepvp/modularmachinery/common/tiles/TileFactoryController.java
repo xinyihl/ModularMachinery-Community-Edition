@@ -233,6 +233,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         }
 
         if (isNotWorking(thread, status)) {
+            markForUpdateSync();
             return;
         }
 
@@ -264,6 +265,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         activeRecipe.start(thread.getContext());
         resetRecipeSearchRetryCount();
+        markForUpdateSync();
     }
 
     public boolean onThreadRecipeFailure(FactoryRecipeThread thread) {
@@ -286,6 +288,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
      */
     public void onThreadRecipeFinished(FactoryRecipeThread thread) {
         new FactoryRecipeFinishEvent(thread, this).postEvent();
+        markForUpdateSync();
     }
 
     @Override

@@ -47,7 +47,7 @@ import java.util.List;
  * TODO: Split FluidStack and GasStack into two different Requirements, combining the two makes for terrible code.
  */
 public class RequirementFluid extends ComponentRequirement.MultiCompParallelizable<HybridFluid, RequirementTypeFluid>
-        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
+        implements ComponentRequirement.ChancedRequirement, Asyncable {
 
     public final HybridFluid required;
 

@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.tiles;
 
 import github.kasuminova.mmce.common.capability.CapabilityUpgrade;
+import github.kasuminova.mmce.common.upgrade.DynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.upgrade.registry.RegistryUpgrade;
@@ -15,6 +16,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import io.netty.util.collection.IntObjectHashMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -29,11 +31,16 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineComponentTile, SelectiveUpdateTileEntity {
     private final UpgradeBusProvider provider = new UpgradeBusProvider();
     private final Map<BlockPos, DynamicMachine> boundedMachine = new HashMap<>();
+
+    private final IntObjectHashMap<List<DynamicMachineUpgrade>> foundDynamicUpgrades = new IntObjectHashMap<>();
+    private final Map<UpgradeType, MachineUpgrade> foundUpgrades = new HashMap<>();
+
     private NBTTagCompound upgradeCustomData = new NBTTagCompound();
 
     private IOInventory inventory = null;
@@ -47,6 +54,7 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             slots[i] = i;
         }
         this.inventory = new IOInventory(this, slots, new int[0]);
+        this.inventory.setListener(this::onUpgradeInventoryChanged);
     }
 
     @Override
@@ -73,7 +81,69 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             }
         }
         if (prevSize != boundedMachine.size()) {
-            markForUpdate();
+            markNoUpdate();
+        }
+    }
+
+    public void onUpgradeInventoryChanged(int changedSlot) {
+        foundUpgrades.clear();
+
+        for (int i = 0; i < inventory.getSlots(); i++) {
+            ItemStack stackInSlot = inventory.getStackInSlot(i);
+            if (stackInSlot.isEmpty()) {
+                removeDynamicUpgrades(i);
+                continue;
+            }
+            if (!RegistryUpgrade.supportsUpgrade(stackInSlot)) {
+                removeDynamicUpgrades(i);
+                continue;
+            }
+            CapabilityUpgrade capability = stackInSlot.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
+            if (capability == null) {
+                removeDynamicUpgrades(i);
+                continue;
+            }
+
+            List<MachineUpgrade> upgrades = capability.getUpgrades();
+            updateUpgrades(upgrades, stackInSlot);
+            if (changedSlot == i || changedSlot == -1) {
+                updateDynamicUpgrades(upgrades, stackInSlot, i);
+            }
+        }
+    }
+
+    public void removeDynamicUpgrades(int slotID) {
+        List<DynamicMachineUpgrade> removed = foundDynamicUpgrades.remove(slotID);
+        if (removed != null) {
+            for (final DynamicMachineUpgrade dynamicUpgrade : removed) {
+                dynamicUpgrade.invalidate();
+            }
+        }
+    }
+
+    public void updateDynamicUpgrades(final List<MachineUpgrade> upgrades, final ItemStack parentStack, final int slotID) {
+        foundDynamicUpgrades.put(slotID, upgrades.stream()
+                .filter(DynamicMachineUpgrade.class::isInstance)
+                .map(DynamicMachineUpgrade.class::cast)
+                .map(dynamicUpgrade -> dynamicUpgrade.setParentBus(this).setParentStack(parentStack).setBusInventoryIndex(slotID))
+                .collect(Collectors.toCollection(LinkedList::new)));
+    }
+
+    public void updateUpgrades(final List<MachineUpgrade> upgrades, final ItemStack parentStack) {
+        for (final MachineUpgrade upgrade : upgrades) {
+            if (upgrade instanceof DynamicMachineUpgrade) {
+                continue;
+            }
+
+            UpgradeType type = upgrade.getType();
+            MachineUpgrade founded = foundUpgrades.get(type);
+            if (founded != null) {
+                founded.incrementStackSize(upgrade.getStackSize());
+                continue;
+            }
+            upgrade.incrementStackSize(parentStack.getCount() - 1);
+
+            foundUpgrades.put(type, upgrade.setParentBus(this));
         }
     }
 
@@ -111,8 +181,9 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
         super.readCustomNBT(compound);
         if (compound.hasKey("inv")) {
             inventory = IOInventory.deserialize(this, compound.getCompoundTag("inv"));
+            inventory.setListener(this::onUpgradeInventoryChanged);
         } else {
-            inventory = new IOInventory(this, new int[0], new int[0]);
+            inventory.clear();
         }
         if (compound.hasKey("upgradeCustomData")) {
             upgradeCustomData = compound.getCompoundTag("upgradeCustomData");
@@ -130,6 +201,8 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
                 boundedMachine.put(pos, machine);
             });
         }
+
+        onUpgradeInventoryChanged(-1);
     }
 
     @Override
@@ -163,7 +236,7 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
             }
 
             boundedMachine.put(pos, foundMachine);
-            markForUpdateSync();
+            markNoUpdateSync();
         }
 
         public Map<BlockPos, DynamicMachine> getBoundedMachine() {
@@ -171,40 +244,25 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
         }
 
         public Map<UpgradeType, List<MachineUpgrade>> getUpgrades(@Nullable TileMultiblockMachineController controller) {
-            IOInventory inventory = TileUpgradeBus.this.inventory;
-            HashMap<UpgradeType, List<MachineUpgrade>> found = new HashMap<>();
-            for (int i = 0; i < inventory.getSlots(); i++) {
-                ItemStack stack = inventory.getStackInSlot(i);
-                if (!RegistryUpgrade.supportsUpgrade(stack)) {
-                    continue;
-                }
+            DynamicMachine foundMachine = controller == null ? null : controller.getFoundMachine();
 
-                CapabilityUpgrade capability = stack.getCapability(CapabilityUpgrade.MACHINE_UPGRADE_CAPABILITY, null);
-                if (capability == null) {
-                    continue;
-                }
+            HashMap<UpgradeType, List<MachineUpgrade>> compatible = new HashMap<>();
 
-                add:
-                for (MachineUpgrade upgrade : capability.getUpgrades()) {
-                    if (controller != null && !upgrade.getType().isCompatible(controller.getFoundMachine())) {
-                        continue;
+            foundUpgrades.forEach((type, upgrade) -> {
+                if (foundMachine == null || type.isCompatible(foundMachine)) {
+                    compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(upgrade);
+                }
+            });
+            foundDynamicUpgrades.values().forEach((dynamicUpgrades) -> {
+                for (final DynamicMachineUpgrade dynamicUpgrade : dynamicUpgrades) {
+                    UpgradeType type = dynamicUpgrade.getType();
+                    if (foundMachine == null || type.isCompatible(foundMachine)) {
+                        compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(dynamicUpgrade);
                     }
-
-                    List<MachineUpgrade> upgrades = found.computeIfAbsent(upgrade.getType(), v -> new ArrayList<>());
-                    for (final MachineUpgrade u : upgrades) {
-                        if (u.equals(upgrade)) {
-                            if (u.getStackSize() >= u.getType().getMaxStackSize()) {
-                                continue add;
-                            }
-
-                            u.incrementStackSize(stack.getCount());
-                            continue add;
-                        }
-                    }
-                    upgrades.add(upgrade.copy(stack).setParentBus(TileUpgradeBus.this));
                 }
-            }
-            return found;
+            });
+
+            return compatible;
         }
 
         public NBTTagCompound getUpgradeCustomData(MachineUpgrade upgrade) {
@@ -213,7 +271,7 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
 
         public void setUpgradeCustomData(MachineUpgrade upgrade, NBTTagCompound tagCompound) {
             upgradeCustomData.setTag(upgrade.getType().getName(), tagCompound);
-            markForUpdateSync();
+            markNoUpdateSync();
         }
 
         public int size() {

@@ -123,6 +123,24 @@ public class MiscUtils {
         }
     }
 
+    public static String formatNumberToInt(long value) {
+        if (value < 1_000L) {
+            return String.valueOf(value);
+        } else if (value < 1_000_000L) {
+            return value / 1000 + "K";
+        } else if (value < 1_000_000_000L) {
+            return value / 1000 + "M";
+        } else if (value < 1_000_000_000_000L) {
+            return value / 1000 + "G";
+        } else if (value < 1_000_000_000_000_000L) {
+            return value / 1000 + "T";
+        } else if (value < 1_000_000_000_000_000_000L) {
+            return value / 1000 + "P";
+        } else {
+            return value / 1000 + "E";
+        }
+    }
+
     public static String formatDecimal(double value) {
         return DECIMAL_FORMAT.format(value);
     }

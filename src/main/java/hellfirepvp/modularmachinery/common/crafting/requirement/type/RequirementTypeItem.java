@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery.common.crafting.requirement.type;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.init.Items;
@@ -28,7 +29,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
  * Created by HellFirePvP
  * Date: 13.07.2019 / 10:45
  */
-public class RequirementTypeItem extends RequirementType<ItemStack, RequirementItem> {
+public class RequirementTypeItem extends RequirementType<IngredientItemStack, RequirementItem> {
 
     @Override
     public RequirementItem createRequirement(IOType type, JsonObject jsonObject) {

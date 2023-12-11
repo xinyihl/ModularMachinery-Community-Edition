@@ -250,6 +250,12 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         return extract;
     }
 
+    public void clear() {
+        for (final SlotStackHolder holder : inventory) {
+            holder.itemStack = ItemStack.EMPTY;
+        }
+    }
+
     public boolean hasCapability(EnumFacing facing) {
         return facing == null || Arrays.binarySearch(accessibleSides, facing) >= 0;
     }

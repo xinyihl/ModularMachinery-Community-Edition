@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.common.handler;
 
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
+import github.kasuminova.mmce.common.upgrade.DynamicMachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.UpgradeEventHandlerCT;
@@ -18,6 +19,12 @@ public class UpgradeMachineEventHandler {
 
         for (List<MachineUpgrade> upgrades : controller.getFoundUpgrades().values()) {
             for (final MachineUpgrade upgrade : upgrades) {
+                if (upgrade instanceof DynamicMachineUpgrade dynamicUpgrade) {
+                    if (dynamicUpgrade.isInvalid()) {
+                        continue;
+                    }
+                }
+
                 List<UpgradeEventHandlerCT> processors = upgrade.getEventHandlers(event.getClass());
                 if (processors.isEmpty()) {
                     continue;
@@ -32,10 +39,12 @@ public class UpgradeMachineEventHandler {
                 TileUpgradeBus.UpgradeBusProvider provider = parentBus.provideComponent();
                 upgrade.readNBT(provider.getUpgradeCustomData(upgrade));
 
-                for (final UpgradeEventHandlerCT handler : processors) {
-                    handler.handle(event, upgrade);
-                    if (event.isCanceled()) {
-                        break;
+                synchronized (parentBus) {
+                    for (final UpgradeEventHandlerCT handler : processors) {
+                        handler.handle(event, upgrade);
+                        if (event.isCanceled()) {
+                            break;
+                        }
                     }
                 }
 

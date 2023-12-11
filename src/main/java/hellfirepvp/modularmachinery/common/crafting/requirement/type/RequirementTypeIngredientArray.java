@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonDeserializer;
 import net.minecraft.init.Items;
@@ -19,7 +20,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequirementTypeIngredientArray extends RequirementType<ItemStack, RequirementIngredientArray> {
+public class RequirementTypeIngredientArray extends RequirementType<IngredientItemStack, RequirementIngredientArray> {
 
     /**
      * Example:
