@@ -167,6 +167,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     }
 
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void getIngredients(@Nonnull IIngredients ingredients) {
         Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> componentMap = new HashMap<>();
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements()) {

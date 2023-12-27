@@ -58,6 +58,18 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
+    public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
+        int result = super.getMaxParallelism(components, context, maxParallelism);
+        if (result >= 1 && !isRequired) {
+            for (RecipeModifier modifier : modifierList) {
+                context.addPermanentModifier(modifier);
+            }
+            isRequired = true;
+        }
+        return result;
+    }
+
+    @Override
     public RequirementCatalyst deepCopy() {
         return deepCopyModified(Collections.emptyList());
     }

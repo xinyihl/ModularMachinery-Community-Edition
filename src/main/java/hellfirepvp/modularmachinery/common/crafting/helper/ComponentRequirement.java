@@ -353,11 +353,13 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          * 此方法为 {@link #canStartCrafting(ProcessingComponent, RecipeCraftingContext, List)} 的增强实现。<br/>
          * 该方法直接一次性提供所有可用的组件以供需求完成操作。<br/>
          * 通常情况下可以不实现，但是如果实现了接口 {@link MultiComponent} 则必须实现此方法。<br/>
+         * 注意：当所有的 ComponentRequirement 都实现了 Parallelizable 接口，则检查配方时会忽略 canStartCrafting 的调用过程（也就是说完全不会调用此方法）。<br/>
          * </p>
          * <p>
          * This method is an enhanced implementation of {@link #canStartCrafting(ProcessingComponent, RecipeCraftingContext, List)}}.<br/>
          * This will directly provides all available components at once for the required completion of the operation.<br/>
          * This method can normally be left out, but must be implemented if the interface {@link MultiComponent} is implemented.<br/>
+         * Note: When all ComponentRequirements implement the Parallelizable interface, the recipe check ignores the canStartCrafting call (i.e., the method is not called at all).<br/>
          * </p>
          *
          * @param components 被复制后的组件，通常情况下可以自由修改其内容。<br/>

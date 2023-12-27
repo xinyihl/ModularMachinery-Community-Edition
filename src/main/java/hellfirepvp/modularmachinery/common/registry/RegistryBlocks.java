@@ -81,7 +81,7 @@ public class RegistryBlocks {
 
     private static void registerBlocks() {
         blockController = prepareRegister(new BlockController());
-        prepareItemBlockRegister(blockController);
+        prepareItemBlockRegister(new ItemBlockController(blockController));
         blockFactoryController = prepareRegister(new BlockFactoryController());
         prepareItemBlockRegister(blockFactoryController);
 
