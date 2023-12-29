@@ -98,7 +98,7 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
                 tooltipBuilder.append(" * ").append(stack.count);
             }
 
-            float chance = actionType == IOType.OUTPUT ? stack.chance * requirement.chance : stack.chance / totalChance;
+            float chance = actionType == IOType.INPUT ? (stack.chance * requirement.chance) : (totalChance == 0 ? 0 : stack.chance / totalChance);
             if (chance < 1F && chance >= 0F) {
                 tooltipBuilder.append(" (");
 
