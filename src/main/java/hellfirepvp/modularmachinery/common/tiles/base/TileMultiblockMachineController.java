@@ -1051,9 +1051,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 BlockModelHider.hideOrShowBlocks(this);
                 notifyStructureFormedState(isStructureFormed());
             }, 1);
-            if (!isStructureFormed()) {
-                animationFactory = null;
-            }
+//            if (!isStructureFormed()) {
+//                animationFactory = null;
+//            }
         }
     }
 

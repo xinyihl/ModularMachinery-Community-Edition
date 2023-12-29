@@ -70,6 +70,12 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
+    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
+        super.finishCrafting(components, context, chance);
+        isRequired = false;
+    }
+
+    @Override
     public RequirementCatalyst deepCopy() {
         return deepCopyModified(Collections.emptyList());
     }
