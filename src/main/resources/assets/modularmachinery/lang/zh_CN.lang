@@ -147,6 +147,8 @@ tooltip.item.controller.owner.not_self=§c你不是控制器的所有者。
 tooltip.machinery.empty=空
 
 tooltip.machinery.ingredient_array_input=接受以下输入（仅消耗其中一种）：
+tooltip.machinery.ingredient_array_output=输出以下物品：
+tooltip.machinery.ingredient_array_output.weight=权重：%s
 tooltip.machinery.catalyst=§a作为催化剂输入（可选输入）。
 tooltip.machinery.catalyst.effect=催化剂效果：
 

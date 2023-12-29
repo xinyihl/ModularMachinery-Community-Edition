@@ -5,6 +5,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
 import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
+import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
@@ -69,34 +70,40 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
     @Override
     public void onJEIHoverTooltip(int slotIndex, boolean input, IngredientItemStack ingredient, List<String> tooltip) {
         tooltip.add("");
-        tooltip.add(I18n.format("tooltip.machinery.ingredient_array_input"));
+        IOType actionType = requirement.getActionType();
+
+        switch (actionType) {
+            case INPUT -> tooltip.add(I18n.format("tooltip.machinery.ingredient_array_input"));
+            case OUTPUT -> tooltip.add(I18n.format("tooltip.machinery.ingredient_array_output"));
+        }
+
+        float totalChance = 1F;
+        if (actionType == IOType.OUTPUT) {
+            totalChance = 0;
+            for (final ChancedIngredientStack reqIngredient : requirement.getIngredients()) {
+                totalChance += reqIngredient.chance;
+            }
+        }
+
         StringBuilder tooltipBuilder = new StringBuilder();
         for (ChancedIngredientStack stack : requirement.getIngredients()) {
             switch (stack.ingredientType) {
-                case ITEMSTACK -> {
-                    ItemStack itemStack = stack.itemStack;
-                    tooltipBuilder.append(itemStack.getDisplayName());
-                }
-                case ORE_DICT -> {
-                    tooltipBuilder.append(stack.oreDictName);
-                }
+                case ITEMSTACK -> tooltipBuilder.append(stack.itemStack.getDisplayName());
+                case ORE_DICT -> tooltipBuilder.append(stack.oreDictName);
             }
 
             if (stack.minCount != stack.maxCount) {
                 tooltipBuilder.append(" * ").append(String.format("%d ~ %d", stack.minCount, stack.maxCount));
             } else {
-                switch (stack.ingredientType) {
-                    case ITEMSTACK -> tooltipBuilder.append(" * ").append(stack.itemStack.getCount());
-                    case ORE_DICT -> tooltipBuilder.append(" * ").append(stack.count);
-                }
+                tooltipBuilder.append(" * ").append(stack.count);
             }
 
-            float chance = stack.chance * requirement.chance;
+            float chance = actionType == IOType.OUTPUT ? stack.chance * requirement.chance : stack.chance / totalChance;
             if (chance < 1F && chance >= 0F) {
                 tooltipBuilder.append(" (");
 
                 String keyNever = input ? "tooltip.machinery.chance.in.never" : "tooltip.machinery.chance.out.never";
-                String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.chance.out";
+                String keyChance = input ? "tooltip.machinery.chance.in" : "tooltip.machinery.ingredient_array_output.weight";
 
                 if (chance == 0F) {
                     tooltipBuilder.append(I18n.format(keyNever));

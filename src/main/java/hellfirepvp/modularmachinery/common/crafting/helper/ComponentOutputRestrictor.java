@@ -18,8 +18,10 @@ import net.minecraft.item.ItemStack;
  * Created by HellFirePvP
  * Date: 12.07.2017 / 21:19
  */
+@Deprecated
 public abstract class ComponentOutputRestrictor {
 
+    @Deprecated
     public static class RestrictionTank extends ComponentOutputRestrictor {
 
         public final HybridFluid inserted;
@@ -32,6 +34,7 @@ public abstract class ComponentOutputRestrictor {
 
     }
 
+    @Deprecated
     public static class RestrictionInventory extends ComponentOutputRestrictor {
 
         public final ItemStack inserted;

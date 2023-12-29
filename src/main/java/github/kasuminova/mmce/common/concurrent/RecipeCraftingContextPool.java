@@ -44,9 +44,7 @@ public class RecipeCraftingContextPool {
     }
 
     public static void onReload() {
-        for (final Queue<RecipeCraftingContext> queue : POOL.values()) {
-            queue.clear();
-        }
+        POOL.clear();
 
         reloadCounter++;
     }
