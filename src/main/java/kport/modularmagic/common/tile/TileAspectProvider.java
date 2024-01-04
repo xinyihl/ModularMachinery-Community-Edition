@@ -1,5 +1,6 @@
 package kport.modularmagic.common.tile;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
@@ -28,10 +29,15 @@ public abstract class TileAspectProvider extends TileJarFillable implements Mach
 
     @Override
     public void setMachineColor(int newColor) {
+        if (color == newColor) {
+            return;
+        }
         this.color = newColor;
-        IBlockState state = this.world.getBlockState(this.pos);
-        this.world.notifyBlockUpdate(this.pos, state, state, 3);
-        this.markDirty();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            IBlockState state = this.world.getBlockState(this.pos);
+            this.world.notifyBlockUpdate(this.pos, state, state, 3);
+            this.markDirty();
+        });
     }
 
     @Override

@@ -20,13 +20,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MMWorldEventListener implements IWorldEventListener {
 
     public static final MMWorldEventListener INSTANCE = new MMWorldEventListener();
 
-    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunksLastTick = new HashMap<>();
-    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunks = new HashMap<>();
+    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunksLastTick = new ConcurrentHashMap<>();
+    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunks = new ConcurrentHashMap<>();
 
     private MMWorldEventListener() {
     }
@@ -59,6 +60,7 @@ public class MMWorldEventListener implements IWorldEventListener {
             return;
         }
 
+        worldChangedChunksLastTick.clear();
         worldChangedChunksLastTick.putAll(worldChangedChunks);
         worldChangedChunks.clear();
     }
@@ -75,9 +77,12 @@ public class MMWorldEventListener implements IWorldEventListener {
 
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                StructureBoundingBox changedArea = worldChangedChunksLastTick.computeIfAbsent(worldIn, v -> new HashMap<>()).get(new ChunkPos(chunkX, chunkZ));
-                if (changedArea != null && changedArea.intersectsWith(structureArea)) {
-                    return true;
+                Map<ChunkPos, StructureBoundingBox> chunkPosBoundingBoxMap = worldChangedChunksLastTick.get(worldIn);
+                if (chunkPosBoundingBoxMap != null) {
+                    StructureBoundingBox changedArea = chunkPosBoundingBoxMap.get(new ChunkPos(chunkX, chunkZ));
+                    if (changedArea != null && changedArea.intersectsWith(structureArea)) {
+                        return true;
+                    }
                 }
             }
         }

@@ -12,7 +12,7 @@ import java.util.List;
 
 public class JEIComponentAspect extends ComponentRequirement.JEIComponent<AspectList> {
 
-    private RequirementAspect requirementAspect;
+    private final RequirementAspect requirementAspect;
 
     public JEIComponentAspect(RequirementAspect requirementAspect) {
         this.requirementAspect = requirementAspect;

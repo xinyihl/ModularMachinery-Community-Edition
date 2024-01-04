@@ -67,7 +67,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
 
     @Override
     public RequirementIngredientArray deepCopyModified(List<RecipeModifier> modifiers) {
-        ArrayList<ChancedIngredientStack> copiedIngredients = new ArrayList<>(this.ingredients);
+        ArrayList<ChancedIngredientStack> copiedIngredients = new ArrayList<>();
 
         ingredients.forEach(item -> {
             ChancedIngredientStack copied = item.copy();

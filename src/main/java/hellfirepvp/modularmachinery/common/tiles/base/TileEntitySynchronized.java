@@ -113,10 +113,10 @@ public class TileEntitySynchronized extends TileEntity {
         if (inUpdateTask) {
             return;
         }
-        if (this instanceof SelectiveUpdateTileEntity) {
-            markNoUpdateSync();
-            return;
-        }
+//        if (this instanceof SelectiveUpdateTileEntity) {
+//            markNoUpdateSync();
+//            return;
+//        }
         ModularMachinery.EXECUTE_MANAGER.addTEUpdateTask(this);
         inUpdateTask = true;
         inMarkTask = true;

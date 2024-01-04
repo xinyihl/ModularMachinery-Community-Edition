@@ -409,7 +409,21 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         public abstract Class<T> getJEIRequirementClass();
 
+        /**
+         * When the JEI does not recognize the ingredient type correctly, rewrite it and return the true material type.
+         */
+        public Class<?> getTrueJEIRequirementClass() {
+            return null;
+        }
+
         public abstract List<T> getJEIIORequirements();
+
+        /**
+         * When the JEI does not recognize the ingredient content correctly, rewrite it and return the true material content.
+         */
+        public List<?> getTrueJEIIORequirements() {
+            return null;
+        }
 
         @SideOnly(Side.CLIENT)
         public abstract RecipeLayoutPart<T> getLayoutPart(Point offset);

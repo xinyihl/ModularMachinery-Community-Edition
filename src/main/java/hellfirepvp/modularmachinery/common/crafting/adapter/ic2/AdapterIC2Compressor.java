@@ -1,4 +1,4 @@
-package hellfirepvp.modularmachinery.common.crafting.adapter;
+package hellfirepvp.modularmachinery.common.crafting.adapter.ic2;
 
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class AdapterIC2Compressor extends RecipeAdapter {
-    public static final int workTime = 300;
+public class AdapterIC2Compressor extends AdapterIC2Machine {
+    public static final int BASE_WORK_TIME = 300;
 
     public AdapterIC2Compressor() {
         super(new ResourceLocation("ic2", "te_compressor"));
@@ -38,35 +38,7 @@ public class AdapterIC2Compressor extends RecipeAdapter {
         Iterable<? extends ic2.api.recipe.MachineRecipe<IRecipeInput, Collection<ItemStack>>> machineRecipes = Recipes.compressor.getRecipes();
 
         List<MachineRecipe> recipes = new ArrayList<>(40);
-        for (ic2.api.recipe.MachineRecipe<IRecipeInput, Collection<ItemStack>> machineRecipe : machineRecipes) {
-            MachineRecipe recipe = createRecipeShell(
-                    new ResourceLocation("ic2", "te_compressor_recipe_" + incId),
-                    owningMachineName,
-                    workTime, incId, false);
-
-            int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, machineRecipe.getInput().getAmount(), false));
-
-            if (inAmount > 0) {
-                for (ItemStack input : machineRecipe.getInput().getInputs()) {
-                    recipe.addRequirement(new RequirementItem(IOType.INPUT, ItemUtils.copyStackWithSize(input, inAmount)));
-                }
-            }
-
-            int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, 1, false));
-            if (outAmount > 0) {
-                for (ItemStack output : machineRecipe.getOutput()) {
-                    recipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize(output, outAmount)));
-                }
-            }
-
-            int inEnergy = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ENERGY, IOType.INPUT, 8, false));
-            if (inEnergy > 0) {
-                recipe.addRequirement(new RequirementEnergy(IOType.INPUT, inEnergy));
-            }
-
-            recipes.add(recipe);
-            incId++;
-        }
+        convertIC2RecipeToMMRecipe(owningMachineName, modifiers, machineRecipes, recipes, "te_compressor_recipe_", BASE_WORK_TIME);
 
         return recipes;
     }

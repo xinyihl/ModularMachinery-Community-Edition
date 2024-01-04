@@ -293,28 +293,6 @@ public class TileFactoryController extends TileMultiblockMachineController {
 
     @Override
     protected void onStructureFormed() {
-//        if (world.getBlockState(getPos()).getBlock() != parentController) {
-//            if (workMode == WorkMode.SYNC) {
-//                if (parentController != null) {
-//                    this.world.setBlockState(pos, parentController.getDefaultState()
-//                            .withProperty(BlockController.FACING, this.controllerRotation));
-//                } else {
-//                    this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
-//                            .withProperty(BlockController.FACING, this.controllerRotation));
-//                }
-//            } else {
-//                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-//                    if (parentController != null) {
-//                        this.world.setBlockState(pos, parentController.getDefaultState()
-//                                .withProperty(BlockController.FACING, this.controllerRotation));
-//                    } else {
-//                        this.world.setBlockState(pos, BlocksMM.blockFactoryController.getDefaultState()
-//                                .withProperty(BlockController.FACING, this.controllerRotation));
-//                    }
-//                });
-//            }
-//        }
-
         super.onStructureFormed();
 
         coreRecipeThreads.clear();
@@ -341,17 +319,18 @@ public class TileFactoryController extends TileMultiblockMachineController {
             if (context != null) {
                 if (context.canStartCrafting().isSuccess()) {
                     offerRecipe(context);
+                    if (hasIdleThread()) {
+                        createRecipeSearchTask();
+                    }
                 } else {
                     RecipeCraftingContextPool.returnCtx(context);
-                }
-                if (hasIdleThread()) {
-                    createRecipeSearchTask();
                 }
             } else {
                 incrementRecipeSearchRetryCount();
                 CraftingStatus status = task.getStatus();
-                if (status != null) {
+                if (status != null && !controllerStatus.equals(status)) {
                     controllerStatus = status;
+                    markNoUpdateSync();
                 }
             }
             searchTask = null;

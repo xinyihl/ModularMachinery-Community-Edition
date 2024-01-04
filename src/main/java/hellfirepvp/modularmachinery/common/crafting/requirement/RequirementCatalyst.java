@@ -70,9 +70,11 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
-    public void finishCrafting(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final ResultChance chance) {
-        super.finishCrafting(components, context, chance);
-        isRequired = false;
+    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
+        if (isRequired) {
+            super.startCrafting(components, context, chance);
+            isRequired = false;
+        }
     }
 
     @Override
@@ -114,13 +116,6 @@ public class RequirementCatalyst extends RequirementItem {
         catalyst.modifierList.addAll(this.modifierList);
         catalyst.toolTipList.addAll(toolTipList);
         return catalyst;
-    }
-
-    @Override
-    public void startCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context, ResultChance chance) {
-        if (isRequired) {
-            super.startCrafting(components, context, chance);
-        }
     }
 
     @Override

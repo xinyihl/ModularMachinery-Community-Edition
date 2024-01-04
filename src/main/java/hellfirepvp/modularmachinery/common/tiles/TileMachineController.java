@@ -141,12 +141,16 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     protected boolean doRecipeTick() {
         MachineRecipeThread thread = this.recipeThread;
+        CraftingStatus status = thread.getStatus();
         if (thread.getActiveRecipe() == null) {
             thread.searchAndStartRecipe();
         }
 
         ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
         if (activeRecipe == null) {
+            if (!status.equals(thread.getStatus())) {
+                markNoUpdateSync();
+            }
             return false;
         }
 
@@ -164,8 +168,6 @@ public class TileMachineController extends TileMultiblockMachineController {
         if (thread.getContext() == null) {
             thread.setContext(thread.createContext(activeRecipe));
         }
-
-        CraftingStatus status = thread.getStatus();
 
         // PreTickEvent
         RecipeTickEvent event = new RecipeTickEvent(this, thread, Phase.START);
@@ -347,29 +349,6 @@ public class TileMachineController extends TileMultiblockMachineController {
 
     public void flushContextModifier() {
         recipeThread.flushContextModifier();
-    }
-
-    @Override
-    protected void onStructureFormed() {
-//        if (world.getBlockState(getPos()).getBlock() != parentController) {
-//            if (workMode == WorkMode.SYNC) {
-//                if (parentController != null) {
-//                    this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-//                } else {
-//                    this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-//                }
-//            } else {
-//                ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-//                    if (parentController != null) {
-//                        this.world.setBlockState(pos, parentController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-//                    } else {
-//                        this.world.setBlockState(pos, BlocksMM.blockController.getDefaultState().withProperty(BlockController.FACING, this.controllerRotation));
-//                    }
-//                });
-//            }
-//        }
-
-        super.onStructureFormed();
     }
 
     @Override

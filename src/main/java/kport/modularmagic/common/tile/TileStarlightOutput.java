@@ -44,8 +44,11 @@ public class TileStarlightOutput extends TileSourceBase implements MachineCompon
 
     @Override
     public void setMachineColor(int newColor) {
+        if (color == newColor) {
+            return;
+        }
         this.color = newColor;
-        this.markForUpdate();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::markForUpdate);
     }
 
     public float getStarlightProduced() {

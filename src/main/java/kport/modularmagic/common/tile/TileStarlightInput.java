@@ -34,8 +34,11 @@ public class TileStarlightInput extends TileReceiverBase implements MachineCompo
 
     @Override
     public void setMachineColor(int newColor) {
+        if (color == newColor) {
+            return;
+        }
         this.color = newColor;
-        this.markForUpdate();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::markForUpdate);
     }
 
     @Nullable

@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r53-dev"
+version = "1.12.2-1.11.1-r55-dev"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -153,12 +153,6 @@ dependencies {
     // Mixins
     implementation("zone.rong:mixinbooter:7.1")
 
-    // Adds NotEnoughItems and its dependencies (CCL&CCC) to runClient/runServer
-//    runtimeOnlyNonPublishable("com.github.GTNewHorizons:NotEnoughItems:2.3.39-GTNH:dev")
-    // Example: grab the ic2 jar from curse maven and deobfuscate
-    // api(rfg.deobf("curse.maven:ic2-242638:2353971"))
-    // Example: grab the ic2 jar from libs/ in the workspace and deobfuscate
-    // api(rfg.deobf(project.files("libs/ic2.jar")))
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:4506796"))
     implementation(rfg.deobf("curse.maven:zenutil-401178:4816158-sources-4816159"))
@@ -175,7 +169,7 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:mantle-74924:2713386"))
     implementation(rfg.deobf("curse.maven:tx-loader-706505:4515357"))
     implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
-
+//    implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:4961400"))
 //    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
     implementation(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
 

@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import net.minecraft.client.resources.I18n;
+import net.minecraftforge.fluids.FluidStack;
 
 import java.awt.*;
 import java.util.Collections;
@@ -21,6 +22,16 @@ public class JEIComponentHybridFluidPerTick extends ComponentRequirement.JEIComp
     @Override
     public Class<HybridFluid> getJEIRequirementClass() {
         return HybridFluid.class;
+    }
+
+    @Override
+    public Class<?> getTrueJEIRequirementClass() {
+        return FluidStack.class;
+    }
+
+    @Override
+    public List<FluidStack> getTrueJEIIORequirements() {
+        return Collections.singletonList(requirement.required);
     }
 
     @Override

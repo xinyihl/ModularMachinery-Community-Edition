@@ -4,6 +4,7 @@ import com.rwtema.extrautils2.network.XUPacketBuffer;
 import com.rwtema.extrautils2.power.IWorldPowerMultiplier;
 import com.rwtema.extrautils2.power.PowerManager;
 import com.rwtema.extrautils2.tile.TilePower;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.tiles.base.ColorableMachineTile;
@@ -30,10 +31,15 @@ public abstract class TileGridProvider extends TilePower implements IWorldPowerM
 
     @Override
     public void setMachineColor(int newColor) {
+        if (color == newColor) {
+            return;
+        }
         this.color = newColor;
-        IBlockState thisState = world.getBlockState(pos);
-        world.notifyBlockUpdate(pos, thisState, thisState, 3);
-        markDirty();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            IBlockState state = this.world.getBlockState(this.pos);
+            this.world.notifyBlockUpdate(this.pos, state, state, 3);
+            this.markDirty();
+        });
     }
 
     @Override

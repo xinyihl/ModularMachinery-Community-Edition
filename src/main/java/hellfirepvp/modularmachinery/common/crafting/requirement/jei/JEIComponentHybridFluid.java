@@ -8,10 +8,14 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
+import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidGas;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
+import mekanism.api.gas.GasStack;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -37,6 +41,22 @@ public class JEIComponentHybridFluid extends ComponentRequirement.JEIComponent<H
     @Override
     public Class<HybridFluid> getJEIRequirementClass() {
         return HybridFluid.class;
+    }
+
+    @Override
+    public Class<?> getTrueJEIRequirementClass() {
+        if (Mods.MEKANISM.isPresent() && requirement.required instanceof HybridFluidGas) {
+            return GasStack.class;
+        }
+        return FluidStack.class;
+    }
+
+    @Override
+    public List<?> getTrueJEIIORequirements() {
+        if (Mods.MEKANISM.isPresent() && requirement.required instanceof HybridFluidGas fluidGas) {
+            return Collections.singletonList(fluidGas.asGasStack());
+        }
+        return Collections.singletonList(requirement.required.asFluidStack());
     }
 
     @Override

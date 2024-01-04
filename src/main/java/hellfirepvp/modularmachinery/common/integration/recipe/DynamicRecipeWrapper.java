@@ -56,6 +56,11 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             }
             finalOrderedComponents.get(req.getActionType())
                     .computeIfAbsent(comp.getJEIRequirementClass(), clazz -> new LinkedList<>()).add(req);
+            Class<?> trueJEIRequirementClass = comp.getTrueJEIRequirementClass();
+            if (trueJEIRequirementClass != null) {
+                finalOrderedComponents.get(req.getActionType())
+                        .computeIfAbsent(trueJEIRequirementClass, clazz -> new LinkedList<>()).add(req);
+            }
         }
     }
 
@@ -170,6 +175,8 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getIngredients(@Nonnull IIngredients ingredients) {
         Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> componentMap = new HashMap<>();
+        Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> trueTypeComponentMap = new HashMap<>();
+
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements()) {
             if (req instanceof RequirementEnergy)
                 continue; //TODO: Ignore. They're handled differently. I should probably rework this...
@@ -181,26 +188,44 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             IIngredientType type = ModIntegrationJEI.ingredientRegistry.getIngredientType(comp.getJEIRequirementClass());
             componentMap.computeIfAbsent(type, t -> new EnumMap<>(IOType.class))
                     .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
-        }
 
-        for (IIngredientType type : componentMap.keySet()) {
-            Map<IOType, List<ComponentRequirement>> ioGroup = componentMap.get(type);
-            for (IOType ioType : ioGroup.keySet()) {
-                List<ComponentRequirement> components = ioGroup.get(ioType);
-                List<List<Object>> componentObjects = new ArrayList<>(components.size());
-                for (ComponentRequirement req : components) {
-                    ComponentRequirement.JEIComponent jeiComp = req.provideJEIComponent();
-                    if (jeiComp == null) {
-                        continue;
-                    }
-                    componentObjects.add(jeiComp.getJEIIORequirements());
-                }
-                switch (ioType) {
-                    case INPUT -> ingredients.setInputLists(type, componentObjects);
-                    case OUTPUT -> ingredients.setOutputLists(type, componentObjects);
-                }
+            Class<?> trueJEIRequirementClass = comp.getTrueJEIRequirementClass();
+            if (trueJEIRequirementClass != null) {
+                IIngredientType trueType = ModIntegrationJEI.ingredientRegistry.getIngredientType(trueJEIRequirementClass);
+                trueTypeComponentMap.computeIfAbsent(trueType, t -> new EnumMap<>(IOType.class))
+                        .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
             }
         }
+
+        componentMap.forEach((type, ioGroup) -> ioGroup.forEach((ioType, components) -> {
+            List<List<Object>> componentObjects = new ArrayList<>();
+            for (ComponentRequirement req : components) {
+                ComponentRequirement.JEIComponent jeiComp = req.provideJEIComponent();
+                if (jeiComp == null) {
+                    continue;
+                }
+                componentObjects.add(jeiComp.getJEIIORequirements());
+            }
+            switch (ioType) {
+                case INPUT -> ingredients.setInputLists(type, componentObjects);
+                case OUTPUT -> ingredients.setOutputLists(type, componentObjects);
+            }
+        }));
+
+        trueTypeComponentMap.forEach((type, ioGroup) -> ioGroup.forEach((ioType, components) -> {
+            List<List<Object>> componentObjects = new ArrayList<>();
+            for (ComponentRequirement req : components) {
+                ComponentRequirement.JEIComponent jeiComp = req.provideJEIComponent();
+                if (jeiComp == null) {
+                    continue;
+                }
+                componentObjects.add(jeiComp.getTrueJEIIORequirements());
+            }
+            switch (ioType) {
+                case INPUT -> ingredients.setInputLists(type, componentObjects);
+                case OUTPUT -> ingredients.setOutputLists(type, componentObjects);
+            }
+        }));
     }
 
 }

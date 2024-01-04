@@ -1,5 +1,6 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
+import com.google.common.collect.Lists;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
@@ -30,6 +31,16 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
     }
 
     @Override
+    public Class<?> getTrueJEIRequirementClass() {
+        return ItemStack.class;
+    }
+
+    @Override
+    public List<?> getTrueJEIIORequirements() {
+        return Lists.transform(getJEIIORequirements(), ingredientItemStack -> ingredientItemStack == null ? null : ingredientItemStack.stack());
+    }
+
+    @Override
     public List<IngredientItemStack> getJEIIORequirements() {
         List<IngredientItemStack> copiedIngredients = new ArrayList<>();
         for (ChancedIngredientStack ingredient : requirement.getIngredients()) {
@@ -37,6 +48,9 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
                 case ITEMSTACK -> {
                     ItemStack itemStack = ingredient.itemStack;
                     ItemStack copiedStack = ItemUtils.copyStackWithSize(itemStack, itemStack.getCount());
+                    if (ingredient.minCount != ingredient.maxCount) {
+                        copiedStack.setCount(ingredient.maxCount);
+                    }
                     copiedIngredients.add(ingredient.asIngredientItemStack(copiedStack));
                 }
                 case ORE_DICT -> {
@@ -52,7 +66,11 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
 
                     for (ItemStack itemStack : out) {
                         ItemStack copied = itemStack.copy();
-                        copied.setCount(ingredient.count);
+                        if (ingredient.minCount != ingredient.maxCount) {
+                            copied.setCount(ingredient.maxCount);
+                        } else {
+                            copied.setCount(ingredient.count);
+                        }
                         copiedIngredients.add(ingredient.asIngredientItemStack(copied));
                     }
                 }

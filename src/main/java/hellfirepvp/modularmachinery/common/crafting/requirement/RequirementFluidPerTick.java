@@ -53,7 +53,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickParalle
     @Override
     public RequirementFluidPerTick deepCopyModified(List<RecipeModifier> modifiers) {
         FluidStack stack = this.required.copy();
-        stack.amount = ((int) Math.round(RecipeModifier.applyModifiers(modifiers, this, (double) stack.amount, false)));
+        stack.amount = ((int) Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_FLUID, actionType, (double) stack.amount, false)));
         RequirementFluidPerTick fluid = new RequirementFluidPerTick(actionType, stack);
         fluid.tagMatch = tagMatch;
         fluid.tagDisplay = tagDisplay;
@@ -118,7 +118,7 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickParalle
     public int doFluidIOInternal(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxMultiplier) {
         List<IFluidHandler> fluidHandlers = HybridFluidUtils.castFluidHandlerComponents(components);
 
-        long required = Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.amount, false));
+        long required = Math.round(RecipeModifier.applyModifiers(context, RequirementTypesMM.REQUIREMENT_FLUID, actionType, (double) this.required.amount, false));
         if (required <= 0) {
             return maxMultiplier;
         }

@@ -53,6 +53,16 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<Ingredie
     }
 
     @Override
+    public Class<ItemStack> getTrueJEIRequirementClass() {
+        return ItemStack.class;
+    }
+
+    @Override
+    public List<ItemStack> getTrueJEIIORequirements() {
+        return Lists.transform(getJEIIORequirements(), ingredientItemStack -> ingredientItemStack == null ? null : ingredientItemStack.stack());
+    }
+
+    @Override
     public List<IngredientItemStack> getJEIIORequirements() {
         switch (requirement.requirementType) {
             case ITEMSTACKS -> {
@@ -62,6 +72,9 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<Ingredie
                 } else if (requirement.tag != null) {
                     requirement.previewDisplayTag = requirement.tag.copy();
                     stack.setTagCompound(requirement.previewDisplayTag.copy());
+                }
+                if (requirement.minAmount != requirement.maxAmount) {
+                    stack.setCount(requirement.maxAmount);
                 }
                 return Collections.singletonList(requirement.asIngredientItemStack(stack));
             }
@@ -78,7 +91,11 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<Ingredie
                 NonNullList<IngredientItemStack> stacksOut = NonNullList.create();
                 for (ItemStack itemStack : out) {
                     ItemStack copy = itemStack.copy();
-                    copy.setCount(requirement.oreDictItemAmount);
+                    if (requirement.minAmount != requirement.maxAmount) {
+                        copy.setCount(requirement.maxAmount);
+                    } else {
+                        copy.setCount(requirement.oreDictItemAmount);
+                    }
                     stacksOut.add(requirement.asIngredientItemStack(copy));
                 }
                 return stacksOut;

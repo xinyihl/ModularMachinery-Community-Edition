@@ -14,10 +14,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
-/**
- * 一个简单的单 Tick 并发执行器
- * 注意：如果提交了一个会修改世界的引用，请使用锁或同步关键字修饰会修改世界的部分代码操作
- */
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.min(Math.max(Runtime.getRuntime().availableProcessors() / 4, 4), 8);
 
@@ -134,7 +130,9 @@ public class TaskExecutor {
             while (!executor.isCompleted) {
                 executed += executeMainThreadActions();
                 updateTileEntity();
-                LockSupport.parkNanos(10_000L);
+                if (!executor.isCompleted) {
+                    LockSupport.parkNanos(10_000L);
+                }
             }
 
             taskUsedTime += executor.usedTime;

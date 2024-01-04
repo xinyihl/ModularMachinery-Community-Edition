@@ -144,7 +144,7 @@ public class MagicPrimer {
     }
 
     @ZenMethod
-    public static RecipePrimer addStarlightInput(RecipePrimer primer, int amount) {
+    public static RecipePrimer addStarlightInput(RecipePrimer primer, float amount) {
         if (amount > 0)
             primer.appendComponent(new RequirementStarlight(IOType.INPUT, amount));
         else
@@ -154,7 +154,7 @@ public class MagicPrimer {
     }
 
     @ZenMethod
-    public static RecipePrimer addStarlightOutput(RecipePrimer primer, int amount) {
+    public static RecipePrimer addStarlightOutput(RecipePrimer primer, float amount) {
         if (amount > 0)
             primer.appendComponent(new RequirementStarlight(IOType.OUTPUT, amount));
         else

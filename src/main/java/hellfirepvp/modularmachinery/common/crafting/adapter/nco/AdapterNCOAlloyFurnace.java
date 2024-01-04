@@ -56,8 +56,7 @@ public class AdapterNCOAlloyFurnace extends AdapterNCOMachine {
 
                 int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, stack.getCount(), false));
                 if (inAmount > 0) {
-                    if (iItemIngredient instanceof OreIngredient) {
-                        OreIngredient oreIngredient = (OreIngredient) iItemIngredient;
+                    if (iItemIngredient instanceof final OreIngredient oreIngredient) {
                         recipe.addRequirement(new RequirementItem(IOType.INPUT, oreIngredient.oreName, inAmount));
                         continue;
                     }

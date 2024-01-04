@@ -10,9 +10,10 @@ package hellfirepvp.modularmachinery.common.registry;
 
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import hellfirepvp.modularmachinery.common.crafting.adapter.AdapterIC2Compressor;
+import hellfirepvp.modularmachinery.common.crafting.adapter.ic2.AdapterIC2Compressor;
 import hellfirepvp.modularmachinery.common.crafting.adapter.AdapterMinecraftFurnace;
 import hellfirepvp.modularmachinery.common.crafting.adapter.RecipeAdapter;
+import hellfirepvp.modularmachinery.common.crafting.adapter.ic2.AdapterIC2Macerator;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOAlloyFurnace;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOChemicalReactor;
 import hellfirepvp.modularmachinery.common.crafting.adapter.nco.AdapterNCOInfuser;
@@ -38,6 +39,7 @@ public class RegistryRecipeAdapters {
         MINECRAFT_FURNACE = registerAdapter(new AdapterMinecraftFurnace());
         if (Mods.IC2.isPresent()) {
             registerAdapter(new AdapterIC2Compressor());
+            registerAdapter(new AdapterIC2Macerator());
         }
         if (Mods.NUCLEARCRAFT_OVERHAULED.isPresent()) {
             registerAdapter(new AdapterNCOAlloyFurnace());
