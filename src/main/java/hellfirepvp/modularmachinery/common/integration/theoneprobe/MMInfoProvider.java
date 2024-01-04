@@ -389,7 +389,6 @@ public class MMInfoProvider implements IProbeInfoProvider {
         return info.vertical(info.defaultLayoutStyle()
                 .spacing(0)
                 .borderColor(0x801E90FF)
-                .alignment(ElementAlignment.ALIGN_CENTER)
         );
     }
 
