@@ -70,18 +70,19 @@ public class MMInfoProvider implements IProbeInfoProvider {
     }
 
     private static void processMultiblockMachineTOP(TileMultiblockMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
+        IProbeInfo stateBox = newVertical(probeInfo);
         UUID ownerUUID = machine.getOwner();
         if (ownerUUID != null) {
             MinecraftServer server = machine.getWorld().getMinecraftServer();
             if (server != null) {
                 if (ownerUUID.equals(player.getGameProfile().getId())) {
-                    probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.GREEN + "{*top.machine.owner.self*}");
+                    stateBox.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.GREEN + "{*top.machine.owner.self*}");
                 } else {
                     GameProfile ownerProfile = server.getPlayerProfileCache().getProfileByUUID(ownerUUID);
                     if (ownerProfile == null) {
-                        probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.YELLOW + "{*top.machine.owner.unknown*}(UUID: " + ownerUUID + ")");
+                        stateBox.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.YELLOW + "{*top.machine.owner.unknown*}(UUID: " + ownerUUID + ")");
                     } else {
-                        probeInfo.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.RED + ownerProfile.getName());
+                        stateBox.text(TextFormatting.AQUA + "{*top.machine.owner*}" + TextFormatting.RED + ownerProfile.getName());
                     }
                 }
             }
@@ -89,9 +90,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
 
         //是否形成结构
         if (machine.isStructureFormed()) {
-            probeInfo.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
+            stateBox.text(TextFormatting.GREEN + "{*top.machine.structure.found*}");
         } else {
-            probeInfo.text(TextFormatting.RED + "{*top.machine.structure.none*}");
+            stateBox.text(TextFormatting.RED + "{*top.machine.structure.none*}");
             return;
         }
 
@@ -101,13 +102,22 @@ public class MMInfoProvider implements IProbeInfoProvider {
         if (machine instanceof TileFactoryController) {
             processFactoryControllerTOP((TileFactoryController) machine, probeInfo, player);
         }
+
+        IProbeInfo perfBox = newVertical(probeInfo);
+        perfBox.text(String.format("%sCPU Avg Usage: %sμs%s, Recipe Search: %sms",
+                TextFormatting.AQUA, formatCPUUsage(machine.getTimeRecorder().usedTimeAvg()),
+                TextFormatting.AQUA, formatRecipeSearchUsage(machine.getTimeRecorder().recipeSearchUsedTimeAvg())));
+        perfBox.text(String.format("%sWorkMode: %s", TextFormatting.AQUA, machine.getWorkMode().getDisplayName()));
     }
 
     // TODO: Really long...
     private static void processFactoryControllerTOP(TileFactoryController factory, IProbeInfo probeInfo, EntityPlayer player) {
+        IProbeInfo statusBox = newVertical(probeInfo);
+
         if (factory.isWorking()) {
-            probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
+            statusBox.text(TextFormatting.GREEN + "{*top.machine.working*}");
         } else {
+            statusBox.text(TextFormatting.RED + "{*" + factory.getControllerStatus().getUnlocMessage() + "*}");
             return;
         }
 
@@ -118,16 +128,21 @@ public class MMInfoProvider implements IProbeInfoProvider {
         final AtomicLong energyGenerateTotal = new AtomicLong();
         collectRequirementEnergy(coreRecipeThreads, energyConsumeTotal, energyGenerateTotal);
         collectRequirementEnergy(recipeThreads, energyConsumeTotal, energyGenerateTotal);
-        if (energyConsumeTotal.get() > 0) {
-            addEnergyUsageText(probeInfo, player, IOType.INPUT, energyConsumeTotal.get());
-        }
-        if (energyGenerateTotal.get() > 0) {
-            addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyGenerateTotal.get());
+        if (energyConsumeTotal.get() > 0 || energyGenerateTotal.get() > 0) {
+            IProbeInfo energyBox = newVertical(probeInfo);
+            if (energyConsumeTotal.get() > 0) {
+                addEnergyUsageText(energyBox, player, IOType.INPUT, energyConsumeTotal.get());
+            }
+            if (energyGenerateTotal.get() > 0) {
+                addEnergyUsageText(energyBox, player, IOType.OUTPUT, energyGenerateTotal.get());
+            }
         }
 
+        IProbeInfo threadBox = null;
         int maxThreads = factory.getMaxThreads();
         if (maxThreads > 0) {
-            probeInfo.text(
+            threadBox = newVertical(probeInfo);
+            threadBox.text(
                     TextFormatting.GREEN + String.valueOf(recipeThreads.size()) +
                             TextFormatting.AQUA + " {*top.factory.thread.running*}" +
                             TextFormatting.RESET + " / " +
@@ -138,9 +153,10 @@ public class MMInfoProvider implements IProbeInfoProvider {
 
         int trueMaxParallelism = factory.getMaxParallelism();
         if (factory.getAvailableParallelism() != trueMaxParallelism) {
-            probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" +
+            IProbeInfo parallelismBox = threadBox == null ? newVertical(probeInfo) : threadBox;
+            parallelismBox.text(TextFormatting.AQUA + "{*top.parallelism*}" +
                     TextFormatting.GREEN + ((trueMaxParallelism - factory.getAvailableParallelism()) + 1));
-            probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" +
+            parallelismBox.text(TextFormatting.GOLD + "{*top.max_parallelism*}" +
                     TextFormatting.YELLOW + trueMaxParallelism);
         }
 
@@ -149,7 +165,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
         recipeThreadList.addAll(coreRecipeThreads);
         recipeThreadList.addAll(recipeThreads);
 
+        IProbeInfo threadsProgressBox = newVertical(probeInfo);
         recipeThreadList.stream().limit(6).forEach(thread -> {
+            IProbeInfo threadProgressBox = newVertical(threadsProgressBox);
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
             CraftingStatus status = thread.getStatus();
 
@@ -166,9 +184,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
             }
 
             if (status.isCrafting()) {
-                probeInfo.text(threadName + ": " + TextFormatting.GREEN + "{*" + status.getUnlocMessage() + "*}");
+                threadProgressBox.text(threadName + ": " + TextFormatting.GREEN + "{*" + status.getUnlocMessage() + "*}");
             } else {
-                probeInfo.text(threadName + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
+                threadProgressBox.text(threadName + ": " + TextFormatting.RED + "{*" + status.getUnlocMessage() + "*}");
                 progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
                 progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
                 progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
@@ -194,9 +212,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
                 progressStr = String.format("%.0f", progress) + "%";
             }
 
-            IProbeInfo progressLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
+            IProbeInfo progressLine = threadProgressBox.horizontal(threadProgressBox.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
             progressLine.text(TextFormatting.AQUA + "{*top.recipe.progress*}:  ");
-            progressLine.progress((int) progress, 100, probeInfo.defaultProgressStyle()
+            progressLine.progress((int) progress, 100, threadProgressBox.defaultProgressStyle()
                     .prefix(progressStr)
                     .filledColor(progressBarFilledColor)
                     .alternateFilledColor(progressBarAlternateFilledColor)
@@ -226,9 +244,10 @@ public class MMInfoProvider implements IProbeInfoProvider {
 
     // TODO: Really long...
     private static void processMachineControllerTOP(TileMachineController machine, IProbeInfo probeInfo, EntityPlayer player) {
+        IProbeInfo statusBox = newVertical(probeInfo);
         //是否在工作
         if (machine.getActiveRecipe() == null || machine.getFoundMachine() == null) {
-            probeInfo.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
+            statusBox.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
             return;
         }
 
@@ -237,24 +256,28 @@ public class MMInfoProvider implements IProbeInfoProvider {
         int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
 
         if (machine.getControllerStatus().isCrafting()) {
-            probeInfo.text(TextFormatting.GREEN + "{*top.machine.working*}");
+            statusBox.text(TextFormatting.GREEN + "{*top.machine.working*}");
         } else {
-            probeInfo.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
+            statusBox.text(TextFormatting.RED + "{*" + machine.getControllerStatus().getUnlocMessage() + "*}");
             progressBarFilledColor = ModIntegrationTOP.failureProgressBarFilledColor;
             progressBarAlternateFilledColor = ModIntegrationTOP.failureProgressBarAlternateFilledColor;
             progressBarBorderColor = ModIntegrationTOP.failureProgressBarBorderColor;
         }
 
         RecipeThread thread = machine.getRecipeThreadList()[0];
-        RequirementEnergy req = getRequirementEnergy(thread, IOType.INPUT);
-        if (req != null) {
-            long energyUsage = getEnergyRequired(thread, req);
-            addEnergyUsageText(probeInfo, player, IOType.INPUT, energyUsage);
-        }
-        req = getRequirementEnergy(thread, IOType.OUTPUT);
-        if (req != null) {
-            long energyUsage = getEnergyRequired(thread, req);
-            addEnergyUsageText(probeInfo, player, IOType.OUTPUT, energyUsage);
+        RequirementEnergy reqEnergyIn = getRequirementEnergy(thread, IOType.INPUT);
+        RequirementEnergy reqEnergyOut = getRequirementEnergy(thread, IOType.OUTPUT);
+        if (reqEnergyIn != null || reqEnergyOut != null) {
+            IProbeInfo energyBox = newVertical(probeInfo);
+
+            if (reqEnergyIn != null) {
+                long energyUsage = getEnergyRequired(thread, reqEnergyIn);
+                addEnergyUsageText(energyBox, player, IOType.INPUT, energyUsage);
+            }
+            if (reqEnergyOut != null) {
+                long energyGenerate = getEnergyRequired(thread, reqEnergyOut);
+                addEnergyUsageText(energyBox, player, IOType.OUTPUT, energyGenerate);
+            }
         }
 
         ActiveMachineRecipe activeRecipe = machine.getActiveRecipe();
@@ -263,8 +286,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
         float progress = (float) (tick * 100) / totalTick;
 
         if (activeRecipe.getParallelism() > 1) {
-            probeInfo.text(TextFormatting.AQUA + "{*top.parallelism*}" + TextFormatting.GREEN + activeRecipe.getParallelism());
-            probeInfo.text(TextFormatting.GOLD + "{*top.max_parallelism*}" + TextFormatting.YELLOW + activeRecipe.getMaxParallelism());
+            IProbeInfo parallelismBox = newVertical(probeInfo);
+            parallelismBox.text(TextFormatting.AQUA + "{*top.parallelism*}" + TextFormatting.GREEN + activeRecipe.getParallelism());
+            parallelismBox.text(TextFormatting.GOLD + "{*top.max_parallelism*}" + TextFormatting.YELLOW + activeRecipe.getMaxParallelism());
         }
 
         String progressStr;
@@ -279,9 +303,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
             progressStr = String.format("%.0f", progress) + "%";
         }
 
-        IProbeInfo progressLine = probeInfo.horizontal(probeInfo.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
+        IProbeInfo progressLine = statusBox.horizontal(statusBox.defaultLayoutStyle().alignment(ElementAlignment.ALIGN_CENTER));
         progressLine.text("{*top.recipe.progress*}:  ");
-        progressLine.progress((int) progress, 100, probeInfo.defaultProgressStyle()
+        progressLine.progress((int) progress, 100, statusBox.defaultProgressStyle()
                 .prefix(progressStr)
                 .filledColor(progressBarFilledColor)
                 .alternateFilledColor(progressBarAlternateFilledColor)
@@ -330,6 +354,43 @@ public class MMInfoProvider implements IProbeInfoProvider {
         return player.isSneaking()
                 ? MiscUtils.formatNumber(EnergyDisplayUtil.type.formatEnergyForDisplay(usagePerTick))
                 : MiscUtils.formatDecimal(EnergyDisplayUtil.type.formatEnergyForDisplay(usagePerTick));
+    }
+
+    private static String formatCPUUsage(final int time) {
+        String prefix;
+        if (time <= 100) {
+            prefix = TextFormatting.GREEN.toString();
+        } else if (time <= 150) {
+            prefix = TextFormatting.YELLOW.toString();
+        } else if (time <= 250) {
+            prefix = TextFormatting.GOLD.toString();
+        } else {
+            prefix = TextFormatting.RED.toString();
+        }
+        return prefix + "~" + MiscUtils.formatDecimal(time);
+    }
+
+    private static String formatRecipeSearchUsage(final float time) {
+        float convertedMs = time / 1000;
+        String prefix;
+        if (convertedMs <= 1F) {
+            prefix = TextFormatting.GREEN.toString();
+        } else if (convertedMs <= 2.5F) {
+            prefix = TextFormatting.YELLOW.toString();
+        } else if (convertedMs <= 5F) {
+            prefix = TextFormatting.GOLD.toString();
+        } else {
+            prefix = TextFormatting.RED.toString();
+        }
+        return prefix + "~" + MiscUtils.formatFloat(convertedMs, 2);
+    }
+
+    private static IProbeInfo newVertical(final IProbeInfo info) {
+        return info.vertical(info.defaultLayoutStyle()
+                .spacing(0)
+                .borderColor(0x801E90FF)
+                .alignment(ElementAlignment.ALIGN_CENTER)
+        );
     }
 
 }

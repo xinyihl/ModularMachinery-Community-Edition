@@ -131,7 +131,7 @@ public class TaskExecutor {
                 executed += executeMainThreadActions();
                 updateTileEntity();
                 if (!executor.isCompleted) {
-                    LockSupport.parkNanos(10_000L);
+                    loopWait(100_000L);
                 }
             }
 
@@ -139,6 +139,17 @@ public class TaskExecutor {
             executed++;
         }
         return executed;
+    }
+
+    private void loopWait(final long nanos) {
+        long startTime = System.nanoTime();
+        while (System.nanoTime() - startTime < nanos) {
+            try {
+                Thread.sleep(0);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
     }
 
     private void updateTileEntity() {

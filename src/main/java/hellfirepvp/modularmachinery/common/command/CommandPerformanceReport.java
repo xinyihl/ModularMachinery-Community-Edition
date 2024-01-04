@@ -49,28 +49,28 @@ public class CommandPerformanceReport extends CommandBase {
         long usedTimeAvg = totalExecuted == 0 ? 0 : taskUsedTime / totalExecuted;
 
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".title",
-                TextFormatting.GREEN + MiscUtils.formatDecimal(executedCount) + TextFormatting.WHITE));
+                TextFormatting.GREEN + MiscUtils.formatDecimal(executedCount) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentString(""));
 
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_executed",
-                TextFormatting.BLUE + MiscUtils.formatDecimal(totalExecuted) + TextFormatting.WHITE));
+                TextFormatting.BLUE + MiscUtils.formatDecimal(totalExecuted) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".tasks_avg_per_execution",
-                TextFormatting.BLUE + String.valueOf(executedAvgPerExecution) + TextFormatting.WHITE));
+                TextFormatting.BLUE + String.valueOf(executedAvgPerExecution) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentString(""));
 
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".total_used_time",
-                TextFormatting.BLUE + String.valueOf(totalUsedTime / 1000) + TextFormatting.WHITE));
+                TextFormatting.BLUE + String.valueOf(totalUsedTime / 1000) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg_per_execution",
-                TextFormatting.YELLOW + String.format("%.2f", usedTimeAvgPerExecution) + TextFormatting.WHITE));
+                TextFormatting.YELLOW + String.format("%.2f", usedTimeAvgPerExecution) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentString(""));
 
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time",
-                TextFormatting.BLUE + MiscUtils.formatDecimal(((double) taskUsedTime / 1000L)) + TextFormatting.WHITE));
+                TextFormatting.BLUE + MiscUtils.formatDecimal(((double) taskUsedTime / 1000L)) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentString(""));
 
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".task_used_time_avg",
-                TextFormatting.YELLOW + String.format("%.2f", taskUsedTimeAvg) + TextFormatting.WHITE));
+                TextFormatting.YELLOW + String.format("%.2f", taskUsedTimeAvg) + TextFormatting.RESET));
         sender.sendMessage(new TextComponentTranslation(LANG_KEY + ".used_time_avg",
-                TextFormatting.BLUE + String.valueOf(usedTimeAvg) + TextFormatting.WHITE));
+                TextFormatting.BLUE + String.valueOf(usedTimeAvg) + TextFormatting.RESET));
     }
 }
