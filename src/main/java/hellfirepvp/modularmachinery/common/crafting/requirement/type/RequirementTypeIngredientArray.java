@@ -20,7 +20,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequirementTypeIngredientArray extends RequirementType<IngredientItemStack, RequirementIngredientArray> {
+public class RequirementTypeIngredientArray extends RequirementType<ItemStack, RequirementIngredientArray> {
 
     /**
      * Example:

@@ -13,23 +13,18 @@ import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
+import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStackRenderer;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
-import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
-import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nullable;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,7 +34,7 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 08.04.2018 / 12:44
  */
-public class JEIComponentItem extends ComponentRequirement.JEIComponent<IngredientItemStack> {
+public class JEIComponentItem extends ComponentRequirement.JEIComponent<ItemStack> {
 
     private final RequirementItem requirement;
 
@@ -48,93 +43,43 @@ public class JEIComponentItem extends ComponentRequirement.JEIComponent<Ingredie
     }
 
     @Override
-    public Class<IngredientItemStack> getJEIRequirementClass() {
-        return IngredientItemStack.class;
-    }
-
-    @Override
-    public Class<ItemStack> getTrueJEIRequirementClass() {
+    public Class<ItemStack> getJEIRequirementClass() {
         return ItemStack.class;
     }
 
     @Override
-    public List<ItemStack> getTrueJEIIORequirements() {
-        return Lists.transform(getJEIIORequirements(), ingredientItemStack -> ingredientItemStack == null ? null : ingredientItemStack.stack());
-    }
-
-    @Override
-    public List<IngredientItemStack> getJEIIORequirements() {
-        switch (requirement.requirementType) {
-            case ITEMSTACKS -> {
-                ItemStack stack = ItemUtils.copyStackWithSize(requirement.required, requirement.required.getCount());
-                if (requirement.previewDisplayTag != null) {
-                    stack.setTagCompound(requirement.previewDisplayTag);
-                } else if (requirement.tag != null) {
-                    requirement.previewDisplayTag = requirement.tag.copy();
-                    stack.setTagCompound(requirement.previewDisplayTag.copy());
-                }
-                if (requirement.minAmount != requirement.maxAmount) {
-                    stack.setCount(requirement.maxAmount);
-                }
-                return Collections.singletonList(requirement.asIngredientItemStack(stack));
-            }
-            case OREDICT -> {
-                NonNullList<ItemStack> stacks = OreDictionary.getOres(requirement.oreDictName);
-                NonNullList<ItemStack> out = NonNullList.create();
-                for (ItemStack oreDictIn : stacks) {
-                    if (oreDictIn.getItemDamage() == OreDictionary.WILDCARD_VALUE && !oreDictIn.isItemStackDamageable() && oreDictIn.getItem().getCreativeTab() != null) {
-                        oreDictIn.getItem().getSubItems(oreDictIn.getItem().getCreativeTab(), out);
-                    } else {
-                        out.add(oreDictIn);
-                    }
-                }
-                NonNullList<IngredientItemStack> stacksOut = NonNullList.create();
-                for (ItemStack itemStack : out) {
-                    ItemStack copy = itemStack.copy();
-                    if (requirement.minAmount != requirement.maxAmount) {
-                        copy.setCount(requirement.maxAmount);
-                    } else {
-                        copy.setCount(requirement.oreDictItemAmount);
-                    }
-                    stacksOut.add(requirement.asIngredientItemStack(copy));
-                }
-                return stacksOut;
-            }
-            case FUEL -> {
-                return Lists.transform(FuelItemHelper.getFuelItems(), IngredientItemStackTransformer.INSTANCE);
-            }
-        }
-        return new ArrayList<>(0);
+    public List<ItemStack> getJEIIORequirements() {
+        return Lists.transform(requirement.cachedJEIIORequirementList, ingredient -> ingredient == null ? null : ingredient.stack());
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public RecipeLayoutPart<IngredientItemStack> getLayoutPart(Point offset) {
+    public RecipeLayoutPart<ItemStack> getLayoutPart(Point offset) {
         return new RecipeLayoutPart.Item(offset);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void onJEIHoverTooltip(int slotIndex, boolean input, IngredientItemStack ingredient, List<String> tooltip) {
+    public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
         if (requirement.requirementType == RequirementItem.ItemRequirementType.FUEL) {
             addFuelTooltip(ingredient, tooltip);
         }
         addChanceTooltip(input, tooltip, requirement.chance);
-        addMinMaxTooltip(input, ingredient, tooltip);
+        addMinMaxTooltip(input, tooltip);
     }
 
-    public static void addFuelTooltip(final IngredientItemStack ingredient, final List<String> tooltip) {
-        int burn = TileEntityFurnace.getItemBurnTime(ingredient.stack());
+    public static void addFuelTooltip(final ItemStack ingredient, final List<String> tooltip) {
+        int burn = TileEntityFurnace.getItemBurnTime(ingredient);
         if (burn > 0) {
             tooltip.add(TextFormatting.GRAY + I18n.format("tooltip.machinery.fuel.item", burn));
         }
         tooltip.add(I18n.format("tooltip.machinery.fuel"));
     }
 
-    public static void addMinMaxTooltip(final boolean input, final IngredientItemStack ingredient, final List<String> tooltip) {
-        if (ingredient.min() != ingredient.max()) {
+    public void addMinMaxTooltip(final boolean input, final List<String> tooltip) {
+        if (requirement.minAmount != requirement.maxAmount) {
             String key = input ? "tooltip.machinery.min_max_amount.input" : "tooltip.machinery.min_max_amount.output";
-            tooltip.add(I18n.format(key, ingredient.min(), ingredient.max()));
+            tooltip.add(I18n.format(key, requirement.minAmount, requirement.maxAmount));
         }
     }
 

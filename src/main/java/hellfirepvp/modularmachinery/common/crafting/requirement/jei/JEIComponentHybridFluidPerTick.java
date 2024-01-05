@@ -24,15 +24,15 @@ public class JEIComponentHybridFluidPerTick extends ComponentRequirement.JEIComp
         return HybridFluid.class;
     }
 
-    @Override
-    public Class<?> getTrueJEIRequirementClass() {
-        return FluidStack.class;
-    }
-
-    @Override
-    public List<FluidStack> getTrueJEIIORequirements() {
-        return Collections.singletonList(requirement.required);
-    }
+//    @Override
+//    public Class<?> getTrueJEIRequirementClass() {
+//        return FluidStack.class;
+//    }
+//
+//    @Override
+//    public List<FluidStack> getTrueJEIIORequirements() {
+//        return Collections.singletonList(requirement.required);
+//    }
 
     @Override
     public List<HybridFluid> getJEIIORequirements() {

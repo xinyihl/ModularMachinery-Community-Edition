@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
+import com.google.common.collect.Lists;
 import github.kasuminova.mmce.common.helper.AdvancedItemChecker;
 import github.kasuminova.mmce.common.helper.AdvancedItemModifier;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
@@ -23,12 +24,15 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.Asyncable;
+import hellfirepvp.modularmachinery.common.util.FuelItemHelper;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -43,7 +47,7 @@ import java.util.Random;
  * Created by HellFirePvP
  * Date: 24.02.2018 / 12:35
  */
-public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<IngredientItemStack, RequirementTypeItem>
+public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeItem>
         implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
     public static final Random RD = new Random();
 
@@ -59,6 +63,8 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     public final List<ItemStack> previewItemStacks = new ArrayList<>();
 
     public final List<AdvancedItemModifier> itemModifierList = new ArrayList<>();
+
+    public List<IngredientItemStack> cachedJEIIORequirementList = null;
 
     public NBTTagCompound tag = null;
     public NBTTagCompound previewDisplayTag = null;
@@ -151,8 +157,57 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     }
 
     @Override
-    public JEIComponent<IngredientItemStack> provideJEIComponent() {
+    public JEIComponent<ItemStack> provideJEIComponent() {
         return new JEIComponentItem(this);
+    }
+
+    @Override
+    public void initializeJEIRequirements() {
+        cachedJEIIORequirementList = asJEIIORequirementList();
+    }
+
+    public List<IngredientItemStack> asJEIIORequirementList() {
+        switch (requirementType) {
+            case ITEMSTACKS -> {
+                ItemStack stack = ItemUtils.copyStackWithSize(required, required.getCount());
+                if (previewDisplayTag != null) {
+                    stack.setTagCompound(previewDisplayTag);
+                } else if (tag != null) {
+                    previewDisplayTag = tag.copy();
+                    stack.setTagCompound(previewDisplayTag.copy());
+                }
+                if (minAmount != maxAmount) {
+                    stack.setCount(maxAmount);
+                }
+                return Collections.singletonList(asIngredientItemStack(stack));
+            }
+            case OREDICT -> {
+                NonNullList<ItemStack> stacks = OreDictionary.getOres(oreDictName);
+                NonNullList<ItemStack> out = NonNullList.create();
+                for (ItemStack oreDictIn : stacks) {
+                    if (oreDictIn.getItemDamage() == OreDictionary.WILDCARD_VALUE && !oreDictIn.isItemStackDamageable() && oreDictIn.getItem().getCreativeTab() != null) {
+                        oreDictIn.getItem().getSubItems(oreDictIn.getItem().getCreativeTab(), out);
+                    } else {
+                        out.add(oreDictIn);
+                    }
+                }
+                NonNullList<IngredientItemStack> stacksOut = NonNullList.create();
+                for (ItemStack itemStack : out) {
+                    ItemStack copy = itemStack.copy();
+                    if (minAmount != maxAmount) {
+                        copy.setCount(maxAmount);
+                    } else {
+                        copy.setCount(oreDictItemAmount);
+                    }
+                    stacksOut.add(asIngredientItemStack(copy));
+                }
+                return stacksOut;
+            }
+            case FUEL -> {
+                return Lists.transform(FuelItemHelper.getFuelItems(), JEIComponentItem.IngredientItemStackTransformer.INSTANCE);
+            }
+        }
+        return Collections.emptyList();
     }
 
     @Override

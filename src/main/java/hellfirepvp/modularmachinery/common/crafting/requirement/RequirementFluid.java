@@ -46,7 +46,8 @@ import java.util.List;
  * Date: 24.02.2018 / 12:28
  * TODO: Split FluidStack and GasStack into two different Requirements, combining the two makes for terrible code.
  */
-public class RequirementFluid extends ComponentRequirement.MultiCompParallelizable<HybridFluid, RequirementTypeFluid>
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class RequirementFluid extends ComponentRequirement.MultiCompParallelizable<Object, RequirementTypeFluid>
         implements ComponentRequirement.ChancedRequirement, Asyncable {
 
     public final HybridFluid required;
@@ -91,7 +92,7 @@ public class RequirementFluid extends ComponentRequirement.MultiCompParallelizab
     }
 
     @Override
-    public JEIComponent<HybridFluid> provideJEIComponent() {
+    public JEIComponent provideJEIComponent() {
         return new JEIComponentHybridFluid(this);
     }
 

@@ -148,7 +148,7 @@ public class ModIntegrationJEI implements IModPlugin {
             exc.printStackTrace();
             throw exc;
         }
-        registry.register(() -> IngredientItemStack.class, new ArrayList<>(), new IngredientItemStackHelper(), new IngredientItemStackRenderer());
+//        registry.register(() -> IngredientItemStack.class, new ArrayList<>(), new IngredientItemStackHelper(), new IngredientItemStackRenderer(Collections));
     }
 
     @Optional.Method(modid = "mekanism")

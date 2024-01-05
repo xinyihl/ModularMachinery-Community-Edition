@@ -1,21 +1,25 @@
 package hellfirepvp.modularmachinery.common.integration.ingredient;
 
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
-import mezz.jei.api.ingredients.IIngredientRenderer;
 import mezz.jei.plugins.vanilla.ingredients.item.ItemStackRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.item.ItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
-public class IngredientItemStackRenderer implements IIngredientRenderer<IngredientItemStack> {
+public class IngredientItemStackRenderer extends ItemStackRenderer {
 
-    private final ItemStackRenderer renderer = new ItemStackRenderer();
+    private final List<IngredientItemStack> preDefined = new ArrayList<>();
+
+    public IngredientItemStackRenderer(final List<IngredientItemStack> preDefined) {
+        this.preDefined.addAll(preDefined);
+    }
 
     public static void renderRequirementOverlyIntoGUI(final FontRenderer fr, final int xPos, final int yPos, int min, int max) {
         String s = String.format("%s~%s", MiscUtils.formatNumberToInt(min), MiscUtils.formatNumberToInt(max));
@@ -40,37 +44,39 @@ public class IngredientItemStackRenderer implements IIngredientRenderer<Ingredie
     }
 
     @Override
-    public void render(@Nonnull final Minecraft minecraft, final int xPos, final int yPos, @Nullable final IngredientItemStack ingredient) {
-        if (ingredient != null) {
-            int min = ingredient.min();
-            int max = ingredient.max();
-
-            GlStateManager.enableDepth();
-            RenderHelper.enableGUIStandardItemLighting();
-            FontRenderer font = getFontRenderer(minecraft, ingredient);
-
-            minecraft.getRenderItem().renderItemAndEffectIntoGUI(null, ingredient.stack(), xPos, yPos);
-            if (min != max) {
-                renderRequirementOverlyIntoGUI(font, xPos, yPos, min, max);
-                minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, "");
-            } else {
-                minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, null);
-            }
-
-            GlStateManager.disableBlend();
-            RenderHelper.disableStandardItemLighting();
+    public void render(@Nonnull final Minecraft minecraft, final int xPos, final int yPos, @Nullable final ItemStack stack) {
+        if (stack == null) {
+            return;
         }
+
+        IngredientItemStack ingredient = findStack(stack);
+        if (ingredient == null) {
+            return;
+        }
+
+        int min = ingredient.min();
+        int max = ingredient.max();
+
+        GlStateManager.enableDepth();
+        RenderHelper.enableGUIStandardItemLighting();
+        FontRenderer font = getFontRenderer(minecraft, ingredient.stack());
+
+        minecraft.getRenderItem().renderItemAndEffectIntoGUI(null, ingredient.stack(), xPos, yPos);
+        if (min != max) {
+            renderRequirementOverlyIntoGUI(font, xPos, yPos, min, max);
+            minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, "");
+        } else {
+            minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, null);
+        }
+
+        GlStateManager.disableBlend();
+        RenderHelper.disableStandardItemLighting();
     }
 
-    @Nonnull
-    @Override
-    public List<String> getTooltip(@Nonnull final Minecraft minecraft, final IngredientItemStack ingredient, @Nonnull final ITooltipFlag tooltipFlag) {
-        return renderer.getTooltip(minecraft, ingredient.stack(), tooltipFlag);
-    }
-
-    @Nonnull
-    @Override
-    public FontRenderer getFontRenderer(@Nonnull final Minecraft minecraft, final IngredientItemStack ingredient) {
-        return renderer.getFontRenderer(minecraft, ingredient.stack());
+    protected IngredientItemStack findStack(final ItemStack stack) {
+        return preDefined.stream()
+                .filter(ingredient -> ingredient.stack() == stack)
+                .findFirst()
+                .orElse(null);
     }
 }

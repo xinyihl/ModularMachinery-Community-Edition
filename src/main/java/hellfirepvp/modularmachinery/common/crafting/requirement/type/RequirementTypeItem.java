@@ -29,7 +29,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
  * Created by HellFirePvP
  * Date: 13.07.2019 / 10:45
  */
-public class RequirementTypeItem extends RequirementType<IngredientItemStack, RequirementItem> {
+public class RequirementTypeItem extends RequirementType<ItemStack, RequirementItem> {
 
     @Override
     public RequirementItem createRequirement(IOType type, JsonObject jsonObject) {

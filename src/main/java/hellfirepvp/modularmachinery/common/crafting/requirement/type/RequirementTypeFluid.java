@@ -26,7 +26,7 @@ import net.minecraftforge.fluids.FluidStack;
  * Created by HellFirePvP
  * Date: 13.07.2019 / 10:47
  */
-public class RequirementTypeFluid extends RequirementType<HybridFluid, RequirementFluid> {
+public class RequirementTypeFluid extends RequirementType<Object, RequirementFluid> {
 
     @Override
     public RequirementFluid createRequirement(IOType type, JsonObject requirement) {

@@ -5,8 +5,9 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementCatal
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.machine.IOType;
+import net.minecraft.item.ItemStack;
 
-public class RequirementTypeCatalyst extends RequirementType<IngredientItemStack, RequirementItem> {
+public class RequirementTypeCatalyst extends RequirementType<ItemStack, RequirementItem> {
 
     @Override
     public RequirementCatalyst createRequirement(IOType type, JsonObject jsonObject) {

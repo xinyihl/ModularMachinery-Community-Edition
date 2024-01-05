@@ -44,22 +44,6 @@ public class JEIComponentHybridFluid extends ComponentRequirement.JEIComponent<H
     }
 
     @Override
-    public Class<?> getTrueJEIRequirementClass() {
-        if (Mods.MEKANISM.isPresent() && requirement.required instanceof HybridFluidGas) {
-            return GasStack.class;
-        }
-        return FluidStack.class;
-    }
-
-    @Override
-    public List<?> getTrueJEIIORequirements() {
-        if (Mods.MEKANISM.isPresent() && requirement.required instanceof HybridFluidGas fluidGas) {
-            return Collections.singletonList(fluidGas.asGasStack());
-        }
-        return Collections.singletonList(requirement.required.asFluidStack());
-    }
-
-    @Override
     public List<HybridFluid> getJEIIORequirements() {
         return Collections.singletonList(requirement.required);
     }

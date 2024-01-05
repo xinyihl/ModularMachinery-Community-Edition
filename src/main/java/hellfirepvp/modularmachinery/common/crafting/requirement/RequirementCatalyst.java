@@ -119,7 +119,7 @@ public class RequirementCatalyst extends RequirementItem {
     }
 
     @Override
-    public JEIComponent<IngredientItemStack> provideJEIComponent() {
+    public JEIComponent<ItemStack> provideJEIComponent() {
         return new JEIComponentCatalyst(this);
     }
 }

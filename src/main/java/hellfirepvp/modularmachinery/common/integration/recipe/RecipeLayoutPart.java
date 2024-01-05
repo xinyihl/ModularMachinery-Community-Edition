@@ -9,15 +9,20 @@
 package hellfirepvp.modularmachinery.common.integration.recipe;
 
 import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementItem;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluid;
 import hellfirepvp.modularmachinery.common.integration.ingredient.HybridFluidRenderer;
 import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStackRenderer;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Optional;
 
 import java.awt.*;
+import java.util.Collections;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -45,6 +50,10 @@ public abstract class RecipeLayoutPart<T> {
     public abstract Class<T> getLayoutTypeClass();
 
     public abstract IIngredientRenderer<T> provideIngredientRenderer();
+
+    public IIngredientRenderer<T> provideIngredientRenderer(final ComponentRequirement<?, ?> req) {
+        return provideIngredientRenderer();
+    }
 
     public abstract int getRendererPaddingX();
 
@@ -234,7 +243,7 @@ public abstract class RecipeLayoutPart<T> {
 
     }
 
-    public static class Item extends RecipeLayoutPart<IngredientItemStack> {
+    public static class Item extends RecipeLayoutPart<ItemStack> {
 
         public Item(Point offset) {
             super(offset);
@@ -251,8 +260,8 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         @Override
-        public Class<IngredientItemStack> getLayoutTypeClass() {
-            return IngredientItemStack.class;
+        public Class<ItemStack> getLayoutTypeClass() {
+            return ItemStack.class;
         }
 
         @Override
@@ -302,8 +311,19 @@ public abstract class RecipeLayoutPart<T> {
         }
 
         @Override
-        public IIngredientRenderer<IngredientItemStack> provideIngredientRenderer() {
-            return new IngredientItemStackRenderer();
+        public IIngredientRenderer<ItemStack> provideIngredientRenderer() {
+            return new IngredientItemStackRenderer(Collections.emptyList());
+        }
+
+        @Override
+        public IIngredientRenderer<ItemStack> provideIngredientRenderer(final ComponentRequirement<?, ?> req) {
+            if (req instanceof RequirementItem reqItem) {
+                return new IngredientItemStackRenderer(reqItem.cachedJEIIORequirementList);
+            }
+            if (req instanceof RequirementIngredientArray ingredientArray) {
+                return new IngredientItemStackRenderer(ingredientArray.cachedJEIIORequirementList);
+            }
+            return super.provideIngredientRenderer(req);
         }
 
         @Override

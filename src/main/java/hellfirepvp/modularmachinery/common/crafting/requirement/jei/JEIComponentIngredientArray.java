@@ -18,7 +18,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JEIComponentIngredientArray extends ComponentRequirement.JEIComponent<IngredientItemStack> {
+public class JEIComponentIngredientArray extends ComponentRequirement.JEIComponent<ItemStack> {
     public final RequirementIngredientArray requirement;
 
     public JEIComponentIngredientArray(RequirementIngredientArray requirement) {
@@ -26,67 +26,22 @@ public class JEIComponentIngredientArray extends ComponentRequirement.JEICompone
     }
 
     @Override
-    public Class<IngredientItemStack> getJEIRequirementClass() {
-        return IngredientItemStack.class;
-    }
-
-    @Override
-    public Class<?> getTrueJEIRequirementClass() {
+    public Class<ItemStack> getJEIRequirementClass() {
         return ItemStack.class;
     }
 
     @Override
-    public List<?> getTrueJEIIORequirements() {
-        return Lists.transform(getJEIIORequirements(), ingredientItemStack -> ingredientItemStack == null ? null : ingredientItemStack.stack());
+    public List<ItemStack> getJEIIORequirements() {
+        return Lists.transform(requirement.cachedJEIIORequirementList, ingredientItemStack -> ingredientItemStack == null ? null : ingredientItemStack.stack());
     }
 
     @Override
-    public List<IngredientItemStack> getJEIIORequirements() {
-        List<IngredientItemStack> copiedIngredients = new ArrayList<>();
-        for (ChancedIngredientStack ingredient : requirement.getIngredients()) {
-            switch (ingredient.ingredientType) {
-                case ITEMSTACK -> {
-                    ItemStack itemStack = ingredient.itemStack;
-                    ItemStack copiedStack = ItemUtils.copyStackWithSize(itemStack, itemStack.getCount());
-                    if (ingredient.minCount != ingredient.maxCount) {
-                        copiedStack.setCount(ingredient.maxCount);
-                    }
-                    copiedIngredients.add(ingredient.asIngredientItemStack(copiedStack));
-                }
-                case ORE_DICT -> {
-                    NonNullList<ItemStack> stacks = OreDictionary.getOres(ingredient.oreDictName);
-                    NonNullList<ItemStack> out = NonNullList.create();
-                    for (ItemStack oreDictIn : stacks) {
-                        if (oreDictIn.getItemDamage() == OreDictionary.WILDCARD_VALUE && !oreDictIn.isItemStackDamageable() && oreDictIn.getItem().getCreativeTab() != null) {
-                            oreDictIn.getItem().getSubItems(oreDictIn.getItem().getCreativeTab(), out);
-                        } else {
-                            out.add(oreDictIn);
-                        }
-                    }
-
-                    for (ItemStack itemStack : out) {
-                        ItemStack copied = itemStack.copy();
-                        if (ingredient.minCount != ingredient.maxCount) {
-                            copied.setCount(ingredient.maxCount);
-                        } else {
-                            copied.setCount(ingredient.count);
-                        }
-                        copiedIngredients.add(ingredient.asIngredientItemStack(copied));
-                    }
-                }
-            }
-        }
-
-        return copiedIngredients;
-    }
-
-    @Override
-    public RecipeLayoutPart<IngredientItemStack> getLayoutPart(Point offset) {
+    public RecipeLayoutPart<ItemStack> getLayoutPart(Point offset) {
         return new RecipeLayoutPart.Item(offset);
     }
 
     @Override
-    public void onJEIHoverTooltip(int slotIndex, boolean input, IngredientItemStack ingredient, List<String> tooltip) {
+    public void onJEIHoverTooltip(int slotIndex, boolean input, ItemStack ingredient, List<String> tooltip) {
         tooltip.add("");
         IOType actionType = requirement.getActionType();
 

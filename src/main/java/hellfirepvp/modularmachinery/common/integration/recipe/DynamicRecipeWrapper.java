@@ -44,24 +44,7 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     private MachineRecipe recipe;
 
     public DynamicRecipeWrapper(MachineRecipe recipe) {
-        this.recipe = recipe;
-
-        for (IOType type : IOType.values()) {
-            finalOrderedComponents.put(type, new HashMap<>());
-        }
-        for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
-            ComponentRequirement.JEIComponent<?> comp = req.provideJEIComponent();
-            if (comp == null) {
-                continue;
-            }
-            finalOrderedComponents.get(req.getActionType())
-                    .computeIfAbsent(comp.getJEIRequirementClass(), clazz -> new LinkedList<>()).add(req);
-            Class<?> trueJEIRequirementClass = comp.getTrueJEIRequirementClass();
-            if (trueJEIRequirementClass != null) {
-                finalOrderedComponents.get(req.getActionType())
-                        .computeIfAbsent(trueJEIRequirementClass, clazz -> new LinkedList<>()).add(req);
-            }
-        }
+        reloadWrapper(recipe);
     }
 
     public void reloadWrapper(MachineRecipe recipe) {
@@ -175,7 +158,6 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void getIngredients(@Nonnull IIngredients ingredients) {
         Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> componentMap = new HashMap<>();
-        Map<IIngredientType, Map<IOType, List<ComponentRequirement>>> trueTypeComponentMap = new HashMap<>();
 
         for (ComponentRequirement<?, ?> req : this.recipe.getCraftingRequirements()) {
             if (req instanceof RequirementEnergy)
@@ -188,13 +170,6 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
             IIngredientType type = ModIntegrationJEI.ingredientRegistry.getIngredientType(comp.getJEIRequirementClass());
             componentMap.computeIfAbsent(type, t -> new EnumMap<>(IOType.class))
                     .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
-
-            Class<?> trueJEIRequirementClass = comp.getTrueJEIRequirementClass();
-            if (trueJEIRequirementClass != null) {
-                IIngredientType trueType = ModIntegrationJEI.ingredientRegistry.getIngredientType(trueJEIRequirementClass);
-                trueTypeComponentMap.computeIfAbsent(trueType, t -> new EnumMap<>(IOType.class))
-                        .computeIfAbsent(req.getActionType(), tt -> new LinkedList<>()).add(req);
-            }
         }
 
         componentMap.forEach((type, ioGroup) -> ioGroup.forEach((ioType, components) -> {
@@ -205,21 +180,6 @@ public class DynamicRecipeWrapper implements IRecipeWrapper {
                     continue;
                 }
                 componentObjects.add(jeiComp.getJEIIORequirements());
-            }
-            switch (ioType) {
-                case INPUT -> ingredients.setInputLists(type, componentObjects);
-                case OUTPUT -> ingredients.setOutputLists(type, componentObjects);
-            }
-        }));
-
-        trueTypeComponentMap.forEach((type, ioGroup) -> ioGroup.forEach((ioType, components) -> {
-            List<List<Object>> componentObjects = new ArrayList<>();
-            for (ComponentRequirement req : components) {
-                ComponentRequirement.JEIComponent jeiComp = req.provideJEIComponent();
-                if (jeiComp == null) {
-                    continue;
-                }
-                componentObjects.add(jeiComp.getTrueJEIIORequirements());
             }
             switch (ioType) {
                 case INPUT -> ingredients.setInputLists(type, componentObjects);

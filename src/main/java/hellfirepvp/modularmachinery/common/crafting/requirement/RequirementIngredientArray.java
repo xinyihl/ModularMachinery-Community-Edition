@@ -21,18 +21,21 @@ import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<IngredientItemStack, RequirementTypeIngredientArray>
+public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeIngredientArray>
         implements ComponentRequirement.ChancedRequirement {
 
     protected final List<ChancedIngredientStack> ingredients;
+    public List<IngredientItemStack> cachedJEIIORequirementList = null;
 
     public float chance = 1.0F;
 
@@ -97,8 +100,52 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
     }
 
     @Override
-    public JEIComponent<IngredientItemStack> provideJEIComponent() {
+    public JEIComponent<ItemStack> provideJEIComponent() {
         return new JEIComponentIngredientArray(this);
+    }
+
+    @Override
+    public void initializeJEIRequirements() {
+        cachedJEIIORequirementList = asJEIIORequirementList();
+    }
+
+    public List<IngredientItemStack> asJEIIORequirementList() {
+        List<IngredientItemStack> copiedIngredients = new ArrayList<>();
+        for (ChancedIngredientStack ingredient : getIngredients()) {
+            switch (ingredient.ingredientType) {
+                case ITEMSTACK -> {
+                    ItemStack itemStack = ingredient.itemStack;
+                    ItemStack copiedStack = ItemUtils.copyStackWithSize(itemStack, itemStack.getCount());
+                    if (ingredient.minCount != ingredient.maxCount) {
+                        copiedStack.setCount(ingredient.maxCount);
+                    }
+                    copiedIngredients.add(ingredient.asIngredientItemStack(copiedStack));
+                }
+                case ORE_DICT -> {
+                    NonNullList<ItemStack> stacks = OreDictionary.getOres(ingredient.oreDictName);
+                    NonNullList<ItemStack> out = NonNullList.create();
+                    for (ItemStack oreDictIn : stacks) {
+                        if (oreDictIn.getItemDamage() == OreDictionary.WILDCARD_VALUE && !oreDictIn.isItemStackDamageable() && oreDictIn.getItem().getCreativeTab() != null) {
+                            oreDictIn.getItem().getSubItems(oreDictIn.getItem().getCreativeTab(), out);
+                        } else {
+                            out.add(oreDictIn);
+                        }
+                    }
+
+                    for (ItemStack itemStack : out) {
+                        ItemStack copied = itemStack.copy();
+                        if (ingredient.minCount != ingredient.maxCount) {
+                            copied.setCount(ingredient.maxCount);
+                        } else {
+                            copied.setCount(ingredient.count);
+                        }
+                        copiedIngredients.add(ingredient.asIngredientItemStack(copied));
+                    }
+                }
+            }
+        }
+
+        return copiedIngredients;
     }
 
     @Override

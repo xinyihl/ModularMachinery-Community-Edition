@@ -86,6 +86,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         for (MachineRecipe recipe : recipes) {
             Map<IOType, Object2IntOpenHashMap<Class<?>>> tempComp = new EnumMap<>(IOType.class);
             for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
+                req.initializeJEIRequirements();
                 ComponentRequirement.JEIComponent<?> jeiComp = req.provideJEIComponent();
                 if (jeiComp == null) {
                     continue;
@@ -264,6 +265,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
     }
 
     @Override
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull DynamicRecipeWrapper recipeWrapper, @Nonnull IIngredients ingredients) {
         List<Class<?>> foundClasses = new LinkedList<>();
 
@@ -283,53 +285,42 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             IGuiIngredientGroup<?> clazzGroup = recipeLayout.getIngredientsGroup(clazz);
             final int[] compSlotIndex = {0};
 
-            //noinspection SimplifyStreamApiCallChains
-            for (RecipeLayoutPart slot : this.inputComponents
-                    .stream()
-                    .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))
-                    .collect(Collectors.toList())) {
-                clazzGroup.init(
-                        compSlotIndex[0],
-                        true,
-                        slot.provideIngredientRenderer(),
-                        slot.getOffset().x,
-                        slot.getOffset().y,
-                        slot.getComponentWidth(),
-                        slot.getComponentHeight(),
-                        slot.getRendererPaddingX(),
-                        slot.getRendererPaddingY());
-                compSlotIndex[0]++;
-                amtCompInputs++;
+            List<ComponentRequirement<?, ?>> inputReqList = recipeWrapper.finalOrderedComponents.get(IOType.INPUT).get(clazz);
+            for (RecipeLayoutPart slot : this.inputComponents) {
+                if (clazz.isAssignableFrom(slot.getLayoutTypeClass())) {
+                    int index = compSlotIndex[0];
+                    clazzGroup.init(
+                            index,
+                            true,
+                            index < inputReqList.size() ? slot.provideIngredientRenderer(inputReqList.get(index)) : slot.provideIngredientRenderer(),
+                            slot.getOffset().x,
+                            slot.getOffset().y,
+                            slot.getComponentWidth(),
+                            slot.getComponentHeight(),
+                            slot.getRendererPaddingX(),
+                            slot.getRendererPaddingY());
+                    compSlotIndex[0]++;
+                    amtCompInputs++;
+                }
             }
 
-            //noinspection SimplifyStreamApiCallChains
-            for (RecipeLayoutPart slot : this.outputComponents
-                    .stream()
-                    .filter(c -> clazz.isAssignableFrom(c.getLayoutTypeClass()))
-                    .collect(Collectors.toList())) {
-                clazzGroup.init(
-                        compSlotIndex[0],
-                        false,
-                        slot.provideIngredientRenderer(),
-                        slot.getOffset().x,
-                        slot.getOffset().y,
-                        slot.getComponentWidth(),
-                        slot.getComponentHeight(),
-                        slot.getRendererPaddingX(),
-                        slot.getRendererPaddingY());
-                compSlotIndex[0]++;
-            }
-
-            // Fake slot, for jei transform.
-            recipeWrapper.finalOrderedComponents.forEach(((ioType, componentTypeMap) -> componentTypeMap.values().forEach((requirements) -> requirements.stream()
-                    .map(requirement -> requirement.provideJEIComponent().getTrueJEIRequirementClass())
-                    .filter(Objects::nonNull)
-                    .forEach(trueJEIRequirementClass -> {
-                if (clazz.isAssignableFrom(trueJEIRequirementClass)) {
-                    clazzGroup.init(compSlotIndex[0], ioType == IOType.INPUT, -999999, -999999);
+            List<ComponentRequirement<?, ?>> outputReqList = recipeWrapper.finalOrderedComponents.get(IOType.OUTPUT).get(clazz);
+            for (RecipeLayoutPart slot : this.outputComponents) {
+                if (clazz.isAssignableFrom(slot.getLayoutTypeClass())) {
+                    int index = compSlotIndex[0] - amtCompInputs;
+                    clazzGroup.init(
+                            compSlotIndex[0],
+                            false,
+                            index < outputReqList.size() ? slot.provideIngredientRenderer(outputReqList.get(index)) : slot.provideIngredientRenderer(),
+                            slot.getOffset().x,
+                            slot.getOffset().y,
+                            slot.getComponentWidth(),
+                            slot.getComponentHeight(),
+                            slot.getRendererPaddingX(),
+                            slot.getRendererPaddingY());
                     compSlotIndex[0]++;
                 }
-            }))));
+            }
 
             clazzGroup.set(ingredients);
             int finalAmtInputs = amtCompInputs;
