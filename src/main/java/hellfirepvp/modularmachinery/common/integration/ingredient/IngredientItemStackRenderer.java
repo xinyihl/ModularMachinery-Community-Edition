@@ -49,24 +49,24 @@ public class IngredientItemStackRenderer extends ItemStackRenderer {
             return;
         }
 
-        IngredientItemStack ingredient = findStack(stack);
-        if (ingredient == null) {
-            return;
-        }
-
-        int min = ingredient.min();
-        int max = ingredient.max();
-
         GlStateManager.enableDepth();
         RenderHelper.enableGUIStandardItemLighting();
-        FontRenderer font = getFontRenderer(minecraft, ingredient.stack());
+        FontRenderer font = getFontRenderer(minecraft, stack);
 
-        minecraft.getRenderItem().renderItemAndEffectIntoGUI(null, ingredient.stack(), xPos, yPos);
-        if (min != max) {
-            renderRequirementOverlyIntoGUI(font, xPos, yPos, min, max);
-            minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, "");
+        minecraft.getRenderItem().renderItemAndEffectIntoGUI(null, stack, xPos, yPos);
+        IngredientItemStack ingredient = findStack(stack);
+        if (ingredient == null) {
+            minecraft.getRenderItem().renderItemOverlayIntoGUI(font, stack, xPos, yPos, null);
+            return;
         } else {
-            minecraft.getRenderItem().renderItemOverlayIntoGUI(font, ingredient.stack(), xPos, yPos, null);
+            int min = ingredient.min();
+            int max = ingredient.max();
+            if (min != max) {
+                renderRequirementOverlyIntoGUI(font, xPos, yPos, min, max);
+                minecraft.getRenderItem().renderItemOverlayIntoGUI(font, stack, xPos, yPos, "");
+            } else {
+                minecraft.getRenderItem().renderItemOverlayIntoGUI(font, stack, xPos, yPos, null);
+            }
         }
 
         GlStateManager.disableBlend();

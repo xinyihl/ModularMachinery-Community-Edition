@@ -133,6 +133,17 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
 
     @Optional.Method(modid = "geckolib3")
     public void renderRecursively(BufferBuilder builder, GeoBone bone, float red, float green, float blue, float alpha) {
+        boolean emissive = bone.name.equals("emissive");
+        float lastBrightnessX = 0;
+        float lastBrightnessY = 0;
+        if (emissive) {
+            Tessellator.getInstance().draw();
+            lastBrightnessX = OpenGlHelper.lastBrightnessX;
+            lastBrightnessY = OpenGlHelper.lastBrightnessY;
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
+            builder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        }
+
         MATRIX_STACK.push();
 
         MATRIX_STACK.translate(bone);
@@ -155,6 +166,12 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         }
 
         MATRIX_STACK.pop();
+
+        if (emissive) {
+            Tessellator.getInstance().draw();
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+            builder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+        }
     }
 
     @Optional.Method(modid = "geckolib3")

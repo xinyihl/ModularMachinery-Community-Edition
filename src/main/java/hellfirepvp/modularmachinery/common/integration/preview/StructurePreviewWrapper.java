@@ -297,25 +297,25 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         int x = 88;
         int z = 64;
 
-        if (dynamnicContext.getPattern().getPattern().size() >= 3500 && dynamnicContext.doesRenderIn3D()) {
-            FontRenderer fr = minecraft.fontRenderer;
-            final int[] y = {12};
-            Stream.of(
-                    I18n.format("gui.preview.error.too_large.tip.0"),
-                    I18n.format("gui.preview.error.too_large.tip.1"),
-                    I18n.format("gui.preview.error.too_large.tip.2"))
-                    .flatMap(str -> fr.listFormattedStringToWidth(str, 160 * res.getScaleFactor()).stream())
-                    .forEach(str -> {
-                        fr.drawStringWithShadow(str, 5, y[0], 0xFFFFFF);
-                        y[0] += 12;
-                    });
-        } else {
+//        if (dynamnicContext.getPattern().getPattern().size() >= 3500 && dynamnicContext.doesRenderIn3D()) {
+//            FontRenderer fr = minecraft.fontRenderer;
+//            final int[] y = {12};
+//            Stream.of(
+//                    I18n.format("gui.preview.error.too_large.tip.0"),
+//                    I18n.format("gui.preview.error.too_large.tip.1"),
+//                    I18n.format("gui.preview.error.too_large.tip.2"))
+//                    .flatMap(str -> fr.listFormattedStringToWidth(str, 160 * res.getScaleFactor()).stream())
+//                    .forEach(str -> {
+//                        fr.drawStringWithShadow(str, 5, y[0], 0xFFFFFF);
+//                        y[0] += 12;
+//                    });
+//        } else {
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             GL11.glScissor((guiLeft + 4) * res.getScaleFactor(), guiTop * res.getScaleFactor(), 160 * res.getScaleFactor(), 94 * res.getScaleFactor());
             GlStateManager.enableBlend();
             dynamnicContext.renderAt(x, z);
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
-        }
+//        }
 
         GuiScreenBlueprint.renderIngredientList(current, minecraft, minecraft.getRenderItem(), ingredientListScrollbar, dynamnicContext, mouseX, mouseY, 4, 144);
         drawButtons(minecraft, mouseX, mouseY, 0, 0, recipeWidth, recipeHeight);

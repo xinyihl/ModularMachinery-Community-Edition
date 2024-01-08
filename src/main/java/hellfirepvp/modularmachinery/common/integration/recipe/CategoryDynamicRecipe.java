@@ -285,7 +285,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
             IGuiIngredientGroup<?> clazzGroup = recipeLayout.getIngredientsGroup(clazz);
             final int[] compSlotIndex = {0};
 
-            List<ComponentRequirement<?, ?>> inputReqList = recipeWrapper.finalOrderedComponents.get(IOType.INPUT).get(clazz);
+            List<ComponentRequirement<?, ?>> inputReqList = recipeWrapper.finalOrderedComponents.get(IOType.INPUT).getOrDefault(clazz, Collections.emptyList());
             for (RecipeLayoutPart slot : this.inputComponents) {
                 if (clazz.isAssignableFrom(slot.getLayoutTypeClass())) {
                     int index = compSlotIndex[0];
@@ -304,7 +304,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
                 }
             }
 
-            List<ComponentRequirement<?, ?>> outputReqList = recipeWrapper.finalOrderedComponents.get(IOType.OUTPUT).get(clazz);
+            List<ComponentRequirement<?, ?>> outputReqList = recipeWrapper.finalOrderedComponents.get(IOType.OUTPUT).getOrDefault(clazz, Collections.emptyList());
             for (RecipeLayoutPart slot : this.outputComponents) {
                 if (clazz.isAssignableFrom(slot.getLayoutTypeClass())) {
                     int index = compSlotIndex[0] - amtCompInputs;

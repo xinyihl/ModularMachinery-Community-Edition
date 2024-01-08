@@ -39,6 +39,7 @@ public class Config {
     public static boolean enableFluxNetworksIntegration = true;
     public static boolean enableFactoryControllerByDefault = false;
     public static boolean controllerOutputComparatorSignal = true;
+    public static boolean enableStructurePreviewDisplayList = false;
     public static int machineColor;
     public static int maxMachineParallelism = 2048;
     public static int defaultFactoryMaxThread = 20;
@@ -83,6 +84,10 @@ public class Config {
         machineColor = col;
         onlyOneMachineController = lastReadConfig.getBoolean("only-one-machine-controller", "general", false,
                 "When enabled, Modules no longer register a separate controller for each machine, and the modular-controller-compatible-mode option is turned off.");
+
+        // Client
+        enableStructurePreviewDisplayList = lastReadConfig.getBoolean("enable-structure-preview-display-list", "client", false,
+                "(Experimental) When enabled, Machinery Preview attempts to use optimized rendering to dramatically improve smoothness in the case of large machinery, note that this can cause potential issues such as rendering misalignment.");
 
         // Modular Controller Merge Support
         mocCompatibleMode = lastReadConfig.getBoolean(

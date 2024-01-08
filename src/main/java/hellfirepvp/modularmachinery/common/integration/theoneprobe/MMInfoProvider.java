@@ -112,13 +112,15 @@ public class MMInfoProvider implements IProbeInfoProvider {
 
     // TODO: Really long...
     private static void processFactoryControllerTOP(TileFactoryController factory, IProbeInfo probeInfo, EntityPlayer player) {
-        IProbeInfo statusBox = newVertical(probeInfo);
-
         if (factory.isWorking()) {
-            statusBox.text(TextFormatting.GREEN + "{*top.machine.working*}");
+            newVertical(probeInfo).text(TextFormatting.GREEN + "{*top.machine.working*}");
         } else {
-            statusBox.text(TextFormatting.RED + "{*" + factory.getControllerStatus().getUnlocMessage() + "*}");
-            return;
+            if (factory.getMaxThreads() > 0) {
+                newVertical(probeInfo).text(TextFormatting.RED + "{*" + factory.getControllerStatus().getUnlocMessage() + "*}");
+            }
+            if (factory.getCoreRecipeThreads().isEmpty()) {
+                return;
+            }
         }
 
         List<FactoryRecipeThread> recipeThreads = factory.getFactoryRecipeThreadList();
@@ -171,10 +173,6 @@ public class MMInfoProvider implements IProbeInfoProvider {
             ActiveMachineRecipe activeRecipe = thread.getActiveRecipe();
             CraftingStatus status = thread.getStatus();
 
-            int progressBarFilledColor = ModIntegrationTOP.recipeProgressBarFilledColor;
-            int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
-            int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
-
             String threadName;
             if (thread.isCoreThread()) {
                 threadName = TextFormatting.BLUE + "{*" + thread.getThreadName() + "*}";
@@ -183,6 +181,9 @@ public class MMInfoProvider implements IProbeInfoProvider {
                 threadName = TextFormatting.AQUA + "{*top.factory.thread*}" + i.getAndIncrement();
             }
 
+            int progressBarFilledColor = ModIntegrationTOP.recipeProgressBarFilledColor;
+            int progressBarAlternateFilledColor = ModIntegrationTOP.recipeProgressBarAlternateFilledColor;
+            int progressBarBorderColor = ModIntegrationTOP.recipeProgressBarBorderColor;
             if (status.isCrafting()) {
                 threadProgressBox.text(threadName + ": " + TextFormatting.GREEN + "{*" + status.getUnlocMessage() + "*}");
             } else {
