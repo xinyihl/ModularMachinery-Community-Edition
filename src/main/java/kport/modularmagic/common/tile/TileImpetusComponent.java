@@ -108,11 +108,11 @@ public abstract class TileImpetusComponent extends TileColorableMachineComponent
         ThaumicAugmentation.proxy.registerRenderableImpetusNode(node);
     }
 
-    @Override
-    public void onChunkUnload() {
-        node.unload();
-        ThaumicAugmentation.proxy.deregisterRenderableImpetusNode(node);
-    }
+//    @Override
+//    public void onChunkUnload() {
+//        node.unload();
+//        ThaumicAugmentation.proxy.deregisterRenderableImpetusNode(node);
+//    }
 
     @Override
     public boolean receiveClientEvent(int id, int type) {
