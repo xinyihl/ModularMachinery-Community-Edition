@@ -123,7 +123,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
         }
 
         if (prevEnergy != this.energy.get()) {
-            markForUpdateSync();
+            markNoUpdateSync();
         }
     }
 
@@ -260,7 +260,7 @@ public class TileEnergyOutputHatch extends TileEnergyHatch implements IEnergySou
     @Optional.Method(modid = "ic2")
     public void drawEnergy(double amount) {
         this.energy.set(MiscUtils.clamp(this.energy.get() - (MathHelper.lfloor(amount) * 4L), 0, this.size.maxEnergy));
-        markForUpdateSync();
+        markNoUpdateSync();
     }
 
     @Override

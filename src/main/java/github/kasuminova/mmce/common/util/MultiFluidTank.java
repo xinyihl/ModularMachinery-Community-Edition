@@ -100,14 +100,13 @@ public class MultiFluidTank implements IFluidHandler {
                     contents[slot] = insert;
                 }
                 return insert.amount;
-            } else {
-                if (doFill) {
-                    FluidStack copied = insert.copy();
-                    copied.amount = capacity;
-                    contents[slot] = copied;
-                }
-                return capacity;
             }
+            if (doFill) {
+                FluidStack copied = insert.copy();
+                copied.amount = capacity;
+                contents[slot] = copied;
+            }
+            return capacity;
         }
 
         if (!content.isFluidEqual(insert) || content.amount >= capacity) {
@@ -121,12 +120,11 @@ public class MultiFluidTank implements IFluidHandler {
                 content.amount += insert.amount;
             }
             return insert.amount;
-        } else {
-            if (doFill) {
-                content.amount = capacity;
-            }
-            return maxCanFill;
         }
+        if (doFill) {
+            content.amount = capacity;
+        }
+        return maxCanFill;
     }
 
     @Nullable

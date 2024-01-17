@@ -66,11 +66,10 @@ public class EventHandler {
         if (container instanceof ContainerBase) {
             te = ((ContainerBase<?>) container).getOwner();
         } else {
-            if (Mods.AE2.isPresent() && container instanceof AEBaseContainer) {
-                te = ((AEBaseContainer) container).getTileEntity();
-            } else {
+            if (!Mods.AE2.isPresent() || !(container instanceof AEBaseContainer)) {
                 return;
             }
+            te = ((AEBaseContainer) container).getTileEntity();
         }
 
         if (!(te instanceof SelectiveUpdateTileEntity) || !(te instanceof final TileEntitySynchronized teSync)) {
@@ -82,20 +81,22 @@ public class EventHandler {
             return;
         }
 
-        if (event.player instanceof EntityPlayerMP playerMP) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-                if (teSync.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
-                    playerMP.connection.sendPacket(teSync.getUpdatePacket());
-                }
-
-                World world = event.player.getEntityWorld();
-                if (world.getWorldTime() % 15 == 0 && te instanceof final TileMultiblockMachineController ctrl) {
-                    int usedTime = ctrl.usedTimeAvg();
-                    int searchUsedTimeAvg = ctrl.recipeSearchUsedTimeAvg();
-                    ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime, searchUsedTimeAvg, ctrl.getWorkMode()), playerMP);
-                }
-            });
+        if (!(event.player instanceof EntityPlayerMP playerMP)) {
+            return;
         }
+
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            if (teSync.getLastUpdateTick() + 1 >= playerMP.world.getTotalWorldTime()) {
+                playerMP.connection.sendPacket(teSync.getUpdatePacket());
+            }
+
+            World world = event.player.getEntityWorld();
+            if (world.getWorldTime() % 15 == 0 && te instanceof final TileMultiblockMachineController ctrl) {
+                int usedTime = ctrl.usedTimeAvg();
+                int searchUsedTimeAvg = ctrl.recipeSearchUsedTimeAvg();
+                ModularMachinery.NET_CHANNEL.sendTo(new PktPerformanceReport(usedTime, searchUsedTimeAvg, ctrl.getWorkMode()), playerMP);
+            }
+        });
     }
 
     @SubscribeEvent
@@ -112,16 +113,16 @@ public class EventHandler {
         }
         World world = event.getWorld();
         TileEntity te = world.getTileEntity(event.getPos());
-        if (te instanceof TileMultiblockMachineController ctrl) {
-            UUID ownerUUID = ctrl.getOwner();
-            if (ownerUUID == null) {
-                return;
-            }
-
-            UUID playerUUID = player.getGameProfile().getId();
-            if (!playerUUID.equals(ownerUUID)) {
-                event.setCanceled(true);
-            }
+        if (!(te instanceof TileMultiblockMachineController ctrl)) {
+            return;
+        }
+        UUID ownerUUID = ctrl.getOwner();
+        if (ownerUUID == null) {
+            return;
+        }
+        UUID playerUUID = player.getGameProfile().getId();
+        if (!playerUUID.equals(ownerUUID)) {
+            event.setCanceled(true);
         }
     }
 
@@ -140,17 +141,18 @@ public class EventHandler {
             return;
         }
         NBTTagCompound stackTag = itemInHand.getTagCompound();
-        if (stackTag != null && stackTag.hasKey("owner")) {
-            String ownerUUIDStr = stackTag.getString("owner");
-            try {
-                UUID ownerUUID = UUID.fromString(ownerUUIDStr);
-                UUID playerUUID = player.getGameProfile().getId();
-                if (!playerUUID.equals(ownerUUID)) {
-                    event.setCanceled(true);
-                }
-            } catch (Exception e) {
-                ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
+        if (stackTag == null || !stackTag.hasKey("owner")) {
+            return;
+        }
+        String ownerUUIDStr = stackTag.getString("owner");
+        try {
+            UUID ownerUUID = UUID.fromString(ownerUUIDStr);
+            UUID playerUUID = player.getGameProfile().getId();
+            if (!playerUUID.equals(ownerUUID)) {
+                event.setCanceled(true);
             }
+        } catch (Exception e) {
+            ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
         }
     }
 

@@ -76,7 +76,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
             long received = attemptDECoreTransfer(maxCanReceive);
             if (received != 0) {
                 this.energy.addAndGet(received);
-                markForUpdateSync();
+                markNoUpdateSync();
             }
         }
     }
@@ -131,7 +131,7 @@ public class TileEnergyInputHatch extends TileEnergyHatch implements IEnergySink
         long addable = Math.min((this.size.maxEnergy - this.energy.get()) / 4L, MathHelper.lfloor(amount));
         amount -= addable;
         this.energy.set(MiscUtils.clamp(this.energy.get() + MathHelper.lfloor(addable * 4), 0, this.size.maxEnergy));
-        markForUpdateSync();
+        markNoUpdateSync();
         return amount;
     }
 

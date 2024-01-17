@@ -186,7 +186,11 @@ public class TileMachineController extends TileMultiblockMachineController {
         }
 
         if (isNotWorking(thread, status)) {
-            markForUpdateSync();
+            if (enableFullDataSync) {
+                markForUpdateSync();
+            } else {
+                markNoUpdateSync();
+            }
             return true;
         }
 
@@ -253,7 +257,11 @@ public class TileMachineController extends TileMultiblockMachineController {
         ActiveMachineRecipe activeRecipe = recipeThread.getActiveRecipe();
         activeRecipe.start(recipeThread.getContext());
         resetRecipeSearchRetryCount();
-        markForUpdateSync();
+        if (enableFullDataSync) {
+            markForUpdateSync();
+        } else {
+            markNoUpdateSync();
+        }
     }
 
     /**
@@ -280,7 +288,11 @@ public class TileMachineController extends TileMultiblockMachineController {
      */
     public void onFinished() {
         new RecipeFinishEvent(this, recipeThread).postEvent();
-        markForUpdateSync();
+        if (enableFullDataSync) {
+            markForUpdateSync();
+        } else {
+            markNoUpdateSync();
+        }
     }
 
     @Override

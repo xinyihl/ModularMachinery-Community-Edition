@@ -91,6 +91,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
     public static boolean enableSecuritySystem = false;
+    public static boolean enableFullDataSync = false;
 
     public static int usedTimeCache = 0;
     public static int searchUsedTimeCache = 0;
@@ -167,6 +168,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         enableSecuritySystem = config.getBoolean("enable-security-system", "general", false,
                 "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
+        enableFullDataSync = config.getBoolean("enable-full-data-sync", "general", false,
+                "When enabled, the controller sends the full NBT to the client at the start and completion of the recipe, which can be helpful for machinery where the client needs to perform special operations.");
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
@@ -1023,13 +1026,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public void validate() {
         super.validate();
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            ClientProxy.clientScheduler.addRunnable(() -> {
-                BlockModelHider.hideOrShowBlocks(this);
-                notifyStructureFormedState(isStructureFormed());
-            }, 1);
-//            if (!isStructureFormed()) {
-//                animationFactory = null;
-//            }
+            BlockModelHider.hideOrShowBlocks(this);
+            notifyStructureFormedState(isStructureFormed());
         }
     }
 
@@ -1059,6 +1057,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         readMachineNBT(compound);
+
+        if (!isInvalid()) {
+            if (FMLCommonHandler.instance().getSide().isClient()) {
+                BlockModelHider.hideOrShowBlocks(this);
+                notifyStructureFormedState(isStructureFormed());
+                if (!isStructureFormed()) {
+                    animationFactory = null;
+                }
+            }
+        }
     }
 
     @Override
