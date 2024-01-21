@@ -228,7 +228,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
         synchronized (this) {
             this.energy.set(MiscUtils.clamp(energy, 0, getMaxEnergy()));
         }
-        markForUpdateSync();
+        markNoUpdateSync();
     }
 
     @Override
@@ -241,7 +241,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
             }
         }
         if (success) {
-            markForUpdateSync();
+            markNoUpdateSync();
         }
         return success;
     }
@@ -256,7 +256,7 @@ public abstract class TileEnergyHatch extends TileColorableMachineComponent impl
             }
         }
         if (success) {
-            markForUpdateSync();
+            markNoUpdateSync();
         }
         return success;
     }

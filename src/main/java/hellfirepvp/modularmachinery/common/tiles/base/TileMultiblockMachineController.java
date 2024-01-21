@@ -1026,8 +1026,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public void validate() {
         super.validate();
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            BlockModelHider.hideOrShowBlocks(this);
-            notifyStructureFormedState(isStructureFormed());
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                BlockModelHider.hideOrShowBlocks(this);
+                notifyStructureFormedState(isStructureFormed());
+            }, 0);
         }
     }
 
@@ -1060,11 +1062,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         if (!isInvalid()) {
             if (FMLCommonHandler.instance().getSide().isClient()) {
-                BlockModelHider.hideOrShowBlocks(this);
-                notifyStructureFormedState(isStructureFormed());
-                if (!isStructureFormed()) {
-                    animationFactory = null;
-                }
+                ClientProxy.clientScheduler.addRunnable(() -> {
+                    BlockModelHider.hideOrShowBlocks(this);
+                    notifyStructureFormedState(isStructureFormed());
+                    if (!isStructureFormed()) {
+                        animationFactory = null;
+                    }
+                }, 0);
             }
         }
     }

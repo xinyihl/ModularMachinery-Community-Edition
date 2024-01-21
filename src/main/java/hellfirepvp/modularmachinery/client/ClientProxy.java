@@ -14,6 +14,7 @@ import github.kasuminova.mmce.client.gui.GuiMEItemInputBus;
 import github.kasuminova.mmce.client.gui.GuiMEItemOutputBus;
 import github.kasuminova.mmce.client.renderer.MachineControllerRenderer;
 import github.kasuminova.mmce.client.resource.GeoModelExternalLoader;
+import github.kasuminova.mmce.common.handler.ClientHandler;
 import github.kasuminova.mmce.common.tile.MEFluidInputBus;
 import github.kasuminova.mmce.common.tile.MEFluidOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
@@ -151,6 +152,8 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new DebugOverlayHelper());
         MinecraftForge.EVENT_BUS.register(new SelectionBoxRenderHelper());
+        MinecraftForge.EVENT_BUS.register(new ClientHandler());
+
         if (Mods.JEI.isPresent()) {
             registerJEIEventHandler();
         }

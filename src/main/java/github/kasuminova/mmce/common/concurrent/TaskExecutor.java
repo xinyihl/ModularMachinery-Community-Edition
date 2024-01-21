@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import io.netty.util.internal.ThrowableUtil;
 import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -47,6 +48,7 @@ public class TaskExecutor {
     private final TaskSubmitter submitter = new TaskSubmitter();
 
     private volatile boolean inTick = false;
+    private volatile boolean shouldUseForkJoinPool = false;
 
     public void init() {
         THREAD_POOL.prestartAllCoreThreads();
@@ -76,6 +78,36 @@ public class TaskExecutor {
         }
 
         executeGroups.clear();
+        checkShouldUseForkJoinPool();
+    }
+
+    /**
+     * <p>大量任务的前提下，使用阻塞队列会导致 CPU 资源占用的激增，此时我们不再关注优先级，而是考虑尽可能快地提交任务。</p>
+     *
+     * <p>With a large number of tasks, the use of a blocking queue can lead to a spike in CPU resource usage, at which
+     * point we stop focusing on prioritization and think about submitting tasks as fast as possible.</p>
+     */
+    private void checkShouldUseForkJoinPool() {
+        if (tickExisted % 20 != 0) {
+            return;
+        }
+
+        if (shouldUseForkJoinPool) {
+            if (!shouldUseForkJoinPool()) {
+                ModularMachinery.log.warn("The thread pool has been re-switched to ThreadPoolExecutor (below the limit of 1500).");
+                shouldUseForkJoinPool = false;
+            }
+            return;
+        }
+        if (shouldUseForkJoinPool()) {
+            ModularMachinery.log.warn("The thread pool has now been replaced with a ForkJoinPool due to too many tasks in a single commit (Limit 1500).");
+            shouldUseForkJoinPool = true;
+        }
+    }
+
+    private boolean shouldUseForkJoinPool() {
+        long executedAvgPerExecution = executedCount == 0 ? 0 : totalExecuted / executedCount;
+        return executedAvgPerExecution >= 1500;
     }
 
     /**
@@ -201,8 +233,7 @@ public class TaskExecutor {
             }
         }
 
-        ActionExecutor actionExecutor = new ActionExecutor(action);
-        return group.offer(actionExecutor);
+        return group.offer(new ActionExecutor(action));
     }
 
     public <T> ForkJoinTask<T> submitForkJoinTask(final ForkJoinTask<T> task) {
@@ -227,10 +258,18 @@ public class TaskExecutor {
         requireMarkNoUpdateTEQueue.offer(te);
     }
 
+    private void execute(final ActionExecutor executor) {
+        if (shouldUseForkJoinPool) {
+            FORK_JOIN_POOL.execute(executor);
+        } else {
+            THREAD_POOL.execute(executor);
+        }
+    }
+
     private synchronized void submitTask() {
         ActionExecutor executor;
         while ((executor = executors.poll()) != null) {
-            THREAD_POOL.execute(executor);
+            execute(executor);
             submitted.offer(executor);
         }
 
@@ -240,8 +279,13 @@ public class TaskExecutor {
         }
 
         synchronized (executeGroups) {
-            for (final ExecuteGroup group : executeGroups.values()) {
+            for (ObjectIterator<ExecuteGroup> it = executeGroups.values().iterator(); it.hasNext(); ) {
+                final ExecuteGroup group = it.next();
                 if (group.isSubmitted()) {
+                    continue;
+                }
+                if (group.isEmpty()) {
+                    it.remove();
                     continue;
                 }
                 ActionExecutor groupExecutor = new ActionExecutor(() -> {
@@ -252,7 +296,7 @@ public class TaskExecutor {
                     group.setSubmitted(false);
                 });
                 group.setSubmitted(true);
-                THREAD_POOL.execute(groupExecutor);
+                execute(groupExecutor);
                 submitted.offer(groupExecutor);
             }
         }

@@ -6,6 +6,7 @@ import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
+import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntityRestrictedTick;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
@@ -21,7 +22,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TileSmartInterface extends TileEntityRestrictedTick implements MachineComponentTile {
+public class TileSmartInterface extends TileEntityRestrictedTick implements MachineComponentTile, SelectiveUpdateTileEntity {
     private final List<SmartInterfaceData> boundData = new ArrayList<>();
     private final SmartInterfaceProvider provider = new SmartInterfaceProvider(this);
 
@@ -147,7 +148,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
             this.boundData.add(newData);
             onDataUpdate(this.parent, newData);
 
-            this.parent.markForUpdateSync();
+            this.parent.markNoUpdateSync();
         }
 
         public void removeMachineData(BlockPos pos) {
@@ -155,7 +156,7 @@ public class TileSmartInterface extends TileEntityRestrictedTick implements Mach
                 SmartInterfaceData data = this.boundData.get(i);
                 if (data.getPos().equals(pos)) {
                     this.boundData.remove(i);
-                    this.parent.markForUpdateSync();
+                    this.parent.markNoUpdateSync();
                     return;
                 }
             }

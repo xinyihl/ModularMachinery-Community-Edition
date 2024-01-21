@@ -114,7 +114,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     @Override
     public void onChangeInventory(final IItemHandler inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack) {
         updateTankCapacity();
-        markForUpdateSync();
+        markNoUpdateSync();
     }
 
     private void updateTankCapacity() {
@@ -124,7 +124,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
 
     @Override
     public void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
-        markForUpdateSync();
+        markNoUpdateSync();
     }
 
     @Override

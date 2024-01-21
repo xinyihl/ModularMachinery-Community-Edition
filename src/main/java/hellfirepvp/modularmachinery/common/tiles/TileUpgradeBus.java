@@ -85,7 +85,7 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
         }
     }
 
-    public void onUpgradeInventoryChanged(int changedSlot) {
+    public synchronized void onUpgradeInventoryChanged(int changedSlot) {
         foundUpgrades.clear();
 
         for (int i = 0; i < inventory.getSlots(); i++) {
@@ -248,19 +248,21 @@ public class TileUpgradeBus extends TileEntityRestrictedTick implements MachineC
 
             HashMap<UpgradeType, List<MachineUpgrade>> compatible = new HashMap<>();
 
-            foundUpgrades.forEach((type, upgrade) -> {
-                if (foundMachine == null || type.isCompatible(foundMachine)) {
-                    compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(upgrade);
-                }
-            });
-            foundDynamicUpgrades.values().forEach((dynamicUpgrades) -> {
-                for (final DynamicMachineUpgrade dynamicUpgrade : dynamicUpgrades) {
-                    UpgradeType type = dynamicUpgrade.getType();
+            synchronized (TileUpgradeBus.this) {
+                foundUpgrades.forEach((type, upgrade) -> {
                     if (foundMachine == null || type.isCompatible(foundMachine)) {
-                        compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(dynamicUpgrade);
+                        compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(upgrade);
                     }
-                }
-            });
+                });
+                foundDynamicUpgrades.values().forEach((dynamicUpgrades) -> {
+                    for (final DynamicMachineUpgrade dynamicUpgrade : dynamicUpgrades) {
+                        UpgradeType type = dynamicUpgrade.getType();
+                        if (foundMachine == null || type.isCompatible(foundMachine)) {
+                            compatible.computeIfAbsent(type, v -> new LinkedList<>()).add(dynamicUpgrade);
+                        }
+                    }
+                });
+            }
 
             return compatible;
         }

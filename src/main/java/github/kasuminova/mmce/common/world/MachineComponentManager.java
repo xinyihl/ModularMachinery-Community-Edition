@@ -48,30 +48,33 @@ public class MachineComponentManager {
         if (!info.areTileEntityEquals(component)) {
             ComponentInfo newInfo = new ComponentInfo(component, pos, new ObjectArraySet<>(Collections.singleton(ctrl)));
             posComponentMap.put(pos, newInfo);
-        } else {
-            Set<TileMultiblockMachineController> owners = info.owners;
-            if (owners.contains(ctrl)) {
+            return;
+        }
+
+        Set<TileMultiblockMachineController> owners = info.owners;
+        if (owners.contains(ctrl)) {
+            return;
+        }
+
+        synchronized (owners) {
+            owners.add(ctrl);
+            if (owners.size() <= 1) {
                 return;
             }
 
-            synchronized (owners) {
-                owners.add(ctrl);
-                if (owners.size() > 1) {
-                    long groupId = -1;
-                    for (final TileMultiblockMachineController owner : owners) {
-                        if (owner.getExecuteGroupId() != -1) {
-                            groupId = owner.getExecuteGroupId();
-                        }
-                    }
-
-                    if (groupId == -1) {
-                        groupId = ExecuteGroup.newGroupId();
-                    }
-
-                    for (final TileMultiblockMachineController owner : owners) {
-                        owner.setExecuteGroupId(groupId);
-                    }
+            long groupId = -1;
+            for (final TileMultiblockMachineController owner : owners) {
+                if (owner.getExecuteGroupId() != -1) {
+                    groupId = owner.getExecuteGroupId();
                 }
+            }
+
+            if (groupId == -1) {
+                groupId = ExecuteGroup.newGroupId();
+            }
+
+            for (final TileMultiblockMachineController owner : owners) {
+                owner.setExecuteGroupId(groupId);
             }
         }
     }

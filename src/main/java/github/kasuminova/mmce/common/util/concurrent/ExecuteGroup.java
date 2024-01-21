@@ -1,14 +1,14 @@
 package github.kasuminova.mmce.common.util.concurrent;
 
-import io.netty.util.internal.shaded.org.jctools.queues.atomic.MpscLinkedAtomicQueue;
-
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ExecuteGroup {
     private static final AtomicLong GROUP_COUNTER = new AtomicLong(0);
+
     private final long groupId;
-    private final Queue<ActionExecutor> executors = new MpscLinkedAtomicQueue<>();
+    private final Queue<ActionExecutor> executors = new ConcurrentLinkedQueue<>();
 
     private volatile boolean submitted = false;
 
