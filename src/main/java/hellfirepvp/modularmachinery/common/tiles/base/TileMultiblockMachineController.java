@@ -137,6 +137,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected Object animationFactory = null;
 
+    protected boolean loaded = false;
+
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
@@ -537,6 +539,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public void notifyStructureFormedState(boolean formed) {
+        //noinspection ConstantValue
+        if (world == null || getPos() == null) {
+            // Where is the controller?
+            return;
+        }
         IBlockState state = world.getBlockState(getPos());
         if (controllerRotation == null || !(state.getBlock() instanceof BlockController)) {
             // Where is the controller?
@@ -1025,21 +1032,27 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void validate() {
         super.validate();
-        if (FMLCommonHandler.instance().getSide().isClient()) {
-            ClientProxy.clientScheduler.addRunnable(() -> {
-                BlockModelHider.hideOrShowBlocks(this);
-                notifyStructureFormedState(isStructureFormed());
-            }, 0);
-        }
     }
 
     @Override
     public void invalidate() {
         super.invalidate();
+        loaded = false;
         foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
 
         if (getWorld().isRemote) {
             BlockModelHider.hideOrShowBlocks(this);
+        }
+    }
+
+    @Override
+    public void onLoad() {
+        if (FMLCommonHandler.instance().getSide().isClient()) {
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                BlockModelHider.hideOrShowBlocks(this);
+                notifyStructureFormedState(isStructureFormed());
+            }, 0);
+            loaded = true;
         }
     }
 
@@ -1060,16 +1073,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         readMachineNBT(compound);
 
-        if (!isInvalid()) {
-            if (FMLCommonHandler.instance().getSide().isClient()) {
-                ClientProxy.clientScheduler.addRunnable(() -> {
-                    BlockModelHider.hideOrShowBlocks(this);
-                    notifyStructureFormedState(isStructureFormed());
-                    if (!isStructureFormed()) {
-                        animationFactory = null;
-                    }
-                }, 0);
-            }
+        if (loaded && FMLCommonHandler.instance().getSide().isClient()) {
+            ClientProxy.clientScheduler.addRunnable(() -> {
+                BlockModelHider.hideOrShowBlocks(this);
+                notifyStructureFormedState(isStructureFormed());
+                if (!isStructureFormed()) {
+                    animationFactory = null;
+                }
+            }, 0);
         }
     }
 
