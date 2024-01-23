@@ -135,7 +135,12 @@ public class RequirementEnergy extends ComponentRequirement.PerTickParallelizabl
         if (mul < maxMultiplier) {
             return switch (actionType) {
                 case INPUT -> CraftCheck.failure("craftcheck.failure.energy.input");
-                case OUTPUT -> CraftCheck.failure("craftcheck.failure.energy.output.space");
+                case OUTPUT -> {
+                    if (ignoreOutputCheck) {
+                        yield CraftCheck.success();
+                    }
+                    yield CraftCheck.failure("craftcheck.failure.energy.output.space");
+                }
             };
         }
         return CraftCheck.success();
