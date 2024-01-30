@@ -44,17 +44,16 @@ public class AdapterTC6InfusionMatrix extends RecipeAdapter {
         for (ResourceLocation string : ThaumcraftApi.getCraftingRecipes().keySet()) {
             IThaumcraftRecipe recipe = ThaumcraftApi.getCraftingRecipes().get(string);
             if (recipe instanceof InfusionRecipe) {
-                if (((InfusionRecipe) recipe).getRecipeInput() != null && ((InfusionRecipe) recipe).recipeOutput != null)
-                {
+                if (((InfusionRecipe) recipe).getRecipeInput() != null && ((InfusionRecipe) recipe).recipeOutput != null) {
                     MachineRecipe machineRecipe = createRecipeShell(new ResourceLocation("thaumcraft", "auto_infusion" + incId), owningMachineName, ((InfusionRecipe) recipe).instability == 0 ? BASE_WORK_TIME : ((InfusionRecipe) recipe).instability * 1000, incId, false);
 
                     int inAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, ((InfusionRecipe) recipe).getRecipeInput().getMatchingStacks().length, false));
                     if (inAmount > 0) {
                         ItemStack[] inputsMiddle = ((InfusionRecipe) recipe).getRecipeInput().getMatchingStacks();
                         List<ChancedIngredientStack> ingredientStackListMiddle = new ArrayList<>(inputsMiddle.length);
-                        for(ItemStack stack : inputsMiddle)
+                        for (ItemStack stack : inputsMiddle)
                             ingredientStackListMiddle.add(new ChancedIngredientStack(stack));
-                        if(!ingredientStackListMiddle.isEmpty())
+                        if (!ingredientStackListMiddle.isEmpty())
                             machineRecipe.addRequirement(new RequirementIngredientArray(ingredientStackListMiddle));
 
                         for (Ingredient iigredient : ((InfusionRecipe) recipe).getComponents()) {
@@ -72,17 +71,17 @@ public class AdapterTC6InfusionMatrix extends RecipeAdapter {
                                 }
                                 */
                             }
-                            if(!ingredientStackList.isEmpty())
+                            if (!ingredientStackList.isEmpty())
                                 machineRecipe.addRequirement(new RequirementIngredientArray(ingredientStackList));
                         }
 
                         Object output = ((InfusionRecipe) recipe).recipeOutput;
-                        if(output instanceof ItemStack) {
+                        if (output instanceof ItemStack) {
                             int outAmount = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, ((ItemStack) output).getCount(), false));
                             if (outAmount > 0) {
                                 machineRecipe.addRequirement(new RequirementItem(IOType.OUTPUT, ItemUtils.copyStackWithSize((ItemStack) output, outAmount)));
                             }
-                        }else if (output != null) {
+                        } else if (output != null) {
                             for (ItemStack stack : ((InfusionRecipe) recipe).getRecipeInput().getMatchingStacks()) {
                                 if (stack != null) {
                                     Object[] objects = (Object[]) output;
@@ -93,7 +92,7 @@ public class AdapterTC6InfusionMatrix extends RecipeAdapter {
                             }
                         }
 
-                        for(Aspect aspect : ((InfusionRecipe) recipe).getAspects().getAspects()){
+                        for (Aspect aspect : ((InfusionRecipe) recipe).getAspects().getAspects()) {
                             machineRecipe.addRequirement(new RequirementAspect(IOType.INPUT, ((InfusionRecipe) recipe).getAspects().getAmount(aspect), aspect));
                         }
                     }
