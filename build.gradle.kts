@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r55-dev"
+version = "1.12.2-1.11.1-r56-dev"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -155,7 +155,7 @@ dependencies {
 
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:4810661"))
-    implementation(rfg.deobf("curse.maven:zenutil-401178:4816158-sources-4816159"))
+    implementation(rfg.deobf("curse.maven:zenutil-401178:5056679"))
     implementation(rfg.deobf("curse.maven:RedstoneFlux-270789:2920436"))
     implementation(rfg.deobf("curse.maven:CodeChickenLib-242818:2779848"))
     implementation(rfg.deobf("curse.maven:brandonscore-231382:3051539"))
@@ -171,7 +171,7 @@ dependencies {
     implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
 //    implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:4961400"))
 //    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
-    implementation(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
+    compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
 
     // GeckoLib
     implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))

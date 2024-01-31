@@ -344,7 +344,9 @@ public class RecipeCraftingContext {
     public List<RequirementComponents> getAllParallelizableComponents() {
         List<RequirementComponents> list = new ArrayList<>();
         for (RequirementComponents reqComponent : requirementComponents) {
-            if (reqComponent.requirement() instanceof ComponentRequirement.Parallelizable) {
+            if (reqComponent.requirement() instanceof ComponentRequirement.Parallelizable parallelizable
+                    && !parallelizable.isParallelizeUnaffected())
+            {
                 list.add(reqComponent);
             }
         }

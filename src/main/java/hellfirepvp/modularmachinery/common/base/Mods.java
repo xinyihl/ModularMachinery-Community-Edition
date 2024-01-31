@@ -9,7 +9,6 @@
 package hellfirepvp.modularmachinery.common.base;
 
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.ModContainer;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -37,13 +36,21 @@ public enum Mods {
     TCONSTRUCT("tconstruct"),
     AE2("appliedenergistics2"),
     AE2EL("appliedenergistics2") {
+        private Boolean detected = null;
+
         @Override
         public boolean isPresent() {
-            if (super.isPresent()) {
-                ModContainer ae2 = Loader.instance().getIndexedModList().get("appliedenergistics2");
-                return ae2.getName().equals("AE2 Unofficial Extended Life");
-            } else {
-                return false;
+            if (detected != null) {
+                return detected;
+            }
+            if (!super.isPresent()) {
+                return detected = false;
+            }
+            try {
+                Class.forName("appeng.core.AE2ELCore");
+                return detected = true;
+            } catch (Exception e) {
+                return detected = false;
             }
         }
     },

@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -62,7 +63,7 @@ public class IOInventory extends IItemHandlerImpl {
     @Override
     public synchronized void setStackInSlot(int slot, @Nonnull ItemStack stack) {
         super.setStackInSlot(slot, stack);
-        owner.markForUpdateSync();
+        notifyOwner();
         if (listener != null) {
             listener.accept(slot);
         }
@@ -77,7 +78,7 @@ public class IOInventory extends IItemHandlerImpl {
             if (listener != null) {
                 listener.accept(slot);
             }
-            owner.markForUpdateSync();
+            notifyOwner();
         }
         return inserted;
     }
@@ -90,9 +91,17 @@ public class IOInventory extends IItemHandlerImpl {
             if (listener != null) {
                 listener.accept(slot);
             }
-            owner.markForUpdateSync();
+            notifyOwner();
         }
         return extracted;
+    }
+
+    private void notifyOwner() {
+        if (owner instanceof SelectiveUpdateTileEntity) {
+            owner.markNoUpdateSync();
+        } else {
+            owner.markForUpdateSync();
+        }
     }
 
     public NBTTagCompound writeNBT() {

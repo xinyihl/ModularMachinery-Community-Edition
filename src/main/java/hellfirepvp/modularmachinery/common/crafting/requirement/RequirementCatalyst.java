@@ -47,7 +47,7 @@ public class RequirementCatalyst extends RequirementItem {
     @Nonnull
     @Override
     public CraftCheck canStartCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
-        if (super.canStartCrafting(components, context).isSuccess()) {
+        if (super.canStartCrafting(components, context).isSuccess() && !isRequired) {
             for (RecipeModifier modifier : modifierList) {
                 context.addPermanentModifier(modifier);
             }
@@ -66,7 +66,8 @@ public class RequirementCatalyst extends RequirementItem {
             }
             isRequired = true;
         }
-        return result;
+        // It is an optional input, so it should not theoretically return the maximum number of consumable quantities.
+        return maxParallelism;
     }
 
     @Override

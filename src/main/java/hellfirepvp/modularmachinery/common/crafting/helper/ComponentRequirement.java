@@ -296,8 +296,6 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
                               final RecipeCraftingContext context,
                               final int maxParallelism);
 
-        int getParallelism();
-
         /**
          * <p>
          * 设置该需求的并行数，检查需求或工作时应当严格遵守该并行数量，不得自行增加或减少并行数。
@@ -310,11 +308,15 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
          */
         void setParallelism(int parallelism);
 
+        int getParallelism();
+
         /**
          * <p>设置该并行类型是否不受并行数影响（即并行数始终为 1）。</p>
          * <p>Sets whether this parallel type is independent of the number of parallels (i.e., the number of parallels is always 1).</p>
          */
         void setParallelizeUnaffected(boolean unaffected);
+
+        boolean isParallelizeUnaffected();
     }
 
     /**
@@ -470,6 +472,11 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
         }
 
         @Override
+        public boolean isParallelizeUnaffected() {
+            return parallelizeUnaffected;
+        }
+
+        @Override
         public int getParallelism() {
             return parallelism;
         }
@@ -487,13 +494,6 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
 
         public PerTick(V requirementType, IOType actionType) {
             super(requirementType, actionType);
-        }
-
-        @Override
-        public ComponentRequirement<T, V> postDeepCopy(ComponentRequirement<?, ?> another) {
-            this.tag = another.tag;
-            this.ignoreOutputCheck = another.ignoreOutputCheck;
-            return this;
         }
 
         @Nonnull
@@ -579,6 +579,11 @@ public abstract class ComponentRequirement<T, V extends RequirementType<T, ? ext
             if (parallelizeUnaffected) {
                 this.parallelism = 1;
             }
+        }
+
+        @Override
+        public boolean isParallelizeUnaffected() {
+            return parallelizeUnaffected;
         }
 
         @Override

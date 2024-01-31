@@ -14,7 +14,7 @@ public class OredictCache {
 
     public static int[] getOreIDsFast(@Nonnull ItemStack stack) {
         if (stack.isEmpty()) {
-            return new int[]{};
+            return new int[0];
         }
 
         IRegistryDelegate<Item> delegate = stack.getItem().delegate;
