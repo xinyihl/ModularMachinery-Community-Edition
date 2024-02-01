@@ -672,6 +672,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         this.foundUpgrades.clear();
+        this.foundUpgradeBuses.clear();
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();
