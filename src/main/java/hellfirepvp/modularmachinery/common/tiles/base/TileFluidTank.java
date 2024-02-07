@@ -14,10 +14,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.HybridGasTank;
 import hellfirepvp.modularmachinery.common.util.HybridTank;
-import mekanism.api.gas.Gas;
-import mekanism.api.gas.GasStack;
-import mekanism.api.gas.IGasHandler;
-import mekanism.api.gas.ITubeConnection;
+import mekanism.api.gas.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.MathHelper;
@@ -25,6 +22,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.Optional;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -140,7 +138,6 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     //Mek things
 
-
     @Override
     @Optional.Method(modid = "mekanism")
     public boolean canTubeConnect(EnumFacing side) {
@@ -149,45 +146,45 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
 
     @Optional.Method(modid = "mekanism")
     private void writeMekGasData(NBTTagCompound compound) {
-        if (this.tank instanceof HybridGasTank) {
-            ((HybridGasTank) this.tank).writeGasToNBT(compound);
+        if (this.tank instanceof HybridGasTank gasTank) {
+            gasTank.writeGasToNBT(compound);
         }
     }
 
     @Optional.Method(modid = "mekanism")
     private void readMekGasData(NBTTagCompound compound) {
-        if (this.tank instanceof HybridGasTank) {
-            ((HybridGasTank) this.tank).readGasFromNBT(compound);
+        if (this.tank instanceof HybridGasTank gasTank) {
+            gasTank.readGasFromNBT(compound);
         }
     }
 
     @Override
     @Optional.Method(modid = "mekanism")
     public int receiveGas(EnumFacing side, GasStack stack, boolean doTransfer) {
-        if (this.tank instanceof HybridGasTank) {
-            return ((IGasHandler) this.tank).receiveGas(side, stack, doTransfer);
-        }
-        return 0;
+        return this.tank instanceof HybridGasTank gasTank ? gasTank.receiveGas(side, stack, doTransfer) : 0;
     }
 
     @Override
     @Optional.Method(modid = "mekanism")
     public GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
-        if (this.tank instanceof HybridGasTank) {
-            return ((IGasHandler) this.tank).drawGas(side, amount, doTransfer);
-        }
-        return null;
+        return this.tank instanceof HybridGasTank gasTank ? gasTank.drawGas(side, amount, doTransfer) : null;
     }
 
     @Override
     @Optional.Method(modid = "mekanism")
     public boolean canReceiveGas(EnumFacing side, Gas type) {
-        return this.tank instanceof HybridGasTank && ((IGasHandler) this.tank).canReceiveGas(side, type);
+        return this.tank instanceof HybridGasTank gasTank && gasTank.canReceiveGas(side, type);
     }
 
     @Override
     @Optional.Method(modid = "mekanism")
     public boolean canDrawGas(EnumFacing side, Gas type) {
-        return this.tank instanceof HybridGasTank && ((IGasHandler) this.tank).canDrawGas(side, type);
+        return this.tank instanceof HybridGasTank gasTank && gasTank.canDrawGas(side, type);
+    }
+
+    @Nonnull
+    @Override
+    public GasTankInfo[] getTankInfo() {
+        return this.tank instanceof HybridGasTank gasTank ? gasTank.getTankInfo() : NONE;
     }
 }

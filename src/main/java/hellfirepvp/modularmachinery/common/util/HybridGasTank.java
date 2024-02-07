@@ -8,13 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
-import mekanism.api.gas.Gas;
-import mekanism.api.gas.GasStack;
-import mekanism.api.gas.IGasHandler;
+import mekanism.api.gas.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.fluids.FluidStack;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -25,12 +24,11 @@ import javax.annotation.Nullable;
  * Date: 26.08.2017 / 19:03
  */
 public class HybridGasTank extends HybridTank implements IGasHandler {
-
-    @Nullable
-    protected GasStack gas;
+    protected final GasTank gasTank;
 
     public HybridGasTank(int capacity) {
         super(capacity);
+        gasTank = new GasTank(capacity);
     }
 
     @Override
@@ -43,7 +41,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Override
     public synchronized int fillInternal(FluidStack resource, boolean doFill) {
-        if (gas != null && gas.amount > 0) {
+        if (getGas() != null && getGas().amount > 0) {
             return 0;
         }
         return super.fillInternal(resource, doFill);
@@ -52,7 +50,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     @Nullable
     @Override
     public synchronized FluidStack drainInternal(int maxDrain, boolean doDrain) {
-        if (gas != null && gas.amount > 0) {
+        if (getGas() != null && getGas().amount > 0) {
             return null;
         }
         return super.drainInternal(maxDrain, doDrain);
@@ -61,7 +59,7 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
     @Nullable
     @Override
     public synchronized FluidStack drainInternal(FluidStack resource, boolean doDrain) {
-        if (gas != null && gas.amount > 0) {
+        if (getGas() != null && getGas().amount > 0) {
             return null;
         }
         return super.drainInternal(resource, doDrain);
@@ -69,15 +67,15 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     @Nullable
     public synchronized GasStack getGas() {
-        return this.gas;
+        return this.gasTank.getGas();
     }
 
     public synchronized void setGas(@Nullable GasStack stack) {
         if (stack != null) {
-            this.gas = stack.copy();
+            this.gasTank.setGas(stack.copy());
             setFluid(null);
         } else {
-            this.gas = null;
+            this.gasTank.setGas(null);
         }
     }
 
@@ -91,87 +89,58 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
             return 0; //We don't collide with the internal fluids
         }
 
-        if (!doTransfer) {
-            if (gas == null) {
-                return Math.min(capacity, stack.amount);
-            }
-
-            if (!gas.isGasEqual(stack)) {
-                return 0;
-            }
-
-            return Math.min(capacity - gas.amount, stack.amount);
-        }
-
-        if (gas == null) {
-            setGas(new GasStack(stack.getGas(), Math.min(capacity, stack.amount)));
-
+        int receive = gasTank.receive(stack, doTransfer);
+        if (receive != 0 && doTransfer) {
             onContentsChanged();
-            return gas.amount;
         }
-
-        if (!gas.isGasEqual(stack)) {
-            return 0;
-        }
-        int filled = capacity - gas.amount;
-
-        if (gas.amount < filled) {
-            gas.amount += stack.amount;
-            filled = stack.amount;
-        } else {
-            gas.amount = capacity;
-        }
-
-        onContentsChanged();
-
-        return filled;
+        return receive;
     }
 
     @Override
     public synchronized GasStack drawGas(EnumFacing side, int amount, boolean doTransfer) {
-        if (gas == null || amount <= 0) {
+        if (getGas() == null || amount <= 0) {
             return null;
         }
         if (getFluid() != null && getFluid().amount > 0) {
             return null; //We don't collide with the internal fluids
         }
-
-        int drained = amount;
-        if (gas.amount < drained) {
-            drained = gas.amount;
+        if (!this.canDrawGas(side, null)) {
+            return null;
         }
 
-        GasStack stack = new GasStack(gas.getGas(), drained);
-        if (doTransfer) {
-            gas.amount -= drained;
-            if (gas.amount <= 0) {
-                setGas(null);
-            }
-
+        GasStack drawn = this.gasTank.draw(amount, doTransfer);
+        if (drawn != null && !doTransfer) {
             onContentsChanged();
-
         }
-        return stack;
+        return drawn;
     }
 
     @Override
     public boolean canReceiveGas(EnumFacing side, Gas type) {
-        return canFill();
+        return canFill() && gasTank.canReceive(type);
     }
 
     @Override
     public boolean canDrawGas(EnumFacing side, Gas type) {
-        return canDrain();
+        return canDrain() && gasTank.canDraw(type);
+    }
+
+    @Nonnull
+    @Override
+    public GasTankInfo[] getTankInfo() {
+        return new GasTank[]{gasTank};
     }
 
     public void readGasFromNBT(NBTTagCompound nbt) {
         NBTTagCompound subGas = nbt.getCompoundTag("gasTag");
-        if (subGas.getSize() > 0) {
-            if (!subGas.hasKey("Empty")) {
-                setGas(GasStack.readFromNBT(subGas));
-            } else {
-                setGas(null);
-            }
+        if (subGas.isEmpty()) {
+            setGas(null);
+            return;
+        }
+
+        // Old version tag support.
+        if (!subGas.hasKey("Empty")) {
+            setGas(GasStack.readFromNBT(subGas));
         } else {
             setGas(null);
         }
@@ -179,10 +148,8 @@ public class HybridGasTank extends HybridTank implements IGasHandler {
 
     public void writeGasToNBT(NBTTagCompound nbt) {
         NBTTagCompound subGas = new NBTTagCompound();
-        if (gas != null) {
-            gas.write(subGas);
-        } else {
-            subGas.setString("Empty", "");
+        if (getGas() != null) {
+            getGas().write(subGas);
         }
         nbt.setTag("gasTag", subGas);
     }
