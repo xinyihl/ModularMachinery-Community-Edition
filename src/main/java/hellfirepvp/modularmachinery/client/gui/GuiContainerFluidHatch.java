@@ -172,25 +172,27 @@ public class GuiContainerFluidHatch extends GuiContainerBase<ContainerFluidHatch
 
     @Optional.Method(modid = "mekanism")
     private void drawMekGasContent() {
-        if (tank.getTank() instanceof HybridGasTank) {
-            GasStack gasContent = ((HybridGasTank) tank.getTank()).getGas();
-            if (gasContent != null && gasContent.amount > 0) {
-                int gascolor = gasContent.getGas().getTint();
-                float red = (gascolor >> 16 & 0xFF) / 255F;
-                float green = (gascolor >> 8 & 0xFF) / 255F;
-                float blue = (gascolor & 0xFF) / 255F;
-                GlStateManager.color(red, green, blue, 1.0F);
-                float percFilled = ((float) gasContent.amount) / ((float) tank.getTank().getCapacity());
-                percFilled = MathHelper.clamp(percFilled, 0F, 1F);
-                int pxFilled = MathHelper.ceil(percFilled * 61F);
-                TextureAtlasSprite tas = gasContent.getGas().getSprite();
-                if (tas == null) {
-                    tas = Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
-                }
-                this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-                drawTexturedModalRect(15, 10 + 61 - pxFilled, tas, 20, pxFilled);
-            }
+        if (!(tank.getTank() instanceof HybridGasTank)) {
+            return;
         }
+        GasStack gasContent = ((HybridGasTank) tank.getTank()).getGas();
+        if (gasContent == null || gasContent.amount <= 0) {
+            return;
+        }
+        int gasColor = gasContent.getGas().getTint();
+        float red = (gasColor >> 16 & 0xFF) / 255F;
+        float green = (gasColor >> 8 & 0xFF) / 255F;
+        float blue = (gasColor & 0xFF) / 255F;
+        GlStateManager.color(red, green, blue, 1.0F);
+        float fillPercent = ((float) gasContent.amount) / ((float) tank.getTank().getCapacity());
+        fillPercent = MathHelper.clamp(fillPercent, 0F, 1F);
+        int pxFilled = MathHelper.ceil(fillPercent * 61F);
+        TextureAtlasSprite tas = gasContent.getGas().getSprite();
+        if (tas == null) {
+            tas = Minecraft.getMinecraft().getTextureMapBlocks().getMissingSprite();
+        }
+        this.mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        drawTexturedModalRect(15, 10 + 61 - pxFilled, tas, 20, pxFilled);
     }
 
     @Override

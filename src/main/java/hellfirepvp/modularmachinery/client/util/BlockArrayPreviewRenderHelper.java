@@ -176,7 +176,7 @@ public class BlockArrayPreviewRenderHelper {
     private int hashBlocks() {
         int hash = 80238287;
         if (this.renderHelper != null && Minecraft.getMinecraft().player != null) {
-            Vec3i move = getRenderOffset();
+            BlockPos move = getRenderOffset();
             if (move != null) {
                 BlockArray render = new BlockArray(this.matchArray, move);
                 for (Map.Entry<BlockPos, BlockArray.BlockInformation> entry : render.getPattern().entrySet()) {

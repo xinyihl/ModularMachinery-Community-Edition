@@ -69,7 +69,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     }
 
     @Override
-    public boolean hasCapability(Capability<?> capability, @Nullable EnumFacing facing) {
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return true;
         }
@@ -84,7 +84,7 @@ public abstract class TileFluidTank extends TileColorableMachineComponent implem
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getCapability(Capability<T> capability, @Nullable EnumFacing facing) {
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
             return (T) tank;
         }

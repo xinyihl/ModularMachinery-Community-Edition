@@ -122,10 +122,10 @@ public class RecipePrimer implements PreparedRecipe {
             if (lastComponent instanceof RequirementItem reqItem) {
                 reqItem.previewDisplayTag = CraftTweakerMC.getNBTCompound(nbt);
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item` or `Catalyst`!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item` or `Catalyst`!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] setPreViewNBT(IData nbt) only can be applied to `Item`!");
         }
         return this;
     }
@@ -136,10 +136,10 @@ public class RecipePrimer implements PreparedRecipe {
             if (lastComponent instanceof RequirementItem reqItem) {
                 reqItem.setItemChecker((controller, stack) -> checker.isMatch(controller, CraftTweakerMC.getIItemStack(stack)));
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item` or `Catalyst`!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item` or `Catalyst`!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] setNBTChecker(AdvancedItemNBTChecker checker) only can be applied to `Item`!");
         }
         return this;
     }
@@ -150,10 +150,10 @@ public class RecipePrimer implements PreparedRecipe {
             if (lastComponent instanceof RequirementItem reqItem) {
                 reqItem.addItemModifier((controller, stack) -> CraftTweakerMC.getItemStack(modifier.apply(controller, CraftTweakerMC.getIItemStackMutable(stack))));
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item` or `Catalyst`!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item` or `Catalyst`!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] addItemModifier(AdvancedItemModifier checker) only can be applied to `Item`!");
         }
         return this;
     }
@@ -169,10 +169,10 @@ public class RecipePrimer implements PreparedRecipe {
                     CraftTweakerAPI.logWarning("[ModularMachinery] `min` cannot larger than `max`!");
                 }
             } else {
-                CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item` or `Catalyst`!");
+                CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item`!");
             }
         } else {
-            CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item` or `Catalyst`!");
+            CraftTweakerAPI.logWarning("[ModularMachinery] setMinMaxOutputAmount(int min, int max) only can be applied to `Item`!");
         }
         return this;
     }
@@ -637,6 +637,12 @@ public class RecipePrimer implements PreparedRecipe {
         return this;
     }
 
+    @ZenMethod
+    public RecipePrimer addCatalystInput(IngredientArrayPrimer input, String[] tooltips, RecipeModifier[] modifiers) {
+        requireCatalyst(input, tooltips, modifiers);
+        return this;
+    }
+
     //----------------------------------------------------------------------------------------------
     // Internals
     //----------------------------------------------------------------------------------------------
@@ -716,10 +722,6 @@ public class RecipePrimer implements PreparedRecipe {
             return;
         }
         RequirementCatalyst catalyst = new RequirementCatalyst(mcStack);
-        if (stack.getTag().length() > 0) {
-            catalyst.tag = CraftTweakerMC.getNBTCompound(stack.getTag());
-            catalyst.previewDisplayTag = CraftTweakerMC.getNBTCompound(stack.getTag());
-        }
         for (String tooltip : tooltips) {
             catalyst.addTooltip(tooltip);
         }
@@ -731,7 +733,20 @@ public class RecipePrimer implements PreparedRecipe {
         appendComponent(catalyst);
     }
 
-    public void appendComponent(ComponentRequirement component) {
+    private void requireCatalyst(IngredientArrayPrimer ingredientArrayPrimer, String[] tooltips, RecipeModifier[] modifiers) {
+        RequirementCatalyst catalyst = new RequirementCatalyst(ingredientArrayPrimer.getIngredientStackList());
+        for (String tooltip : tooltips) {
+            catalyst.addTooltip(tooltip);
+        }
+        for (RecipeModifier modifier : modifiers) {
+            if (modifier != null) {
+                catalyst.addModifier(modifier);
+            }
+        }
+        appendComponent(catalyst);
+    }
+
+    public void appendComponent(ComponentRequirement<?, ?> component) {
         this.components.add(component);
         this.lastComponent = component;
     }

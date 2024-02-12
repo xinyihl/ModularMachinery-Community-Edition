@@ -18,12 +18,12 @@ import java.util.concurrent.locks.LockSupport;
 public class TaskExecutor {
     public static final int THREAD_COUNT = Math.min(Math.max(Runtime.getRuntime().availableProcessors() / 4, 4), 8);
 
-    private static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(4, THREAD_COUNT,
+    public static final ThreadPoolExecutor THREAD_POOL = new ThreadPoolExecutor(4, THREAD_COUNT,
             5000, TimeUnit.MILLISECONDS,
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s"));
 
-    private static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(THREAD_COUNT,
+    public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(THREAD_COUNT,
             new CustomForkJoinWorkerThreadFactory("MMCE-ForkJoinPool-worker-%s"),
             null, true);
 

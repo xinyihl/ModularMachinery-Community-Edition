@@ -26,7 +26,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -52,7 +52,7 @@ public class BlockArray {
 
     protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
     protected Map<BlockPos, BlockInformation> tileBlocksArray = new HashMap<>();
-    private Vec3i min = new Vec3i(0, 0, 0), max = new Vec3i(0, 0, 0), size = new Vec3i(0, 0, 0);
+    private BlockPos min = new BlockPos(0, 0, 0), max = new BlockPos(0, 0, 0), size = new BlockPos(0, 0, 0);
 
     public BlockArray() {
         this.traitNum = BlockArrayCache.nextTraitNum();
@@ -64,20 +64,20 @@ public class BlockArray {
 
     public BlockArray(BlockArray other) {
         this.pattern = new HashMap<>(other.pattern);
-        this.min = new Vec3i(other.min.getX(), other.min.getY(), other.min.getZ());
-        this.max = new Vec3i(other.max.getX(), other.max.getY(), other.max.getZ());
-        this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+        this.min = new BlockPos(other.min.getX(), other.min.getY(), other.min.getZ());
+        this.max = new BlockPos(other.max.getX(), other.max.getY(), other.max.getZ());
+        this.size = new BlockPos(other.size.getX(), other.size.getY(), other.size.getZ());
 
         this.traitNum = other.traitNum;
     }
 
-    public BlockArray(BlockArray other, Vec3i offset) {
+    public BlockArray(BlockArray other, BlockPos offset) {
         for (Map.Entry<BlockPos, BlockInformation> otherEntry : other.pattern.entrySet()) {
             this.pattern.put(otherEntry.getKey().add(offset), otherEntry.getValue());
         }
-        this.min = new Vec3i(offset.getX() + other.min.getX(), offset.getY() + other.min.getY(), offset.getZ() + other.min.getZ());
-        this.max = new Vec3i(offset.getX() + other.max.getX(), offset.getY() + other.max.getY(), offset.getZ() + other.max.getZ());
-        this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+        this.min = new BlockPos(offset.getX() + other.min.getX(), offset.getY() + other.min.getY(), offset.getZ() + other.min.getZ());
+        this.max = new BlockPos(offset.getX() + other.max.getX(), offset.getY() + other.max.getY(), offset.getZ() + other.max.getZ());
+        this.size = new BlockPos(other.size.getX(), other.size.getY(), other.size.getZ());
 
         this.traitNum = other.traitNum;
     }
@@ -99,9 +99,9 @@ public class BlockArray {
 
     public void overwrite(BlockArray other) {
         this.pattern = new HashMap<>(other.pattern);
-        this.min = new Vec3i(other.min.getX(), other.min.getY(), other.min.getZ());
-        this.max = new Vec3i(other.max.getX(), other.max.getY(), other.max.getZ());
-        this.size = new Vec3i(other.size.getX(), other.size.getY(), other.size.getZ());
+        this.min = new BlockPos(other.min.getX(), other.min.getY(), other.min.getZ());
+        this.max = new BlockPos(other.max.getX(), other.max.getY(), other.max.getZ());
+        this.size = new BlockPos(other.size.getX(), other.size.getY(), other.size.getZ());
     }
 
     public void addBlock(int x, int y, int z, @Nonnull BlockInformation info) {
@@ -121,38 +121,38 @@ public class BlockArray {
         return pattern.isEmpty();
     }
 
-    public Vec3i getMax() {
+    public BlockPos getMax() {
         return max;
     }
 
-    public Vec3i getMin() {
+    public BlockPos getMin() {
         return min;
     }
 
-    public Vec3i getSize() {
+    public BlockPos getSize() {
         return size;
     }
 
     private void updateSize(BlockPos addedPos) {
         if (addedPos.getX() < min.getX()) {
-            min = new Vec3i(addedPos.getX(), min.getY(), min.getZ());
+            min = new BlockPos(addedPos.getX(), min.getY(), min.getZ());
         }
         if (addedPos.getX() > max.getX()) {
-            max = new Vec3i(addedPos.getX(), max.getY(), max.getZ());
+            max = new BlockPos(addedPos.getX(), max.getY(), max.getZ());
         }
         if (addedPos.getY() < min.getY()) {
-            min = new Vec3i(min.getX(), addedPos.getY(), min.getZ());
+            min = new BlockPos(min.getX(), addedPos.getY(), min.getZ());
         }
         if (addedPos.getY() > max.getY()) {
-            max = new Vec3i(max.getX(), addedPos.getY(), max.getZ());
+            max = new BlockPos(max.getX(), addedPos.getY(), max.getZ());
         }
         if (addedPos.getZ() < min.getZ()) {
-            min = new Vec3i(min.getX(), min.getY(), addedPos.getZ());
+            min = new BlockPos(min.getX(), min.getY(), addedPos.getZ());
         }
         if (addedPos.getZ() > max.getZ()) {
-            max = new Vec3i(max.getX(), max.getY(), addedPos.getZ());
+            max = new BlockPos(max.getX(), max.getY(), addedPos.getZ());
         }
-        size = new Vec3i(max.getX() - min.getX() + 1, max.getY() - min.getY() + 1, max.getZ() - min.getZ() + 1);
+        size = new BlockPos(max.getX() - min.getX() + 1, max.getY() - min.getY() + 1, max.getZ() - min.getZ() + 1);
     }
 
     public Map<BlockPos, BlockInformation> getPattern() {
@@ -522,9 +522,9 @@ public class BlockArray {
 
         public IBlockState getSampleState(long snapTick) {
             int tickSpeed = CYCLE_TICK_SPEED;
-            if (samples.size() > 10) {
-                tickSpeed *= 0.6;
-            }
+//            if (samples.size() > 10) {
+//                tickSpeed *= 0.6;
+//            }
             int p = (int) ((snapTick == -1 ? ClientScheduler.getClientTick() : snapTick) / tickSpeed);
             int part = p % samples.size();
             return samples.get(part);

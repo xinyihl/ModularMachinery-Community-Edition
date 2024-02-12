@@ -10,6 +10,12 @@ package hellfirepvp.modularmachinery.client.gui;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import github.kasuminova.mmce.client.gui.GuiScreenDynamic;
+import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
+import github.kasuminova.mmce.client.gui.widget.container.Column;
+import github.kasuminova.mmce.client.gui.widget.preview.MachineStructurePreviewWidget;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
@@ -32,9 +38,7 @@ import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
@@ -48,7 +52,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
@@ -56,7 +59,6 @@ import net.minecraftforge.fluids.IFluidBlock;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -65,7 +67,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -74,18 +75,18 @@ import java.util.stream.Stream;
  * Created by HellFirePvP
  * Date: 09.07.2017 / 21:08
  */
-public class GuiScreenBlueprint extends GuiScreen {
+public class GuiScreenBlueprint extends GuiScreenDynamic {
+    public static final ResourceLocation TEXTURE_BACKGROUND =
+            new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_background.png");
 
-    public static final ResourceLocation TEXTURE_BACKGROUND = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_large.png");
-    public static final int X_SIZE = 176;
-    public static final int Y_SIZE = 184;
+    public static final ResourceLocation TEXTURE_OVERLAY =
+            new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_new.png");
+    public static final int X_SIZE = 184;
+    public static final int Y_SIZE = 221;
 
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
 
     private final DynamicMachine machine;
-
-    protected int guiLeft;
-    protected int guiTop;
 
     private DynamicMachineRenderContext renderContext;
     private GuiScrollbar ingredientListScrollbar;
@@ -191,10 +192,16 @@ public class GuiScreenBlueprint extends GuiScreen {
 
     @Override
     public void initGui() {
-        super.initGui();
         this.guiLeft = (this.width - X_SIZE) / 2;
         this.guiTop = (this.height - Y_SIZE) / 2;
         this.ingredientListScrollbar = new GuiScrollbar().setLeft(guiLeft + 156).setTop(guiTop + 142).setHeight(34);
+
+        this.widgetController = new WidgetController(new WidgetGui(this, X_SIZE, Y_SIZE));
+        this.widgetController.init();
+        Column column = (Column) new Column().setAbsX(6).setAbsY(27).setWidth(172).setHeight(150);
+        this.widgetController.addWidgetContainer(column.addWidget(
+                new MachineStructurePreviewWidget(machine).setWidth(172).setHeight(150)
+        ));
     }
 
     @Override
@@ -204,74 +211,79 @@ public class GuiScreenBlueprint extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
-        frameCount++;
+        drawDefaultBackground();
 
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
         int x = (this.width - X_SIZE) / 2;
         int z = (this.height - Y_SIZE) / 2;
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+
+        this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
         this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
 
-        if (renderContext.doesRenderIn3D()) {
-            if (Mouse.isButtonDown(0) && frameCount > 20) {
-                renderContext.rotateRender(0.25 * Mouse.getDY(), 0.25 * Mouse.getDX(), 0);
-            }
-        } else {
-            if (Mouse.isButtonDown(0) && frameCount > 20) {
-                renderContext.moveRender(0.25 * Mouse.getDX(), 0, -0.25 * Mouse.getDY());
-            }
-        }
+        super.drawScreen(mouseX, mouseY, partialTicks);
 
-        handleDWheel(mouseX, mouseY);
-
-        if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
-            if (renderContext.getShiftSnap() == -1) {
-                renderContext.snapSamples();
-            }
-        } else {
-            renderContext.releaseSamples();
-        }
-
-//        if (renderContext.getPattern().getPattern().size() >= 3500 && renderContext.doesRenderIn3D()) {
-//            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
-//            FontRenderer fr = fontRenderer;
-//            final int[] y = {guiTop + 12};
-//            Stream.of(
-//                            I18n.format("gui.preview.error.too_large.tip.0"),
-//                            I18n.format("gui.preview.error.too_large.tip.1"),
-//                            I18n.format("gui.preview.error.too_large.tip.2"))
-//                    .flatMap(str -> fr.listFormattedStringToWidth(str, 160 * res.getScaleFactor()).stream())
-//                    .forEach(str -> {
-//                        fr.drawStringWithShadow(str,  guiLeft + 10, y[0], 0xFFFFFF);
-//                        y[0] += 12;
-//                    });
+        this.mc.getTextureManager().bindTexture(TEXTURE_OVERLAY);
+        this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
+//
+//        if (renderContext.doesRenderIn3D()) {
+//            if (Mouse.isButtonDown(0) && frameCount > 20) {
+//                renderContext.rotateRender(0.25 * Mouse.getDY(), 0.25 * Mouse.getDX(), 0);
+//            }
 //        } else {
-        ScaledResolution res = new ScaledResolution(mc);
-        Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 82) * res.getScaleFactor(),
-                160 * res.getScaleFactor(), 94 * res.getScaleFactor());
-        GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
-        x = 88;
-        z = 62;
-        renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+//            if (Mouse.isButtonDown(0) && frameCount > 20) {
+//                renderContext.moveRender(0.25 * Mouse.getDX(), 0, -0.25 * Mouse.getDY());
+//            }
 //        }
-
-        renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
-        drawButtons(mouseX, mouseY);
-        renderUpgradeInfo(mouseX, mouseY);
-
-        fontRenderer.drawStringWithShadow(machine.getLocalizedName(), this.guiLeft + 10, this.guiTop + 11, 0xFFFFFFFF);
-        if (machine.isRequiresBlueprint()) {
-            String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
-            fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0xFFFFFF);
-        }
-
-        scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
-        if (!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
-            render2DHover(mouseX, mouseY, x, z);
-        }
+//
+//        handleDWheel(mouseX, mouseY);
+//
+//        if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak)) {
+//            if (renderContext.getShiftSnap() == -1) {
+//                renderContext.snapSamples();
+//            }
+//        } else {
+//            renderContext.releaseSamples();
+//        }
+//
+////        if (renderContext.getPattern().getPattern().size() >= 3500 && renderContext.doesRenderIn3D()) {
+////            ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+////            FontRenderer fr = fontRenderer;
+////            final int[] y = {guiTop + 12};
+////            Stream.of(
+////                            I18n.format("gui.preview.error.too_large.tip.0"),
+////                            I18n.format("gui.preview.error.too_large.tip.1"),
+////                            I18n.format("gui.preview.error.too_large.tip.2"))
+////                    .flatMap(str -> fr.listFormattedStringToWidth(str, 160 * res.getScaleFactor()).stream())
+////                    .forEach(str -> {
+////                        fr.drawStringWithShadow(str,  guiLeft + 10, y[0], 0xFFFFFF);
+////                        y[0] += 12;
+////                    });
+////        } else {
+//        ScaledResolution res = new ScaledResolution(mc);
+//        Rectangle scissorFrame = new Rectangle((guiLeft + 8) * res.getScaleFactor(), (guiTop + 82) * res.getScaleFactor(),
+//                160 * res.getScaleFactor(), 94 * res.getScaleFactor());
+//        GL11.glEnable(GL11.GL_SCISSOR_TEST);
+//        GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
+//        x = 88;
+//        z = 62;
+//        renderContext.renderAt(this.guiLeft + x, this.guiTop + z, partialTicks);
+//        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+////        }
+//
+//        renderIngredientList(this, mc, mc.getRenderItem(), ingredientListScrollbar, renderContext, mouseX, mouseY, guiLeft + 8, guiTop + 142);
+//        drawButtons(mouseX, mouseY);
+//        renderUpgradeInfo(mouseX, mouseY);
+//
+//        fontRenderer.drawStringWithShadow(machine.getLocalizedName(), this.guiLeft + 10, this.guiTop + 11, 0xFFFFFFFF);
+//        if (machine.isRequiresBlueprint()) {
+//            String reqBlueprint = I18n.format("tooltip.machinery.blueprint.required");
+//            fontRenderer.drawStringWithShadow(reqBlueprint, this.guiLeft + 10, this.guiTop + 106, 0xFFFFFF);
+//        }
+//
+//        scissorFrame = new Rectangle(MathHelper.floor(this.guiLeft + 8), MathHelper.floor(this.guiTop + 8), 160, 94);
+//        if (!renderContext.doesRenderIn3D() && scissorFrame.contains(mouseX, mouseY)) {
+//            render2DHover(mouseX, mouseY, x, z);
+//        }
     }
 
     private void handleDWheel(final int x, final int y) {
@@ -540,50 +552,50 @@ public class GuiScreenBlueprint extends GuiScreen {
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         super.mouseClicked(mouseX, mouseY, mouseButton);
 
-        if (mouseButton == 0) {
-            if (!renderContext.doesRenderIn3D()) {
-                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
-                        mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
-                    renderContext.setTo3D();
-                }
-                if (renderContext.hasSliceUp() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
-                        mouseY >= this.guiTop + 102 && mouseY <= this.guiTop + 102 + 16) {
-                    renderContext.sliceUp();
-                }
-                if (renderContext.hasSliceDown() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
-                        mouseY >= this.guiTop + 124 && mouseY <= this.guiTop + 124 + 16) {
-                    renderContext.sliceDown();
-                }
-            } else {
-                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
-                        mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
-                    renderContext.setTo2D();
-                }
-
-                // DynamicPattern Size Smaller
-                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
-                        mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
-                    renderContext = DynamicMachineRenderContext.createContext(
-                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() - 1);
-                }
-
-                // DynamicPattern Size Larger
-                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
-                        mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
-                    renderContext = DynamicMachineRenderContext.createContext(
-                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() + 1);
-                }
-            }
-            if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&
-                    mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
-                    mouseY >= this.guiTop + 106 && mouseY < this.guiTop + 106 + 16) {
-                if (ClientProxy.renderHelper.startPreview(this.renderContext)) {
-                    Minecraft.getMinecraft().displayGuiScreen(null);
-                }
-            }
-        } else if (mouseButton == 1) {
-            Minecraft.getMinecraft().displayGuiScreen(null);
-        }
+//        if (mouseButton == 0) {
+//            if (!renderContext.doesRenderIn3D()) {
+//                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+//                        mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
+//                    renderContext.setTo3D();
+//                }
+//                if (renderContext.hasSliceUp() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+//                        mouseY >= this.guiTop + 102 && mouseY <= this.guiTop + 102 + 16) {
+//                    renderContext.sliceUp();
+//                }
+//                if (renderContext.hasSliceDown() && mouseX >= this.guiLeft + 150 && mouseX <= this.guiLeft + 150 + 16 &&
+//                        mouseY >= this.guiTop + 124 && mouseY <= this.guiTop + 124 + 16) {
+//                    renderContext.sliceDown();
+//                }
+//            } else {
+//                if (mouseX >= this.guiLeft + 132 && mouseX <= this.guiLeft + 132 + 16 &&
+//                        mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
+//                    renderContext.setTo2D();
+//                }
+//
+//                // DynamicPattern Size Smaller
+//                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+//                        mouseY >= this.guiTop + 106 && mouseY <= this.guiTop + 106 + 16) {
+//                    renderContext = DynamicMachineRenderContext.createContext(
+//                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() - 1);
+//                }
+//
+//                // DynamicPattern Size Larger
+//                if (mouseX >= this.guiLeft + 100 && mouseX <= this.guiLeft + 100 + 16 &&
+//                        mouseY >= this.guiTop + 122 && mouseY <= this.guiTop + 122 + 16) {
+//                    renderContext = DynamicMachineRenderContext.createContext(
+//                            renderContext.getDisplayedMachine(), renderContext.getDynamicPatternSize() + 1);
+//                }
+//            }
+//            if (GameSettings.isKeyDown(Minecraft.getMinecraft().gameSettings.keyBindSneak) &&
+//                    mouseX >= this.guiLeft + 116 && mouseX <= this.guiLeft + 116 + 16 &&
+//                    mouseY >= this.guiTop + 106 && mouseY < this.guiTop + 106 + 16) {
+//                if (ClientProxy.renderHelper.startPreview(this.renderContext)) {
+//                    Minecraft.getMinecraft().displayGuiScreen(null);
+//                }
+//            }
+//        } else if (mouseButton == 1) {
+//            Minecraft.getMinecraft().displayGuiScreen(null);
+//        }
     }
 
 }

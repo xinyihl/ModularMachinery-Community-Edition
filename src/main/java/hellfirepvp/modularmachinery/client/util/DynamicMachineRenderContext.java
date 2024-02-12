@@ -42,7 +42,7 @@ public class DynamicMachineRenderContext {
     private final DynamicMachine machine;
     private final BlockArrayRenderHelper render;
     private final BlockArray pattern;
-    private final Vec3i moveOffset;
+    private final BlockPos moveOffset;
     private int dynamicPatternSize;
 
     private boolean render3D = true;
@@ -63,7 +63,7 @@ public class DynamicMachineRenderContext {
 
         Vec3i min = copy.getMin();
         Vec3i max = copy.getMax();
-        this.moveOffset = new Vec3i(
+        this.moveOffset = new BlockPos(
                 (min.getX() + (max.getX() - min.getX()) / 2) * -1,
                 -min.getY(),
                 (min.getZ() + (max.getZ() - min.getZ()) / 2) * -1

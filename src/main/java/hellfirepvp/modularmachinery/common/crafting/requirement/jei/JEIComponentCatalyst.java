@@ -11,7 +11,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.awt.*;
 import java.util.List;
 
-public class JEIComponentCatalyst extends JEIComponentItem {
+public class JEIComponentCatalyst extends JEIComponentIngredientArray {
     RequirementCatalyst requirement;
 
     public JEIComponentCatalyst(RequirementCatalyst requirement) {

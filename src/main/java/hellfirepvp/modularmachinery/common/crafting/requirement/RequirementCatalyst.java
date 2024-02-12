@@ -1,11 +1,11 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
+import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentCatalyst;
-import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
-import hellfirepvp.modularmachinery.common.machine.IOType;
+import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ResultChance;
 import net.minecraft.item.ItemStack;
@@ -15,21 +15,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class RequirementCatalyst extends RequirementItem {
+public class RequirementCatalyst extends RequirementIngredientArray {
     protected final List<RecipeModifier> modifierList = new ArrayList<>();
     protected final List<String> toolTipList = new ArrayList<>();
     protected boolean isRequired = false;
 
     public RequirementCatalyst(ItemStack item) {
-        super(IOType.INPUT, item);
+        super(Collections.singletonList(new ChancedIngredientStack(item)));
     }
 
-    public RequirementCatalyst(String oreDictName, int oreDictAmount) {
-        super(IOType.INPUT, oreDictName, oreDictAmount);
+    public RequirementCatalyst(String oreDictName, int amount) {
+        super(Collections.singletonList(new ChancedIngredientStack(oreDictName, amount)));
     }
 
-    public RequirementCatalyst(int fuelBurntime) {
-        super(IOType.INPUT, fuelBurntime);
+    public RequirementCatalyst(List<ChancedIngredientStack> ingredients) {
+        super(ingredients);
     }
 
     public void addModifier(RecipeModifier modifier) {
@@ -53,6 +53,8 @@ public class RequirementCatalyst extends RequirementItem {
             }
             isRequired = true;
             return CraftCheck.success();
+        } else {
+            isRequired = false;
         }
         return CraftCheck.skipComponent();
     }
@@ -65,6 +67,8 @@ public class RequirementCatalyst extends RequirementItem {
                 context.addPermanentModifier(modifier);
             }
             isRequired = true;
+        } else {
+            isRequired = false;
         }
         // It is an optional input, so it should not theoretically return the maximum number of consumable quantities.
         return maxParallelism;
@@ -85,35 +89,25 @@ public class RequirementCatalyst extends RequirementItem {
 
     @Override
     public RequirementCatalyst deepCopyModified(List<RecipeModifier> modifiers) {
-        RequirementCatalyst catalyst;
-        switch (this.requirementType) {
-            case OREDICT -> {
-                int inOreAmt = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.oreDictItemAmount, false));
-                catalyst = new RequirementCatalyst(this.oreDictName, inOreAmt);
+        ArrayList<ChancedIngredientStack> copiedIngredients = new ArrayList<>();
+
+        ingredients.forEach(item -> {
+            ChancedIngredientStack copied = item.copy();
+
+            switch (copied.ingredientType) {
+                case ITEMSTACK -> {
+                    ItemStack itemStack = copied.itemStack;
+                    int amt = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, itemStack.getCount(), false));
+                    itemStack.setCount(amt);
+                }
+                case ORE_DICT -> copied.count = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.count, false));
             }
-            case FUEL -> {
-                int inFuel = Math.round(RecipeModifier.applyModifiers(modifiers, this, this.fuelBurntime, false));
-                catalyst = new RequirementCatalyst(inFuel);
-            }
-            default -> {
-                ItemStack inReq = this.required.copy();
-                int amt = Math.round(RecipeModifier.applyModifiers(modifiers, this, inReq.getCount(), false));
-                inReq.setCount(amt);
-                catalyst = new RequirementCatalyst(inReq);
-            }
-        }
-        catalyst.chance = this.chance;
-        if (this.itemChecker != null) {
-            catalyst.itemChecker = this.itemChecker;
-        } else if (this.tag != null) {
-            catalyst.tag = this.tag.copy();
-        }
-        if (!this.itemModifierList.isEmpty()) {
-            catalyst.itemModifierList.addAll(this.itemModifierList);
-        }
-        if (this.previewDisplayTag != null) {
-            catalyst.previewDisplayTag = this.previewDisplayTag.copy();
-        }
+            copied.chance = RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.chance, true);
+
+            copiedIngredients.add(copied);
+        });
+
+        RequirementCatalyst catalyst = new RequirementCatalyst(copiedIngredients);
         catalyst.modifierList.addAll(this.modifierList);
         catalyst.toolTipList.addAll(toolTipList);
         return catalyst;
