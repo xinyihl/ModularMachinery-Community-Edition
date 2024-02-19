@@ -11,11 +11,11 @@ package hellfirepvp.modularmachinery.client.gui;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import github.kasuminova.mmce.client.gui.GuiScreenDynamic;
-import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.container.Column;
-import github.kasuminova.mmce.client.gui.widget.preview.MachineStructurePreviewWidget;
+import github.kasuminova.mmce.client.gui.widget.preview.MachineStructurePreviewPanel;
+import github.kasuminova.mmce.client.gui.widget.preview.WorldSceneRendererWidget;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
@@ -78,11 +78,11 @@ import java.util.Optional;
 public class GuiScreenBlueprint extends GuiScreenDynamic {
     public static final ResourceLocation TEXTURE_BACKGROUND =
             new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_background.png");
-
     public static final ResourceLocation TEXTURE_OVERLAY =
             new ResourceLocation(ModularMachinery.MODID, "textures/gui/guiblueprint_new.png");
+
     public static final int X_SIZE = 184;
-    public static final int Y_SIZE = 221;
+    public static final int Y_SIZE = 220;
 
     private static final ResourceLocation ic2TileBlock = new ResourceLocation("ic2", "te");
 
@@ -197,11 +197,8 @@ public class GuiScreenBlueprint extends GuiScreenDynamic {
         this.ingredientListScrollbar = new GuiScrollbar().setLeft(guiLeft + 156).setTop(guiTop + 142).setHeight(34);
 
         this.widgetController = new WidgetController(new WidgetGui(this, X_SIZE, Y_SIZE));
+        this.widgetController.addWidgetContainer(new MachineStructurePreviewPanel(machine));
         this.widgetController.init();
-        Column column = (Column) new Column().setAbsX(6).setAbsY(27).setWidth(172).setHeight(150);
-        this.widgetController.addWidgetContainer(column.addWidget(
-                new MachineStructurePreviewWidget(machine).setWidth(172).setHeight(150)
-        ));
     }
 
     @Override
@@ -219,11 +216,11 @@ public class GuiScreenBlueprint extends GuiScreenDynamic {
 
         this.mc.getTextureManager().bindTexture(TEXTURE_BACKGROUND);
         this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
+        this.mc.getTextureManager().bindTexture(TEXTURE_OVERLAY);
+        this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
 
-        this.mc.getTextureManager().bindTexture(TEXTURE_OVERLAY);
-        this.drawTexturedModalRect(x, z, 0, 0, X_SIZE, Y_SIZE);
 //
 //        if (renderContext.doesRenderIn3D()) {
 //            if (Mouse.isButtonDown(0) && frameCount > 20) {

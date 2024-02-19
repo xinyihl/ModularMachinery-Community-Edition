@@ -48,8 +48,10 @@ public class Column extends WidgetContainer {
             if (widgetRenderPos == null) {
                 continue;
             }
-            RenderPos absRenderPos = widgetRenderPos.add(renderPos);
-            renderFunction.doRender(widget, gui, new RenderSize(widget.getWidth(), widget.getHeight()).smaller(renderSize), absRenderPos, mousePos.relativeTo(widgetRenderPos));
+            if (widget.isVisible()) {
+                RenderPos absRenderPos = widgetRenderPos.add(renderPos);
+                renderFunction.doRender(widget, gui, new RenderSize(widget.getWidth(), widget.getHeight()).smaller(renderSize), absRenderPos, mousePos.relativeTo(widgetRenderPos));
+            }
             y += widget.getMarginUp() + widget.getHeight() + widget.getMarginDown();
         }
     }
@@ -61,6 +63,9 @@ public class Column extends WidgetContainer {
 
     @Override
     public Column addWidget(final DynamicWidget widget) {
+        if (widget == this) {
+            throw new IllegalArgumentException("Containers cannot be added to their own containers!");
+        }
         widgets.add(widget);
         return this;
     }
@@ -74,7 +79,7 @@ public class Column extends WidgetContainer {
     // GUI EventHandlers
 
     @Override
-    public boolean onMouseClicked(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+    public boolean onMouseClick(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
         int y = 0;
 
         int width = getWidth();
@@ -93,7 +98,7 @@ public class Column extends WidgetContainer {
             MousePos relativeMousePos = mousePos.relativeTo(widgetRenderPos);
             if (widget.isMouseOver(relativeMousePos)) {
                 RenderPos absRenderPos = widgetRenderPos.add(renderPos);
-                if (widget.onMouseClicked(mousePos.relativeTo(widgetRenderPos), absRenderPos, mouseButton)) {
+                if (widget.onMouseClick(mousePos.relativeTo(widgetRenderPos), absRenderPos, mouseButton)) {
                     return true;
                 }
             }
@@ -242,7 +247,10 @@ public class Column extends WidgetContainer {
         int xOffset;
         int yOffset;
 
-        if (isCenterAligned()) {
+        if (widget.isUseAbsPos()) {
+            xOffset = widget.getAbsX();
+            yOffset = widget.getAbsY();
+        } else if (isCenterAligned()) {
             xOffset = (width - (widget.getMarginLeft() + widget.getWidth() + widget.getMarginRight())) / 2;
             yOffset = y + widget.getMarginUp();
         } else if (leftAligned) {
@@ -265,7 +273,14 @@ public class Column extends WidgetContainer {
     public int getWidth() {
         int maxX = 0;
         for (final DynamicWidget widget : widgets) {
-            int width = widget.getMarginLeft() + widget.getWidth() + widget.getMarginRight();
+            if (widget.isDisabled()) {
+                continue;
+            }
+            int width = 0;
+            if (widget.isUseAbsPos()) {
+                width += widget.getAbsX();
+            }
+            width += widget.getMarginLeft() + widget.getWidth() + widget.getMarginRight();
             if (width > maxX) {
                 maxX = width;
             }
@@ -283,13 +298,27 @@ public class Column extends WidgetContainer {
     public int getHeight() {
         int height = 0;
         for (final DynamicWidget widget : widgets) {
-            height += widget.getMarginUp() + widget.getHeight() + widget.getMarginDown();
+            if (widget.isDisabled()) {
+                continue;
+            }
+            int widgetHeight = widget.getMarginUp() + widget.getHeight() + widget.getMarginDown();
+            if (widget.isUseAbsPos()) {
+                height = Math.max(height, widgetHeight);
+                continue;
+            }
+            height += widgetHeight;
         }
         return height;
     }
 
     @Override
     public DynamicWidget setHeight(final int height) {
+        // It's dynamic, so ignore it.
+        return this;
+    }
+
+    @Override
+    public DynamicWidget setWidthHeight(final int width, final int height) {
         // It's dynamic, so ignore it.
         return this;
     }

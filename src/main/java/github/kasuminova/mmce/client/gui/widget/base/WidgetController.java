@@ -54,14 +54,16 @@ public class WidgetController {
         GlStateManager.popMatrix();
     }
 
-    public void postRender(final MousePos mousePos) {
+    public void postRender(final MousePos mousePos, final boolean translatePos) {
         WidgetGui gui = this.gui;
 
         final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
         final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
 
         GlStateManager.pushMatrix();
-//        GlStateManager.translate(guiLeft, guiTop, 0F);
+        if (translatePos) {
+            GlStateManager.translate(guiLeft, guiTop, 0F);
+        }
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(guiLeft + container.getAbsX(), guiTop + container.getAbsY());
@@ -123,7 +125,7 @@ public class WidgetController {
             MousePos relativeMousePos = mousePos.relativeTo(renderPos);
 
             if (container.isMouseOver(relativeMousePos)) {
-                if (container.onMouseClicked(relativeMousePos, relativeRenderPos, mouseButton)) {
+                if (container.onMouseClick(relativeMousePos, relativeRenderPos, mouseButton)) {
                     return true;
                 }
             }

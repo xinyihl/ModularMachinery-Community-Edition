@@ -2,6 +2,7 @@ package com.cleanroommc.client.preview.renderer.scene;
 
 import com.cleanroommc.client.util.*;
 import com.cleanroommc.client.util.world.LRDummyWorld;
+import github.kasuminova.mmce.client.util.BufferBuilderPool;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -53,9 +54,9 @@ public abstract class WorldSceneRenderer {
     protected static final FloatBuffer PIXEL_DEPTH_BUFFER = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asFloatBuffer();
     protected static final FloatBuffer OBJECT_POS_BUFFER = ByteBuffer.allocateDirect(3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
-    protected static final Map<BlockRenderLayer, BufferBuilder> LAYER_BUFFER_BUILDERS = new EnumMap<>(BlockRenderLayer.class);
-
     protected static final AtomicInteger THREAD_ID = new AtomicInteger(0);
+
+    protected Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
 
     enum CacheState {
         UNUSED,
@@ -138,6 +139,10 @@ public abstract class WorldSceneRenderer {
                         anotherBufferRef[i].deleteGlBuffers();
                     }
                 }
+                layerBufferBuilders.values().stream()
+                        .filter(buffer -> buffer != null)
+                        .forEach(BufferBuilderPool::returnBuffer);
+                layerBufferBuilders.clear();
             });
         }
         this.tileEntities = null;
@@ -233,8 +238,8 @@ public abstract class WorldSceneRenderer {
         return worldUp;
     }
 
-    public void setCameraLookAt(Vector3f eyePos, Vector3f lookAt, Vector3f worldUp) {
-        this.eyePos = eyePos;
+    public void setCameraLookAt(Vector3 eyePos, Vector3f lookAt, Vector3f worldUp) {
+        this.eyePos = eyePos.vector3f();
         this.lookAt = lookAt;
         this.worldUp = worldUp;
         if (viewEntity != null) {
@@ -252,7 +257,7 @@ public abstract class WorldSceneRenderer {
         Vector3 vecX = new Vector3(Math.cos(rotationPitch), 0, Math.sin(rotationPitch));
         Vector3 vecY = new Vector3(0, Math.tan(rotationYaw) * vecX.mag(),0);
         Vector3 pos = vecX.copy().add(vecY).normalize().multiply(radius);
-        setCameraLookAt(pos.add(lookAt.x, lookAt.y, lookAt.z).vector3f(), lookAt, worldUp);
+        setCameraLookAt(pos.add(lookAt.x, lookAt.y, lookAt.z), lookAt, worldUp);
     }
 
     protected PositionedRect getPositionedRect(int x, int y, int width, int height) {
@@ -378,15 +383,15 @@ public abstract class WorldSceneRenderer {
         return vertexBuffers.getBuffer();
     }
 
-    public static BufferBuilder getLayerBufferBuilder(final BlockRenderLayer layer) {
-        BufferBuilder builder = LAYER_BUFFER_BUILDERS.get(layer);
+    protected BufferBuilder getLayerBufferBuilder(final BlockRenderLayer layer) {
+        BufferBuilder builder = layerBufferBuilders.get(layer);
         if (builder != null) {
             return builder;
         }
-        synchronized (LAYER_BUFFER_BUILDERS) {
-            builder = LAYER_BUFFER_BUILDERS.get(layer);
+        synchronized (layerBufferBuilders) {
+            builder = layerBufferBuilders.get(layer);
             if (builder == null) {
-                LAYER_BUFFER_BUILDERS.put(layer, builder = new BufferBuilder(256 * 1024));
+                layerBufferBuilders.put(layer, builder = BufferBuilderPool.borrowBuffer(256 * 1024));
             }
         }
         return builder;
@@ -448,60 +453,61 @@ public abstract class WorldSceneRenderer {
         if (cacheState.get() == CacheState.NEED) {
             cacheState.set(CacheState.COMPILING);
             progress.set(0);
-            maxProgress = renderedBlocksMap.getAnotherMap().keySet().stream().map(Collection::size).reduce(0, Integer::sum) * (BlockRenderLayer.values().length + 1);
+            maxProgress = renderedBlocksMap.getAnotherMap().keySet().stream()
+                    .map(Collection::size)
+                    .reduce(0, Integer::sum) * (BlockRenderLayer.values().length + 1);
 
             thread = new Thread(() -> compileCache(mc, oldRenderLayer, checkDisabledModel));
             thread.start();
-        } else {
-            for (BlockRenderLayer layer : BlockRenderLayer.values()) {
-                int pass = layer == BlockRenderLayer.TRANSLUCENT ? 1 : 0;
-                if (pass == 1) {
-                    renderTESR(0, particleTicks, checkDisabledModel);
-                }
+        }
+        for (BlockRenderLayer layer : BlockRenderLayer.values()) {
+            int pass = layer == BlockRenderLayer.TRANSLUCENT ? 1 : 0;
+            if (pass == 1) {
+                renderTESR(0, particleTicks, checkDisabledModel);
+            }
 
-                GlStateManager.glEnableClientState(32884);
-                OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
-                GlStateManager.glEnableClientState(32888);
-                OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);
-                GlStateManager.glEnableClientState(32888);
-                OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
-                GlStateManager.glEnableClientState(32886);
+            GlStateManager.glEnableClientState(32884);
+            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
+            GlStateManager.glEnableClientState(32888);
+            OpenGlHelper.setClientActiveTexture(OpenGlHelper.lightmapTexUnit);
+            GlStateManager.glEnableClientState(32888);
+            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
+            GlStateManager.glEnableClientState(32886);
 
-                VertexBuffer vbo = getVertexBuffers()[layer.ordinal()];
-                setDefaultPassRenderState(pass);
-                vbo.bindBuffer();
-                this.setupArrayPointers();
-                vbo.drawArrays(7);
-                OpenGlHelper.glBindBuffer(OpenGlHelper.GL_ARRAY_BUFFER, 0);
-                GlStateManager.resetColor();
+            VertexBuffer vbo = getVertexBuffers()[layer.ordinal()];
+            setDefaultPassRenderState(pass);
+            vbo.bindBuffer();
+            this.setupArrayPointers();
+            vbo.drawArrays(7);
+            OpenGlHelper.glBindBuffer(OpenGlHelper.GL_ARRAY_BUFFER, 0);
+            GlStateManager.resetColor();
 
-                for (VertexFormatElement vertexformatelement : DefaultVertexFormats.BLOCK.getElements()) {
-                    VertexFormatElement.EnumUsage enumUsage = vertexformatelement.getUsage();
-                    int k1 = vertexformatelement.getIndex();
+            for (VertexFormatElement vertexformatelement : DefaultVertexFormats.BLOCK.getElements()) {
+                VertexFormatElement.EnumUsage enumUsage = vertexformatelement.getUsage();
+                int k1 = vertexformatelement.getIndex();
 
-                    switch (enumUsage) {
-                        case POSITION:
-                            GlStateManager.glDisableClientState(32884);
-                            break;
-                        case UV:
-                            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit + k1);
-                            GlStateManager.glDisableClientState(32888);
-                            OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
-                            break;
-                        case COLOR:
-                            GlStateManager.glDisableClientState(32886);
-                            GlStateManager.resetColor();
-                    }
+                switch (enumUsage) {
+                    case POSITION:
+                        GlStateManager.glDisableClientState(32884);
+                        break;
+                    case UV:
+                        OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit + k1);
+                        GlStateManager.glDisableClientState(32888);
+                        OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
+                        break;
+                    case COLOR:
+                        GlStateManager.glDisableClientState(32886);
+                        GlStateManager.resetColor();
                 }
             }
-            renderTESR(1, particleTicks, checkDisabledModel);
         }
+        renderTESR(1, particleTicks, checkDisabledModel);
     }
 
     private void compileCache(final Minecraft mc, final BlockRenderLayer oldRenderLayer, final boolean checkDisabledModel) {
+        Thread compilerThread = Thread.currentThread();
         BlockRendererDispatcher blockrendererdispatcher = mc.getBlockRendererDispatcher();
         Map<Collection<BlockPos>, ISceneRenderHook> renderedBlocksMap = this.renderedBlocksMap.getAnotherMap();
-//        try { // render block in each layer
         Arrays.stream(BlockRenderLayer.values()).parallel().forEach(layer -> {
             ForgeHooksClient.setRenderLayer(layer);
             BufferBuilder buffer = getLayerBufferBuilder(layer);
@@ -514,8 +520,7 @@ public abstract class WorldSceneRenderer {
                 buffer.reset();
             }
             ForgeHooksClient.setRenderLayer(null);
-            Thread currentThread = Thread.currentThread();
-            if (currentThread.isInterrupted()) {
+            if (compilerThread.isInterrupted()) {
                 return;
             }
             mc.addScheduledTask(() -> {
@@ -526,17 +531,14 @@ public abstract class WorldSceneRenderer {
                 vertexBuffers.getAnotherBuffer()[layer.ordinal()].bufferData(buf);
             });
         });
-        if (Thread.currentThread().isInterrupted()) {
+        if (compilerThread.isInterrupted()) {
             return;
         }
-//        } finally {
-//            ForgeHooksClient.setRenderLayer(oldRenderLayer);
-//        }
         Set<BlockPos> poses = new HashSet<>();
         renderedBlocksMap.forEach((renderedBlocks, hook) -> {
             for (BlockPos pos : renderedBlocks) {
                 progress.getAndIncrement();
-                if (Thread.currentThread().isInterrupted()) {
+                if (compilerThread.isInterrupted()) {
                     return;
                 }
 //                        if (checkDisabledModel && MultiblockWorldSavedData.modelDisabled.contains(pos)) {
@@ -548,7 +550,7 @@ public abstract class WorldSceneRenderer {
                 }
             }
         });
-        if (Thread.currentThread().isInterrupted()) {
+        if (compilerThread.isInterrupted()) {
             return;
         }
 

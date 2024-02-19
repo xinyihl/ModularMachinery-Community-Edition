@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * A button component with three states: Normal / Hovered / Unavailable.
+ */
 @SuppressWarnings("unused")
 public class Button extends DynamicWidget {
 
@@ -22,6 +25,11 @@ public class Button extends DynamicWidget {
     protected int hoveredTextureX = 0;
     protected int hoveredTextureY = 0;
 
+    protected int unavailableTextureX = 0;
+    protected int unavailableTextureY = 0;
+
+    protected boolean available = true;
+
     protected Consumer<Button> onClickedListener = null;
     protected Function<Button, List<String>> tooltipFunction = null;
 
@@ -30,7 +38,11 @@ public class Button extends DynamicWidget {
         if (isVisible() && textureLocation != null) {
             int texX;
             int texY;
-            if (isMouseOver(mousePos)) {
+
+            if (isUnavailable()) {
+                texX = unavailableTextureX;
+                texY = unavailableTextureY;
+            } else if (isMouseOver(mousePos)) {
                 texX = hoveredTextureX;
                 texY = hoveredTextureY;
             } else {
@@ -45,7 +57,7 @@ public class Button extends DynamicWidget {
     }
 
     @Override
-    public boolean onMouseClicked(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+    public boolean onMouseClick(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
         if (isVisible() && onClickedListener != null) {
             onClickedListener.accept(this);
             return true;
@@ -57,7 +69,7 @@ public class Button extends DynamicWidget {
 
     @Override
     public List<String> getHoverTooltips(final MousePos mousePos) {
-        if (tooltipFunction != null) {
+        if (available && tooltipFunction != null) {
             return tooltipFunction.apply(this);
         }
         return super.getHoverTooltips(mousePos);
@@ -119,6 +131,53 @@ public class Button extends DynamicWidget {
     public Button setHoveredTextureXY(final int hoveredTextureX, final int hoveredTextureY) {
         this.hoveredTextureX = hoveredTextureX;
         this.hoveredTextureY = hoveredTextureY;
+        return this;
+    }
+
+    public int getUnavailableTextureX() {
+        return unavailableTextureX;
+    }
+
+    public Button setUnavailableTextureX(final int unavailableTextureX) {
+        this.unavailableTextureX = unavailableTextureX;
+        return this;
+    }
+
+    public int getUnavailableTextureY() {
+        return unavailableTextureY;
+    }
+
+    public Button setUnavailableTextureY(final int unavailableTextureY) {
+        this.unavailableTextureY = unavailableTextureY;
+        return this;
+    }
+
+    public Button setUnavailableTextureXY(final int unavailableTextureX, final int unavailableTextureY) {
+        this.unavailableTextureX = unavailableTextureX;
+        this.unavailableTextureY = unavailableTextureY;
+        return this;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public boolean isUnavailable() {
+        return !available;
+    }
+
+    public Button setAvailable(final boolean available) {
+        this.available = available;
+        return this;
+    }
+
+    public Button setAvailable() {
+        this.available = true;
+        return this;
+    }
+
+    public Button setUnavailable() {
+        this.available = false;
         return this;
     }
 

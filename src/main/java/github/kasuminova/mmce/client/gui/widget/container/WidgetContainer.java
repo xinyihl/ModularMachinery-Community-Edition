@@ -16,10 +16,7 @@ import java.util.List;
 public abstract class WidgetContainer extends DynamicWidget {
     protected static final ThreadLocal<LinkedList<Rectangle>> SCISSOR_STACK = ThreadLocal.withInitial(LinkedList::new);
 
-    protected int absX;
-    protected int absY;
-
-    public static void enableScissor(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final int width, final int height) {
+    public static void pushScissor(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final int width, final int height) {
         final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
         final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
 
@@ -50,7 +47,7 @@ public abstract class WidgetContainer extends DynamicWidget {
         }
     }
 
-    public static void disableScissor(final RenderSize renderSize) {
+    public static void popScissor(final RenderSize renderSize) {
         if (renderSize.isLimited()) {
             LinkedList<Rectangle> scissorStack = SCISSOR_STACK.get();
             scissorStack.pop();
@@ -64,9 +61,22 @@ public abstract class WidgetContainer extends DynamicWidget {
         }
     }
 
+    public static void enableScissor() {
+        LinkedList<Rectangle> scissorStack = SCISSOR_STACK.get();
+        Rectangle scissorFrame = scissorStack.peekFirst();
+        if (scissorFrame != null) {
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glScissor(scissorFrame.x, scissorFrame.y, scissorFrame.width, scissorFrame.height);
+        }
+    }
+
+    public static void disableScissor() {
+        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+    }
+
     @Override
     public final void preRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        enableScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
 
         try {
             preRenderInternal(gui, renderSize, renderPos, mousePos);
@@ -75,13 +85,13 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            disableScissor(renderSize);
+            popScissor(renderSize);
         }
     }
 
     @Override
     public final void render(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        enableScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
 
         try {
             renderInternal(gui, renderSize, renderPos, mousePos);
@@ -90,13 +100,13 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            disableScissor(renderSize);
+            popScissor(renderSize);
         }
     }
 
     @Override
     public final void postRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        enableScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
 
         try {
             postRenderInternal(gui, renderSize, renderPos, mousePos);
@@ -105,7 +115,7 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            disableScissor(renderSize);
+            popScissor(renderSize);
         }
     }
 
@@ -151,7 +161,7 @@ public abstract class WidgetContainer extends DynamicWidget {
     }
 
     @Override
-    public abstract boolean onMouseClicked(final MousePos mousePos, final RenderPos renderPos, final int mouseButton);
+    public abstract boolean onMouseClick(final MousePos mousePos, final RenderPos renderPos, final int mouseButton);
 
     @Override
     public abstract boolean onMouseReleased(final MousePos mousePos, final RenderPos renderPos);
@@ -166,25 +176,5 @@ public abstract class WidgetContainer extends DynamicWidget {
 
     @Override
     public abstract List<String> getHoverTooltips(final MousePos mousePos);
-
-    // Getter Setters
-
-    public int getAbsX() {
-        return absX;
-    }
-
-    public WidgetContainer setAbsX(final int absX) {
-        this.absX = absX;
-        return this;
-    }
-
-    public int getAbsY() {
-        return absY;
-    }
-
-    public WidgetContainer setAbsY(final int absY) {
-        this.absY = absY;
-        return this;
-    }
 
 }

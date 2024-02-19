@@ -5,7 +5,8 @@ import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
-import net.minecraft.util.ResourceLocation;
+
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 public class Scrollbar extends DynamicWidget {
@@ -20,16 +21,7 @@ public class Scrollbar extends DynamicWidget {
 
     public static final int DEFAULT_SCROLL_UNIT = 1;
 
-    protected ResourceLocation textureLocation = null;
-
-    protected int scrollWidth = DEFAULT_SCROLL_WIDTH;
-    protected int scrollHeight = DEFAULT_SCROLL_HEIGHT;
-
-    protected int textureX = DEFAULT_TEXTURE_X;
-    protected int textureY = DEFAULT_TEXTURE_Y;
-
-    protected int disabledTextureOffsetX = DEFAULT_TEXTURE_OFFSET_X;
-    protected int disabledTextureOffsetY = DEFAULT_TEXTURE_OFFSET_Y;
+    protected final Button4State scroll = new Button4State();
 
     protected int maxScroll = 0;
     protected int minScroll = 0;
@@ -39,41 +31,55 @@ public class Scrollbar extends DynamicWidget {
 
     protected boolean mouseDown = false;
 
+    protected boolean mouseWheelCheckPos = true;
+
+    protected Consumer<Scrollbar> onValueChanged = null;
+
     public Scrollbar() {
-        this.width = scrollWidth;
-        this.height = scrollHeight * 2;
+        this.width = scroll.getWidth();
+        this.height = scroll.getHeight() * 2;
     }
 
     @Override
     public void render(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        if (mouseDown) {
-            handleMouseDragMove(mousePos);
-        }
-
-        gui.getGui().mc.getTextureManager().bindTexture(textureLocation);
-        int offsetX = renderPos.posX();
-        int offsetY = renderPos.posY();
         int height = renderSize.isHeightLimited() ? renderSize.height() : this.height;
+        int scrollHeight = scroll.getHeight();
+        int scrollWidth = scroll.getWidth();
 
         if (this.getRange() == 0) {
-            gui.getGui().drawTexturedModalRect(offsetX, offsetY,
-                    this.textureX + this.disabledTextureOffsetX,
-                    this.textureY + this.disabledTextureOffsetY,
-                    this.scrollWidth, this.scrollHeight
-            );
+            scroll.render(gui, new RenderSize(scrollWidth, scrollHeight), renderPos, mousePos);
         } else {
-            offsetY += (this.currentScroll - this.minScroll) * (height - this.scrollHeight) / this.getRange();
-            gui.getGui().drawTexturedModalRect(offsetX, offsetY, this.textureX, this.textureY, this.scrollWidth, this.scrollHeight);
+            int offsetY = (this.currentScroll - this.minScroll) * (height - scrollHeight) / this.getRange();
+            scroll.render(gui,
+                    new RenderSize(scrollWidth, scrollHeight),
+                    renderPos.add(new RenderPos(0, offsetY)),
+                    mousePos.relativeTo(new RenderPos(0, offsetY)));
         }
     }
 
     @Override
-    public boolean onMouseClicked(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+    public boolean onMouseClick(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
         if (this.getRange() == 0) {
             return false;
         }
-        mouseDown = true;
-        return true;
+
+        int scrollHeight = scroll.getHeight();
+        int offsetY = getRange() == 0 ? 0 : (this.currentScroll - this.minScroll) * (height - scrollHeight) / this.getRange();
+        RenderPos offset = new RenderPos(0, offsetY);
+        MousePos scrollMousePos = mousePos.relativeTo(offset);
+        if (scroll.isMouseOver(scrollMousePos) && scroll.onMouseClick(mousePos, renderPos.subtract(offset), mouseButton)) {
+            return mouseDown = true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean onMouseClickMove(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+        if (mouseDown) {
+            handleMouseDragMove(mousePos);
+        }
+        return super.onMouseClickMove(mousePos, renderPos, mouseButton);
     }
 
     protected void handleMouseDragMove(final MousePos mousePos) {
@@ -84,74 +90,32 @@ public class Scrollbar extends DynamicWidget {
 
     @Override
     public boolean onMouseReleased(final MousePos mousePos, final RenderPos renderPos) {
+        int scrollHeight = scroll.getHeight();
+        int offsetY = getRange() == 0 ? 0 : (this.currentScroll - this.minScroll) * (height - scrollHeight) / this.getRange();
+        RenderPos offset = new RenderPos(0, offsetY);
+        MousePos scrollMousePos = mousePos.relativeTo(offset);
+        scroll.onMouseReleased(mousePos, renderPos.subtract(offset));
+
         mouseDown = false;
         return false;
     }
 
     @Override
     public boolean onMouseDWheel(final MousePos mousePos, final RenderPos renderPos, final int dWheel) {
+        if (mouseWheelCheckPos) {
+            if (!isMouseOver(mousePos)) {
+                return false;
+            }
+        }
         int wheel = Math.max(Math.min(-dWheel, 1), -1);
         setCurrentScroll(this.currentScroll + (wheel * this.scrollUnit));
-
         return true;
     }
 
-    // Scroll Width / Height
+    // Scroll button
 
-    public int getScrollWidth() {
-        return scrollWidth;
-    }
-
-    public Scrollbar setScrollWidth(final int scrollWidth) {
-        this.scrollWidth = scrollWidth;
-        return this;
-    }
-
-    public int getScrollHeight() {
-        return scrollHeight;
-    }
-
-    public Scrollbar setScrollHeight(final int scrollHeight) {
-        this.scrollHeight = scrollHeight;
-        return this;
-    }
-
-    // Scroll Texture Enabled/Disabled X/Y
-
-    public int getTextureX() {
-        return textureX;
-    }
-
-    public Scrollbar setTextureX(final int textureX) {
-        this.textureX = textureX;
-        return this;
-    }
-
-    public int getTextureY() {
-        return textureY;
-    }
-
-    public Scrollbar setTextureY(final int textureY) {
-        this.textureY = textureY;
-        return this;
-    }
-
-    public int getDisabledTextureOffsetX() {
-        return disabledTextureOffsetX;
-    }
-
-    public Scrollbar setDisabledTextureOffsetX(final int disabledTextureOffsetX) {
-        this.disabledTextureOffsetX = disabledTextureOffsetX;
-        return this;
-    }
-
-    public int getDisabledTextureOffsetY() {
-        return disabledTextureOffsetY;
-    }
-
-    public Scrollbar setDisabledTextureOffsetY(final int disabledTextureOffsetY) {
-        this.disabledTextureOffsetY = disabledTextureOffsetY;
-        return this;
+    public Button4State getScroll() {
+        return scroll;
     }
 
     // Scroll Range
@@ -169,7 +133,12 @@ public class Scrollbar extends DynamicWidget {
     }
 
     public Scrollbar setCurrentScroll(final int currentScroll) {
-        this.currentScroll = Math.max(Math.min(currentScroll, this.maxScroll), this.minScroll);
+        if (this.currentScroll != currentScroll) {
+            this.currentScroll = Math.max(Math.min(currentScroll, this.maxScroll), this.minScroll);
+            if (onValueChanged != null) {
+                onValueChanged.accept(this);
+            }
+        }
         return this;
     }
 
@@ -184,6 +153,7 @@ public class Scrollbar extends DynamicWidget {
         if (this.minScroll > this.maxScroll) {
             this.maxScroll = this.minScroll;
         }
+        this.scroll.setAvailable(getRange() != 0);
 
         setCurrentScroll(this.currentScroll);
         return this;
@@ -197,6 +167,28 @@ public class Scrollbar extends DynamicWidget {
 
     public Scrollbar setScrollUnit(final int scrollUnit) {
         this.scrollUnit = Math.max(scrollUnit, 1);
+        return this;
+    }
+
+    // Handlers
+
+    public Consumer<Scrollbar> getOnValueChanged() {
+        return onValueChanged;
+    }
+
+    public Scrollbar setOnValueChanged(final Consumer<Scrollbar> onValueChanged) {
+        this.onValueChanged = onValueChanged;
+        return this;
+    }
+
+    // Handle mouse wheel
+
+    public boolean isMouseWheelCheckPos() {
+        return mouseWheelCheckPos;
+    }
+
+    public Scrollbar setMouseWheelCheckPos(final boolean mouseWheelCheckPos) {
+        this.mouseWheelCheckPos = mouseWheelCheckPos;
         return this;
     }
 }

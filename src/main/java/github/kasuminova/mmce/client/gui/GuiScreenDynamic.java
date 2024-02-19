@@ -2,7 +2,6 @@ package github.kasuminova.mmce.client.gui;
 
 import github.kasuminova.mmce.client.gui.util.MousePos;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
-import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
 
@@ -35,7 +34,7 @@ public abstract class GuiScreenDynamic extends GuiScreen {
     public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
         widgetController.render(new MousePos(mouseX, mouseY));
-        widgetController.postRender(new MousePos(mouseX, mouseY));
+        widgetController.postRender(new MousePos(mouseX, mouseY), true);
     }
 
     @Override

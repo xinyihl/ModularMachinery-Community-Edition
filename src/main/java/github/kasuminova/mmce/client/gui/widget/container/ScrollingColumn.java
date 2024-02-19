@@ -8,7 +8,6 @@ import github.kasuminova.mmce.client.gui.widget.Scrollbar;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
-import net.minecraft.client.gui.GuiScreen;
 
 import java.util.Collections;
 import java.util.List;
@@ -58,6 +57,7 @@ public class ScrollingColumn extends Column {
     public void initWidget(final WidgetGui gui) {
         super.initWidget(gui);
         scrollbar.setMargin(0, 1, 1, 1);
+        scrollbar.setMouseWheelCheckPos(false);
     }
 
     @Override
@@ -78,12 +78,12 @@ public class ScrollingColumn extends Column {
     public void update(final WidgetGui gui) {
         super.update(gui);
         scrollbar.setRange(0, Math.max(getTotalHeight() - height, 0));
-        scrollbar.setScrollUnit(scrollbar.getRange() / 20);
+        scrollbar.setScrollUnit(scrollbar.getRange() / 10);
         scrollbar.update(gui);
     }
 
     @Override
-    public boolean onMouseClicked(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+    public boolean onMouseClick(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
         int width = this.width;
         int height = this.height;
 
@@ -104,7 +104,7 @@ public class ScrollingColumn extends Column {
                 MousePos relativeMousePos = mousePos.relativeTo(widgetRenderPos);
                 if (widget.isMouseOver(relativeMousePos)) {
                     RenderPos absRenderPos = widgetRenderPos.add(renderPos);
-                    if (widget.onMouseClicked(relativeMousePos, absRenderPos, mouseButton)) {
+                    if (widget.onMouseClick(relativeMousePos, absRenderPos, mouseButton)) {
                         return true;
                     }
                 }
@@ -117,7 +117,7 @@ public class ScrollingColumn extends Column {
                 height - (scrollbar.getMarginUp() + scrollbar.getHeight() + scrollbar.getMarginDown()));
         MousePos scrollbarRelativeMousePos = mousePos.relativeTo(scrollbarRenderPos);
         if (scrollbar.isMouseOver(scrollbarRelativeMousePos)) {
-            return scrollbar.onMouseClicked(scrollbarRelativeMousePos, renderPos.add(scrollbarRenderPos), mouseButton);
+            return scrollbar.onMouseClick(scrollbarRelativeMousePos, renderPos.add(scrollbarRenderPos), mouseButton);
         }
 
         return false;
@@ -145,7 +145,10 @@ public class ScrollingColumn extends Column {
             y += widget.getMarginUp() + widget.getHeight() + widget.getMarginDown();
         }
 
-        return false;
+        RenderPos scrollbarRenderPos = new RenderPos(
+                width - (scrollbar.getMarginLeft() + scrollbar.getWidth() + scrollbar.getMarginRight()),
+                height - (scrollbar.getMarginUp() + scrollbar.getHeight() + scrollbar.getMarginDown()));
+        return scrollbar.onMouseClickMove(mousePos.relativeTo(scrollbarRenderPos), renderPos.add(scrollbarRenderPos), mouseButton);
     }
 
     @Override
@@ -309,9 +312,17 @@ public class ScrollingColumn extends Column {
         return this;
     }
 
+    @Override
+    public ScrollingColumn setWidthHeight(final int width, final int height) {
+        return setWidth(width).setHeight(height);
+    }
+
     public int getTotalHeight() {
         int total = 0;
         for (final DynamicWidget widget : widgets) {
+            if (widget.isUseAbsPos()) {
+                continue;
+            }
             total += widget.getMarginUp() + widget.getHeight() + widget.getMarginDown();
         }
         return total;

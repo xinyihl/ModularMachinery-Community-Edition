@@ -8,9 +8,14 @@ import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
 import java.util.Collections;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public abstract class DynamicWidget {
     protected int width = 0;
     protected int height = 0;
+
+    protected int absX;
+    protected int absY;
+    protected boolean useAbsPos = false;
 
     protected int marginLeft = 0;
     protected int marginRight = 0;
@@ -41,7 +46,7 @@ public abstract class DynamicWidget {
     public void onGUIClosed(WidgetGui gui) {
     }
 
-    public boolean onMouseClicked(MousePos mousePos, RenderPos renderPos, int mouseButton) {
+    public boolean onMouseClick(MousePos mousePos, RenderPos renderPos, int mouseButton) {
         return false;
     }
 
@@ -111,6 +116,46 @@ public abstract class DynamicWidget {
     public DynamicWidget setHeight(final int height) {
         this.height = height;
         return this;
+    }
+
+    public DynamicWidget setWidthHeight(final int width, final int height) {
+        return setWidth(width).setHeight(height);
+    }
+
+    // Absolute position
+
+    public int getAbsX() {
+        return absX;
+    }
+
+    public DynamicWidget setAbsX(final int absX) {
+        this.useAbsPos = true;
+        this.absX = absX;
+        return this;
+    }
+
+    public int getAbsY() {
+        return absY;
+    }
+
+    public DynamicWidget setAbsY(final int absY) {
+        this.useAbsPos = true;
+        this.absY = absY;
+        return this;
+    }
+
+    public DynamicWidget setAbsXY(final int absX, final int absY) {
+        this.useAbsPos = true;
+        return setAbsX(absX).setAbsY(absY);
+    }
+
+    public DynamicWidget setUseAbsPos(final boolean useAbsPos) {
+        this.useAbsPos = useAbsPos;
+        return this;
+    }
+
+    public boolean isUseAbsPos() {
+        return useAbsPos;
     }
 
     // Margin

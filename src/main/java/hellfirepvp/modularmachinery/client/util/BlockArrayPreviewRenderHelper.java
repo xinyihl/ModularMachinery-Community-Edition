@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.client.util;
 
+import github.kasuminova.mmce.client.gui.widget.preview.WorldSceneRendererWidget;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
