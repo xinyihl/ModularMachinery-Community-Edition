@@ -178,6 +178,10 @@ public class DynamicMachineRenderContext {
         this.shiftSnap = ClientScheduler.getClientTick();
     }
 
+    public void setShiftSnap(final long shiftSnap) {
+        this.shiftSnap = shiftSnap;
+    }
+
     public void releaseSamples() {
         this.shiftSnap = -1;
     }

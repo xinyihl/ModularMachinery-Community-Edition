@@ -109,20 +109,23 @@ public class RequirementImpetus extends ComponentRequirement.MultiCompParalleliz
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
-        switch (actionType) {
-            case INPUT -> {
-                return consumeAll(convertImpetusProviders(components), context, maxParallelism, true);
+        if (parallelizeUnaffected) {
+            int max = switch (actionType) {
+                case INPUT -> consumeAll(convertImpetusProviders(components), context, 1, true);
+                case OUTPUT -> supplyAll(convertImpetusProviders(components), context, 1, true);
+            };
+            if (max >= 1) {
+                return maxParallelism;
             }
-            case OUTPUT -> {
-                return supplyAll(convertImpetusProviders(components), context, maxParallelism, true);
-            }
+            return 0;
         }
-
-        return 0;
+        return switch (actionType) {
+            case INPUT -> consumeAll(convertImpetusProviders(components), context, maxParallelism, true);
+            case OUTPUT -> supplyAll(convertImpetusProviders(components), context, maxParallelism, true);
+        };
     }
 
     private int supplyAll(final List<ImpetusProviderCopy> impetusCopies,

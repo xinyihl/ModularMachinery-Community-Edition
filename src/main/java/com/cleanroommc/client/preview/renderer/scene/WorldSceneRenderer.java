@@ -3,6 +3,9 @@ package com.cleanroommc.client.preview.renderer.scene;
 import com.cleanroommc.client.util.*;
 import com.cleanroommc.client.util.world.LRDummyWorld;
 import github.kasuminova.mmce.client.util.BufferBuilderPool;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -33,6 +36,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -56,7 +60,17 @@ public abstract class WorldSceneRenderer {
 
     protected static final AtomicInteger THREAD_ID = new AtomicInteger(0);
 
-    protected Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
+    protected static final Object2IntMap<BlockRenderLayer> LAYER_PROGRESS_UNITS = new Object2IntOpenHashMap<>();
+
+    protected volatile Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
+
+    static {
+        LAYER_PROGRESS_UNITS.defaultReturnValue(1);
+        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.SOLID, 4);
+        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.CUTOUT_MIPPED, 1);
+        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.CUTOUT, 3);
+        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.TRANSLUCENT, 2);
+    }
 
     enum CacheState {
         UNUSED,
@@ -88,7 +102,7 @@ public abstract class WorldSceneRenderer {
 
     public WorldSceneRenderer(LRDummyWorld world) {
         this.dummyWorld = world;
-        renderedBlocksMap = new LRMap<>(new LinkedHashMap<>(), new LinkedHashMap<>());
+        renderedBlocksMap = new LRMap<>(new ConcurrentHashMap<>(), new ConcurrentHashMap<>());
         cacheState = new AtomicReference<>(CacheState.UNUSED);
     }
 
@@ -101,10 +115,7 @@ public abstract class WorldSceneRenderer {
                 this.vertexBuffers.getBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
                 this.vertexBuffers.getAnotherBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
             }
-            if (cacheState.get() == CacheState.COMPILING && thread != null) {
-                thread.interrupt();
-                thread = null;
-            }
+            stopCompileCache();
             cacheState.set(CacheState.NEED);
         }
         this.useCache = useCache;
@@ -114,15 +125,15 @@ public abstract class WorldSceneRenderer {
     public WorldSceneRenderer deleteCacheBuffer() {
         if (useCache) {
             Thread thread = this.thread;
-            if (cacheState.get() == CacheState.COMPILING && this.thread != null) {
-                this.thread.interrupt();
-                this.thread = null;
-            }
+            stopCompileCache();
 
             VertexBuffer[] bufferRef = this.vertexBuffers.getBuffer();
             VertexBuffer[] anotherBufferRef = this.vertexBuffers.getAnotherBuffer();
             this.vertexBuffers.setLeft(null);
             this.vertexBuffers.setRight(null);
+
+            Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = this.layerBufferBuilders;
+            this.layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
 
             CompletableFuture.runAsync(() -> {
                 if (thread != null && thread.isAlive()) {
@@ -152,12 +163,20 @@ public abstract class WorldSceneRenderer {
     }
 
     public WorldSceneRenderer needCompileCache() {
-        if (cacheState.get() == CacheState.COMPILING && thread != null) {
-            thread.interrupt();
-            thread = null;
+        if (useCache) {
+            stopCompileCache();
+            cacheState.set(CacheState.NEED);
+        } else {
+            switchLRRenderer(Minecraft.getMinecraft());
         }
-        cacheState.set(CacheState.NEED);
         return this;
+    }
+
+    public void stopCompileCache() {
+        if (cacheState.get() == CacheState.COMPILING) {
+            cacheState.set(CacheState.UNUSED);
+            thread.interrupt();
+        }
     }
 
     public WorldSceneRenderer setBeforeWorldRender(Consumer<WorldSceneRenderer> callback) {
@@ -364,11 +383,22 @@ public abstract class WorldSceneRenderer {
         return cacheState.get() == CacheState.COMPILING;
     }
 
-    public double getCompileProgress() {
-        if (maxProgress > 1000) {
-            return progress.get() * 1. / maxProgress;
+    public boolean isCompilerThreadAlive() {
+        if (thread != null) {
+            if (thread.isAlive()) {
+                return true;
+            }
+            thread = null;
         }
-        return 0;
+        return false;
+    }
+
+    public float getCompileProgress() {
+        // 1000 blocks, 11 is per block unit.
+        if (maxProgress <= 1000 * 11) {
+            return -1;
+        }
+        return (float) progress.get() / maxProgress;
     }
 
     public World getWorld() {
@@ -403,19 +433,21 @@ public abstract class WorldSceneRenderer {
     }
 
     public void refreshCache() {
-        if (cacheState.get() == CacheState.COMPILING) {
+        if (isCompiling() || isCompilerThreadAlive()) {
             return;
         }
         cacheState.set(CacheState.COMPILING);
         progress.set(0);
-        maxProgress = renderedBlocksMap.getAnotherMap().keySet().stream().map(Collection::size).reduce(0, Integer::sum) * (BlockRenderLayer.values().length + 1);
+        maxProgress = renderedBlocksMap.getAnotherMap().keySet().stream()
+                .map(Collection::size)
+                .reduce(0, Integer::sum) * 11;
 
         BlockRenderLayer oldRenderLayer = MinecraftForgeClient.getRenderLayer();
         Minecraft mc = Minecraft.getMinecraft();
         boolean checkDisabledModel = getWorld() == mc.world || (getWorld() instanceof TrackedDummyWorld && ((TrackedDummyWorld) getWorld()).proxyWorld == mc.world);
 
         thread = new Thread(() -> compileCache(mc, oldRenderLayer, checkDisabledModel));
-        thread.setName("PreviewCompiler-" + THREAD_ID.getAndIncrement());
+        thread.setName("MMCE-PreviewCompiler-" + THREAD_ID.getAndIncrement());
         thread.start();
     }
 
@@ -428,7 +460,7 @@ public abstract class WorldSceneRenderer {
                 if (pass == 1) {
                     renderTESR(0, particleTicks, checkDisabledModel);
                 }
-                renderedBlocksMap.getMap().forEach((renderedBlocks, hook)->{
+                renderedBlocksMap.getMap().forEach((renderedBlocks, hook) -> {
                     if (hook != null) {
                         hook.apply(false, pass, layer);
                     } else {
@@ -437,7 +469,7 @@ public abstract class WorldSceneRenderer {
                     BufferBuilder buffer = Tessellator.getInstance().getBuffer();
                     buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
 
-                    renderBlocks(checkDisabledModel, blockrendererdispatcher, layer, buffer, renderedBlocks, getWorld());
+                    renderBlocks(checkDisabledModel, blockrendererdispatcher, layer, buffer, renderedBlocks, getWorld(), 0);
 
                     Tessellator.getInstance().draw();
                     Tessellator.getInstance().getBuffer().setTranslation(0, 0, 0);
@@ -451,14 +483,7 @@ public abstract class WorldSceneRenderer {
 
     protected void renderCacheBuffer(Minecraft mc, BlockRenderLayer oldRenderLayer, float particleTicks, boolean checkDisabledModel) {
         if (cacheState.get() == CacheState.NEED) {
-            cacheState.set(CacheState.COMPILING);
-            progress.set(0);
-            maxProgress = renderedBlocksMap.getAnotherMap().keySet().stream()
-                    .map(Collection::size)
-                    .reduce(0, Integer::sum) * (BlockRenderLayer.values().length + 1);
-
-            thread = new Thread(() -> compileCache(mc, oldRenderLayer, checkDisabledModel));
-            thread.start();
+            refreshCache();
         }
         for (BlockRenderLayer layer : BlockRenderLayer.values()) {
             int pass = layer == BlockRenderLayer.TRANSLUCENT ? 1 : 0;
@@ -508,19 +533,20 @@ public abstract class WorldSceneRenderer {
         Thread compilerThread = Thread.currentThread();
         BlockRendererDispatcher blockrendererdispatcher = mc.getBlockRendererDispatcher();
         Map<Collection<BlockPos>, ISceneRenderHook> renderedBlocksMap = this.renderedBlocksMap.getAnotherMap();
-        Arrays.stream(BlockRenderLayer.values()).parallel().forEach(layer -> {
+        for (final BlockRenderLayer layer : BlockRenderLayer.values()) {
+            int progressUnit = LAYER_PROGRESS_UNITS.get(layer);
             ForgeHooksClient.setRenderLayer(layer);
             BufferBuilder buffer = getLayerBufferBuilder(layer);
             synchronized (buffer) {
                 buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.BLOCK);
                 for (final Collection<BlockPos> renderedBlocks : renderedBlocksMap.keySet()) {
-                    renderBlocks(checkDisabledModel, blockrendererdispatcher, layer, buffer, renderedBlocks, getLRDummyWorld().getAnotherWorld());
+                    renderBlocks(checkDisabledModel, blockrendererdispatcher, layer, buffer, renderedBlocks, getLRDummyWorld().getAnotherWorld(), progressUnit);
                 }
                 buffer.finishDrawing();
                 buffer.reset();
             }
             ForgeHooksClient.setRenderLayer(null);
-            if (compilerThread.isInterrupted()) {
+            if (!isCompiling()) {
                 return;
             }
             mc.addScheduledTask(() -> {
@@ -530,15 +556,15 @@ public abstract class WorldSceneRenderer {
                 ByteBuffer buf = buffer.getByteBuffer();
                 vertexBuffers.getAnotherBuffer()[layer.ordinal()].bufferData(buf);
             });
-        });
-        if (compilerThread.isInterrupted()) {
+        }
+        if (!isCompiling()) {
             return;
         }
         Set<BlockPos> poses = new HashSet<>();
         renderedBlocksMap.forEach((renderedBlocks, hook) -> {
             for (BlockPos pos : renderedBlocks) {
                 progress.getAndIncrement();
-                if (compilerThread.isInterrupted()) {
+                if (!isCompiling()) {
                     return;
                 }
 //                        if (checkDisabledModel && MultiblockWorldSavedData.modelDisabled.contains(pos)) {
@@ -550,21 +576,24 @@ public abstract class WorldSceneRenderer {
                 }
             }
         });
-        if (compilerThread.isInterrupted()) {
+        if (!isCompiling()) {
             return;
         }
 
         tileEntities = poses;
         cacheState.set(CacheState.COMPILED);
-        thread = null;
         maxProgress = -1;
 
+        switchLRRenderer(mc);
+
+        thread = null;
+    }
+
+    protected void switchLRRenderer(final Minecraft mc) {
         dummyWorld.setUseLeft(!dummyWorld.isUseLeft());
         vertexBuffers.setUseLeft(!vertexBuffers.isUseLeft());
-        this.renderedBlocksMap.setUseLeft(!this.renderedBlocksMap.isUseLeft());
-        mc.addScheduledTask(() -> {
-            this.renderedBlocksMap.getAnotherMap().clear();
-        });
+        renderedBlocksMap.setUseLeft(!renderedBlocksMap.isUseLeft());
+        renderedBlocksMap.getAnotherMap().clear();
     }
 
     private void renderBlocks(final boolean checkDisabledModel,
@@ -572,10 +601,11 @@ public abstract class WorldSceneRenderer {
                               final BlockRenderLayer layer,
                               final BufferBuilder buffer,
                               final Collection<BlockPos> renderedBlocks,
-                              final World world) {
+                              final World world,
+                              final int progressUnit) {
         for (BlockPos pos : renderedBlocks) {
             if (maxProgress > 0) {
-                progress.getAndIncrement();
+                progress.getAndAdd(progressUnit);
             }
 //            if (checkDisabledModel && MultiblockWorldSavedData.modelDisabled.contains(pos)) {
 //                continue;
@@ -636,7 +666,6 @@ public abstract class WorldSceneRenderer {
         }
         ForgeHooksClient.setRenderPass(-1);
         RenderHelper.disableStandardItemLighting();
-
     }
 
     public static void setDefaultPassRenderState(int pass) {

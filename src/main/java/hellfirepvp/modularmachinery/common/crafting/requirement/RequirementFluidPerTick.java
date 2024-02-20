@@ -92,10 +92,15 @@ public class RequirementFluidPerTick extends ComponentRequirement.PerTickParalle
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
+        if (parallelizeUnaffected) {
+            if (doFluidIOInternal(components, context, 1) >= 1) {
+                return maxParallelism;
+            }
+            return 0;
+        }
         return doFluidIOInternal(components, context, maxParallelism);
     }
 

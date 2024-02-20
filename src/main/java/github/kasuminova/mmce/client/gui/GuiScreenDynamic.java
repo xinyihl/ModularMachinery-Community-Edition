@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.client.gui;
 
 import github.kasuminova.mmce.client.gui.util.MousePos;
+import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Mouse;
@@ -33,8 +34,21 @@ public abstract class GuiScreenDynamic extends GuiScreen {
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float partialTicks) {
         super.drawScreen(mouseX, mouseY, partialTicks);
-        widgetController.render(new MousePos(mouseX, mouseY));
+        widgetController.render(new MousePos(mouseX, mouseY), true);
         widgetController.postRender(new MousePos(mouseX, mouseY), true);
+        renderHoveredToolTip(mouseX, mouseY, false);
+    }
+
+    protected void renderHoveredToolTip(final int mouseX, final int mouseY, final boolean translateMousePos) {
+        MousePos mousePos = new MousePos(mouseX, mouseY);
+        List<String> hoverTooltips = widgetController.getHoverTooltips(mousePos);
+        if (hoverTooltips.isEmpty()) {
+            return;
+        }
+        if (translateMousePos) {
+            mousePos = mousePos.relativeTo(new RenderPos(guiLeft, guiTop));
+        }
+        this.drawHoveringText(hoverTooltips, mousePos.mouseX(), mousePos.mouseY(), fontRenderer);
     }
 
     @Override

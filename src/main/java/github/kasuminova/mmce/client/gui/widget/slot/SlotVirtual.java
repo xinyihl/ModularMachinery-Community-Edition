@@ -6,6 +6,7 @@ import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.container.WidgetContainer;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
@@ -61,18 +62,24 @@ public class SlotVirtual extends DynamicWidget {
             return;
         }
 
+        // TODO The first rendered ItemStack doesn't seem to work too accurately.
         RenderHelper.disableStandardItemLighting();
+        GlStateManager.disableBlend();
         GlStateManager.enableDepth();
         RenderHelper.enableGUIStandardItemLighting();
 
         RenderItem ri = mc.getRenderItem();
         rx += 1;
         ry += 1;
-        ri.renderItemAndEffectIntoGUI(stackInSlot, rx, ry);
+        try {
+            ri.renderItemAndEffectIntoGUI(stackInSlot, rx, ry);
+        } catch (Exception e) {
+            ModularMachinery.log.warn("Failed to render virtual slot item!", e);
+        }
+
         ri.renderItemOverlays(mc.fontRenderer, stackInSlot, rx, ry);
         drawHoverOverlay(mousePos, rx, ry);
 
-        GlStateManager.disableBlend();
         RenderHelper.disableStandardItemLighting();
         GlStateManager.color(1F, 1F, 1F, 1F);
     }

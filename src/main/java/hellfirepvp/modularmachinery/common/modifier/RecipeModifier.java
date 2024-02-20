@@ -188,6 +188,14 @@ public class RecipeModifier {
         return operation;
     }
 
+    public RecipeModifier multiply(final float value) {
+        return new RecipeModifier(target, ioTarget, modifier * value, operation, chance);
+    }
+
+    public RecipeModifier add(final float value) {
+        return new RecipeModifier(target, ioTarget, modifier + value, operation, chance);
+    }
+
     public static class ModifierApplier {
         public static final ModifierApplier DEFAULT_APPLIER = new ModifierApplier();
 

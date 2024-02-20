@@ -63,14 +63,6 @@ public class Button5State extends Button4State {
         return false;
     }
 
-    @Override
-    public List<String> getHoverTooltips(final MousePos mousePos) {
-        if (clicked) {
-            return Collections.emptyList();
-        }
-        return super.getHoverTooltips(mousePos);
-    }
-
     public Button5State setClickedTextureXY(final int clickedTextureX, final int clickedTextureY) {
         this.clickedTextureX = clickedTextureX;
         this.clickedTextureY = clickedTextureY;

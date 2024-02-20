@@ -6,6 +6,7 @@ import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -110,6 +111,19 @@ public class Scrollbar extends DynamicWidget {
         int wheel = Math.max(Math.min(-dWheel, 1), -1);
         setCurrentScroll(this.currentScroll + (wheel * this.scrollUnit));
         return true;
+    }
+
+    @Override
+    public List<String> getHoverTooltips(final MousePos mousePos) {
+        int scrollHeight = scroll.getHeight();
+        int offsetY = getRange() == 0 ? 0 : (this.currentScroll - this.minScroll) * (height - scrollHeight) / this.getRange();
+        RenderPos offset = new RenderPos(0, offsetY);
+        MousePos scrollMousePos = mousePos.relativeTo(offset);
+        if (scroll.isMouseOver(scrollMousePos)) {
+            return scroll.getHoverTooltips(mousePos);
+        }
+
+        return super.getHoverTooltips(mousePos);
     }
 
     // Scroll button

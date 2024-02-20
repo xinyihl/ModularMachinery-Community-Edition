@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RequirementCatalyst extends RequirementIngredientArray {
     protected final List<RecipeModifier> modifierList = new ArrayList<>();
@@ -22,14 +23,17 @@ public class RequirementCatalyst extends RequirementIngredientArray {
 
     public RequirementCatalyst(ItemStack item) {
         super(Collections.singletonList(new ChancedIngredientStack(item)));
+        setParallelizeUnaffected(true);
     }
 
     public RequirementCatalyst(String oreDictName, int amount) {
         super(Collections.singletonList(new ChancedIngredientStack(oreDictName, amount)));
+        setParallelizeUnaffected(true);
     }
 
     public RequirementCatalyst(List<ChancedIngredientStack> ingredients) {
         super(ingredients);
+        setParallelizeUnaffected(true);
     }
 
     public void addModifier(RecipeModifier modifier) {
@@ -48,9 +52,7 @@ public class RequirementCatalyst extends RequirementIngredientArray {
     @Override
     public CraftCheck canStartCrafting(List<ProcessingComponent<?>> components, RecipeCraftingContext context) {
         if (super.canStartCrafting(components, context).isSuccess() && !isRequired) {
-            for (RecipeModifier modifier : modifierList) {
-                context.addPermanentModifier(modifier);
-            }
+            addModifierToContext(context);
             isRequired = true;
             return CraftCheck.success();
         } else {
@@ -63,15 +65,25 @@ public class RequirementCatalyst extends RequirementIngredientArray {
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
         int result = super.getMaxParallelism(components, context, maxParallelism);
         if (result >= 1 && !isRequired) {
-            for (RecipeModifier modifier : modifierList) {
-                context.addPermanentModifier(modifier);
-            }
+            addModifierToContext(context);
             isRequired = true;
         } else {
             isRequired = false;
         }
         // It is an optional input, so it should not theoretically return the maximum number of consumable quantities.
         return maxParallelism;
+    }
+
+    protected void addModifierToContext(final RecipeCraftingContext context) {
+        if (parallelism > 1) {
+            for (RecipeModifier mod : modifierList) {
+                context.addPermanentModifier(mod.multiply(parallelism));
+            }
+        } else {
+            for (RecipeModifier modifier : modifierList) {
+                context.addPermanentModifier(modifier);
+            }
+        }
     }
 
     @Override

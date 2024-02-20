@@ -8,11 +8,15 @@ import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
 import net.minecraft.client.renderer.GlStateManager;
 import org.lwjgl.input.Mouse;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class WidgetController {
+
+    public static final ThreadLocal<RenderPos> TRANSLATE_STATE = ThreadLocal.withInitial(() -> new RenderPos(0, 0));
 
     protected final WidgetGui gui;
     protected final List<WidgetContainer> containers = new ArrayList<>();
@@ -27,42 +31,51 @@ public class WidgetController {
         containers.add(widgetContainer);
     }
 
-    public void render(final MousePos mousePos) {
+    public void render(final MousePos mousePos, final boolean translatePos) {
         WidgetGui gui = this.gui;
 
-        final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
-        final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
+        final int guiLeft = gui.getGuiLeft();
+        final int guiTop = gui.getGuiTop();
+        RenderPos offset = new RenderPos(guiLeft, guiTop);
 
         GlStateManager.pushMatrix();
-        GlStateManager.translate(guiLeft, guiTop, 0F);
+        if (translatePos) {
+            GlStateManager.translate(guiLeft, guiTop, 0F);
+            TRANSLATE_STATE.set(TRANSLATE_STATE.get().add(offset));
+        }
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(guiLeft + container.getAbsX(), guiTop + container.getAbsY());
-            RenderPos relativeRenderPos = renderPos.subtract(new RenderPos(guiLeft, guiTop));
+            RenderPos relativeRenderPos = renderPos.subtract(offset);
             MousePos relativeMousePos = mousePos.relativeTo(renderPos);
             RenderSize renderSize = new RenderSize(container.getWidth(), container.getHeight());
             container.preRender(gui, renderSize, relativeRenderPos, relativeMousePos);
         }
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(guiLeft + container.getAbsX(), guiTop + container.getAbsY());
-            RenderPos relativeRenderPos = renderPos.subtract(new RenderPos(guiLeft, guiTop));
+            RenderPos relativeRenderPos = renderPos.subtract(offset);
             MousePos relativeMousePos = mousePos.relativeTo(renderPos);
             RenderSize renderSize = new RenderSize(container.getWidth(), container.getHeight());
             container.render(gui, renderSize, relativeRenderPos, relativeMousePos);
         }
 
+        if (translatePos) {
+            TRANSLATE_STATE.set(TRANSLATE_STATE.get().subtract(offset));
+        }
         GlStateManager.popMatrix();
     }
 
     public void postRender(final MousePos mousePos, final boolean translatePos) {
         WidgetGui gui = this.gui;
 
-        final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
-        final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
+        final int guiLeft = gui.getGuiLeft();
+        final int guiTop = gui.getGuiTop();
+        RenderPos offset = new RenderPos(guiLeft, guiTop);
 
         GlStateManager.pushMatrix();
         if (translatePos) {
             GlStateManager.translate(guiLeft, guiTop, 0F);
+            TRANSLATE_STATE.set(TRANSLATE_STATE.get().add(offset));
         }
 
         for (final WidgetContainer container : containers) {
@@ -73,12 +86,15 @@ public class WidgetController {
             container.postRender(gui, renderSize, relativeRenderPos, relativeMousePos);
         }
 
+        if (translatePos) {
+            TRANSLATE_STATE.set(TRANSLATE_STATE.get().subtract(offset));
+        }
         GlStateManager.popMatrix();
     }
 
     public void renderTooltip(final MousePos mousePos) {
-        final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
-        final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
+        final int guiLeft = gui.getGuiLeft();
+        final int guiTop = gui.getGuiTop();
 
         List<String> hoverTooltips = getHoverTooltips(mousePos);
         if (!hoverTooltips.isEmpty()) {
@@ -116,8 +132,8 @@ public class WidgetController {
     public boolean onMouseClicked(final MousePos mousePos, final int mouseButton) {
         WidgetGui gui = this.gui;
 
-        final int x = (gui.getWidth() - gui.getXSize()) / 2;
-        final int y = (gui.getHeight() - gui.getYSize()) / 2;
+        final int x = gui.getGuiLeft();
+        final int y = gui.getGuiTop();
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(x + container.getAbsX(), y + container.getAbsY());
@@ -136,8 +152,8 @@ public class WidgetController {
     public boolean onMouseClickMove(final MousePos mousePos, final int mouseButton) {
         WidgetGui gui = this.gui;
 
-        final int x = (gui.getWidth() - gui.getXSize()) / 2;
-        final int y = (gui.getHeight() - gui.getYSize()) / 2;
+        final int x = gui.getGuiLeft();
+        final int y = gui.getGuiTop();
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(x + container.getAbsX(), y + container.getAbsY());
@@ -154,8 +170,8 @@ public class WidgetController {
     public boolean onMouseReleased(final MousePos mousePos) {
         WidgetGui gui = this.gui;
 
-        final int x = (gui.getWidth() - gui.getXSize()) / 2;
-        final int y = (gui.getHeight() - gui.getYSize()) / 2;
+        final int x = gui.getGuiLeft();
+        final int y = gui.getGuiTop();
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(x + container.getAbsX(), y + container.getAbsY());
@@ -170,14 +186,14 @@ public class WidgetController {
     }
 
     public boolean onMouseInput(final MousePos mousePos) {
-        final int wheel = Mouse.getEventDWheel();
+        final int wheel = Mouse.getDWheel();
         if (wheel == 0) {
             return false;
         }
         WidgetGui gui = this.gui;
 
-        final int x = (gui.getWidth() - gui.getXSize()) / 2;
-        final int y = (gui.getHeight() - gui.getYSize()) / 2;
+        final int x = gui.getGuiLeft();
+        final int y = gui.getGuiTop();
 
         for (final WidgetContainer container : containers) {
             RenderPos renderPos = new RenderPos(x + container.getAbsX(), y + container.getAbsY());
@@ -203,8 +219,8 @@ public class WidgetController {
     public List<String> getHoverTooltips(final MousePos mousePos) {
         WidgetGui gui = this.gui;
 
-        final int x = (gui.getWidth() - gui.getXSize()) / 2;
-        final int y = (gui.getHeight() - gui.getYSize()) / 2;
+        final int x = gui.getGuiLeft();
+        final int y = gui.getGuiTop();
 
         List<String> tooltips = null;
         for (final WidgetContainer container : containers) {

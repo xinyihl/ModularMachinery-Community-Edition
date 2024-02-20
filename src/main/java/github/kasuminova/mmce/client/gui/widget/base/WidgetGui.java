@@ -7,19 +7,23 @@ public class WidgetGui {
     private final GuiScreen gui;
     private int xSize;
     private int ySize;
+    private int guiLeft;
+    private int guiTop;
 
-    public WidgetGui(final GuiScreen gui, final int xSize, final int ySize) {
+    public WidgetGui(final GuiScreen gui, final int xSize, final int ySize, final int guiLeft, final int guiTop) {
         this.gui = gui;
         this.xSize = xSize;
         this.ySize = ySize;
+        this.guiLeft = guiLeft;
+        this.guiTop = guiTop;
     }
 
     public static WidgetGui of(final GuiContainer container) {
-        return new WidgetGui(container, container.getXSize(), container.getYSize());
+        return new WidgetGui(container, container.getXSize(), container.getYSize(), container.getGuiLeft(), container.getGuiTop());
     }
 
-    public static WidgetGui of(final GuiScreen container, final int xSize, final int ySize) {
-        return new WidgetGui(container, xSize, ySize);
+    public static WidgetGui of(final GuiScreen guiScreen, final int xSize, final int ySize, final int guiLeft, final int guiTop) {
+        return new WidgetGui(guiScreen, xSize, ySize, guiLeft, guiTop);
     }
 
     public GuiScreen getGui() {
@@ -49,6 +53,24 @@ public class WidgetGui {
 
     public WidgetGui setYSize(final int ySize) {
         this.ySize = ySize;
+        return this;
+    }
+
+    public int getGuiLeft() {
+        return guiLeft;
+    }
+
+    public WidgetGui setGuiLeft(final int guiLeft) {
+        this.guiLeft = guiLeft;
+        return this;
+    }
+
+    public int getGuiTop() {
+        return guiTop;
+    }
+
+    public WidgetGui setGuiTop(final int guiTop) {
+        this.guiTop = guiTop;
         return this;
     }
 }

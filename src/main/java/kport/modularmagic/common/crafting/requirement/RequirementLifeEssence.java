@@ -131,20 +131,23 @@ public class RequirementLifeEssence extends ComponentRequirement.PerTickParallel
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
-        switch (actionType) {
-            case INPUT -> {
-                return removeAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
+        if (parallelizeUnaffected) {
+            int max = switch (actionType) {
+                case INPUT -> removeAll(convertLifeEssenceProviders(components), context, 1, true);
+                case OUTPUT -> addAll(convertLifeEssenceProviders(components), context, 1, true);
+            };
+            if (max >= 1) {
+                return maxParallelism;
             }
-            case OUTPUT -> {
-                return addAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
-            }
+            return 0;
         }
-
-        return 0;
+        return switch (actionType) {
+            case INPUT -> removeAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
+            case OUTPUT -> addAll(convertLifeEssenceProviders(components), context, maxParallelism, true);
+        };
     }
 
     private int addAll(final List<LifeEssenceProviderCopy> lifeEssenceCopies,

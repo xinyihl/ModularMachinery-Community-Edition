@@ -12,6 +12,8 @@ import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
+import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
+import github.kasuminova.mmce.client.gui.widget.event.WorldRendererCacheCleanEvent;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -43,6 +45,13 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     protected BlockArray pattern = null;
 
     protected BlockPos offset = BlockPos.ORIGIN;
+    protected boolean useLayerRender = false;
+    protected int renderLayer = 0;
+
+    protected int dynamicPatternSize = 0;
+    protected boolean resetZoom = false;
+
+    protected boolean structureFormed = false;
 
     protected Vector3f center = new Vector3f();
     protected float rotationYaw = 25;
@@ -57,10 +66,12 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     protected int lastMouseX;
     protected int lastMouseY;
 
-    protected boolean useLayerRender = false;
-    protected int renderLayer = 0;
+    protected boolean requireRefreshPattern = false;
 
-    protected int dynamicPatternSize = 0;
+    protected boolean cycleBlocks = true;
+    protected long tickSnap = ClientScheduler.getClientTick();
+
+    protected long lastPatternUpdate = -1;
 
     protected Consumer<WorldSceneRendererWidget> onPatternUpdate = null;
     protected Consumer<BlockPos> onBlockSelected = null;
@@ -98,7 +109,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             if (useLayerRender && pos.getY() != renderLayer) {
                 return;
             }
-            IBlockState sampleState = info.getSampleState(ClientScheduler.getClientTick());
+            IBlockState sampleState = info.getSampleState(tickSnap);
             TileEntity te = null;
             Block block = sampleState.getBlock();
             if (block.hasTileEntity(sampleState)) {
@@ -108,8 +119,8 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         });
 
         world.addBlocks(converted);
-        setRenderedCore(min.add(offset), max.add(offset),
-                converted.keySet(), null, dynamicPatternSize <= 0 && resetZoom);
+        preInitNextRenderedCore(min.add(offset), max.add(offset), converted.keySet(), (_1, _2, _3) -> {}, this.resetZoom || resetZoom);
+        this.resetZoom = false;
         if (onPatternUpdate != null) {
             onPatternUpdate.accept(this);
         }
@@ -122,9 +133,6 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     }
 
     protected void addDynamicPatternToPattern(final DynamicMachine machine) {
-        if (dynamicPatternSize <= 0) {
-            return;
-        }
         Map<String, DynamicPattern> dynamicPatterns = machine.getDynamicPatterns();
         for (final DynamicPattern pattern : dynamicPatterns.values()) {
             this.dynamicPatternSize = Math.max(dynamicPatternSize, pattern.getMinSize());
@@ -170,29 +178,39 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         renderer.setOnLookingAt(ray -> {});
         renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
         renderer.useCacheBuffer(true);
+        lastPatternUpdate = System.currentTimeMillis();
     }
 
     @Override
     public void update(final WidgetGui gui) {
         super.update(gui);
-        if (ClientScheduler.getClientTick() % 30 == 0) {
+        if ((System.currentTimeMillis() - lastPatternUpdate >= 1500 && cycleBlocks) || requireRefreshPattern) {
+            if (cycleBlocks) {
+                tickSnap = ClientScheduler.getClientTick();
+            }
             refreshPattern();
-        }
-        if (!zoom.isAnimFinished()) {
-            renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
         }
     }
 
     protected void refreshPattern() {
-        renderer.getLRDummyWorld().setAnotherWorld(new TrackedDummyWorld());
-        initPattern(machine, false);
-        renderer.needCompileCache();
+        if (!renderer.isCompiling() && !renderer.isCompilerThreadAlive()) {
+            renderer.getLRDummyWorld().setAnotherWorld(new TrackedDummyWorld());
+            initPattern(machine, false);
+            renderer.needCompileCache();
+            requireRefreshPattern = false;
+            lastPatternUpdate = System.currentTimeMillis();
+        } else {
+            requireRefreshPattern = true;
+        }
     }
 
     @Override
     public void preRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
-        final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
+        handleZoomAnim();
+        handleMouseMove();
+
+        final int guiLeft = gui.getGuiLeft();
+        final int guiTop = gui.getGuiTop();
 
         RenderPos renderOffset = new RenderPos(guiLeft, guiTop);
         RenderPos realRenderPos = renderPos.add(renderOffset);
@@ -212,7 +230,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     @Override
     public boolean onMouseDWheel(final MousePos mousePos, final RenderPos renderPos, final int wheel) {
         if (isMouseOver(mousePos)) {
-            zoom.set(MathHelper.clamp(zoom.getTargetValue() + (wheel < 0 ? 1 : -1), 0.1, 999));
+            zoom.set(MathHelper.clamp(zoom.getTargetValue() + (wheel < 0 ? 1.5f : -1.5f), 0.1, 999));
             return true;
         }
         return super.onMouseDWheel(mousePos, renderPos, wheel);
@@ -229,10 +247,19 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         return true;
     }
 
-    @Override
-    public boolean onMouseClickMove(final MousePos mousePos, final RenderPos renderPos, final int mouseButton) {
+    protected void handleZoomAnim() {
+        if (!zoom.isAnimFinished()) {
+            renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
+        }
+    }
+
+    /**
+     * Using {@link DynamicWidget#onMouseClickMove} only maintains a maximum frame rate of 20 fps,
+     * so we'll consider listening for mouse movement at render time.
+     */
+    protected void handleMouseMove() {
         if (!dragging) {
-            return false;
+            return;
         }
 
         int mouseX = Mouse.getX();
@@ -245,8 +272,6 @@ public class WorldSceneRendererWidget extends DynamicWidget {
 
         lastMouseX = mouseX;
         lastMouseY = mouseY;
-
-        return false;
     }
 
     @Override
@@ -268,7 +293,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         }
     }
 
-    public WorldSceneRendererWidget setRenderedCore(BlockPos min, BlockPos max, Collection<BlockPos> blocks, ISceneRenderHook renderHook, boolean resetZoom) {
+    public WorldSceneRendererWidget preInitNextRenderedCore(BlockPos min, BlockPos max, Collection<BlockPos> blocks, ISceneRenderHook renderHook, boolean resetZoom) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
         center = new Vector3f(
@@ -286,13 +311,25 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     }
 
     @Override
-    public void onGUIClosed(final WidgetGui gui) {
-        super.onGUIClosed(gui);
-        renderer.deleteCacheBuffer();
+    public boolean onGuiEvent(final GuiEvent event) {
+        if (event instanceof WorldRendererCacheCleanEvent) {
+            renderer.deleteCacheBuffer();
+            return true;
+        }
+        return false;
     }
 
     public BlockArray getPattern() {
         return pattern;
+    }
+
+    public boolean isStructureFormed() {
+        return structureFormed;
+    }
+
+    public WorldSceneRendererWidget setStructureFormed(final boolean structureFormed) {
+        this.structureFormed = structureFormed;
+        return this;
     }
 
     public boolean isUseLayerRender() {
@@ -329,6 +366,19 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         return this;
     }
 
+    public boolean isCycleBlocks() {
+        return cycleBlocks;
+    }
+
+    public WorldSceneRendererWidget setCycleBlocks(final boolean cycleBlocks) {
+        this.cycleBlocks = cycleBlocks;
+        return this;
+    }
+
+    public long getTickSnap() {
+        return tickSnap;
+    }
+
     public int getDynamicPatternSize() {
         return dynamicPatternSize;
     }
@@ -336,6 +386,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     public WorldSceneRendererWidget setDynamicPatternSize(final int dynamicPatternSize) {
         if (this.dynamicPatternSize != dynamicPatternSize) {
             this.dynamicPatternSize = dynamicPatternSize;
+            this.resetZoom = true;
             refreshPattern();
         }
         return this;

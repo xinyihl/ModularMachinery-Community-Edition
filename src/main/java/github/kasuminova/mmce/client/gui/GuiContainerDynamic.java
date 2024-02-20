@@ -49,7 +49,7 @@ public abstract class GuiContainerDynamic<T extends ContainerBase<?>> extends Gu
 
     @Override
     protected void drawGuiContainerBackgroundLayer(final float partialTicks, final int mouseX, final int mouseY) {
-        widgetController.render(new MousePos(mouseX, mouseY));
+        widgetController.render(new MousePos(mouseX, mouseY), true);
     }
 
     @Override

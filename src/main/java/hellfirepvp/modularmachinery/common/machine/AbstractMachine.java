@@ -15,6 +15,7 @@ public abstract class AbstractMachine {
     protected final ResourceLocation registryName;
 
     protected String localizedName = "";
+    protected String prefix = "";
     protected int definedColor = Config.machineColor;
 
     protected int maxParallelism = Config.maxMachineParallelism;
@@ -45,6 +46,17 @@ public abstract class AbstractMachine {
 
     public boolean isRequiresBlueprint() {
         return requiresBlueprint;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public String getPrefix() {
+        String localizationKey = registryName.getNamespace() + "." + registryName.getPath() + ".prefix";
+        return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :
+                prefix != null ? prefix : localizationKey;
+    }
+
+    public void setPrefix(final String prefix) {
+        this.prefix = prefix;
     }
 
     @SideOnly(Side.CLIENT)

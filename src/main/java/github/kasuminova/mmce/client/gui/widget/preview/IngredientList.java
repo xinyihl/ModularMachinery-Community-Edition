@@ -19,15 +19,21 @@ public class IngredientList extends ScrollingColumn {
     }
 
     @Override
+    public void update(final WidgetGui gui) {
+        super.update(gui);
+        scrollbar.setScrollUnit(scrollbar.getRange() / 5);
+    }
+
+    @Override
     public void initWidget(final WidgetGui gui) {
         super.initWidget(gui);
         scrollbar.setMargin(3, 1, 1, 1);
         scrollbar.setWidthHeight(8, 34);
         scrollbar.getScroll()
-                .setMouseDownTextureXY(204, 127)
-                .setHoveredTextureXY(194, 127)
-                .setTextureXY(184, 127)
-                .setUnavailableTextureXY(214, 127)
+                .setMouseDownTextureXY(204, 143)
+                .setHoveredTextureXY(194, 143)
+                .setTextureXY(184, 143)
+                .setUnavailableTextureXY(214, 143)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
                 .setWidthHeight(8, 13);
     }
@@ -41,16 +47,16 @@ public class IngredientList extends ScrollingColumn {
             final ItemStack stack = list.get(i);
             row.addWidget(SlotVirtual.ofJEI(stack)
                     .setSlotTexLocation(WIDGETS_TEX_LOCATION)
-                    .setSlotTexX(184).setSlotTexY(178)
+                    .setSlotTexX(184).setSlotTexY(194)
             );
             stackPerRow++;
             if (stackPerRow >= MAX_STACK_PER_ROW && i + 1 < list.size()) {
-                addWidget(row);
+                addWidget(row.setUseScissor(false));
                 row = new Row();
                 stackPerRow = 0;
             }
         }
-        addWidget(row);
+        addWidget(row.setUseScissor(false));
         return this;
     }
 

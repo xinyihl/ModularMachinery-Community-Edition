@@ -244,6 +244,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return Math.max(1, parallelism);
     }
 
+    /**
+     * Only for preview, DO NOT USE THIS METHOD ON TRUE WORLD!
+     */
+    public void setFoundMachine(final DynamicMachine foundMachine) {
+        this.foundMachine = foundMachine;
+    }
+
     @Nullable
     public DynamicMachine getFoundMachine() {
         return foundMachine;

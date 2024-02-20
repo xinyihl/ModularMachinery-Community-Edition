@@ -20,7 +20,7 @@ public class RenderUtils {
         GlStateManager.disableTexture2D();
         BufferBuilder buffer = tessellator.getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        com.cleanroommc.multiblocked.client.util.RenderUtils.renderCubeFace(buffer, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, r, g, b, a);
+        RenderUtils.renderCubeFace(buffer, -0.5f, -0.5f, -0.5f, 0.5, 0.5, 0.5, r, g, b, a);
         tessellator.draw();
 
         GlStateManager.scale(1 / scale, 1 / scale, 1 / scale);
@@ -31,4 +31,35 @@ public class RenderUtils {
         GlStateManager.color(1, 1, 1, 1);
     }
 
+    public static void renderCubeFace(BufferBuilder buffer, double minX, double minY, double minZ, double maxX, double maxY, double maxZ, float r, float g, float b, float a) {
+        buffer.pos(minX, minY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, minY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, maxY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, maxY, minZ).color(r, g, b, a).endVertex();
+
+        buffer.pos(maxX, minY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, minY, maxZ).color(r, g, b, a).endVertex();
+
+        buffer.pos(minX, minY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, minY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, minY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, minY, maxZ).color(r, g, b, a).endVertex();
+
+        buffer.pos(minX, maxY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, maxY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, minZ).color(r, g, b, a).endVertex();
+
+        buffer.pos(minX, minY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, maxY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, minZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, minY, minZ).color(r, g, b, a).endVertex();
+
+        buffer.pos(minX, minY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, minY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(maxX, maxY, maxZ).color(r, g, b, a).endVertex();
+        buffer.pos(minX, maxY, maxZ).color(r, g, b, a).endVertex();
+    }
 }

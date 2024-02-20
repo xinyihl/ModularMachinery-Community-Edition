@@ -95,11 +95,6 @@ public class ClientProxy extends CommonProxy {
     private final List<Item> itemModelsToRegister = new LinkedList<>();
     private final List<Item> itemModelsCustomNameToRegister = new LinkedList<>();
 
-    @Optional.Method(modid = "jei")
-    private static void registerJEIEventHandler() {
-        MinecraftForge.EVENT_BUS.register(new ClientMouseJEIGuiEventHandler());
-    }
-
     private static void registerPendingIBlockColorBlocks() {
         BlockColors colors = Minecraft.getMinecraft().getBlockColors();
         for (BlockDynamicColor dynamicColor : RegistryBlocks.pendingIBlockColorBlocks) {
@@ -153,10 +148,6 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new DebugOverlayHelper());
         MinecraftForge.EVENT_BUS.register(new SelectionBoxRenderHelper());
         MinecraftForge.EVENT_BUS.register(new ClientHandler());
-
-        if (Mods.JEI.isPresent()) {
-            registerJEIEventHandler();
-        }
 
         if (Mods.TC6.isPresent()) {
             ClientRegistry.bindTileEntitySpecialRenderer(TileAspectProvider.Input.class, new TileAspectProviderRenderer());

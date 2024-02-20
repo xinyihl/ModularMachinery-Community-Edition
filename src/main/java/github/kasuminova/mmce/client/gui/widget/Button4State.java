@@ -5,6 +5,9 @@ import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Inherits the normal button with an additional press state.
  */
@@ -62,6 +65,14 @@ public class Button4State extends Button {
         }
         mouseDown = false;
         return false;
+    }
+
+    @Override
+    public List<String> getHoverTooltips(final MousePos mousePos) {
+        if (mouseDown) {
+            return Collections.emptyList();
+        }
+        return super.getHoverTooltips(mousePos);
     }
 
     public Button4State setMouseDownTextureXY(final int mouseDownTextureX, final int mouseDownTextureY) {

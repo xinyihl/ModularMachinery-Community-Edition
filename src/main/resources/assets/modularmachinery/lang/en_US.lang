@@ -71,9 +71,33 @@ gui.meitembus.nbt_stored=Items have been stored internally.
 gui.mefluidoutputbus.title=ME Machinery Fluid Output Bus
 gui.mefluidinputbus.title=ME Machinery Fluid Input Bus
 
-gui.preview.error.too_large.tip.0=The machinery are overly complex and large!
-gui.preview.error.too_large.tip.1=Only the ingredients required for the structure are shown.
-gui.preview.error.too_large.tip.2=Use the Structure Projector to right-click the controller to view the structure projection.
+gui.preview.button.menu.tip=Click to open the Preview Options menu.
+gui.preview.button.machine_info=Extra Info:
+gui.preview.button.machine_info.xyz.0=Length / Height / Width:
+gui.preview.button.machine_info.xyz.1=§c%s§f - §a%s§f - §9%s§f
+gui.preview.button.machine_info.controller_y_pos=Controller Y pos: §6%s§f
+gui.preview.button.machine_info.internal_parallelism=Internal Parallelism：§2%s§f
+gui.preview.button.machine_info.max_parallelism=Max Parallelism：§a%s§f
+gui.preview.button.machine_info.max_threads=Max Threads(Only Factory Controller)：§b%s§f
+gui.preview.button.machine_info.core_threads=Special Threads(Only Factory Controller)：§9%s§f
+gui.preview.button.machine_info.dynamic_pattern=§eDynamic structures exist.
+gui.preview.button.toggle_layer_render.tip=Click to switch to slice preview mode.
+gui.preview.button.toggle_3d_render.tip=Click to switch to 3D preview mode.
+gui.preview.button.place_world_preview.tip=Click to project the current preview to the world.
+gui.preview.button.enable_cycle_replaceable_blocks.tip.0=Click to enable timed cycle replacement of blocks.
+gui.preview.button.enable_cycle_replaceable_blocks.tip.1=Cycle Replaceable: Cycles through all available blocks in each position in sequence every 1.5 seconds.
+gui.preview.button.disable_cycle_replaceable_blocks.tip=Click to disable timed cycle replacement of blocks.
+gui.preview.button.dynamic_pattern_plus.tip=Click to reduce the size of the dynamic structure. (Current: §a%s§f)
+gui.preview.button.dynamic_pattern_subtract.tip=Click to increase the size of the dynamic structure. (Current: §a%s§f)
+gui.preview.button.toggle_unformed.tip=Click to switch the structure to the unformed state.
+gui.preview.button.toggle_formed.tip=Click to switch the structure to the formed state.
+gui.preview.button.toggle_upgrade_display.enable.tip=Click to switch the structure to the unformed state.
+gui.preview.button.toggle_upgrade_display.disable.tip=Click to switch the structure to the formed state.
+gui.preview.button.layer_render_scrollbar.up.tip=Click on the square one level up from the preview structure.
+gui.preview.button.layer_render_scrollbar.down.tip=Click on the square one layer below the preview structure.
+gui.preview.button.layer_render_scrollbar.tip=Hold and drag to quickly adjust the layer of squares you want to preview.
+gui.preview.button.layer_render_scrollbar.state.tip=Current/Total number of levels: §a%s§f / §e%s§f
+gui.preview.compiling.progress=Renderer is pre compiling! (Progress：%s%%)
 
 top.recipe.progress=Progress
 top.machine.owner=Owner:
@@ -114,8 +138,6 @@ component.missing.modularmachinery.interface.number=No Smart Data Interface foun
 
 gui.blueprint.popout.info=Sneak to freeze the current preview to be able to preview it in world.
 gui.blueprint.popout.place=Rightclick to place preview; move away from the placed one or open another structure preview (blueprint) to remove the one in-world.
-gui.blueprint.smaller.info=Click to reduce the size of the dynamic structure. (Current: %s)
-gui.blueprint.larger.info=Click to increase the size of the dynamic structure. (Current: %s)
 
 jei.category.preview=Structure Preview
 

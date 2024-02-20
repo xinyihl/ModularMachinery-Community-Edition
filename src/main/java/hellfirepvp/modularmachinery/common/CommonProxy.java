@@ -135,7 +135,6 @@ public class CommonProxy implements IGuiHandler {
         MinecraftForge.EVENT_BUS.register(new EventHandler());
         MinecraftForge.EVENT_BUS.register(new UpgradeEventHandler());
         MinecraftForge.EVENT_BUS.register(MMWorldEventListener.INSTANCE);
-        ModularMachinery.EVENT_BUS.register(new UpgradeMachineEventHandler());
 
         ModularMachinery.EXECUTE_MANAGER.init();
         ModularMachinery.log.info(String.format("[ModularMachinery-CE] Parallel executor is ready (%s Threads), Let's get started!!!", TaskExecutor.THREAD_COUNT));

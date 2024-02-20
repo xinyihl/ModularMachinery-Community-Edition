@@ -16,6 +16,11 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         DynamicMachine machine = new DynamicMachine(registryName);
         machine.setLocalizedName(localized);
 
+        // Prefix
+        if (root.has("prefix")) {
+            machine.setPrefix(getPrefix(root));
+        }
+
         // Failure Action
         if (root.has("failure-action")) {
             machine.setFailureAction(getFailureActions(root));
@@ -53,6 +58,16 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
             }
         }
         return registryName;
+    }
+
+    public static String getPrefix(JsonObject root) throws JsonParseException {
+        String localized = JsonUtils.getString(root, "prefix", "");
+
+        if (localized.isEmpty()) {
+            throw new JsonParseException("Invalid/Missing 'prefix' !");
+        }
+
+        return localized;
     }
 
     public static String getLocalizedName(JsonObject root) throws JsonParseException {

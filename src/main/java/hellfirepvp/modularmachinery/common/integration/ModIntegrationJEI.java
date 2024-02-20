@@ -104,7 +104,7 @@ public class ModIntegrationJEI implements IModPlugin {
     }
 
     public static void reloadPreviewWrappers() {
-        PREVIEW_WRAPPERS.forEach(StructurePreviewWrapper::flushContext);
+//        PREVIEW_WRAPPERS.forEach(StructurePreviewWrapper::flushContext);
     }
 
     public static void addItemStackToBookmarkList(ItemStack stack) {

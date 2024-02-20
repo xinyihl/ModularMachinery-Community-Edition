@@ -15,9 +15,10 @@ import java.util.List;
 import static github.kasuminova.mmce.client.gui.widget.preview.MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION;
 
 public class SelectedBlockIngredientList extends IngredientList {
-    protected int listBgTexX = 224;
+    protected int listBgTexX = 229;
     protected int listBgTexY = 125;
     protected int listBgTexWidth = 25;
+    protected int listBgTexWidthWithNoScrollbar = 18;
     protected int listBgTexHeight = 126;
 
     public SelectedBlockIngredientList() {
@@ -30,12 +31,18 @@ public class SelectedBlockIngredientList extends IngredientList {
         scrollbar.setMargin(1, 1, 1, 1);
         scrollbar.setWidthHeight(6, 124);
         scrollbar.getScroll()
-                .setMouseDownTextureXY(200, 159)
-                .setHoveredTextureXY(192, 159)
-                .setTextureXY(184, 159)
-                .setUnavailableTextureXY(208, 159)
+                .setMouseDownTextureXY(200, 175)
+                .setHoveredTextureXY(192, 175)
+                .setTextureXY(184, 175)
+                .setUnavailableTextureXY(208, 175)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
                 .setWidthHeight(6, 17);
+    }
+
+    @Override
+    public void update(final WidgetGui gui) {
+        super.update(gui);
+        scrollbar.setDisabled(scrollbar.getRange() <= 0);
     }
 
     @Override
@@ -64,7 +71,7 @@ public class SelectedBlockIngredientList extends IngredientList {
         gui.drawTexturedModalRect(
                 renderPos.posX(), renderPos.posY(),
                 listBgTexX, listBgTexY,
-                listBgTexWidth, listBgTexHeight
+                scrollbar.isDisabled() ? listBgTexWidthWithNoScrollbar : listBgTexWidth, listBgTexHeight
         );
         GlStateManager.disableBlend();
     }

@@ -13,8 +13,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.util.List;
 
 public class UpgradeMachineEventHandler {
-    @SubscribeEvent
-    public void onMachineEvent(MachineEvent event) {
+
+    public static void onMachineEvent(MachineEvent event) {
         TileMultiblockMachineController controller = event.getController();
 
         for (List<MachineUpgrade> upgrades : controller.getFoundUpgrades().values()) {
@@ -56,4 +56,5 @@ public class UpgradeMachineEventHandler {
             }
         }
     }
+
 }

@@ -253,10 +253,15 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
 
     @Override
     public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
+        if (parallelizeUnaffected) {
+            if (doItemIOInternal(components, context, 1, Collections.emptyList(), ResultChance.GUARANTEED) >= 1) {
+                return maxParallelism;
+            }
+            return 0;
+        }
         return doItemIOInternal(components, context, maxParallelism, Collections.emptyList(), ResultChance.GUARANTEED);
     }
 

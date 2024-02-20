@@ -116,12 +116,17 @@ public class RequirementEnergy extends ComponentRequirement.PerTickParallelizabl
     }
 
     @Override
-    public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int max) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
-            return max;
+    public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxParallelism) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
+            return maxParallelism;
         }
-
-        return (int) doEnergyIOInternal(components, context, max, true);
+        if (parallelizeUnaffected) {
+            if (doEnergyIOInternal(components, context, 1, true) >= 1) {
+                return maxParallelism;
+            }
+            return 0;
+        }
+        return (int) doEnergyIOInternal(components, context, maxParallelism, true);
     }
 
     private CraftCheck doEnergyIO(final List<ProcessingComponent<?>> components,

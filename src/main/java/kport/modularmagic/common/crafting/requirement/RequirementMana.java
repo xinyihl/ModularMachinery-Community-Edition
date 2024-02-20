@@ -130,20 +130,24 @@ public class RequirementMana extends ComponentRequirement.PerTickParallelizable<
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
-        switch (actionType) {
-            case INPUT -> {
-                return reduceAll(convertManaProviders(components), context, maxParallelism, true);
+        if (parallelizeUnaffected) {
+            int max = switch (actionType) {
+                case INPUT -> reduceAll(convertManaProviders(components), context, 1, true);
+                case OUTPUT -> receiveAll(convertManaProviders(components), context, 1, true);
+            };
+            if (max >= 1) {
+                return maxParallelism;
             }
-            case OUTPUT -> {
-                return receiveAll(convertManaProviders(components), context, maxParallelism, true);
-            }
+            return 0;
         }
 
-        return 0;
+        return switch (actionType) {
+            case INPUT -> reduceAll(convertManaProviders(components), context, maxParallelism, true);
+            case OUTPUT -> receiveAll(convertManaProviders(components), context, maxParallelism, true);
+        };
     }
 
     private int receiveAll(final List<ManaProviderCopy> manaProviderCopies,

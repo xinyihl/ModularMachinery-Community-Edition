@@ -1,26 +1,35 @@
 package github.kasuminova.mmce.client.gui.widget.preview;
 
 import com.cleanroommc.client.util.RenderUtils;
+import github.kasuminova.mmce.client.gui.widget.Button;
 import github.kasuminova.mmce.client.gui.widget.Button4State;
 import github.kasuminova.mmce.client.gui.widget.Button5State;
 import github.kasuminova.mmce.client.gui.widget.container.Row;
 import github.kasuminova.mmce.client.gui.widget.slot.SlotVirtual;
 import hellfirepvp.modularmachinery.ModularMachinery;
-import hellfirepvp.modularmachinery.client.ClientScheduler;
+import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.util.DynamicMachineRenderContext;
+import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import ink.ikx.mmce.common.utils.StackUtils;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import javax.annotation.Nonnull;
+import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * All of our preview content is rendered here.
+ */
 public class MachineStructurePreviewPanel extends Row {
     public static final ResourceLocation WIDGETS_TEX_LOCATION = new ResourceLocation(ModularMachinery.MODID,
             "textures/gui/guiblueprint_new.png");
@@ -42,68 +51,95 @@ public class MachineStructurePreviewPanel extends Row {
         // Widgets...
         // ====================
 
+        // Title, at panel top...
+        StructurePreviewTitle title = new StructurePreviewTitle(machine);
+
+        // Compiler progress bar, at renderer top...
+        PreviewCompilerProgressbar compilerProgressbar = new PreviewCompilerProgressbar(renderer);
+
         // Buttons, at preview bottom...
         Button5State menuBtn = new Button5State();
         Button5State toggleLayerRender = new Button5State();
         Button4State placeWorldPreview = new Button4State();
+        Button5State enableCycleReplaceableBlocks = new Button5State();
         Button4State dynamicPatternPlus = new Button4State();
         Button4State dynamicPatternSubtract = new Button4State();
 
-        // Buttons, at preview top...
+        // Buttons, at preview top right...
         Button5State toggleFormed = new Button5State();
         Button5State showUpgrades = new Button5State();
+        Button machineExtraInfo = new Button();
 
         // Ingredient list, at panel bottom...
-        IngredientList ingredientList = (IngredientList) new IngredientList()
-                .setAbsXY(5, 179);
+        IngredientList ingredientList = new IngredientList();
 
         // Selected block ingredient main stack, at left...
-        SlotVirtual selectedBlockIngredientMain = (SlotVirtual) SlotVirtual.ofJEI()
-                .setSlotTexX(224).setSlotTexY(105)
-                .setSlotTexLocation(WIDGETS_TEX_LOCATION)
-                .setAbsXY(8, 28);
+        SlotVirtual selectedBlockIngredientMain = SlotVirtual.ofJEI();
         // Selected block ingredient list, at left, under the selectedBlockIngredientMain...
-        SelectedBlockIngredientList selectedBlockIngredientList = (SelectedBlockIngredientList) new SelectedBlockIngredientList()
-                .setAbsXY(8, 48);
+        SelectedBlockIngredientList selectedBlockIngredientList = new SelectedBlockIngredientList();
 
         // 2D layer scrollbar, and 2 buttons, only shown when 2D preview enabled, at right...
-        LayerRenderScrollbar layerScrollbar = (LayerRenderScrollbar) new LayerRenderScrollbar()
-                .setAbsXY(165, 44)
-                .setEnabled(false);
+        LayerRenderScrollbar layerScrollbar = new LayerRenderScrollbar(renderer);
 
         // ====================
-        // Initialize...
+        // Initialize texture, size, positions, tooltips...
         // ====================
+        title.setAbsXY(5, 5);
+
+        compilerProgressbar.setMaxWidth(172)
+                .setAbsXY(6, 26);
 
         menuBtn.setClickedTextureXY(184 + 15 + 15, 15)
                 .setMouseDownTextureXY(184 + 15 + 15, 15)
                 .setHoveredTextureXY(184 + 15, 15)
                 .setTextureXY(184, 15)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> Collections.singletonList(I18n.format(
+                        "gui.preview.button.menu.tip")))
                 .setWidthHeight(13, 13);
         toggleLayerRender.setClickedTextureXY(184 + 15 + 15 + 15, 30)
                 .setMouseDownTextureXY(184 + 15 + 15, 30)
                 .setHoveredTextureXY(184 + 15, 30)
-                .setTextureXY(184,  15 + 15)
+                .setTextureXY(184, 30)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> toggleLayerRender.isClicked()
+                        ? Collections.singletonList(I18n.format("gui.preview.button.toggle_3d_render.tip"))
+                        : Collections.singletonList(I18n.format("gui.preview.button.toggle_layer_render.tip")))
                 .setWidthHeight(13, 13);
         placeWorldPreview
                 .setMouseDownTextureXY(184 + 15 + 15, 45)
                 .setHoveredTextureXY(184 + 15, 45)
                 .setTextureXY(184, 45)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> Collections.singletonList(I18n.format(
+                        "gui.preview.button.place_world_preview.tip")))
+                .setWidthHeight(13, 13);
+        enableCycleReplaceableBlocks.setClickedTextureXY(184 + 15 + 15, 105)
+                .setMouseDownTextureXY(184 + 15 + 15, 105)
+                .setHoveredTextureXY(184 + 15, 105)
+                .setTextureXY(184,  105)
+                .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> enableCycleReplaceableBlocks.isClicked()
+                        ? Collections.singletonList(I18n.format("gui.preview.button.disable_cycle_replaceable_blocks.tip"))
+                        : Arrays.asList(
+                                I18n.format("gui.preview.button.enable_cycle_replaceable_blocks.tip.0"),
+                                I18n.format("gui.preview.button.enable_cycle_replaceable_blocks.tip.1")))
                 .setWidthHeight(13, 13);
         dynamicPatternPlus
                 .setMouseDownTextureXY(184 + 15 + 15, 60)
                 .setHoveredTextureXY(184 + 15, 60)
                 .setTextureXY(184, 60)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> Collections.singletonList(I18n.format(
+                        "gui.preview.button.dynamic_pattern_plus.tip", renderer.getDynamicPatternSize())))
                 .setWidthHeight(13, 13);
         dynamicPatternSubtract
                 .setMouseDownTextureXY(184 + 15 + 15, 75)
                 .setHoveredTextureXY(184 + 15, 75)
                 .setTextureXY(184, 75)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> Collections.singletonList(I18n.format(
+                        "gui.preview.button.dynamic_pattern_subtract.tip", renderer.getDynamicPatternSize())))
                 .setWidthHeight(13, 13);
 
         toggleFormed.setClickedTextureXY(184 + 15 + 15 + 15, 0)
@@ -111,18 +147,39 @@ public class MachineStructurePreviewPanel extends Row {
                 .setHoveredTextureXY(184 + 15, 0)
                 .setTextureXY(184, 0)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> toggleFormed.isClicked()
+                        ? Collections.singletonList(I18n.format("gui.preview.button.toggle_unformed.tip"))
+                        : Collections.singletonList(I18n.format("gui.preview.button.toggle_formed.tip")))
                 .setWidthHeight(13, 13);
         showUpgrades.setClickedTextureXY(184 + 15 + 15 + 15, 90)
                 .setMouseDownTextureXY(184 + 15 + 15, 90)
                 .setHoveredTextureXY(184 + 15, 90)
                 .setTextureXY(184, 90)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> showUpgrades.isClicked()
+                        ? Collections.singletonList(I18n.format("gui.preview.button.toggle_upgrade_display.disable.tip"))
+                        : Collections.singletonList(I18n.format("gui.preview.button.toggle_upgrade_display.enable.tip")))
                 .setWidthHeight(13, 13);
+        machineExtraInfo.setHoveredTextureXY(184 + 15, 214)
+                .setTextureXY(184, 214)
+                .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> getMachineExtraInfo(machine))
+                .setWidthHeight(13, 13);
+
+        ingredientList.setAbsXY(5, 179);
+
+        selectedBlockIngredientMain.setSlotTexX(229).setSlotTexY(105)
+                .setSlotTexLocation(WIDGETS_TEX_LOCATION)
+                .setAbsXY(8, 28);
+        selectedBlockIngredientList.setAbsXY(8, 48);
+
+        layerScrollbar.setAbsXY(165, 44).setEnabled(false);
 
         // ====================
         // Assembly...
         // ====================
 
+        // Bottom Menu
         Row bottomMenu = new Row();
         if (!machine.getDynamicPatterns().isEmpty()) {
             bottomMenu.addWidgets(
@@ -132,19 +189,25 @@ public class MachineStructurePreviewPanel extends Row {
         }
         bottomMenu.addWidgets(
                 placeWorldPreview.setMarginRight(2).setDisabled(true),
+                enableCycleReplaceableBlocks.setClicked(true).setMarginRight(2).setDisabled(true),
                 toggleLayerRender.setMarginRight(2).setDisabled(true),
                 menuBtn.setMarginRight(2)
         );
         bottomMenu.setAbsXY(PANEL_WIDTH - (bottomMenu.getWidth() + 6), 161);
 
-        Row topMenu = (Row) new Row().addWidgets(
+        // Right Top Menu
+        Row rightTopMenu = (Row) new Row().addWidgets(
                 showUpgrades.setMarginRight(2),
-                toggleFormed.setMarginRight(2)
+                toggleFormed.setMarginRight(2),
+                machineExtraInfo.setMarginRight(2)
         );
-        topMenu.setAbsXY(PANEL_WIDTH - (topMenu.getWidth() + 6), 28);
+        rightTopMenu.setAbsXY(PANEL_WIDTH - (rightTopMenu.getWidth() + 6), 28);
 
-        // Add all widgets to panel...
-        addWidgets(topMenu, bottomMenu,
+        // Add all widgets to preview panel...
+        addWidgets(
+                title,
+                compilerProgressbar,
+                rightTopMenu, bottomMenu,
                 ingredientList,
                 selectedBlockIngredientMain.setDisabled(true), selectedBlockIngredientList.setDisabled(true),
                 layerScrollbar
@@ -155,67 +218,155 @@ public class MachineStructurePreviewPanel extends Row {
         // EventHandlers...
         // ====================
 
-        menuBtn.setOnClickedListener(btn -> {
-            boolean enable = menuBtn.isClicked();
-            bottomMenu.getWidgets().stream()
-                    .filter(widget -> widget != menuBtn)
-                    .forEach(widget -> widget.setEnabled(enable));
-            bottomMenu.setAbsXY(PANEL_WIDTH - (bottomMenu.getWidth() + 6), 161);
-        });
-        toggleLayerRender.setOnClickedListener(btn -> {
-            boolean layerRender = toggleLayerRender.isClicked();
-            if (layerRender) {
-                renderer.useLayerRender();
-                int minY = renderer.getPattern().getMin().getY();
-                int maxY = renderer.getPattern().getMax().getY();
-                layerScrollbar.setEnabled(true);
-                layerScrollbar.getScrollbar().setRange(minY, maxY);
-                renderer.setRenderLayer(maxY - minY);
-            } else {
-                renderer.use3DRender();
-                layerScrollbar.setDisabled(true);
-            }
-        });
+        menuBtn.setOnClickedListener(btn -> handleMenuButton(menuBtn, bottomMenu));
+        toggleLayerRender.setOnClickedListener(btn -> handleToggleLayerRenderButton(toggleLayerRender, layerScrollbar));
+        placeWorldPreview.setOnClickedListener(btn -> handlePlaceWorldPreviewButton(machine));
+        enableCycleReplaceableBlocks.setOnClickedListener(btn -> handleCycleReplaceableBlocksButton(enableCycleReplaceableBlocks));
         if (!machine.getDynamicPatterns().isEmpty()) {
-            dynamicPatternPlus.setOnClickedListener(btn ->
-                    renderer.setDynamicPatternSize(renderer.getDynamicPatternSize() + 1));
-            dynamicPatternSubtract.setOnClickedListener(btn ->
-                    renderer.setDynamicPatternSize(Math.max(renderer.getDynamicPatternSize() - 1, 0)));
+            dynamicPatternPlus.setOnClickedListener(btn -> handleDynamicPatternPlusButton());
+            dynamicPatternSubtract.setOnClickedListener(btn -> handleDynamicPatternSubtractButton());
         }
-        layerScrollbar.setOnScrollChanged(renderLayer -> {
-            int range = layerScrollbar.getScrollbar().getRange();
-            renderer.setRenderLayer(range - renderLayer);
-        });
-        renderer.setOnPatternUpdate(r -> {
-            List<ItemStack> stackList = renderer.getPattern().getDescriptiveStackList(ClientScheduler.getClientTick());
-            ingredientList.setStackList(stackList.stream()
-                    .sorted(Comparator.comparingInt(ItemStack::getCount).reversed())
-                    .collect(Collectors.toList()));
-        });
-        renderer.setOnBlockSelected(relativePos -> {
-            BlockPos pos = relativePos == null ? null : relativePos.subtract(renderer.getRenderOffset());
-            if (pos == null) {
-                selectedBlockIngredientMain.setStackInSlot(ItemStack.EMPTY);
-                selectedBlockIngredientMain.setDisabled(true);
-                selectedBlockIngredientList.setStackList(Collections.emptyList());
-                selectedBlockIngredientList.setDisabled(true);
-                renderer.getWorldRenderer().setAfterWorldRender(null);
-                return;
+
+        toggleFormed.setOnClickedListener(btn -> handleToggleFormedButton(toggleFormed));
+
+        layerScrollbar.setOnScrollChanged(this::handleLayerScrollbarChanged);
+        renderer.setOnPatternUpdate(r -> handleRendererPatternUpdate(machine, r, ingredientList));
+        renderer.setOnBlockSelected(relativePos -> handlePatternBlockSelected(relativePos, selectedBlockIngredientMain, selectedBlockIngredientList));
+    }
+
+    // Machine extra info.
+
+    @Nonnull
+    protected List<String> getMachineExtraInfo(final DynamicMachine machine) {
+        BlockPos min = renderer.getPattern().getMin();
+        BlockPos max = renderer.getPattern().getMax();
+        List<String> tips = new ArrayList<>();
+        tips.add(I18n.format("gui.preview.button.machine_info"));
+        tips.add(I18n.format("gui.preview.button.machine_info.xyz.0"));
+        tips.add(I18n.format("gui.preview.button.machine_info.xyz.1",
+                max.getX() - min.getX(),
+                max.getY() - min.getY(),
+                max.getZ() - min.getZ()
+        ));
+        tips.add(I18n.format("gui.preview.button.machine_info.controller_y_pos",
+                Math.abs(machine.getPattern().getMin().getY())
+        ));
+        if (machine.getInternalParallelism() > 0) {
+            tips.add(I18n.format("gui.preview.button.machine_info.internal_parallelism",
+                    machine.getInternalParallelism()
+            ));
+        }
+        if (machine.getMaxParallelism() != Config.maxMachineParallelism) {
+            tips.add(I18n.format("gui.preview.button.machine_info.max_parallelism",
+                    machine.getMaxParallelism()
+            ));
+        }
+        if (machine.isHasFactory()) {
+            tips.add(I18n.format("gui.preview.button.machine_info.max_threads",
+                    machine.getMaxThreads()
+            ));
+        }
+        if (!machine.getCoreThreadPreset().isEmpty()) {
+            tips.add(I18n.format("gui.preview.button.machine_info.core_threads",
+                    machine.getCoreThreadPreset().size()
+            ));
+        }
+        if (!machine.getDynamicPatterns().isEmpty()) {
+            tips.add(I18n.format("gui.preview.button.machine_info.dynamic_pattern"));
+        }
+        return tips;
+    }
+
+    // Handler methods.
+
+    protected void handlePatternBlockSelected(final BlockPos relativePos, final SlotVirtual selectedBlockIngredientMain, final SelectedBlockIngredientList selectedBlockIngredientList) {
+        BlockPos pos = relativePos == null ? null : relativePos.subtract(renderer.getRenderOffset());
+        if (pos == null) {
+            selectedBlockIngredientMain.setStackInSlot(ItemStack.EMPTY);
+            selectedBlockIngredientMain.setDisabled(true);
+            selectedBlockIngredientList.setStackList(Collections.emptyList());
+            selectedBlockIngredientList.setDisabled(true);
+            renderer.getWorldRenderer().setAfterWorldRender(null);
+            return;
+        }
+
+        IBlockState clickedBlock = renderer.getWorldRenderer().getWorld().getBlockState(relativePos);
+        BlockArray.BlockInformation clicked = renderer.getPattern().getPattern().get(pos);
+        ItemStack clickedBlockStack = StackUtils.getStackFromBlockState(clickedBlock);
+        List<ItemStack> replaceable = clicked.getIngredientList().stream()
+                .filter(replaceableStack -> !ItemUtils.matchStacks(clickedBlockStack, replaceableStack))
+                .collect(Collectors.toList());
+        selectedBlockIngredientMain.setStackInSlot(clickedBlockStack);
+        selectedBlockIngredientMain.setEnabled(true);
+        selectedBlockIngredientList.setStackList(replaceable);
+        selectedBlockIngredientList.setEnabled(!replaceable.isEmpty());
+
+        renderer.getWorldRenderer().setAfterWorldRender(worldRenderer ->
+                RenderUtils.renderBlockOverLay(relativePos, .6f, 0f, 0f, 1f, 1.01f));
+    }
+
+    protected void handleRendererPatternUpdate(final DynamicMachine machine, final WorldSceneRendererWidget r, final IngredientList ingredientList) {
+        List<ItemStack> stackList = renderer.getPattern().getDescriptiveStackList(renderer.getTickSnap());
+        ingredientList.setStackList(stackList.stream()
+                .sorted(Comparator.comparingInt(ItemStack::getCount).reversed())
+                .collect(Collectors.toList()));
+        if (r.isStructureFormed()) {
+            TileEntity ctrlTE = r.getWorldRenderer().getWorld().getTileEntity(BlockPos.ORIGIN.add(r.getRenderOffset()));
+            if (ctrlTE instanceof TileMultiblockMachineController controller) {
+                controller.setFoundMachine(machine);
             }
+        }
+    }
 
-            IBlockState clickedBlock = renderer.getWorldRenderer().getWorld().getBlockState(pos);
-            BlockArray.BlockInformation clicked = renderer.getPattern().getPattern().get(pos);
-            ItemStack clickedBlockStack = StackUtils.getStackFromBlockState(clickedBlock);
-            List<ItemStack> replaceable = clicked.getIngredientList().stream()
-                    .filter(replaceableStack -> !ItemUtils.matchStacks(clickedBlockStack, replaceableStack))
-                    .collect(Collectors.toList());
-            selectedBlockIngredientMain.setStackInSlot(clickedBlockStack);
-            selectedBlockIngredientMain.setEnabled(true);
-            selectedBlockIngredientList.setStackList(replaceable);
-            selectedBlockIngredientList.setEnabled(!replaceable.isEmpty());
+    protected void handleLayerScrollbarChanged(final Integer renderLayer) {
+        int minY = renderer.getPattern().getMin().getY();
+        int maxY = renderer.getPattern().getMax().getY();
+        renderer.setRenderLayer((maxY - renderLayer) + minY);
+    }
 
-            renderer.getWorldRenderer().setAfterWorldRender(worldRenderer ->
-                    RenderUtils.renderBlockOverLay(pos, .6f, 0f, 0f, 1f, 1.01f));
-        });
+    protected void handleToggleFormedButton(final Button5State toggleFormed) {
+        renderer.setStructureFormed(toggleFormed.isClicked());
+    }
+
+    protected void handleDynamicPatternSubtractButton() {
+        renderer.setDynamicPatternSize(Math.max(renderer.getDynamicPatternSize() - 1, 0));
+    }
+
+    protected void handleDynamicPatternPlusButton() {
+        renderer.setDynamicPatternSize(renderer.getDynamicPatternSize() + 1);
+    }
+
+    protected void handleCycleReplaceableBlocksButton(final Button5State enableCycleReplaceableBlocks) {
+        renderer.setCycleBlocks(enableCycleReplaceableBlocks.isClicked());
+    }
+
+    protected void handlePlaceWorldPreviewButton(final DynamicMachine machine) {
+        DynamicMachineRenderContext renderContext = DynamicMachineRenderContext.createContext(machine, renderer.getDynamicPatternSize());
+        renderContext.setShiftSnap(renderer.getTickSnap());
+        ClientProxy.renderHelper.startPreview(renderContext);
+        Minecraft.getMinecraft().displayGuiScreen(null);
+    }
+
+    protected void handleToggleLayerRenderButton(final Button5State toggleLayerRender, final LayerRenderScrollbar layerScrollbar) {
+        boolean layerRender = toggleLayerRender.isClicked();
+        if (layerRender) {
+            renderer.useLayerRender();
+            int minY = renderer.getPattern().getMin().getY();
+            int maxY = renderer.getPattern().getMax().getY();
+            layerScrollbar.setEnabled(true);
+            layerScrollbar.getScrollbar().setRange(minY, maxY);
+            renderer.setRenderLayer(minY);
+        } else {
+            renderer.use3DRender();
+            layerScrollbar.setDisabled(true);
+        }
+    }
+
+    protected static void handleMenuButton(final Button5State menuBtn, final Row bottomMenu) {
+        boolean enable = menuBtn.isClicked();
+        bottomMenu.getWidgets().stream()
+                .filter(widget -> widget != menuBtn)
+                .forEach(widget -> widget.setEnabled(enable));
+        bottomMenu.setAbsXY(PANEL_WIDTH - (bottomMenu.getWidth() + 6), 161);
     }
 }

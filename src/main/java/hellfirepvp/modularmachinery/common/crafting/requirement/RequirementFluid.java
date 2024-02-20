@@ -178,10 +178,15 @@ public class RequirementFluid extends ComponentRequirement.MultiCompParallelizab
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
+        if (parallelizeUnaffected) {
+            if (doFluidGasIOInternal(components, context, 1) >= 1) {
+                return maxParallelism;
+            }
+            return 0;
+        }
         return doFluidGasIOInternal(components, context, maxParallelism);
     }
 

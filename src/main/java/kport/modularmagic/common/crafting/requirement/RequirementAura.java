@@ -99,24 +99,24 @@ public class RequirementAura extends ComponentRequirement.MultiCompParallelizabl
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
         Map<ChunkPos, TileAuraProvider> chunkAuraProviders = buildChunkAuraProviderMap(components);
-        switch (actionType) {
-            case INPUT -> {
-                return removeAll(chunkAuraProviders.values(), context, parallelism, true);
+        if (parallelizeUnaffected) {
+            int max = switch (actionType) {
+                case INPUT -> removeAll(chunkAuraProviders.values(), context, 1, true);
+                case OUTPUT -> addAll(chunkAuraProviders.values(), context, 1, true);
+            };
+            if (max >= 1) {
+                return maxParallelism;
             }
-            case OUTPUT -> {
-                if (ignoreOutputCheck) {
-                    return maxParallelism;
-                }
-                return addAll(chunkAuraProviders.values(), context, parallelism, true);
-            }
+            return 0;
         }
-
-        return 0;
+        return switch (actionType) {
+            case INPUT -> removeAll(chunkAuraProviders.values(), context, parallelism, true);
+            case OUTPUT -> addAll(chunkAuraProviders.values(), context, parallelism, true);
+        };
     }
 
     private int addAll(final Collection<TileAuraProvider> chunkAuraProviders,

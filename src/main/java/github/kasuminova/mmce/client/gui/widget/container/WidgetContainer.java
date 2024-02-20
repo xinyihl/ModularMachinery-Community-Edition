@@ -16,9 +16,11 @@ import java.util.List;
 public abstract class WidgetContainer extends DynamicWidget {
     protected static final ThreadLocal<LinkedList<Rectangle>> SCISSOR_STACK = ThreadLocal.withInitial(LinkedList::new);
 
+    protected boolean useScissor = true;
+
     public static void pushScissor(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final int width, final int height) {
-        final int guiLeft = (gui.getWidth() - gui.getXSize()) / 2;
-        final int guiTop = (gui.getHeight() - gui.getYSize()) / 2;
+        final int guiLeft = gui.getGuiLeft();
+        final int guiTop = gui.getGuiTop();
 
         int offsetX = renderPos.posX();
         int offsetY = renderPos.posY();
@@ -50,7 +52,9 @@ public abstract class WidgetContainer extends DynamicWidget {
     public static void popScissor(final RenderSize renderSize) {
         if (renderSize.isLimited()) {
             LinkedList<Rectangle> scissorStack = SCISSOR_STACK.get();
-            scissorStack.pop();
+            if (scissorStack.peekFirst() != null) {
+                scissorStack.pop();
+            }
 
             Rectangle prevScissorFrame = scissorStack.peekFirst();
             if (prevScissorFrame == null) {
@@ -76,8 +80,10 @@ public abstract class WidgetContainer extends DynamicWidget {
 
     @Override
     public final void preRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
-
+        boolean useScissor = this.useScissor;
+        if (useScissor) {
+            pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        }
         try {
             preRenderInternal(gui, renderSize, renderPos, mousePos);
         } catch (Exception e) {
@@ -85,14 +91,18 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            popScissor(renderSize);
+            if (useScissor) {
+                popScissor(renderSize);
+            }
         }
     }
 
     @Override
     public final void render(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
-
+        boolean useScissor = this.useScissor;
+        if (useScissor) {
+            pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        }
         try {
             renderInternal(gui, renderSize, renderPos, mousePos);
         } catch (Exception e) {
@@ -100,14 +110,18 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            popScissor(renderSize);
+            if (useScissor) {
+                popScissor(renderSize);
+            }
         }
     }
 
     @Override
     public final void postRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
-
+        boolean useScissor = this.useScissor;
+        if (useScissor) {
+            pushScissor(gui, renderSize, renderPos, getWidth(), getHeight());
+        }
         try {
             postRenderInternal(gui, renderSize, renderPos, mousePos);
         } catch (Exception e) {
@@ -115,7 +129,9 @@ public abstract class WidgetContainer extends DynamicWidget {
             ModularMachinery.log.error("Error when rendering dynamic widgets!", e);
             throw e;
         } finally {
-            popScissor(renderSize);
+            if (useScissor) {
+                popScissor(renderSize);
+            }
         }
     }
 
@@ -177,4 +193,14 @@ public abstract class WidgetContainer extends DynamicWidget {
     @Override
     public abstract List<String> getHoverTooltips(final MousePos mousePos);
 
+    // Scissor setting
+
+    public boolean isUseScissor() {
+        return useScissor;
+    }
+
+    public WidgetContainer setUseScissor(final boolean useScissor) {
+        this.useScissor = useScissor;
+        return this;
+    }
 }

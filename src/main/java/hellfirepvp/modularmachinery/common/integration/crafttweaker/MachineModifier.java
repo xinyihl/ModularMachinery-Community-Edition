@@ -120,6 +120,22 @@ public class MachineModifier {
         });
     }
 
+    @ZenMethod
+    public static void setMachinePrefix(String machineName, String prefixName) {
+        if (FMLCommonHandler.instance().getSide().isServer()) {
+            return;
+        }
+
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineName));
+            if (machine == null) {
+                CraftTweakerAPI.logError("Could not find machine `" + machineName + "`!");
+                return;
+            }
+            machine.setPrefix(prefixName);
+        });
+    }
+
     public static void loadAll() {
         for (Action waitForRegister : WAIT_FOR_MODIFY) {
             waitForRegister.doAction();

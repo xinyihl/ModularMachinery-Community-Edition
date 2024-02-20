@@ -174,12 +174,17 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
     }
 
     @Override
-    public int getMaxParallelism(List<ProcessingComponent<?>> component, RecipeCraftingContext context, int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+    public int getMaxParallelism(List<ProcessingComponent<?>> components, RecipeCraftingContext context, int maxParallelism) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
-        return doItemIOInternal(component, context, maxParallelism, ResultChance.GUARANTEED);
+        if (parallelizeUnaffected) {
+            if (doItemIOInternal(components, context, 1, ResultChance.GUARANTEED) >= 1) {
+                return maxParallelism;
+            }
+            return 0;
+        }
+        return doItemIOInternal(components, context, maxParallelism, ResultChance.GUARANTEED);
     }
 
     @Nonnull

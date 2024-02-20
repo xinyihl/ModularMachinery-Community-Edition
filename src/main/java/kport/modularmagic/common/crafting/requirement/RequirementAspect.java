@@ -112,20 +112,24 @@ public class RequirementAspect extends ComponentRequirement.MultiCompParalleliza
 
     @Override
     public int getMaxParallelism(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxParallelism) {
-        if (parallelizeUnaffected || (ignoreOutputCheck && actionType == IOType.OUTPUT)) {
+        if (ignoreOutputCheck && actionType == IOType.OUTPUT) {
             return maxParallelism;
         }
-
-        switch (actionType) {
-            case INPUT -> {
-                return takeAll(convertJars(components), context, maxParallelism, true);
+        if (parallelizeUnaffected) {
+            int max = switch (actionType) {
+                case INPUT -> takeAll(convertJars(components), context, 1, true);
+                case OUTPUT -> addAll(convertJars(components), context, 1, true);
+            };
+            if (max >= 1) {
+                return maxParallelism;
             }
-            case OUTPUT -> {
-                return addAll(convertJars(components), context, maxParallelism, true);
-            }
+            return 0;
         }
 
-        return 0;
+        return switch (actionType) {
+            case INPUT -> takeAll(convertJars(components), context, maxParallelism, true);
+            case OUTPUT -> addAll(convertJars(components), context, maxParallelism, true);
+        };
     }
 
     private int addAll(final List<AspectProviderCopy> jars,

@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "1.12.2-1.11.1-r56-dev"
+version = "2.0.0-pre1"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -40,7 +40,14 @@ minecraft {
     // tagReplacementFiles.add("RfgExampleMod.java")
 
     // Enable assertions in the mod's package when running the client or server
-    extraRunJvmArguments.add("-ea:${project.group}")
+    val args = mutableListOf("-ea:${project.group}")
+
+    // Mixin args
+    args.add("-Dfml.coreMods.load=github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader")
+    args.add("-Dmixin.hotSwap=true")
+    args.add("-Dmixin.checks.interfaces=true")
+    args.add("-Dmixin.debug.export=true")
+    extraRunJvmArguments.addAll(args)
 
     // If needed, add extra tweaker classes like for mixins.
     // extraTweakClasses.add("org.spongepowered.asm.launch.MixinTweaker")
@@ -70,6 +77,14 @@ tasks.compileJava.configure {
 
     javaCompiler = javaToolchains.compilerFor {
         languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+tasks.jar.configure {
+    manifest {
+        val attributes = manifest.attributes
+        attributes["FMLCorePlugin"] = "github.kasuminova.mmce.mixin.MMCEEarlyMixinLoader"
+        attributes["FMLCorePluginContainsFMLMod"] = true
     }
 }
 
@@ -151,7 +166,16 @@ dependencies {
     testCompileOnly("me.eigenraven.java8unsupported:java-8-unsupported-shim:1.0.0")
 
     // Mixins
-    implementation("zone.rong:mixinbooter:7.1")
+    val mixin : String = modUtils.enableMixins("zone.rong:mixinbooter:8.9", "mixins.mmce.refmap.json").toString()
+    api (mixin) {
+        isTransitive = false
+    }
+    annotationProcessor("org.ow2.asm:asm-debug-all:5.2")
+    annotationProcessor("com.google.guava:guava:30.0-jre")
+    annotationProcessor("com.google.code.gson:gson:2.8.9")
+    annotationProcessor (mixin) {
+        isTransitive = false
+    }
 
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:4810661"))
