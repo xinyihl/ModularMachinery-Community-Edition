@@ -244,9 +244,9 @@ public class MachineStructurePreviewPanel extends Row {
         tips.add(I18n.format("gui.preview.button.machine_info"));
         tips.add(I18n.format("gui.preview.button.machine_info.xyz.0"));
         tips.add(I18n.format("gui.preview.button.machine_info.xyz.1",
-                max.getX() - min.getX(),
-                max.getY() - min.getY(),
-                max.getZ() - min.getZ()
+                max.getX() - min.getX() + 1,
+                max.getY() - min.getY() + 1,
+                max.getZ() - min.getZ() + 1
         ));
         tips.add(I18n.format("gui.preview.button.machine_info.controller_y_pos",
                 Math.abs(machine.getPattern().getMin().getY())

@@ -104,6 +104,9 @@ public abstract class AbstractMachine {
     }
 
     public void setInternalParallelism(final int internalParallelism) {
+        if (maxParallelism < internalParallelism) {
+            this.maxParallelism = internalParallelism;
+        }
         this.internalParallelism = internalParallelism;
     }
 
