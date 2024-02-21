@@ -122,6 +122,7 @@ public class RequirementCatalyst extends RequirementIngredientArray {
         RequirementCatalyst catalyst = new RequirementCatalyst(copiedIngredients);
         catalyst.modifierList.addAll(this.modifierList);
         catalyst.toolTipList.addAll(toolTipList);
+        catalyst.chance = RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, chance, true);
         return catalyst;
     }
 

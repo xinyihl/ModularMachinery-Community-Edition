@@ -111,7 +111,7 @@ public abstract class WorldSceneRenderer {
         }
         deleteCacheBuffer();
         if (useCache && OpenGlHelper.useVbo()) {
-            this.setVertexBuffers(new VertexBuffer[BlockRenderLayer.values().length]);
+            setVertexBuffers(new VertexBuffer[BlockRenderLayer.values().length]);
             for (int j = 0; j < BlockRenderLayer.values().length; ++j) {
                 this.vertexBuffers.getBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
                 this.vertexBuffers.getAnotherBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
@@ -130,8 +130,7 @@ public abstract class WorldSceneRenderer {
 
             VertexBuffer[] bufferRef = this.vertexBuffers.getBuffer();
             VertexBuffer[] anotherBufferRef = this.vertexBuffers.getAnotherBuffer();
-            this.vertexBuffers.setLeft(null);
-            this.vertexBuffers.setRight(null);
+            setVertexBuffers(new VertexBuffer[BlockRenderLayer.values().length]);
 
             Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = this.layerBufferBuilders;
             this.layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
