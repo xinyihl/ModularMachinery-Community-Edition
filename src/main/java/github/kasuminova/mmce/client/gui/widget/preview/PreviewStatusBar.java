@@ -1,15 +1,19 @@
 package github.kasuminova.mmce.client.gui.widget.preview;
 
+import com.cleanroommc.client.shader.ShaderManager;
 import github.kasuminova.mmce.client.gui.widget.HorizontalLine;
 import github.kasuminova.mmce.client.gui.widget.MultiLineLabel;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.container.Column;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.resources.I18n;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-public class PreviewCompilerProgressbar extends Column {
+public class PreviewStatusBar extends Column {
 
     protected final WorldSceneRendererWidget renderer;
 
@@ -18,9 +22,10 @@ public class PreviewCompilerProgressbar extends Column {
 
     protected int maxWidth = 0;
 
-    protected boolean hasProgress = false;
+    protected boolean shaderPackLoaded = false;
+    protected boolean vboUnsupported = false;
 
-    public PreviewCompilerProgressbar(WorldSceneRendererWidget renderer) {
+    public PreviewStatusBar(WorldSceneRendererWidget renderer) {
         this.renderer = renderer;
     }
 
@@ -33,30 +38,41 @@ public class PreviewCompilerProgressbar extends Column {
                 .setMarginLeft(22);
         progressLine.setColor(0xFF87CEFA)
                 .setHeight(2);
+        addWidgets(progressLine, messageLabel);
     }
 
     @Override
     public void update(final WidgetGui gui) {
         super.update(gui);
         float progress = renderer.getWorldRenderer().getCompileProgress();
-        if (progress <= 0) {
-            if (hasProgress) {
-                getWidgets().clear();
-                hasProgress = false;
-            }
-            return;
+
+        if (ShaderManager.isOptifineShaderPackLoaded()) {
+            shaderPackLoaded = true;
+        } else if (!OpenGlHelper.useVbo()) {
+            vboUnsupported = true;
         }
-        if (!hasProgress) {
-            addWidgets(progressLine, messageLabel);
-            hasProgress = true;
+
+        if (progress > 0) {
+            progressLine.setWidth((int) Math.floor(maxWidth * progress));
+        } else {
+            progressLine.setWidth(0);
         }
-        messageLabel.setContents(Collections.singletonList(I18n.format(
-                "gui.preview.compiling.progress", MiscUtils.formatFloat(progress * 100f, 1)))
-        );
-        progressLine.setWidth((int) Math.floor(maxWidth * progress));
+
+        List<String> contents = new ArrayList<>();
+        if (progress > 0) {
+            contents.add(I18n.format("gui.preview.compiling.progress",
+                    MiscUtils.formatFloat(progress * 100f, 1)));
+        }
+        if (shaderPackLoaded) {
+            contents.add(I18n.format("gui.preview.optifine_shader_pack_warn"));
+        }
+        if (vboUnsupported) {
+            contents.add(I18n.format("gui.preview.vbo_unsupported_warn"));
+        }
+        messageLabel.setContents(contents);
     }
 
-    public PreviewCompilerProgressbar setMaxWidth(final int maxWidth) {
+    public PreviewStatusBar setMaxWidth(final int maxWidth) {
         this.maxWidth = maxWidth;
         this.messageLabel.setWidth(maxWidth - messageLabel.getMarginLeft() - messageLabel.getMarginRight());
         return this;

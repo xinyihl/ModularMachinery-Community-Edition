@@ -3,6 +3,7 @@ package github.kasuminova.mmce.client.gui.widget.preview;
 import com.cleanroommc.client.preview.renderer.scene.ISceneRenderHook;
 import com.cleanroommc.client.preview.renderer.scene.ImmediateWorldSceneRenderer;
 import com.cleanroommc.client.preview.renderer.scene.WorldSceneRenderer;
+import com.cleanroommc.client.shader.ShaderManager;
 import com.cleanroommc.client.util.BlockInfo;
 import com.cleanroommc.client.util.TrackedDummyWorld;
 import com.cleanroommc.client.util.world.LRDummyWorld;
@@ -11,6 +12,7 @@ import github.kasuminova.mmce.client.gui.util.MousePos;
 import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
 import github.kasuminova.mmce.client.gui.widget.event.WorldRendererCacheCleanEvent;
@@ -25,6 +27,7 @@ import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
@@ -213,8 +216,19 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         final int guiTop = gui.getGuiTop();
 
         RenderPos renderOffset = new RenderPos(guiLeft, guiTop);
-        RenderPos realRenderPos = renderPos.add(renderOffset);
+        RenderPos realRenderPos = renderPos.add(WidgetController.TRANSLATE_STATE.get());
         MousePos realMousePos = mousePos.add(renderPos).add(renderOffset);
+
+        // Optifine is broken everything we have.
+        boolean shaderPackLoaded = ShaderManager.isOptifineShaderPackLoaded();
+        if (shaderPackLoaded) {
+            if (renderer.isUseCache()) {
+                renderer.useCacheBuffer(false);
+                renderer.switchLRRenderer();
+            }
+        } else if (!renderer.isUseCache() && OpenGlHelper.useVbo()) {
+            renderer.useCacheBuffer(true);
+        }
 
         renderer.render(
                 realRenderPos.posX(), realRenderPos.posY(),

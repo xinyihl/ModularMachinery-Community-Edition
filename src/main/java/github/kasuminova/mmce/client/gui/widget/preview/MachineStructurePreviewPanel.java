@@ -54,8 +54,8 @@ public class MachineStructurePreviewPanel extends Row {
         // Title, at panel top...
         StructurePreviewTitle title = new StructurePreviewTitle(machine);
 
-        // Compiler progress bar, at renderer top...
-        PreviewCompilerProgressbar compilerProgressbar = new PreviewCompilerProgressbar(renderer);
+        // Preview Status Bar, at renderer top...
+        PreviewStatusBar previewStatusBar = new PreviewStatusBar(renderer);
 
         // Buttons, at preview bottom...
         Button5State menuBtn = new Button5State();
@@ -86,7 +86,7 @@ public class MachineStructurePreviewPanel extends Row {
         // ====================
         title.setAbsXY(5, 5);
 
-        compilerProgressbar.setMaxWidth(172)
+        previewStatusBar.setMaxWidth(172)
                 .setAbsXY(6, 26);
 
         menuBtn.setClickedTextureXY(184 + 15 + 15, 15)
@@ -151,7 +151,7 @@ public class MachineStructurePreviewPanel extends Row {
                         ? Collections.singletonList(I18n.format("gui.preview.button.toggle_unformed.tip"))
                         : Collections.singletonList(I18n.format("gui.preview.button.toggle_formed.tip")))
                 .setWidthHeight(13, 13);
-        showUpgrades.setClickedTextureXY(184 + 15 + 15 + 15, 90)
+        showUpgrades.setClickedTextureXY(184 + 15 + 15, 90)
                 .setMouseDownTextureXY(184 + 15 + 15, 90)
                 .setHoveredTextureXY(184 + 15, 90)
                 .setTextureXY(184, 90)
@@ -206,7 +206,7 @@ public class MachineStructurePreviewPanel extends Row {
         // Add all widgets to preview panel...
         addWidgets(
                 title,
-                compilerProgressbar,
+                previewStatusBar,
                 rightTopMenu, bottomMenu,
                 ingredientList,
                 selectedBlockIngredientMain.setDisabled(true), selectedBlockIngredientList.setDisabled(true),
@@ -273,6 +273,9 @@ public class MachineStructurePreviewPanel extends Row {
         }
         if (!machine.getDynamicPatterns().isEmpty()) {
             tips.add(I18n.format("gui.preview.button.machine_info.dynamic_pattern"));
+        }
+        if (machine.isRequiresBlueprint()) {
+            tips.add(I18n.format("gui.preview.button.machine_info.requires_blueprint"));
         }
         return tips;
     }

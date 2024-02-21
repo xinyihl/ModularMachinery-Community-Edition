@@ -13,8 +13,10 @@ public class HorizontalLine extends DynamicWidget {
 
     @Override
     public void render(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        GuiContainer.drawRect(renderPos.posX(), renderPos.posY(), renderPos.posX() + width, renderPos.posY() + height, color);
-        GlStateManager.color(1f, 1f, 1f, 1f);
+        if (width > 0) {
+            GuiContainer.drawRect(renderPos.posX(), renderPos.posY(), renderPos.posX() + width, renderPos.posY() + height, color);
+            GlStateManager.color(1f, 1f, 1f, 1f);
+        }
     }
 
     public int getColor() {

@@ -3,7 +3,6 @@ package com.cleanroommc.client.preview.renderer.scene;
 import com.cleanroommc.client.util.*;
 import com.cleanroommc.client.util.world.LRDummyWorld;
 import github.kasuminova.mmce.client.util.BufferBuilderPool;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
@@ -107,17 +106,19 @@ public abstract class WorldSceneRenderer {
     }
 
     public WorldSceneRenderer useCacheBuffer(boolean useCache) {
-        if (this.useCache || !OpenGlHelper.useVbo() || !Minecraft.getMinecraft().isCallingFromMinecraftThread()) return this;
+        if (this.useCache == useCache || !Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
+            return this;
+        }
         deleteCacheBuffer();
-        if (useCache) {
+        if (useCache && OpenGlHelper.useVbo()) {
             this.setVertexBuffers(new VertexBuffer[BlockRenderLayer.values().length]);
             for (int j = 0; j < BlockRenderLayer.values().length; ++j) {
                 this.vertexBuffers.getBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
                 this.vertexBuffers.getAnotherBuffer()[j] = new VertexBuffer(DefaultVertexFormats.BLOCK);
             }
             stopCompileCache();
-            cacheState.set(CacheState.NEED);
         }
+        cacheState.set(useCache ? CacheState.NEED : CacheState.UNUSED);
         this.useCache = useCache;
         return this;
     }
@@ -142,14 +143,16 @@ public abstract class WorldSceneRenderer {
                     } catch (InterruptedException ignored) {
                     }
                 }
-                for (int i = 0; i < BlockRenderLayer.values().length; ++i) {
-                    if (bufferRef[i] != null) {
-                        bufferRef[i].deleteGlBuffers();
+                Minecraft.getMinecraft().addScheduledTask(() -> {
+                    for (int i = 0; i < BlockRenderLayer.values().length; ++i) {
+                        if (bufferRef[i] != null) {
+                            bufferRef[i].deleteGlBuffers();
+                        }
+                        if (anotherBufferRef[i] != null) {
+                            anotherBufferRef[i].deleteGlBuffers();
+                        }
                     }
-                    if (anotherBufferRef[i] != null) {
-                        anotherBufferRef[i].deleteGlBuffers();
-                    }
-                }
+                });
                 layerBufferBuilders.values().stream()
                         .filter(buffer -> buffer != null)
                         .forEach(BufferBuilderPool::returnBuffer);
@@ -167,7 +170,7 @@ public abstract class WorldSceneRenderer {
             stopCompileCache();
             cacheState.set(CacheState.NEED);
         } else {
-            switchLRRenderer(Minecraft.getMinecraft());
+            switchLRRenderer();
         }
         return this;
     }
@@ -584,12 +587,12 @@ public abstract class WorldSceneRenderer {
         cacheState.set(CacheState.COMPILED);
         maxProgress = -1;
 
-        switchLRRenderer(mc);
+        switchLRRenderer();
 
         thread = null;
     }
 
-    protected void switchLRRenderer(final Minecraft mc) {
+    public void switchLRRenderer() {
         dummyWorld.setUseLeft(!dummyWorld.isUseLeft());
         vertexBuffers.setUseLeft(!vertexBuffers.isUseLeft());
         renderedBlocksMap.setUseLeft(!renderedBlocksMap.isUseLeft());

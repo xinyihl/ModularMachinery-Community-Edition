@@ -88,7 +88,9 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
             copiedIngredients.add(copied);
         });
 
-        return new RequirementIngredientArray(copiedIngredients, getActionType());
+        RequirementIngredientArray requirement = new RequirementIngredientArray(copiedIngredients, getActionType());
+        requirement.chance = RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, chance, true);
+        return requirement;
     }
 
     @Nonnull
