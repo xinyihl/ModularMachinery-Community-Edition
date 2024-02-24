@@ -106,7 +106,7 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         if (gui == null) {
             gui = new GuiBlueprintScreenJEI();
             gui.setWorldAndResolution(minecraft, recipesGUI.width, recipesGUI.height);
-            gui.setWidgetController(new WidgetController(new WidgetGui(gui, recipeWidth, recipeHeight, guiLeft, guiTop)));
+            gui.setWidgetController(new WidgetController(WidgetGui.of(gui, recipeWidth, recipeHeight, guiLeft, guiTop)));
         }
         gui.width = recipesGUI.width;
         gui.height = recipesGUI.height;

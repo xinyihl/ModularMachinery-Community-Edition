@@ -44,7 +44,7 @@ public class GuiScreenBlueprint extends GuiScreenDynamic {
         this.guiLeft = (this.width - X_SIZE) / 2;
         this.guiTop = (this.height - Y_SIZE) / 2;
 
-        this.widgetController = new WidgetController(new WidgetGui(this, X_SIZE, Y_SIZE, guiLeft, guiTop));
+        this.widgetController = new WidgetController(WidgetGui.of(this, X_SIZE, Y_SIZE, guiLeft, guiTop));
     }
 
     @Override
