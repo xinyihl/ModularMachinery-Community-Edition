@@ -5,6 +5,7 @@ import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.DynamicWidget;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
+import github.kasuminova.mmce.client.gui.widget.event.GuiEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.opengl.GL11;
@@ -192,6 +193,15 @@ public abstract class WidgetContainer extends DynamicWidget {
 
     @Override
     public abstract List<String> getHoverTooltips(final MousePos mousePos);
+
+    // Events
+
+    /**
+     * GUI events will only be passed down, not up.
+     * @return Returns true to terminate the passing of events to the widgets.
+     */
+    @Override
+    public abstract boolean onGuiEvent(final GuiEvent event);
 
     // Scissor setting
 

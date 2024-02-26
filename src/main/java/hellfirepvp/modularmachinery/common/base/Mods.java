@@ -36,13 +36,15 @@ public enum Mods {
     TCONSTRUCT("tconstruct"),
     AE2("appliedenergistics2"),
     AE2EL("appliedenergistics2") {
-        private Boolean detected = null;
+        private boolean initialized = false;
+        private boolean detected = false;
 
         @Override
         public boolean isPresent() {
-            if (detected != null) {
+            if (initialized) {
                 return detected;
             }
+            initialized = true;
             if (!super.isPresent()) {
                 return detected = false;
             }

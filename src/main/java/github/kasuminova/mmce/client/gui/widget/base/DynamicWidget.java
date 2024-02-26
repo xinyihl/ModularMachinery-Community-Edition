@@ -154,6 +154,11 @@ public abstract class DynamicWidget {
         return this;
     }
 
+    /**
+     * Absolute coordinates cause the component to always be rendered at one coordinate
+     * (but the exact position on the screen still depends on the component container).
+     * Widgets rendered using absolute coordinates ignore the margin attribute.
+     */
     public boolean isUseAbsPos() {
         return useAbsPos;
     }

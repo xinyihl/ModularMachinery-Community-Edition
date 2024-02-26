@@ -43,12 +43,9 @@ public class MultiLineLabel extends DynamicWidget {
 
         int maxWidth = renderSize.isWidthLimited() ? Math.round(Math.max((float) renderSize.width() / scale, DEFAULT_FONT_HEIGHT / scale)) : -1;
         int maxHeight = renderSize.isHeightLimited() ? Math.round((float) renderSize.height() / scale) : Math.round(height / scale);
-        float posX = renderPos.posX() / scale;
-        float posY = renderPos.posY() / scale;
         float totalHeight = getTotalHeight();
-        if (verticalCentering) {
-            posY += (maxHeight - totalHeight) / 2F;
-        }
+        float posX = renderPos.posX() / scale;
+        float posY = renderPos.posY() / scale + (verticalCentering ? (maxHeight - totalHeight) / 2F : 0);
 
         FontRenderer fr = gui.getGui().mc.fontRenderer;
 

@@ -39,6 +39,7 @@ import javax.vecmath.Vector3f;
 import java.util.*;
 import java.util.function.Consumer;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class WorldSceneRendererWidget extends DynamicWidget {
     protected final DynamicMachine machine;
     protected final WorldSceneRenderer renderer = new ImmediateWorldSceneRenderer(

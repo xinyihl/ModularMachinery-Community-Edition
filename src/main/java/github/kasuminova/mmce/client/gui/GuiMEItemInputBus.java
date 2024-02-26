@@ -68,36 +68,37 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
         List<String> tooltip = new ArrayList<>();
         tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action"));
         // Quite a sight, isn't it?
+        String addAmount = MiscUtils.formatDecimal(getAddAmount());
         if (isShiftDown() && isControlDown() && isAltDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "SHIFT + CTRL + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + CTRL + ALT", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "SHIFT + CTRL + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + CTRL + ALT", addAmount));
         } else if (isAltDown() && isControlDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "CTRL + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "CTRL + ALT", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "CTRL + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "CTRL + ALT", addAmount));
         } else if (isAltDown() && isShiftDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "SHIFT + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + ALT", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "SHIFT + ALT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + ALT", addAmount));
         } else if (isShiftDown() && isControlDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "SHIFT + CTRL", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + CTRL", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "SHIFT + CTRL", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT + CTRL", addAmount));
         } else if (isControlDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "CTRL", MiscUtils.formatDecimal(getAddAmount())));
+                    "CTRL", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "CTRL", MiscUtils.formatDecimal(getAddAmount())));
+                    "CTRL", addAmount));
         } else if (isShiftDown()) {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase",
-                    "SHIFT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT", addAmount));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease",
-                    "SHIFT", MiscUtils.formatDecimal(getAddAmount())));
+                    "SHIFT", addAmount));
         } else {
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.increase.normal"));
             tooltip.add(TextFormatting.GRAY + I18n.format("gui.meiteminputbus.inv_action.decrease.normal"));
@@ -137,26 +138,27 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
 
     protected void onMouseWheelEvent(final int x, final int y, final int wheel) {
         final Slot slot = this.getSlot(x, y);
-        if (slot instanceof SlotFake) {
-            final ItemStack stack = slot.getStack();
-            if (stack.isEmpty()) {
-                return;
-            }
-
-            int amount = wheel < 0 ? -getAddAmount() : getAddAmount();
-            int stackCount = stack.getCount();
-
-            if (amount > 0) {
-                if (stackCount + amount > slot.getSlotStackLimit()) {
-                    return;
-                }
-            } else if (stackCount - amount <= 0) {
-                return;
-            }
-
-            this.invActionAmount += amount;
-            ClientProxy.clientScheduler.addRunnable(() -> sendInvActionToServer(slot.slotNumber), 0);
+        if (!(slot instanceof SlotFake)) {
+            return;
         }
+        final ItemStack stack = slot.getStack();
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        int amount = wheel < 0 ? -getAddAmount() : getAddAmount();
+        int stackCount = stack.getCount();
+
+        if (amount > 0) {
+            if (stackCount + amount > slot.getSlotStackLimit()) {
+                return;
+            }
+        } else if (stackCount - amount <= 0) {
+            return;
+        }
+
+        this.invActionAmount += amount;
+        ClientProxy.clientScheduler.addRunnable(() -> sendInvActionToServer(slot.slotNumber), 0);
     }
 
     public void sendInvActionToServer(int slotNumber) {

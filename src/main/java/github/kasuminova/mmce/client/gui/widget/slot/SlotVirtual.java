@@ -18,6 +18,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.config.GuiUtils;
 
 import java.awt.*;
+import java.util.Collections;
+import java.util.List;
 
 public class SlotVirtual extends DynamicWidget {
 
@@ -26,6 +28,8 @@ public class SlotVirtual extends DynamicWidget {
     protected int slotTexY = 0;
 
     protected ItemStack stackInSlot = ItemStack.EMPTY;
+
+    protected boolean mouseOver = false;
 
     public SlotVirtual() {
         setWidthHeight(18, 18);
@@ -96,9 +100,15 @@ public class SlotVirtual extends DynamicWidget {
         }
     }
 
+    /**
+     * Renders tooltips that take advantage of the ScrollingColumn feature to determine
+     * if the mouse is actually over the widget, preventing the judgment from going outside
+     * the container.
+     */
     @Override
     public void postRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        if (!stackInSlot.isEmpty() && isMouseOver(mousePos)) {
+        if (!stackInSlot.isEmpty() && mouseOver) {
+            mouseOver = false;
             WidgetContainer.disableScissor();
             GuiScreen g = gui.getGui();
             GuiUtils.preItemToolTip(stackInSlot);
@@ -106,6 +116,12 @@ public class SlotVirtual extends DynamicWidget {
             GuiUtils.postItemToolTip();
             WidgetContainer.enableScissor();
         }
+    }
+
+    @Override
+    public List<String> getHoverTooltips(final MousePos mousePos) {
+        mouseOver = true;
+        return Collections.emptyList();
     }
 
     public SlotVirtual setSlotTexLocation(final ResourceLocation slotTexLocation) {
