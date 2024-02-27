@@ -21,6 +21,7 @@ import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.recipe.*;
 import github.kasuminova.mmce.common.util.concurrent.Action;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.PreparedRecipe;
 import hellfirepvp.modularmachinery.common.crafting.RecipeRegistry;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
@@ -38,6 +39,7 @@ import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasRegistry;
 import mekanism.api.gas.GasStack;
+import mekanism.common.integration.crafttweaker.gas.IGasStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
@@ -391,8 +393,9 @@ public class RecipePrimer implements PreparedRecipe {
             input instanceof IOreDictEntry ||
             input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
             addItemInput(input);
-        } else if (input instanceof ILiquidStack) {
-            addFluidInput((ILiquidStack) input);
+        } else if (input instanceof ILiquidStack liquidStack) {
+            addFluidInput(liquidStack);
+        } else if (Mods.MEKANISM.isPresent() && checkIGasStackAndAdd(IOType.INPUT, input)) {
         } else {
             CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid input type %s(%s)! Ignored.", input, input.getClass()));
         }
@@ -415,6 +418,7 @@ public class RecipePrimer implements PreparedRecipe {
             addItemOutput(output);
         } else if (output instanceof ILiquidStack) {
             addFluidOutput((ILiquidStack) output);
+        } else if (Mods.MEKANISM.isPresent() && checkIGasStackAndAdd(IOType.OUTPUT, output)) {
         } else {
             CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid output type %s(%s)! Ignored.", output, output.getClass()));
         }
@@ -427,6 +431,18 @@ public class RecipePrimer implements PreparedRecipe {
             addOutput(output);
         }
         return this;
+    }
+
+    @Optional.Method(modid = "mekanism")
+    private boolean checkIGasStackAndAdd(IOType ioType, IIngredient input) {
+        if (!(input instanceof IGasStack gasStack)) {
+            return false;
+        }
+        switch (ioType) {
+            case INPUT -> addGasInput(gasStack);
+            case OUTPUT -> addGasOutput(gasStack);
+        }
+        return true;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -507,6 +523,7 @@ public class RecipePrimer implements PreparedRecipe {
     // GAS input & output
     //----------------------------------------------------------------------------------------------
     @ZenMethod
+    @Deprecated
     @Optional.Method(modid = "mekanism")
     public RecipePrimer addGasInput(String gasName, int amount) {
         requireGas(IOType.INPUT, gasName, amount);
@@ -514,9 +531,42 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     @ZenMethod
+    @Deprecated
     @Optional.Method(modid = "mekanism")
     public RecipePrimer addGasOutput(String gasName, int amount) {
         requireGas(IOType.OUTPUT, gasName, amount);
+        return this;
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "mekanism")
+    public RecipePrimer addGasInput(IGasStack gasStack) {
+        requireGas(IOType.INPUT, gasStack);
+        return this;
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "mekanism")
+    public RecipePrimer addGasOutput(IGasStack gasStack) {
+        requireGas(IOType.OUTPUT, gasStack);
+        return this;
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "mekanism")
+    public RecipePrimer addGasInputs(IGasStack... gasStacks) {
+        for (final IGasStack gasStack : gasStacks) {
+            requireGas(IOType.INPUT, gasStack);
+        }
+        return this;
+    }
+
+    @ZenMethod
+    @Optional.Method(modid = "mekanism")
+    public RecipePrimer addGasOutputs(IGasStack... gasStacks) {
+        for (final IGasStack gasStack : gasStacks) {
+            requireGas(IOType.OUTPUT, gasStack);
+        }
         return this;
     }
 
@@ -667,6 +717,7 @@ public class RecipePrimer implements PreparedRecipe {
         }
     }
 
+    @Deprecated
     @Optional.Method(modid = "mekanism")
     private void requireGas(IOType ioType, String gasName, int amount) {
         Gas gas = GasRegistry.getGas(gasName);
@@ -676,7 +727,23 @@ public class RecipePrimer implements PreparedRecipe {
         }
         int max = Math.max(0, amount);
         GasStack gasStack = new GasStack(gas, max);
+        switch (ioType) {
+            case INPUT -> CraftTweakerAPI.logWarning(String.format(
+                    "[ModularMachinery] addGasInput(%s, %d) is deprecated consider using <gas:%s> * %d!",
+                    gasName, amount, gasName, amount
+            ));
+            case OUTPUT -> CraftTweakerAPI.logWarning(String.format(
+                    "[ModularMachinery] addGasOutput(%s, %d) is deprecated consider using <gas:%s> * %d!",
+                    gasName, amount, gasName, amount
+            ));
+        }
         RequirementFluid req = RequirementFluid.createMekanismGasRequirement(RequirementTypesMM.REQUIREMENT_GAS, ioType, gasStack);
+        appendComponent(req);
+    }
+
+    @Optional.Method(modid = "mekanism")
+    private void requireGas(IOType ioType, IGasStack gasStack) {
+        RequirementFluid req = RequirementFluid.createMekanismGasRequirement(RequirementTypesMM.REQUIREMENT_GAS, ioType, (GasStack) gasStack.getInternal());
         appendComponent(req);
     }
 
