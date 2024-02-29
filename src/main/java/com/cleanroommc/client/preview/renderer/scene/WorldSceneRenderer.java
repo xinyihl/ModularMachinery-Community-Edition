@@ -82,7 +82,7 @@ public abstract class WorldSceneRenderer {
     private final LRMap<Collection<BlockPos>, ISceneRenderHook> renderedBlocksMap;
     private final LRVertexBuffer vertexBuffers = new LRVertexBuffer();
 
-    protected Set<BlockPos> tileEntities;
+    protected Set<BlockPos> tileEntities = new HashSet<>();
     protected boolean useCache;
     protected AtomicReference<CacheState> cacheState;
     protected int maxProgress;
@@ -157,7 +157,7 @@ public abstract class WorldSceneRenderer {
                 layerBufferBuilders.clear();
             });
         }
-        this.tileEntities = null;
+        tileEntities.clear();
         useCache = false;
         cacheState.set(CacheState.UNUSED);
         return this;
@@ -223,7 +223,7 @@ public abstract class WorldSceneRenderer {
 
     public void render(float x, float y, float width, float height, int mouseX, int mouseY) {
         // setupCamera
-        PositionedRect positionedRect = getPositionedRect((int)x, (int)y, (int)width, (int)height);
+        PositionedRect positionedRect = getPositionedRect((int) x, (int) y, (int) width, (int) height);
         PositionedRect mouse = getPositionedRect(mouseX, mouseY, 0, 0);
         mouseX = mouse.position.x;
         mouseY = mouse.position.y;
@@ -232,18 +232,21 @@ public abstract class WorldSceneRenderer {
         drawWorld();
         // check lookingAt
         this.lastTraceResult = null;
-        if (onLookingAt != null && mouseX > positionedRect.position.x && mouseX < positionedRect.position.x + positionedRect.size.width
-                && mouseY > positionedRect.position.y && mouseY < positionedRect.position.y + positionedRect.size.height) {
+        if (onLookingAt != null && isMouseOver(positionedRect, mouseX, mouseY)) {
             Vector3f hitPos = unProject(mouseX, mouseY);
             RayTraceResult result = rayTrace(hitPos);
             if (result != null) {
-                this.lastTraceResult = null;
                 this.lastTraceResult = result;
                 onLookingAt.accept(result);
             }
         }
         // resetCamera
         resetCamera();
+    }
+
+    protected static boolean isMouseOver(final PositionedRect positionedRect, final int mouseX, final int mouseY) {
+        return mouseX > positionedRect.position.x && mouseX < positionedRect.position.x + positionedRect.size.width
+                && mouseY > positionedRect.position.y && mouseY < positionedRect.position.y + positionedRect.size.height;
     }
 
     public Vector3f getEyePos() {
@@ -275,7 +278,7 @@ public abstract class WorldSceneRenderer {
 
     public void setCameraLookAt(Vector3f lookAt, double radius, double rotationPitch, double rotationYaw) {
         Vector3 vecX = new Vector3(Math.cos(rotationPitch), 0, Math.sin(rotationPitch));
-        Vector3 vecY = new Vector3(0, Math.tan(rotationYaw) * vecX.mag(),0);
+        Vector3 vecY = new Vector3(0, Math.tan(rotationYaw) * vecX.mag(), 0);
         Vector3 pos = vecX.copy().add(vecY).normalize().multiply(radius);
         setCameraLookAt(pos.add(lookAt.x, lookAt.y, lookAt.z), lookAt, worldUp);
     }
@@ -639,7 +642,7 @@ public abstract class WorldSceneRenderer {
         RenderHelper.enableStandardItemLighting();
         ForgeHooksClient.setRenderPass(pass);
         if (!useCache) {
-            renderedBlocksMap.getMap().forEach((renderedBlocks, hook)->{
+            renderedBlocksMap.getMap().forEach((renderedBlocks, hook) -> {
                 if (hook != null) {
                     hook.apply(true, pass, null);
                 } else {
@@ -658,14 +661,10 @@ public abstract class WorldSceneRenderer {
                 }
             });
         } else {
-            if (tileEntities != null) {
-                for (BlockPos pos : tileEntities) {
-                    TileEntity tile = getWorld().getTileEntity(pos);
-                    if (tile != null) {
-                        if (tile.shouldRenderInPass(pass)) {
-                            TileEntityRendererDispatcher.instance.render(tile, pos.getX(), pos.getY(), pos.getZ(), particle);
-                        }
-                    }
+            for (BlockPos pos : tileEntities) {
+                TileEntity tile = getWorld().getTileEntity(pos);
+                if (tile != null && tile.shouldRenderInPass(pass)) {
+                    TileEntityRendererDispatcher.instance.render(tile, pos.getX(), pos.getY(), pos.getZ(), particle);
                 }
             }
         }
@@ -804,7 +803,7 @@ public abstract class WorldSceneRenderer {
      * @param depth should pass Depth Test
      * @return x, y, z
      */
-    protected Vector3f blockPos2ScreenPos(BlockPos pos, boolean depth, int x, int y, int width, int height){
+    protected Vector3f blockPos2ScreenPos(BlockPos pos, boolean depth, int x, int y, int width, int height) {
         // render a frame
         GlStateManager.enableDepth();
         setupCamera(getPositionedRect(x, y, width, height));

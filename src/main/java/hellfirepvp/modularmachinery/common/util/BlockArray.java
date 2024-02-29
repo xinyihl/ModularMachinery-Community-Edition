@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.util;
 
 import com.github.bsideup.jabel.Desugar;
 import com.google.gson.JsonParseException;
+import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
@@ -26,12 +27,12 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,6 +46,8 @@ import java.util.stream.Collectors;
  * Created by HellFirePvP
  * Date: 27.06.2017 / 10:50
  */
+@ZenRegister
+@ZenClass("mods.modularmachinery.BlockArray")
 public class BlockArray {
     private static final ResourceLocation IC_2_TILE_BLOCK = new ResourceLocation("ic2", "te");
 
@@ -234,7 +237,7 @@ public class BlockArray {
         pattern.forEach((pos, info) -> {
             BlockPos realPos = ctrlPos.add(pos);
             if (!info.matches(world, realPos, false)) {
-                ingredientList.add(new StructureIngredient.ItemIngredient(pos, info.getBlockStateIngredientList()));
+                ingredientList.add(new StructureIngredient.ItemIngredient(pos, info.getBlockStateIngredientList(), info.getMatchingTag()));
             }
         });
         return ingredientList;
@@ -395,8 +398,8 @@ public class BlockArray {
             sb.append(move).append(move).append(move).append("\"z\": ").append(pos.getZ()).append(",").append(newline);
 
             BlockInformation bi = this.pattern.get(pos);
-            if (bi.matchingTag != null) {
-                String strTag = NBTJsonSerializer.serializeNBT(bi.matchingTag);
+            if (bi.getMatchingTag() != null) {
+                String strTag = NBTJsonSerializer.serializeNBT(bi.getMatchingTag());
                 sb.append(move).append(move).append(move).append("\"nbt\": ").append(strTag).append(",").append(newline);
             }
 
@@ -435,8 +438,8 @@ public class BlockArray {
         private List<IBlockState> samples = new ArrayList<>();
 
         private boolean hasTileEntity;
-        public NBTTagCompound matchingTag = null;
-        public NBTTagCompound previewTag = null;
+        protected NBTTagCompound matchingTag = null;
+        protected NBTTagCompound previewTag = null;
         public AdvancedBlockChecker nbtChecker = null;
 
         public BlockInformation(List<IBlockStateDescriptor> matching) {
@@ -512,8 +515,20 @@ public class BlockArray {
             }
         }
 
+        public NBTTagCompound getMatchingTag() {
+            return matchingTag;
+        }
+
         public void setMatchingTag(@Nullable NBTTagCompound matchingTag) {
             this.matchingTag = matchingTag;
+        }
+
+        public NBTTagCompound getPreviewTag() {
+            return previewTag;
+        }
+
+        public void setPreviewTag(NBTTagCompound previewTag) {
+            this.previewTag = previewTag;
         }
 
         public IBlockState getSampleState() {
@@ -580,8 +595,8 @@ public class BlockArray {
                 bi = new BlockInformation(newDescriptors);
             }
 
-            if (this.matchingTag != null) {
-                bi.matchingTag = this.matchingTag;
+            if (this.getMatchingTag() != null) {
+                bi.setMatchingTag(this.getMatchingTag());
             }
             return bi;
         }
@@ -594,8 +609,8 @@ public class BlockArray {
                 descr.add(copy);
             }
             BlockInformation bi = new BlockInformation(descr);
-            if (this.matchingTag != null) {
-                bi.matchingTag = this.matchingTag;
+            if (this.getMatchingTag() != null) {
+                bi.setMatchingTag(this.getMatchingTag());
             }
             return bi;
         }
@@ -614,12 +629,12 @@ public class BlockArray {
 
                     if (!isNBTCheckerMatch(world, at, applicable)) return false;
 
-                    if (matchingTag != null) {
+                    if (getMatchingTag() != null) {
                         TileEntity te = world.getTileEntity(at);
-                        if (te != null && matchingTag.getSize() > 0) {
+                        if (te != null && getMatchingTag().getSize() > 0) {
                             NBTTagCompound cmp = new NBTTagCompound();
                             te.writeToNBT(cmp);
-                            return NBTMatchingHelper.matchNBTCompound(matchingTag, cmp); //No match at this position.
+                            return NBTMatchingHelper.matchNBTCompound(getMatchingTag(), cmp); //No match at this position.
                         }
                     }
                     return true;

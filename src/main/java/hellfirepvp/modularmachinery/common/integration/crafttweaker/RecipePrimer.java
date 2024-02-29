@@ -259,30 +259,41 @@ public class RecipePrimer implements PreparedRecipe {
     }
 
     /**
-     * 设置此配方在工厂中同时运行的数量是否不超过 1。
-     */
-    @ZenMethod
-    @Deprecated
-    public RecipePrimer setSingleThread(boolean singleThread) {
-        CraftTweakerAPI.logWarning("[ModularMachinery] setSingleThread() is deprecated! Consider using setMaxThreads(1)");
-        return setMaxThreads(singleThread ? 1 : -1);
-    }
-
-    /**
      * 设置此配方只能被指定的核心线程执行。
      * @param name 线程名
      */
     @ZenMethod
     public RecipePrimer setThreadName(String name) {
-        this.threadName = name;
+        this.threadName = name == null ? "" : name;
         return this;
     }
 
     //----------------------------------------------------------------------------------------------
     // EventHandlers
     //----------------------------------------------------------------------------------------------
+
     @ZenMethod
+    public RecipePrimer addPreCheckHandler(IEventHandler<RecipeCheckEvent> handler) {
+        addRecipeEventHandler(RecipeCheckEvent.class, event -> {
+            if (event.phase != Phase.START) return;
+            handler.handle(event);
+        });
+        return this;
+    }
+
+    @ZenMethod
+    public RecipePrimer addPostCheckHandler(IEventHandler<RecipeCheckEvent> handler) {
+        addRecipeEventHandler(RecipeCheckEvent.class, event -> {
+            if (event.phase != Phase.END) return;
+            handler.handle(event);
+        });
+        return this;
+    }
+
+    @ZenMethod
+    @Deprecated
     public RecipePrimer addCheckHandler(IEventHandler<RecipeCheckEvent> handler) {
+        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method addCheckHandler()! Consider using addPostCheckHandler()");
         addRecipeEventHandler(RecipeCheckEvent.class, handler);
         return this;
     }
@@ -309,13 +320,6 @@ public class RecipePrimer implements PreparedRecipe {
             handler.handle(event);
         });
         return this;
-    }
-
-    @ZenMethod
-    @Deprecated
-    public RecipePrimer addTickHandler(IEventHandler<RecipeTickEvent> handler) {
-        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method addTickHandler()! Consider using addPostTickHandler()");
-        return addPostTickHandler(handler);
     }
 
     @ZenMethod
@@ -355,14 +359,6 @@ public class RecipePrimer implements PreparedRecipe {
             }
             handler.handle(event);
         });
-        return this;
-    }
-
-    @ZenMethod
-    @Deprecated
-    public RecipePrimer addFactoryTickHandler(IEventHandler<FactoryRecipeTickEvent> handler) {
-        CraftTweakerAPI.logWarning("[ModularMachinery] Deprecated method addFactoryTickHandler()! Consider using addFactoryPostTickHandler()");
-        addRecipeEventHandler(FactoryRecipeTickEvent.class, handler);
         return this;
     }
 
@@ -593,7 +589,7 @@ public class RecipePrimer implements PreparedRecipe {
     public RecipePrimer addItemInput(IOreDictEntry oreDict, int amount) {
         requireFuel(IOType.INPUT, oreDict.getName(), amount);
         CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
-                                                 "`addItemInput(<ore:%s>, %s)`! Consider using `addItemInput(<ore:%s> * %s)`",
+                        "`addItemInput(<ore:%s>, %s)`! Consider using `addItemInput(<ore:%s> * %s)`",
                 oreDict.getName(), amount, oreDict.getName(), amount)
         );
         return this;
@@ -654,7 +650,7 @@ public class RecipePrimer implements PreparedRecipe {
     public RecipePrimer addItemOutput(IOreDictEntry oreDict, int amount) {
         requireFuel(IOType.OUTPUT, oreDict.getName(), amount);
         CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
-                                                 "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
+                        "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
                 oreDict.getName(), amount, oreDict.getName(), amount)
         );
         return this;
@@ -729,11 +725,11 @@ public class RecipePrimer implements PreparedRecipe {
         GasStack gasStack = new GasStack(gas, max);
         switch (ioType) {
             case INPUT -> CraftTweakerAPI.logWarning(String.format(
-                    "[ModularMachinery] addGasInput(%s, %d) is deprecated consider using <gas:%s> * %d!",
+                    "[ModularMachinery] `addGasInput(%s, %d)` is deprecated, consider using `<gas:%s> * %d`!",
                     gasName, amount, gasName, amount
             ));
             case OUTPUT -> CraftTweakerAPI.logWarning(String.format(
-                    "[ModularMachinery] addGasOutput(%s, %d) is deprecated consider using <gas:%s> * %d!",
+                    "[ModularMachinery] `addGasOutput(%s, %d)` is deprecated, consider using `<gas:%s> * %d`!",
                     gasName, amount, gasName, amount
             ));
         }
