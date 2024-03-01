@@ -69,9 +69,10 @@ public class MachineStructurePreviewPanel extends Row {
         Button4State dynamicPatternSubtract = new Button4State();
 
         // Buttons, at preview top right...
+        Button machineExtraInfo = new Button();
         Button5State toggleFormed = new Button5State();
         Button5State showUpgrades = new Button5State();
-        Button machineExtraInfo = new Button();
+        Button4State resetCenter = new Button4State();
 
         // Ingredient list, at panel bottom...
         IngredientList ingredientList = new IngredientList();
@@ -148,6 +149,11 @@ public class MachineStructurePreviewPanel extends Row {
                         "gui.preview.button.dynamic_pattern_subtract.tip", renderer.getDynamicPatternSize())))
                 .setWidthHeight(13, 13);
 
+        machineExtraInfo.setHoveredTextureXY(184 + 15, 214)
+                .setTextureXY(184, 214)
+                .setTextureLocation(WIDGETS_TEX_LOCATION)
+                .setTooltipFunction(btn -> getMachineExtraInfo(machine))
+                .setWidthHeight(13, 13);
         toggleFormed.setClickedTextureXY(184 + 15 + 15 + 15, 0)
                 .setMouseDownTextureXY(184 + 15 + 15, 0)
                 .setHoveredTextureXY(184 + 15, 0)
@@ -166,10 +172,11 @@ public class MachineStructurePreviewPanel extends Row {
                         ? Collections.singletonList(I18n.format("gui.preview.button.toggle_upgrade_display.disable.tip"))
                         : Collections.singletonList(I18n.format("gui.preview.button.toggle_upgrade_display.enable.tip")))
                 .setWidthHeight(13, 13);
-        machineExtraInfo.setHoveredTextureXY(184 + 15, 214)
-                .setTextureXY(184, 214)
+        resetCenter.setMouseDownTextureXY(184 + 15 + 15, 229)
+                .setHoveredTextureXY(184 + 15, 229)
+                .setTextureXY(184, 229)
                 .setTextureLocation(WIDGETS_TEX_LOCATION)
-                .setTooltipFunction(btn -> getMachineExtraInfo(machine))
+                .setTooltipFunction(btn -> Collections.singletonList(I18n.format("gui.preview.button.reset_center.tip")))
                 .setWidthHeight(13, 13);
 
         ingredientList.setAbsXY(5, 179);
@@ -204,7 +211,7 @@ public class MachineStructurePreviewPanel extends Row {
         if (!machine.getModifiers().isEmpty() || !machine.getMultiBlockModifiers().isEmpty()) {
             rightTopMenu.addWidgets(showUpgrades.setMarginRight(2));
         }
-        rightTopMenu.addWidgets(toggleFormed.setMarginRight(2), machineExtraInfo.setMarginRight(2));
+        rightTopMenu.addWidgets(resetCenter.setMarginRight(2), toggleFormed.setMarginRight(2), machineExtraInfo.setMarginRight(2));
         rightTopMenu.setAbsXY(PANEL_WIDTH - (rightTopMenu.getWidth() + 6), 28);
 
         // Right menu
@@ -237,6 +244,7 @@ public class MachineStructurePreviewPanel extends Row {
             dynamicPatternSubtract.setOnClickedListener(btn -> handleDynamicPatternSubtractButton());
         }
 
+        resetCenter.setOnClickedListener(btn -> handleResetCenterButton());
         toggleFormed.setOnClickedListener(btn -> handleToggleFormedButton(toggleFormed));
         if (!machine.getModifiers().isEmpty() || !machine.getMultiBlockModifiers().isEmpty()) {
             showUpgrades.setOnClickedListener(btn -> handleShowUpgradesButton(upgradeIngredientList, showUpgrades, rightMenu));
@@ -335,6 +343,10 @@ public class MachineStructurePreviewPanel extends Row {
         int minY = renderer.getPattern().getMin().getY();
         int maxY = renderer.getPattern().getMax().getY();
         renderer.setRenderLayer((maxY - renderLayer) + minY);
+    }
+
+    protected void handleResetCenterButton() {
+        renderer.resetCenter();
     }
 
     protected void handleToggleFormedButton(final Button5State toggleFormed) {

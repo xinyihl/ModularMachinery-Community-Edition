@@ -53,7 +53,7 @@ public class IngredientItemStackRenderer extends ItemStackRenderer {
             fr.setUnicodeFlag(false);
             fr.drawStringWithShadow(s, (xPos + 16 - (fr.getStringWidth(s) * scale)) / scale, (yPos + 12) / scale, 0xFFFFFF);
         } else {
-            fr.drawStringWithShadow(s, xPos + 16 - fr.getStringWidth(s), yPos + 9, 0xFFFFFF);
+            fr.drawStringWithShadow(s, xPos + 17 - fr.getStringWidth(s), yPos + 9, 0xFFFFFF);
         }
         fr.setUnicodeFlag(unicodeFlag);
 

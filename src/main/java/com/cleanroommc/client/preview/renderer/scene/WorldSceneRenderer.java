@@ -231,7 +231,7 @@ public abstract class WorldSceneRenderer {
         return lastTraceResult;
     }
 
-    public void render(float x, float y, float width, float height, int mouseX, int mouseY) {
+    public void render(float x, float y, float width, float height, int mouseX, int mouseY, boolean traceBlock) {
         // setupCamera
         PositionedRect positionedRect = getPositionedRect((int) x, (int) y, (int) width, (int) height);
         PositionedRect mouse = getPositionedRect(mouseX, mouseY, 0, 0);
@@ -241,13 +241,13 @@ public abstract class WorldSceneRenderer {
         // render TrackedDummyWorld
         drawWorld();
         // check lookingAt
-        this.lastTraceResult = null;
-        if (onLookingAt != null && isMouseOver(positionedRect, mouseX, mouseY)) {
+        if (traceBlock && isMouseOver(positionedRect, mouseX, mouseY)) {
             Vector3f hitPos = unProject(mouseX, mouseY);
-            RayTraceResult result = rayTrace(hitPos);
+            RayTraceResult result = lastTraceResult = rayTrace(hitPos);
             if (result != null) {
-                this.lastTraceResult = result;
-                onLookingAt.accept(result);
+                if (onLookingAt != null) {
+                    onLookingAt.accept(result);
+                }
             }
         }
         // resetCamera

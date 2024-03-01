@@ -88,6 +88,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     protected long tickSnap = ClientScheduler.getClientTick();
 
     protected long lastPatternUpdate = -1;
+    protected long lastTraceUpdate = -1;
 
     protected Consumer<WorldSceneRendererWidget> onPatternUpdate = null;
     protected Consumer<BlockPos> onBlockSelected = null;
@@ -225,8 +226,20 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             );
         });
         renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
-        renderer.useCacheBuffer(true);
+        checkCacheRenderer();
         lastPatternUpdate = System.currentTimeMillis();
+    }
+
+    protected void checkCacheRenderer() {
+        boolean shaderPackLoaded = ShaderManager.isOptifineShaderPackLoaded();
+        if (shaderPackLoaded) {
+            if (renderer.isUseCache()) {
+                renderer.useCacheBuffer(false);
+                renderer.switchLRRenderer();
+            }
+        } else if (!renderer.isUseCache() && OpenGlHelper.useVbo()) {
+            renderer.useCacheBuffer(true);
+        }
     }
 
     @Override
@@ -265,21 +278,19 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         MousePos realMousePos = mousePos.add(renderPos).add(renderOffset);
 
         // Optifine is broken everything we have.
-        boolean shaderPackLoaded = ShaderManager.isOptifineShaderPackLoaded();
-        if (shaderPackLoaded) {
-            if (renderer.isUseCache()) {
-                renderer.useCacheBuffer(false);
-                renderer.switchLRRenderer();
-            }
-        } else if (!renderer.isUseCache() && OpenGlHelper.useVbo()) {
-            renderer.useCacheBuffer(true);
+        checkCacheRenderer();
+
+        boolean traceBlock = false;
+        if (lastTraceUpdate + 50 < System.currentTimeMillis()) {
+            traceBlock = true;
+            lastTraceUpdate = System.currentTimeMillis();
         }
 
         renderer.render(
                 realRenderPos.posX(), realRenderPos.posY(),
                 renderSize.width(), renderSize.height(),
-                realMousePos.mouseX(), realMousePos.mouseY()
-        );
+                realMousePos.mouseX(), realMousePos.mouseY(),
+                traceBlock);
     }
 
     @Override
@@ -332,12 +343,26 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             rotationPitch = rotationPitch % 360F;
             rotationYaw = (float) MathHelper.clamp(rotationYaw - ((mouseOffsetY) * 0.25F), -89.9, 89.9);
         } else if (mouseButton == 1) {
-            // TODO 2D Panning Camera...
+            mouseOffsetX *= 0.05f;
+            mouseOffsetY *= 0.05f;
+
+            // Specially thanks Doogle007 provides algorithm.
+            double motionX = Math.cos(((rotationPitch + 90) % 360) / 180F * Math.PI) * mouseOffsetX;
+            double motionZ = Math.sin(((rotationPitch + 90) % 360) / 180F * Math.PI) * mouseOffsetX;
+
+            center.x += (float) motionX;
+            center.y -= mouseOffsetY;
+            center.z += (float) motionZ;
         }
         renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
 
         lastMouseX = mouseX;
         lastMouseY = mouseY;
+    }
+
+    public void resetCenter() {
+        center.set(defaultCenter.x, defaultCenter.y, defaultCenter.z);
+        renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
     }
 
     @Override

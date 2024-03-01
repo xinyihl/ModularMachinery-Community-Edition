@@ -96,6 +96,7 @@ gui.preview.button.toggle_upgrade_display.enable.tip=Click to display a list of 
 gui.preview.button.toggle_upgrade_display.disable.tip=Click to hide the list of available upgrades for machinery.
 gui.preview.button.toggle_upgrade_display.item.enable_overlay.tip=Click to highlight the position in the structure preview in green.
 gui.preview.button.toggle_upgrade_display.item.disable_overlay.tip=Click to turn off highlighting in the structure preview.
+gui.preview.button.reset_center.tip=Click to reset the center of the preview.
 gui.preview.button.layer_render_scrollbar.up.tip=Click on the square one level up from the preview structure.
 gui.preview.button.layer_render_scrollbar.down.tip=Click on the square one layer below the preview structure.
 gui.preview.button.layer_render_scrollbar.tip=Hold and drag to quickly adjust the layer of squares you want to preview.
@@ -103,6 +104,7 @@ gui.preview.button.layer_render_scrollbar.state.tip=Current/Total number of leve
 gui.preview.compiling.progress=Renderer is pre compiling! (Progress：%s%%)
 gui.preview.optifine_shader_pack_warn=§4Opt Shader detected! Performance will drop dramatically.
 gui.preview.vbo_unsupported_warn=§4VBO is not supported on GPU! Performance will drop dramatically.
+gui.preview.vbo_disabled_warn=§4VBO is not enabled！Performance will drop dramatically.
 
 top.recipe.progress=Progress
 top.machine.owner=Owner:
