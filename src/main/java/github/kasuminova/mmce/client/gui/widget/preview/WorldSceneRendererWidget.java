@@ -347,11 +347,15 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             mouseOffsetY *= 0.05f;
 
             // Specially thanks Doogle007 provides algorithm.
-            double motionX = Math.cos(((rotationPitch + 90) % 360) / 180F * Math.PI) * mouseOffsetX;
-            double motionZ = Math.sin(((rotationPitch + 90) % 360) / 180F * Math.PI) * mouseOffsetX;
+            double radianPitch = Math.toRadians((rotationPitch + 90) % 360);
+            double radianYaw = Math.toRadians(rotationYaw);
+
+            double motionX =  Math.cos(radianPitch) * mouseOffsetX + Math.sin(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
+            double motionY = -Math.cos(radianYaw)   * mouseOffsetY;
+            double motionZ =  Math.sin(radianPitch) * mouseOffsetX - Math.cos(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
 
             center.x += (float) motionX;
-            center.y -= mouseOffsetY;
+            center.y += (float) motionY;
             center.z += (float) motionZ;
         }
         renderer.setCameraLookAt(center, zoom.get(), Math.toRadians(rotationPitch), Math.toRadians(rotationYaw));
