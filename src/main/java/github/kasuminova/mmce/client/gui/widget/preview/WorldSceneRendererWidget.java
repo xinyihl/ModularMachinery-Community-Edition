@@ -39,8 +39,8 @@ import org.lwjgl.input.Mouse;
 
 import javax.vecmath.Vector3f;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -289,7 +289,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     @Override
     public boolean onMouseDWheel(final MousePos mousePos, final RenderPos renderPos, final int wheel) {
         if (isMouseOver(mousePos)) {
-            zoom.set(MathHelper.clamp(zoom.getTargetValue() + (wheel < 0 ? 1.5f : -1.5f), defaultZoom / 80D, defaultZoom * 80D));
+            zoom.set(MathHelper.clamp(zoom.getTargetValue() + (wheel < 0 ? 1.5f : -1.5f), defaultZoom / 80D, defaultZoom * 40D));
             return true;
         }
         return super.onMouseDWheel(mousePos, renderPos, wheel);
@@ -324,8 +324,8 @@ public class WorldSceneRendererWidget extends DynamicWidget {
 
         int mouseX = Mouse.getX();
         int mouseY = Mouse.getY();
-        int mouseOffsetX = mouseX - lastMouseX;
-        int mouseOffsetY = mouseY - lastMouseY;
+        float mouseOffsetX = mouseX - lastMouseX;
+        float mouseOffsetY = mouseY - lastMouseY;
 
         if (mouseButton == 0) {
             rotationPitch += ((mouseOffsetX) * 0.25F) + 360;

@@ -22,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -304,10 +305,11 @@ public class MachineStructurePreviewPanel extends Row {
             return;
         }
 
-        IBlockState clickedBlock = renderer.getWorldRenderer().getWorld().getBlockState(relativePos);
+        World world = renderer.getWorldRenderer().getWorld();
+        IBlockState clickedBlock = world.getBlockState(relativePos);
         BlockArray.BlockInformation clicked = renderer.getPattern().getPattern().get(pos);
-        ItemStack clickedBlockStack = StackUtils.getStackFromBlockState(clickedBlock);
-        List<ItemStack> replaceable = clicked.getIngredientList().stream()
+        ItemStack clickedBlockStack = StackUtils.getStackFromBlockState(clickedBlock, relativePos, world);
+        List<ItemStack> replaceable = clicked.getIngredientList(pos, world).stream()
                 .filter(replaceableStack -> !ItemUtils.matchStacks(clickedBlockStack, replaceableStack))
                 .collect(Collectors.toList());
         selectedBlockIngredientMain.setStackInSlot(clickedBlockStack);
@@ -317,7 +319,7 @@ public class MachineStructurePreviewPanel extends Row {
     }
 
     protected void handleRendererPatternUpdate(final DynamicMachine machine, final WorldSceneRendererWidget r, final IngredientList ingredientList) {
-        List<ItemStack> stackList = renderer.getPattern().getDescriptiveStackList(renderer.getTickSnap());
+        List<ItemStack> stackList = r.getPattern().getDescriptiveStackList(r.getTickSnap(), r.getWorldRenderer().getWorld(), r.getRenderOffset());
         ingredientList.setStackList(stackList.stream()
                 .sorted(Comparator.comparingInt(ItemStack::getCount).reversed())
                 .collect(Collectors.toList()));

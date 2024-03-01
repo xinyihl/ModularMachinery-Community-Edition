@@ -4,18 +4,13 @@ import com.google.common.collect.Lists;
 import github.kasuminova.mmce.common.itemtype.ChancedIngredientStack;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementIngredientArray;
-import hellfirepvp.modularmachinery.common.integration.ingredient.IngredientItemStack;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
 import hellfirepvp.modularmachinery.common.machine.IOType;
-import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraftforge.oredict.OreDictionary;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class JEIComponentIngredientArray extends ComponentRequirement.JEIComponent<ItemStack> {

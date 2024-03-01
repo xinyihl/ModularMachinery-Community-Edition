@@ -60,15 +60,25 @@ public abstract class WorldSceneRenderer {
     protected static final AtomicInteger THREAD_ID = new AtomicInteger(0);
 
     protected static final Object2IntMap<BlockRenderLayer> LAYER_PROGRESS_UNITS = new Object2IntOpenHashMap<>();
+    protected static final int TOTAL_PROGRESS_UNIT;
 
     protected volatile Map<BlockRenderLayer, BufferBuilder> layerBufferBuilders = new EnumMap<>(BlockRenderLayer.class);
 
     static {
+        int totalProgressUnit = 0;
         LAYER_PROGRESS_UNITS.defaultReturnValue(1);
-        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.SOLID, 4);
-        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.CUTOUT_MIPPED, 1);
-        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.CUTOUT, 3);
-        LAYER_PROGRESS_UNITS.put(BlockRenderLayer.TRANSLUCENT, 2);
+        for (final BlockRenderLayer layer : BlockRenderLayer.values()) {
+            int progressUnit = 1;
+            switch (layer) {
+                case SOLID -> progressUnit = 4;
+                case CUTOUT_MIPPED -> progressUnit = 1;
+                case CUTOUT -> progressUnit = 3;
+                case TRANSLUCENT -> progressUnit = 2;
+            }
+            LAYER_PROGRESS_UNITS.put(layer, progressUnit);
+            totalProgressUnit += progressUnit;
+        }
+        TOTAL_PROGRESS_UNIT = totalProgressUnit;
     }
 
     enum CacheState {
@@ -399,7 +409,7 @@ public abstract class WorldSceneRenderer {
 
     public float getCompileProgress() {
         // 1000 blocks, 11 is per block unit.
-        if (maxProgress <= 1000 * 11) {
+        if (maxProgress <= 1000 * TOTAL_PROGRESS_UNIT) {
             return -1;
         }
         return (float) progress.get() / maxProgress;
@@ -542,7 +552,7 @@ public abstract class WorldSceneRenderer {
         BlockRendererDispatcher blockrendererdispatcher = mc.getBlockRendererDispatcher();
         Map<Collection<BlockPos>, ISceneRenderHook> renderedBlocksMap = this.renderedBlocksMap.getAnotherMap();
         for (final BlockRenderLayer layer : BlockRenderLayer.values()) {
-            int progressUnit = LAYER_PROGRESS_UNITS.get(layer);
+            int progressUnit = LAYER_PROGRESS_UNITS.getInt(layer);
             ForgeHooksClient.setRenderLayer(layer);
             BufferBuilder buffer = getLayerBufferBuilder(layer);
             synchronized (buffer) {

@@ -12,6 +12,8 @@ import com.github.bsideup.jabel.Desugar;
 import com.google.gson.JsonParseException;
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
+import github.kasuminova.mmce.common.machine.pattern.SpecialItemBlockProxy;
+import github.kasuminova.mmce.common.machine.pattern.SpecialItemBlockProxyRegistry;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
@@ -250,6 +252,33 @@ public class BlockArray {
             ItemStack descriptiveStack = info.getDescriptiveStack(snapTick);
             if (descriptiveStack.isEmpty()) {
                 return;
+            }
+
+            for (final ItemStack stack : stackList) {
+                if (ItemUtils.matchStacks(descriptiveStack, stack)) {
+                    stack.grow(1);
+                    return;
+                }
+            }
+
+            stackList.add(descriptiveStack);
+        });
+
+        return stackList;
+    }
+
+    public List<ItemStack> getDescriptiveStackList(long snapTick, World world, BlockPos offset) {
+        List<ItemStack> stackList = new ArrayList<>();
+
+        pattern.forEach((pos, info) -> {
+            ItemStack descriptiveStack = info.getDescriptiveStack(snapTick);
+            if (descriptiveStack.isEmpty()) {
+                return;
+            }
+            SpecialItemBlockProxy specialItemBlockProxy = SpecialItemBlockProxyRegistry.INSTANCE.getValidProxy(descriptiveStack);
+            if (specialItemBlockProxy != null) {
+                BlockPos realPos = pos.add(offset);
+                descriptiveStack = specialItemBlockProxy.getTrueStack(world.getBlockState(realPos), world.getTileEntity(realPos));
             }
 
             for (final ItemStack stack : stackList) {
@@ -553,6 +582,15 @@ public class BlockArray {
             List<ItemStack> list = new ArrayList<>();
             samples.stream()
                     .map(StackUtils::getStackFromBlockState)
+                    .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
+                    .forEach(list::add);
+            return list;
+        }
+
+        public List<ItemStack> getIngredientList(BlockPos pos, World world) {
+            List<ItemStack> list = new ArrayList<>();
+            samples.stream()
+                    .map(state -> StackUtils.getStackFromBlockState(state, pos, world))
                     .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
                     .forEach(list::add);
             return list;
