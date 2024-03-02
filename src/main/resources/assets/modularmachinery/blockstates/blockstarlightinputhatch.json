@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "variant=basic": {
+      "model": "modularmachinery:blockstarlightinputhatch_basic"
+    },
+    "variant=trait": {
+      "model": "modularmachinery:blockstarlightinputhatch_trait"
+    },
+    "variant=brilliant": {
+      "model": "modularmachinery:blockstarlightinputhatch_brilliant"
+    }
+  }
+}

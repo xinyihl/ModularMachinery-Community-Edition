@@ -8,7 +8,6 @@ import de.ellpeck.naturesaura.api.aura.type.IAuraType;
 import hellfirepvp.astralsorcery.common.constellation.ConstellationRegistry;
 import hellfirepvp.astralsorcery.common.constellation.IConstellation;
 import net.minecraft.util.ResourceLocation;
-import thaumcraft.api.aspects.Aspect;
 
 import javax.annotation.Nullable;
 
@@ -117,13 +116,6 @@ public class RequirementUtils {
             return b;
         }
         return defaultValue;
-    }
-
-    public static Aspect getAspect(JsonObject json, String key, String requirement) {
-        String s = getRequiredString(json, key, requirement);
-        Aspect aspect = Aspect.getAspect(s);
-        if (aspect != null) return aspect;
-        else throw new JsonParseException("Invalid aspect name : " + s);
     }
 
     public static IAuraType getAuraType(JsonObject json, String key, String requirement) {
