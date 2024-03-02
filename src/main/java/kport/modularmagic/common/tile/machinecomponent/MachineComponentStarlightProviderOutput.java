@@ -4,8 +4,9 @@ import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import kport.modularmagic.common.crafting.component.ModularMagicComponents;
+import kport.gugu_utils.GuGuCompoments;
 import kport.modularmagic.common.tile.TileStarlightOutput;
+import net.minecraft.util.ResourceLocation;
 
 public class MachineComponentStarlightProviderOutput extends MachineComponent<TileStarlightOutput> {
 
@@ -18,7 +19,7 @@ public class MachineComponentStarlightProviderOutput extends MachineComponent<Ti
 
     @Override
     public ComponentType getComponentType() {
-        return RegistriesMM.COMPONENT_TYPE_REGISTRY.getValue(ModularMagicComponents.KEY_COMPONENT_STARLIGHT);
+        return RegistriesMM.COMPONENT_TYPE_REGISTRY.getValue((ResourceLocation) GuGuCompoments.COMPONENT_STARLIGHT);
     }
 
     @Override

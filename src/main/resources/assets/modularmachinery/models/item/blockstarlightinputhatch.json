@@ -1,0 +1,23 @@
+{
+    "parent": "block/block",
+    "overrides": [
+        {
+            "predicate": {
+                "meta": 0
+            },
+            "model": "modularmachinery:item/blockstarlightinputhatch_basic"
+        },
+        {
+            "predicate": {
+                "meta": 1
+            },
+            "model": "modularmachinery:item/blockstarlightinputhatch_trait"
+        },
+        {
+            "predicate": {
+                "meta": 2
+            },
+            "model": "modularmachinery:item/blockstarlightinputhatch_brilliant"
+        }
+    ]
+}

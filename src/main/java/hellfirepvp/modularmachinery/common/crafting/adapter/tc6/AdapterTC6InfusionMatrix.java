@@ -12,15 +12,11 @@ import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
-import kport.modularmagic.common.crafting.requirement.RequirementAspect;
+import kport.gugu_utils.common.requirements.RequirementAspect;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.ResourceLocation;
 import thaumcraft.api.ThaumcraftApi;
-import thaumcraft.api.aspects.Aspect;
-import thaumcraft.api.aspects.AspectList;
-import thaumcraft.api.crafting.IThaumcraftRecipe;
 import thaumcraft.api.crafting.InfusionRecipe;
 
 import javax.annotation.Nonnull;
@@ -80,7 +76,7 @@ public class AdapterTC6InfusionMatrix extends RecipeAdapter {
 
             // Aspect Inputs
             recipe.getAspects().aspects.forEach((aspect, amount) -> {
-                machineRecipe.addRequirement(new RequirementAspect(IOType.INPUT, amount, aspect));
+                machineRecipe.addRequirement(new RequirementAspect(amount, aspect));
             });
 
             // Outputs
