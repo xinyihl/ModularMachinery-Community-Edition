@@ -5,13 +5,13 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import kport.modularmagic.common.crafting.component.ModularMagicComponents;
-import kport.modularmagic.common.tile.TileStarlightOutput;
+import kport.modularmagic.common.tile.TileStarlightInput;
 
-public class MachineComponentStarlightProviderOutput extends MachineComponent<TileStarlightOutput> {
+public class MachineComponentStarlightProviderInput extends MachineComponent<TileStarlightInput> {
 
-    private final TileStarlightOutput starlightProvider;
+    private final TileStarlightInput starlightProvider;
 
-    public MachineComponentStarlightProviderOutput(TileStarlightOutput starlightProvider, IOType ioType) {
+    public MachineComponentStarlightProviderInput(TileStarlightInput starlightProvider, IOType ioType) {
         super(ioType);
         this.starlightProvider = starlightProvider;
     }
@@ -22,7 +22,7 @@ public class MachineComponentStarlightProviderOutput extends MachineComponent<Ti
     }
 
     @Override
-    public TileStarlightOutput getContainerProvider() {
+    public TileStarlightInput getContainerProvider() {
         return starlightProvider;
     }
 }
