@@ -14,10 +14,33 @@ import kport.modularmagic.common.integration.jei.ingredient.Aura;
 import net.minecraft.util.ResourceLocation;
 import stanhebben.zenscript.annotations.ZenExpansion;
 import stanhebben.zenscript.annotations.ZenMethod;
+import thaumcraft.api.aspects.Aspect;
 
 @ZenRegister
 @ZenExpansion("mods.modularmachinery.RecipePrimer")
 public class MagicPrimer {
+
+    @ZenMethod
+    public static RecipePrimer addAspectInput(RecipePrimer primer, String aspectString, int amount) {
+        Aspect aspect = Aspect.getAspect(aspectString);
+        if (aspect != null)
+            primer.appendComponent(new RequirementAspect(IOType.INPUT, amount, aspect));
+        else
+            CraftTweakerAPI.logError("Invalid aspect name : " + aspectString);
+
+        return primer;
+    }
+
+    @ZenMethod
+    public static RecipePrimer addAspectOutput(RecipePrimer primer, String aspectString, int amount) {
+        Aspect aspect = Aspect.getAspect(aspectString);
+        if (aspect != null)
+            primer.appendComponent(new RequirementAspect(IOType.OUTPUT, amount, aspect));
+        else
+            CraftTweakerAPI.logError("Invalid aspect name : " + aspectString);
+
+        return primer;
+    }
 
     @ZenMethod
     public static RecipePrimer addAuraInput(RecipePrimer primer, String auraType, int amount) {
@@ -121,9 +144,19 @@ public class MagicPrimer {
     }
 
     @ZenMethod
+    public static RecipePrimer addStarlightInput(RecipePrimer primer, float amount) {
+        if (amount > 0)
+            primer.appendComponent(new RequirementStarlight(IOType.INPUT, amount));
+        else
+            CraftTweakerAPI.logError("Invalid Starlight amount : " + amount + " (need to be positive and not null)");
+
+        return primer;
+    }
+
+    @ZenMethod
     public static RecipePrimer addStarlightOutput(RecipePrimer primer, float amount) {
         if (amount > 0)
-            primer.appendComponent(new RequirementStarlightOutput(IOType.OUTPUT, amount));
+            primer.appendComponent(new RequirementStarlight(IOType.OUTPUT, amount));
         else
             CraftTweakerAPI.logError("Invalid Starlight amount : " + amount + " (need to be positive and not null)");
 
@@ -170,6 +203,26 @@ public class MagicPrimer {
             primer.appendComponent(new RequirementWill(IOType.OUTPUT, amount, willType, min, max));
         else
             CraftTweakerAPI.logError("Invalid demon will type : " + willTypeString);
+
+        return primer;
+    }
+
+    @ZenMethod
+    public static RecipePrimer addManaInput(RecipePrimer primer, int amount, boolean perTick) {
+        if (amount > 0)
+            primer.appendComponent(new RequirementMana(IOType.INPUT, amount, perTick));
+        else
+            CraftTweakerAPI.logError("Invalid Mana amount : " + amount + " (need to be positive and not null)");
+
+        return primer;
+    }
+
+    @ZenMethod
+    public static RecipePrimer addManaOutput(RecipePrimer primer, int amount, boolean perTick) {
+        if (amount > 0)
+            primer.appendComponent(new RequirementMana(IOType.OUTPUT, amount, perTick));
+        else
+            CraftTweakerAPI.logError("Invalid Mana amount : " + amount + " (need to be positive and not null)");
 
         return primer;
     }

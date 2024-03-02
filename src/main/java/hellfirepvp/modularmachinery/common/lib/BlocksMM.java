@@ -13,7 +13,6 @@ import github.kasuminova.mmce.common.block.appeng.BlockMEFluidOutputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemInputBus;
 import github.kasuminova.mmce.common.block.appeng.BlockMEItemOutputBus;
 import hellfirepvp.modularmachinery.common.block.*;
-import kport.gugu_utils.common.block.*;
 import kport.modularmagic.common.block.*;
 
 /**
@@ -36,7 +35,6 @@ public class BlocksMM {
     public static BlockFluidOutputHatch fluidOutputHatch;
     public static BlockEnergyInputHatch energyInputHatch;
     public static BlockEnergyOutputHatch energyOutputHatch;
-    public static BlockEnvironmentHatch blockEnvironmentHatch;
 
     public static BlockSmartInterface smartInterface;
     public static BlockParallelController parallelController;
@@ -61,16 +59,17 @@ public class BlocksMM {
     public static BlockAuraProviderInput blockAuraProviderInput;
     public static BlockAuraProviderOutput blockAuraProviderOutput;
 
-    public static BlockStarLightInputHatch blockStarLightProviderInput;
+    public static BlockStarlightProviderInput blockStarlightProviderInput;
     public static BlockStarlightProviderOutput blockStarlightProviderOutput;
 
     public static BlockConstellationProvider blockConstellationProvider;
-    public static BlockSparkManaHatch blockSparkManaProvider;
+
+    public static BlockManaProviderInput blockManaProviderInput;
+    public static BlockManaProviderOutput blockManaProviderOutput;
+
     public static BlockImpetusProviderInput blockImpetusProviderInput;
     public static BlockImpetusProviderOutput blockImpetusProviderOutput;
-    public static BlockLargeAspectHatch blockLargeAspectProvider;
 
-    public static BlockPressureHatch blockPressureProvider;
-    public static BlockEmberInputHatch blockEmberInputProvider;
-    public static BlockHotAirInputHatch blockHotAirHatch;
+    public static BlockAspectProviderInput blockAspectProviderInput;
+    public static BlockAspectProviderOutput blockAspectProviderOutput;
 }
