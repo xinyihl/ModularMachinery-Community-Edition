@@ -27,7 +27,26 @@ public class OredictCache {
         int id = Item.REGISTRY.getIDForObject(delegate.get());
         int damageOffset = id | ((stack.getItemDamage() + 1) << 16);
 
-        return ORE_ID_CACHE_MAP.computeIfAbsent(id, v -> new Int2ObjectOpenHashMap<>())
-                .computeIfAbsent(damageOffset, v -> OreDictionary.getOreIDs(stack));
+        Int2ObjectMap<int[]> map = ORE_ID_CACHE_MAP.get(id);
+        if (map == null) {
+            synchronized (ORE_ID_CACHE_MAP) {
+                map = ORE_ID_CACHE_MAP.get(id);
+                if (map == null) {
+                    ORE_ID_CACHE_MAP.put(id, map = new Int2ObjectOpenHashMap<>());
+                }
+            }
+        }
+
+        int[] oreIDs = map.get(damageOffset);
+        if (oreIDs == null) {
+            synchronized (map) {
+                oreIDs = map.get(damageOffset);
+                if (oreIDs == null) {
+                    map.put(id, oreIDs = OreDictionary.getOreIDs(stack));
+                }
+            }
+        }
+
+        return oreIDs;
     }
 }
