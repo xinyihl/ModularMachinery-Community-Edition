@@ -18,8 +18,11 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class MEItemInputBus extends MEItemBus {
+    private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
     private IOInventory configInventory = buildConfigInventory();
 
     @Override
@@ -183,7 +186,7 @@ public class MEItemInputBus extends MEItemBus {
     }
 
     private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
-        IAEItemStack aeStack = channel.createStack(stack);
+        IAEItemStack aeStack = createStack(stack);
         if (aeStack == null) {
             return ItemStack.EMPTY;
         }
@@ -196,7 +199,7 @@ public class MEItemInputBus extends MEItemBus {
     }
 
     private ItemStack insertStackToAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
-        IAEItemStack aeStack = channel.createStack(stack);
+        IAEItemStack aeStack = createStack(stack);
         if (aeStack == null) {
             return stack;
         }
@@ -206,6 +209,10 @@ public class MEItemInputBus extends MEItemBus {
             return ItemStack.EMPTY;
         }
         return left.createItemStack();
+    }
+
+    private IAEItemStack createStack(final ItemStack stack) {
+        return AE_STACK_CACHE.computeIfAbsent(stack, v -> channel.createStack(stack));
     }
 
     @Override
