@@ -299,7 +299,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Override
     public boolean isFullBlock(IBlockState state) {
-        return parentMachine.getControllerBoundingBox().equals(FULL_BLOCK_AABB);
+        return parentMachine == null || parentMachine.getControllerBoundingBox().equals(FULL_BLOCK_AABB);
     }
 
     @Override
