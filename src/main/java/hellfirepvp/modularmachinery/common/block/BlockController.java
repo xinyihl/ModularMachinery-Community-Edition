@@ -34,6 +34,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -190,7 +191,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         if (parentMachine != null && DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(parentMachine) != null) {
             return !state.getValue(FORMED);
         }
-        return true;
+        return super.doesSideBlockRendering(state, blockAccess, pos, face);
     }
 
     @Override
@@ -294,6 +295,27 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
             return I18n.format("tile.modularmachinery.machinecontroller.name", parentMachine.getLocalizedName());
         }
         return I18n.format("tile.modularmachinery.blockcontroller.name");
+    }
+
+    @Override
+    public boolean isFullBlock(IBlockState state) {
+        return parentMachine.getControllerBoundingBox().equals(FULL_BLOCK_AABB);
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return isFullBlock(state);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public boolean isTranslucent(IBlockState state) {
+        return isFullBlock(state);
+    }
+
+    @Override
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        return parentMachine.getControllerBoundingBox();
     }
 
     @Override
