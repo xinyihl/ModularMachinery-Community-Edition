@@ -315,7 +315,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        return parentMachine.getControllerBoundingBox();
+        return parentMachine != null ? parentMachine.getControllerBoundingBox() : FULL_BLOCK_AABB;
     }
 
     @Override
