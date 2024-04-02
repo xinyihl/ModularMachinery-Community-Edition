@@ -34,6 +34,7 @@ public class MEItemInputBus extends MEItemBus {
         }
         IOInventory inv = new IOInventory(this, slotIDs, new int[]{});
         inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
+        inv.setListener(changedSlots::set);
         return inv;
     }
 
@@ -52,6 +53,7 @@ public class MEItemInputBus extends MEItemBus {
         IOInventory inv = new IOInventory(this, new int[]{}, new int[]{});
         inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
         inv.setMiscSlots(slotIDs);
+        inv.setListener(changedSlots::set);
         return inv;
     }
 
@@ -117,7 +119,7 @@ public class MEItemInputBus extends MEItemBus {
 
     @Nonnull
     @Override
-    public TickRateModulation tickingRequest(@Nonnull final IGridNode node, final int ticksSinceLastCall) {
+    public synchronized TickRateModulation tickingRequest(@Nonnull final IGridNode node, final int ticksSinceLastCall) {
         if (!proxy.isActive()) {
             return TickRateModulation.IDLE;
         }
@@ -127,7 +129,7 @@ public class MEItemInputBus extends MEItemBus {
 
             IMEMonitor<IAEItemStack> inv = proxy.getStorage().getInventory(channel);
 
-            for (int slot = 0; slot < configInventory.getSlots(); slot++) {
+            for (final int slot : getNeedUpdateSlots()) {
                 ItemStack cfgStack = configInventory.getStackInSlot(slot);
                 ItemStack invStack = inventory.getStackInSlot(slot);
 
@@ -179,8 +181,10 @@ public class MEItemInputBus extends MEItemBus {
                 }
             }
 
+            changedSlots.clear();
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
+            changedSlots.clear();
             return TickRateModulation.IDLE;
         }
     }
@@ -217,7 +221,7 @@ public class MEItemInputBus extends MEItemBus {
 
     @Override
     public void markNoUpdate() {
-        if (proxy.isActive() && needsUpdate()) {
+        if (proxy.isActive() && !changedSlots.isEmpty()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {
@@ -240,6 +244,7 @@ public class MEItemInputBus extends MEItemBus {
 
     public void readConfigInventoryNBT(final NBTTagCompound compound) {
         configInventory = IOInventory.deserialize(this, compound);
+        configInventory.setListener(changedSlots::set);
 
         int[] slotIDs = new int[configInventory.getSlots()];
         for (int slotID = 0; slotID < slotIDs.length; slotID++) {

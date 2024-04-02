@@ -11,6 +11,7 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -63,6 +64,22 @@ public class MMWorldEventListener implements IWorldEventListener {
         worldChangedChunksLastTick.clear();
         worldChangedChunksLastTick.putAll(worldChangedChunks);
         worldChangedChunks.clear();
+    }
+
+    @SubscribeEvent
+    public void onChunkUnload(final ChunkEvent.Unload event) {
+        World world = event.getWorld();
+        if (world.isRemote) {
+            return;
+        }
+        ChunkPos pos = event.getChunk().getPos();
+        int xStart = pos.getXStart();
+        int xEnd = pos.getXEnd();
+        int zStart = pos.getZStart();
+        int zEnd = pos.getZEnd();
+
+        StructureBoundingBox structureArea = new StructureBoundingBox(xStart, zStart, xEnd, zEnd);
+        worldChangedChunks.get(world).put(pos, structureArea);
     }
 
     public boolean isAreaChanged(@Nonnull final World worldIn,

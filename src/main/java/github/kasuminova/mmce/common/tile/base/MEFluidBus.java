@@ -26,6 +26,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.BitSet;
 
 public abstract class MEFluidBus extends MEMachineComponent implements
         IAEFluidInventory,
@@ -38,12 +39,17 @@ public abstract class MEFluidBus extends MEMachineComponent implements
 
     protected final IFluidStorageChannel channel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
     protected final ConfigManager cm = new ConfigManager(this);
+    protected final BitSet changedSlots = new BitSet();
     protected final UpgradeInventory upgrades;
     protected final AEFluidInventoryUpgradeable tanks;
 
     public MEFluidBus() {
         this.tanks = new AEFluidInventoryUpgradeable(this, TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY);
         this.upgrades = new StackUpgradeInventory(proxy.getMachineRepresentation(), this, 5);
+    }
+
+    protected int[] getNeedUpdateSlots() {
+        return changedSlots.stream().toArray();
     }
 
     public IAEFluidTank getTanks() {
@@ -114,7 +120,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     @Override
     public void onChangeInventory(final IItemHandler inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack) {
         updateTankCapacity();
-        markNoUpdateSync();
+        markForUpdateSync();
     }
 
     private void updateTankCapacity() {
@@ -124,6 +130,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
 
     @Override
     public void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
+        changedSlots.set(slot);
         markNoUpdateSync();
     }
 

@@ -3,6 +3,8 @@ package github.kasuminova.mmce.common.tile.base;
 import appeng.api.AEApi;
 import appeng.api.storage.channels.IItemStorageChannel;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -12,13 +14,19 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.BitSet;
 
 public abstract class MEItemBus extends MEMachineComponent {
 
     protected final IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
+    protected final BitSet changedSlots = new BitSet();
     protected IOInventory inventory = buildInventory();
 
     public abstract IOInventory buildInventory();
+
+    protected int[] getNeedUpdateSlots() {
+        return changedSlots.stream().toArray();
+    }
 
     public IOInventory getInternalInventory() {
         return inventory;
@@ -50,6 +58,7 @@ public abstract class MEItemBus extends MEMachineComponent {
 
     public void readInventoryNBT(final NBTTagCompound tag) {
         this.inventory = IOInventory.deserialize(this, tag);
+        this.inventory.setListener(changedSlots::set);
 
         int[] slotIDs = new int[inventory.getSlots()];
         for (int slotID = 0; slotID < slotIDs.length; slotID++) {

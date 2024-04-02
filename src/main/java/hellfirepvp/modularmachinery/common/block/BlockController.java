@@ -171,6 +171,13 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     }
 
     @Override
+    public void onNeighborChange(@Nonnull final IBlockAccess world, @Nonnull final BlockPos pos, @Nonnull final BlockPos neighbor) {
+        if (world.getTileEntity(pos) instanceof TileMultiblockMachineController ctrl) {
+            ctrl.onNeighborChange();
+        }
+    }
+
+    @Override
     public boolean canConnectRedstone(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nullable EnumFacing side) {
         return true;
     }
