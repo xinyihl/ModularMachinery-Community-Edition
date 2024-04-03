@@ -1,6 +1,8 @@
 package github.kasuminova.mmce.common.world;
 
 import github.kasuminova.mmce.client.world.BlockModelHider;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,14 +23,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class MMWorldEventListener implements IWorldEventListener {
 
     public static final MMWorldEventListener INSTANCE = new MMWorldEventListener();
 
-    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunksLastTick = new ConcurrentHashMap<>();
-    private final Map<World, Map<ChunkPos, StructureBoundingBox>> worldChangedChunks = new ConcurrentHashMap<>();
+    private final Map<World, Long2ObjectMap<StructureBoundingBox>> worldChangedChunks = new HashMap<>();
 
     private MMWorldEventListener() {
     }
@@ -51,19 +51,16 @@ public class MMWorldEventListener implements IWorldEventListener {
             return;
         }
         worldChangedChunks.remove(world);
-        worldChangedChunksLastTick.remove(world);
         MachineComponentManager.INSTANCE.removeWorld(world);
     }
 
     @SubscribeEvent
-    public void onServerTickStart(TickEvent.ServerTickEvent event) {
+    public void onWorldTickStart(TickEvent.WorldTickEvent event) {
         if (event.side != Side.SERVER || event.phase != TickEvent.Phase.START) {
             return;
         }
 
-        worldChangedChunksLastTick.clear();
-        worldChangedChunksLastTick.putAll(worldChangedChunks);
-        worldChangedChunks.clear();
+        worldChangedChunks.put(event.world, new Long2ObjectOpenHashMap<>());
     }
 
     @SubscribeEvent
@@ -79,7 +76,7 @@ public class MMWorldEventListener implements IWorldEventListener {
         int zEnd = pos.getZEnd();
 
         StructureBoundingBox structureArea = new StructureBoundingBox(xStart, zStart, xEnd, zEnd);
-        worldChangedChunks.get(world).put(pos, structureArea);
+        worldChangedChunks.get(world).put(ChunkPos.asLong(pos.x, pos.z), structureArea);
     }
 
     public boolean isAreaChanged(@Nonnull final World worldIn,
@@ -94,9 +91,9 @@ public class MMWorldEventListener implements IWorldEventListener {
 
         for (int chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
             for (int chunkZ = minChunkZ; chunkZ <= maxChunkZ; chunkZ++) {
-                Map<ChunkPos, StructureBoundingBox> chunkPosBoundingBoxMap = worldChangedChunksLastTick.get(worldIn);
-                if (chunkPosBoundingBoxMap != null) {
-                    StructureBoundingBox changedArea = chunkPosBoundingBoxMap.get(new ChunkPos(chunkX, chunkZ));
+                Long2ObjectMap<StructureBoundingBox> changedChunks = worldChangedChunks.get(worldIn);
+                if (changedChunks != null) {
+                    StructureBoundingBox changedArea = changedChunks.get(ChunkPos.asLong(chunkX, chunkZ));
                     if (changedArea != null && changedArea.intersectsWith(structureArea)) {
                         return true;
                     }
@@ -111,16 +108,17 @@ public class MMWorldEventListener implements IWorldEventListener {
                                   @Nonnull final BlockPos pos,
                                   @Nonnull final IBlockState oldState,
                                   @Nonnull final IBlockState newState, final int flags) {
-        if ((flags != 1 && flags != 3) || oldState == newState) {
+        if ((flags & 1) == 0 || oldState == newState) {
             return;
         }
 
-        Map<ChunkPos, StructureBoundingBox> chunkPosHeightSetMap = worldChangedChunks.computeIfAbsent(worldIn, v -> new HashMap<>());
+        Long2ObjectMap<StructureBoundingBox> changedChunks = worldChangedChunks.computeIfAbsent(worldIn, v -> new Long2ObjectOpenHashMap<>());
         ChunkPos chunkPos = new ChunkPos(pos.getX() >> 4, pos.getZ() >> 4);
-        StructureBoundingBox changedArea = chunkPosHeightSetMap.get(chunkPos);
+        long longChunkPos = ChunkPos.asLong(chunkPos.x, chunkPos.z);
+        StructureBoundingBox changedArea = changedChunks.get(longChunkPos);
 
         if (changedArea == null) {
-            chunkPosHeightSetMap.put(chunkPos, new StructureBoundingBox(pos, pos));
+            changedChunks.put(longChunkPos, new StructureBoundingBox(pos, pos));
         } else {
             changedArea.expandTo(new StructureBoundingBox(pos, pos));
         }
