@@ -27,6 +27,7 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.BitSet;
+import java.util.stream.IntStream;
 
 public abstract class MEFluidBus extends MEMachineComponent implements
         IAEFluidInventory,
@@ -42,6 +43,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     protected final BitSet changedSlots = new BitSet();
     protected final UpgradeInventory upgrades;
     protected final AEFluidInventoryUpgradeable tanks;
+    protected int fullCheckCounter = 5;
 
     public MEFluidBus() {
         this.tanks = new AEFluidInventoryUpgradeable(this, TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY);
@@ -49,6 +51,11 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     }
 
     protected int[] getNeedUpdateSlots() {
+        fullCheckCounter++;
+        if (fullCheckCounter >= 5) {
+            fullCheckCounter = 0;
+            return IntStream.range(0, tanks.getSlots()).toArray();
+        }
         return changedSlots.stream().toArray();
     }
 

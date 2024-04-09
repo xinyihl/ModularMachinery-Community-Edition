@@ -76,7 +76,11 @@ public class MMWorldEventListener implements IWorldEventListener {
         int zEnd = pos.getZEnd();
 
         StructureBoundingBox structureArea = new StructureBoundingBox(xStart, zStart, xEnd, zEnd);
-        worldChangedChunks.get(world).put(ChunkPos.asLong(pos.x, pos.z), structureArea);
+        Long2ObjectMap<StructureBoundingBox> changedChunks = worldChangedChunks.get(world);
+        if (changedChunks == null) {
+            return;
+        }
+        changedChunks.put(ChunkPos.asLong(pos.x, pos.z), structureArea);
     }
 
     public boolean isAreaChanged(@Nonnull final World worldIn,
