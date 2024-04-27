@@ -3,6 +3,7 @@ package github.kasuminova.mmce.common.tile.base;
 import appeng.api.AEApi;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
+import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.channels.IFluidStorageChannel;
 import appeng.api.util.IConfigManager;
 import appeng.fluids.util.IAEFluidInventory;
@@ -33,7 +34,8 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         IAEFluidInventory,
         IUpgradeableHost,
         IConfigManagerHost,
-        IAEAppEngInventory {
+        IAEAppEngInventory,
+        IGridTickable {
 
     public static final int TANK_SLOT_AMOUNT = 9;
     public static final int TANK_DEFAULT_CAPACITY = 8000;

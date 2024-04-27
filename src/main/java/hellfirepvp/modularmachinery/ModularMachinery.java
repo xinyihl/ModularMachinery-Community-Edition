@@ -11,6 +11,7 @@ package hellfirepvp.modularmachinery;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import github.kasuminova.mmce.common.network.PktAutoAssemblyRequest;
 import github.kasuminova.mmce.common.network.PktMEInputBusInvAction;
+import github.kasuminova.mmce.common.network.PktMEPatternProviderAction;
 import github.kasuminova.mmce.common.network.PktPerformanceReport;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -101,8 +102,9 @@ public class ModularMachinery {
         NET_CHANNEL.registerMessage(PktParallelControllerUpdate.class, PktParallelControllerUpdate.class, 102, Side.SERVER);
         NET_CHANNEL.registerMessage(PktMEInputBusInvAction.class, PktMEInputBusInvAction.class, 103, Side.SERVER);
         NET_CHANNEL.registerMessage(PktAutoAssemblyRequest.class, PktAutoAssemblyRequest.class, 104, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktMEPatternProviderAction.class, PktMEPatternProviderAction.class, 105, Side.SERVER);
         if (Mods.ASTRAL_SORCERY.isPresent()) {
-            NET_CHANNEL.registerMessage(StarlightMessage.StarlightMessageHandler.class, StarlightMessage.class, 105, Side.SERVER);
+            NET_CHANNEL.registerMessage(StarlightMessage.StarlightMessageHandler.class, StarlightMessage.class, 106, Side.SERVER);
         }
 
         CommonProxy.loadModData(event.getModConfigurationDirectory());

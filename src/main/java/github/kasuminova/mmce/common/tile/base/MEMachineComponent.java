@@ -7,7 +7,6 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.IActionSource;
-import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEPartLocation;
 import appeng.api.util.DimensionalCoord;
@@ -27,7 +26,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public abstract class MEMachineComponent extends TileColorableMachineComponent implements SelectiveUpdateTileEntity, MachineComponentTile, IActionHost, IGridProxyable, IGridTickable {
+public abstract class MEMachineComponent extends TileColorableMachineComponent implements SelectiveUpdateTileEntity, MachineComponentTile, IActionHost, IGridProxyable {
 
     protected final AENetworkProxy proxy = new AENetworkProxy(this, "aeProxy", getVisualItemStack(), true);
     protected final IActionSource source;
@@ -66,7 +65,7 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
         this.notifyNeighbors();
     }
 
-    private void notifyNeighbors() {
+    protected void notifyNeighbors() {
         if (this.proxy.isActive()) {
             try {
                 this.proxy.getTick().wakeDevice(this.proxy.getNode());

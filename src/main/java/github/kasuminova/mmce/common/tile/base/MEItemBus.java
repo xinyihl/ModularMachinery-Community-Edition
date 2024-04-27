@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.common.tile.base;
 
 import appeng.api.AEApi;
+import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.channels.IItemStorageChannel;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import net.minecraft.item.ItemStack;
@@ -15,7 +16,7 @@ import javax.annotation.Nullable;
 import java.util.BitSet;
 import java.util.stream.IntStream;
 
-public abstract class MEItemBus extends MEMachineComponent {
+public abstract class MEItemBus extends MEMachineComponent implements IGridTickable {
 
     protected final IItemStorageChannel channel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
     protected final BitSet changedSlots = new BitSet();
