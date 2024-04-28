@@ -39,11 +39,11 @@ public class PktMEPatternProviderAction implements IMessage, IMessageHandler<Pkt
         switch (message.action) {
             case ENABLE_BLOCKING_MODE -> {
                 provider.setBlockingMode(true);
-                provider.markNoUpdateSync();
+                provider.markChunkDirty();
             }
             case DISABLE_BLOCKING_MODE -> {
                 provider.setBlockingMode(false);
-                provider.markNoUpdateSync();
+                provider.markChunkDirty();
             }
             case RETURN_ITEMS -> provider.returnItemsScheduled();
         }

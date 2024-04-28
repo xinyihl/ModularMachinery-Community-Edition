@@ -18,7 +18,7 @@ public class PatternProviderIngredientList extends IngredientList {
     public void initWidget(final WidgetGui gui) {
         super.initWidget(gui);
         scrollbar.setMargin(5, 1, 1, 1);
-        scrollbar.setWidthHeight(9, 160);
+        scrollbar.setWidthHeight(9, 124);
         scrollbar.getScroll()
                 .setMouseDownTextureXY(198, 232)
                 .setHoveredTextureXY(187, 232)

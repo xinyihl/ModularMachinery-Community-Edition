@@ -25,7 +25,7 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
 
     public abstract IOInventory buildInventory();
 
-    protected int[] getNeedUpdateSlots() {
+    protected synchronized int[] getNeedUpdateSlots() {
         fullCheckCounter++;
         if (fullCheckCounter >= 5) {
             fullCheckCounter = 0;
@@ -64,7 +64,11 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
 
     public void readInventoryNBT(final NBTTagCompound tag) {
         this.inventory = IOInventory.deserialize(this, tag);
-        this.inventory.setListener(changedSlots::set);
+        this.inventory.setListener(slot -> {
+            synchronized (this) {
+                changedSlots.set(slot);
+            }
+        });
 
         int[] slotIDs = new int[inventory.getSlots()];
         for (int slotID = 0; slotID < slotIDs.length; slotID++) {

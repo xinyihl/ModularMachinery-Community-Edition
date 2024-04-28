@@ -43,7 +43,12 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
         if (FMLCommonHandler.instance().getSide().isServer()) {
-            proxy.readFromNBT(compound);
+            try {
+                proxy.readFromNBT(compound);
+            } catch (IllegalStateException e) {
+                // Prevent loading data after part of a grid.
+                ModularMachinery.log.warn(e);
+            }
         }
     }
 

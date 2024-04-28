@@ -5,22 +5,31 @@ import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
+import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
+import appeng.api.networking.events.MENetworkEventSubscribe;
+import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.channels.IFluidStorageChannel;
 import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.fluids.util.IAEFluidInventory;
+import appeng.fluids.util.IAEFluidTank;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.tile.inventory.AppEngInternalOversizedInventory;
 import appeng.util.Platform;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import com.glodblock.github.common.item.fake.FakeFluids;
 import com.glodblock.github.common.item.fake.FakeItemRegister;
 import github.kasuminova.mmce.client.gui.GuiMEPatternProvider;
+import github.kasuminova.mmce.common.container.ContainerMEPatternProvider;
+import github.kasuminova.mmce.common.network.PktMEPatternProviderHandlerItems;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
+import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
 import github.kasuminova.mmce.common.util.InfItemFluidHandler;
 import github.kasuminova.mmce.common.util.PatternItemFilter;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -33,6 +42,7 @@ import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -48,28 +58,49 @@ import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory {
+public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory {
 
     public static final int PATTERNS = 36;
+    public static final int SUB_ITEM_HANDLER_SLOTS = 2;
 
-    protected final InfItemFluidHandler handler = new InfItemFluidHandler();
+    protected final AppEngInternalInventory subItemHandler = createOverSizedInventory(this, SUB_ITEM_HANDLER_SLOTS, Integer.MAX_VALUE);
+    protected final AEFluidInventoryUpgradeable subFluidHandler = new AEFluidInventoryUpgradeable(this, 1, Integer.MAX_VALUE);
+    protected final InfItemFluidHandler handler = new InfItemFluidHandler(subItemHandler, subFluidHandler);
 
     protected final AppEngInternalInventory patterns = new AppEngInternalInventory(this, PATTERNS, 1, PatternItemFilter.INSTANCE);
     protected final List<ICraftingPatternDetails> details = new ObjectArrayList<>(PATTERNS);
 
     protected boolean blockingMode = false;
     protected boolean shouldReturnItems = false;
+    protected boolean handlerDirty = false;
+
+    protected static AppEngInternalInventory createOverSizedInventory(final IAEAppEngInventory inv, final int size, final int maxStack) {
+        try {
+            // AE2EL
+            return new AppEngInternalOversizedInventory(inv, size, maxStack);
+        } catch (Exception | Error e) {
+            // Default AE2
+            return new AppEngInternalInventory(inv, size, Math.min(64, maxStack));
+        }
+    }
 
     public MEPatternProvider() {
         // Initialize details...
         IntStream.range(0, 36).<ICraftingPatternDetails>mapToObj(i -> null).forEach(details::add);
         // Set handler onChanged consumer...
-        handler.setOnItemChanged(slot -> markNoUpdateSync());
-        handler.setOnFluidChanged(slot -> markNoUpdateSync());
+        handler.setOnItemChanged(slot -> {
+            handlerDirty = true;
+            markChunkDirty();
+        });
+        handler.setOnFluidChanged(slot -> {
+            handlerDirty = true;
+            markChunkDirty();
+        });
     }
 
     @Override
@@ -91,6 +122,16 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
                 return handler;
             }
         };
+    }
+
+    @MENetworkEventSubscribe
+    public void stateChange(final MENetworkChannelsChanged change) {
+        this.notifyNeighbors();
+    }
+
+    @MENetworkEventSubscribe
+    public void stateChange(final MENetworkPowerStatusChange change) {
+        this.notifyNeighbors();
     }
 
     @Override
@@ -186,44 +227,46 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         shouldReturnItems = false;
 
         try {
-            List<ItemStack> itemStackList = handler.getItemStackList();
-            List<FluidStack> fluidStackList = handler.getFluidStackList();
+            synchronized (handler) {
+                List<ItemStack> itemStackList = handler.getItemStackList();
+                List<FluidStack> fluidStackList = handler.getFluidStackList();
 
-            IItemStorageChannel itemChannel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
-            IMEMonitor<IAEItemStack> itemInv = proxy.getStorage().getInventory(itemChannel);
+                IItemStorageChannel itemChannel = AEApi.instance().storage().getStorageChannel(IItemStorageChannel.class);
+                IMEMonitor<IAEItemStack> itemInv = proxy.getStorage().getInventory(itemChannel);
 
-            for (int i = 0; i < itemStackList.size(); i++) {
-                final ItemStack stack = itemStackList.get(i);
-                if (stack.isEmpty()) {
-                    continue;
+                for (int i = 0; i < itemStackList.size(); i++) {
+                    final ItemStack stack = itemStackList.get(i);
+                    if (stack.isEmpty()) {
+                        continue;
+                    }
+                    IAEItemStack notInserted = insertStackToAE(itemInv, itemChannel.createStack(stack));
+                    if (notInserted != null) {
+                        itemStackList.set(i, notInserted.createItemStack());
+                    } else {
+                        itemStackList.set(i, ItemStack.EMPTY);
+                    }
                 }
-                IAEItemStack notInserted = insertStackToAE(itemInv, itemChannel.createStack(stack));
-                if (notInserted != null) {
-                    itemStackList.set(i, notInserted.createItemStack());
-                } else {
-                    itemStackList.set(i, ItemStack.EMPTY);
-                }
-            }
 
-            IFluidStorageChannel fluidChannel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
-            IMEMonitor<IAEFluidStack> fluidInv = proxy.getStorage().getInventory(fluidChannel);
-            for (int i = 0; i < fluidStackList.size(); i++) {
-                final FluidStack stack = fluidStackList.get(i);
-                if (stack == null) {
-                    continue;
-                }
-                IAEFluidStack notInserted = insertStackToAE(fluidInv, fluidChannel.createStack(stack));
-                if (notInserted != null) {
-                    fluidStackList.set(i, notInserted.getFluidStack());
-                } else {
-                    fluidStackList.set(i, null);
+                IFluidStorageChannel fluidChannel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
+                IMEMonitor<IAEFluidStack> fluidInv = proxy.getStorage().getInventory(fluidChannel);
+                for (int i = 0; i < fluidStackList.size(); i++) {
+                    final FluidStack stack = fluidStackList.get(i);
+                    if (stack == null) {
+                        continue;
+                    }
+                    IAEFluidStack notInserted = insertStackToAE(fluidInv, fluidChannel.createStack(stack));
+                    if (notInserted != null) {
+                        fluidStackList.set(i, notInserted.getFluidStack());
+                    } else {
+                        fluidStackList.set(i, null);
+                    }
                 }
             }
         } catch (GridAccessException ignored) {
         }
 
-        // TODO: Bandwidth Issue.
-        markNoUpdateSync();
+        handlerDirty = true;
+        markChunkDirty();
     }
 
     private <T extends IAEStack<T>> T insertStackToAE(final IMEMonitor<T> inv, final T stack) throws GridAccessException {
@@ -231,6 +274,14 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             return null;
         }
         return Platform.poweredInsert(proxy.getEnergy(), inv, stack.copy(), source);
+    }
+
+    public AppEngInternalInventory getSubItemHandler() {
+        return subItemHandler;
+    }
+
+    public AEFluidInventoryUpgradeable getSubFluidHandler() {
+        return subFluidHandler;
     }
 
     public InfItemFluidHandler getInfHandler() {
@@ -262,12 +313,67 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
+        readProviderNBT(compound);
+    }
+
+    public void readProviderNBT(final NBTTagCompound compound) {
+        subItemHandler.readFromNBT(compound, "subItemHandler");
+        subFluidHandler.readFromNBT(compound, "subFluidHandler");
         handler.readFromNBT(compound, "handler");
         patterns.readFromNBT(compound, "patterns");
         blockingMode = compound.getBoolean("blockingMode");
 
         if (FMLCommonHandler.instance().getSide().isClient()) {
             processClientGUIUpdate();
+        }
+    }
+
+    @Override
+    public void writeCustomNBT(final NBTTagCompound compound) {
+        super.writeCustomNBT(compound);
+        writeProviderNBT(compound);
+    }
+
+    public NBTTagCompound writeProviderNBT(final NBTTagCompound compound) {
+        handler.writeToNBT(compound, "handler");
+        patterns.writeToNBT(compound, "patterns");
+        subItemHandler.writeToNBT(compound, "subItemHandler");
+        subFluidHandler.writeToNBT(compound, "subFluidHandler");
+        compound.setBoolean("blockingMode", blockingMode);
+        return compound;
+    }
+
+    public boolean isAllDefault() {
+        if (IntStream.range(0, subItemHandler.getSlots()).mapToObj(subItemHandler::getStackInSlot).anyMatch(stackInSlot -> !stackInSlot.isEmpty())) {
+            return false;
+        }
+        if (subFluidHandler.getFluidInSlot(0) != null) {
+            return false;
+        }
+        if (IntStream.range(0, patterns.getSlots()).mapToObj(patterns::getStackInSlot).anyMatch(stackInSlot -> !stackInSlot.isEmpty())) {
+            return false;
+        }
+        return handler.isEmpty() && !blockingMode;
+    }
+
+    public void sendHandlerItemsToClient() {
+        if (world.isRemote) {
+            return;
+        }
+        List<EntityPlayerMP> players = new ArrayList<>();
+        world.playerEntities.stream()
+                .filter(EntityPlayerMP.class::isInstance)
+                .map(EntityPlayerMP.class::cast)
+                .forEach(playerMP -> {
+                    if (playerMP.openContainer instanceof ContainerMEPatternProvider cPatternProvider) {
+                        if (cPatternProvider.getOwner() == this) {
+                            players.add(playerMP);
+                        }
+                    }
+                });
+        if (!players.isEmpty()) {
+            PktMEPatternProviderHandlerItems message = new PktMEPatternProviderHandlerItems(this);
+            players.forEach(player -> ModularMachinery.NET_CHANNEL.sendTo(message, player));
         }
     }
 
@@ -282,22 +388,23 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     }
 
     @Override
-    public void writeCustomNBT(final NBTTagCompound compound) {
-        super.writeCustomNBT(compound);
-        handler.writeToNBT(compound, "handler");
-        patterns.writeToNBT(compound, "patterns");
-        compound.setBoolean("blockingMode", blockingMode);
-    }
-
-    @Override
     public void validate() {
         super.validate();
-        refreshPatterns();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::refreshPatterns);
     }
 
     @Override
     public void saveChanges() {
         markNoUpdateSync();
+    }
+
+    @Override
+    public void markChunkDirty() {
+        super.markChunkDirty();
+        if (handlerDirty) {
+            sendHandlerItemsToClient();
+            handlerDirty = false;
+        }
     }
 
     @Override
@@ -307,6 +414,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             this.getProxy().getGrid().postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
         } catch (GridAccessException ignored) {
         }
+    }
+
+    @Override
+    public void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
+        markChunkDirty();
     }
 
 }

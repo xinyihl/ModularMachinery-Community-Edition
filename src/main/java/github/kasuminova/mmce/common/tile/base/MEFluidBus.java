@@ -52,7 +52,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         this.upgrades = new StackUpgradeInventory(proxy.getMachineRepresentation(), this, 5);
     }
 
-    protected int[] getNeedUpdateSlots() {
+    protected synchronized int[] getNeedUpdateSlots() {
         fullCheckCounter++;
         if (fullCheckCounter >= 5) {
             fullCheckCounter = 0;
@@ -138,7 +138,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     }
 
     @Override
-    public void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
+    public synchronized void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
         changedSlots.set(slot);
         markNoUpdateSync();
     }

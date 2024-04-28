@@ -14,21 +14,48 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandler {
 
     protected final List<ItemStack> itemStackList = new ObjectArrayList<>();
     protected final List<FluidStack> fluidStackList = new ObjectArrayList<>();
 
-    protected IntConsumer onItemChanged = null;
-    protected IntConsumer onFluidChanged = null;
+    protected volatile IItemHandlerModifiable subItemHandler = null;
+    protected volatile IFluidHandler subFluidHandler = null;
+
+    protected volatile IntConsumer onItemChanged = null;
+    protected volatile IntConsumer onFluidChanged = null;
+
+    public InfItemFluidHandler() {
+    }
+
+    public InfItemFluidHandler(final IItemHandlerModifiable subItemHandler) {
+        this.subItemHandler = subItemHandler;
+    }
+
+    public InfItemFluidHandler(final IFluidHandler subFluidHandler) {
+        this.subFluidHandler = subFluidHandler;
+    }
+
+    public InfItemFluidHandler(final IItemHandlerModifiable subItemHandler, final IFluidHandler subFluidHandler) {
+        this.subItemHandler = subItemHandler;
+        this.subFluidHandler = subFluidHandler;
+    }
 
     @Override
     public IFluidTankProperties[] getTankProperties() {
+        if (subFluidHandler != null) {
+            return Stream.concat(
+                    fluidStackList.stream().map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE)),
+                    Arrays.stream(subFluidHandler.getTankProperties())
+            ).toArray(IFluidTankProperties[]::new);
+        }
         return fluidStackList.stream()
                 .map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE))
                 .toArray(IFluidTankProperties[]::new);
@@ -77,6 +104,13 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
             return null;
         }
 
+        if (subFluidHandler != null) {
+            FluidStack drained = subFluidHandler.drain(resource, doDrain);
+            if (drained != null) {
+                return drained;
+            }
+        }
+
         for (int i = 0; i < fluidStackList.size(); i++) {
             final FluidStack stackInSlot = fluidStackList.get(i);
             if (stackInSlot != null && stackInSlot.isFluidEqual(resource)) {
@@ -102,6 +136,13 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     @Nullable
     @Override
     public synchronized FluidStack drain(final int maxDrain, final boolean doDrain) {
+        if (subFluidHandler != null) {
+            FluidStack drained = subFluidHandler.drain(maxDrain, doDrain);
+            if (drained != null) {
+                return drained;
+            }
+        }
+
         for (int i = 0; i < fluidStackList.size(); i++) {
             final FluidStack stackInSlot = fluidStackList.get(i);
             if (stackInSlot != null) {
@@ -125,31 +166,49 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
     @Override
     public synchronized void setStackInSlot(final int slot, @Nonnull final ItemStack stack) {
-        if (slot >= itemStackList.size()) {
+        int trueSlot = slot;
+        if (subItemHandler != null) {
+            if (slot < subItemHandler.getSlots()) {
+                subItemHandler.setStackInSlot(slot, stack);
+                return;
+            }
+            trueSlot -= (subItemHandler.getSlots());
+        }
+
+        if (trueSlot >= itemStackList.size()) {
             itemStackList.add(stack);
             if (onItemChanged != null) {
                 onItemChanged.accept(itemStackList.size() - 1);
             }
         } else {
-            itemStackList.set(slot, stack);
+            itemStackList.set(trueSlot, stack);
             if (onItemChanged != null) {
-                onItemChanged.accept(slot);
+                onItemChanged.accept(trueSlot);
             }
         }
     }
 
     @Override
     public int getSlots() {
-        return itemStackList.size();
+        return itemStackList.size() + (subItemHandler != null ? subItemHandler.getSlots() : 0);
     }
 
     @Nonnull
     @Override
     public ItemStack getStackInSlot(final int slot) {
-        if (slot >= itemStackList.size()) {
+        int trueSlot = slot;
+
+        if (subItemHandler != null) {
+            if (slot < subItemHandler.getSlots()) {
+                return subItemHandler.getStackInSlot(slot);
+            }
+            trueSlot -= (subItemHandler.getSlots());
+        }
+
+        if (trueSlot >= itemStackList.size()) {
             return ItemStack.EMPTY;
         }
-        return itemStackList.get(slot);
+        return itemStackList.get(trueSlot);
     }
 
     @Nonnull
@@ -185,7 +244,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         }
         return ItemStack.EMPTY;
     }
-    
+
     public synchronized void appendItem(@Nonnull final ItemStack stack) {
         int toAppend = stack.getCount();
 
@@ -217,19 +276,27 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     @Nonnull
     @Override
     public synchronized ItemStack extractItem(final int slot, final int amount, final boolean simulate) {
-        if (slot >= itemStackList.size()) {
+        int trueSlot = slot;
+        if (subItemHandler != null) {
+            if (slot < subItemHandler.getSlots()) {
+                return subItemHandler.extractItem(slot, amount, simulate);
+            }
+            trueSlot -= (subItemHandler.getSlots());
+        }
+
+        if (trueSlot >= itemStackList.size()) {
             return ItemStack.EMPTY;
         }
-        ItemStack stackInSlot = itemStackList.get(slot);
+        ItemStack stackInSlot = itemStackList.get(trueSlot);
         if (stackInSlot.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
         if (amount >= stackInSlot.getCount()) {
             if (!simulate) {
-                itemStackList.set(slot, ItemStack.EMPTY);
+                itemStackList.set(trueSlot, ItemStack.EMPTY);
                 if (onItemChanged != null) {
-                    onItemChanged.accept(slot);
+                    onItemChanged.accept(trueSlot);
                 }
             }
             return stackInSlot;
@@ -237,7 +304,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
             if (!simulate) {
                 stackInSlot.shrink(amount);
                 if (onItemChanged != null) {
-                    onItemChanged.accept(slot);
+                    onItemChanged.accept(trueSlot);
                 }
             }
             return ItemUtils.copyStackWithSize(stackInSlot, amount);
@@ -246,6 +313,11 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
     @Override
     public int getSlotLimit(final int slot) {
+        if (subItemHandler != null) {
+            if (slot < subItemHandler.getSlots()) {
+                return subItemHandler.getSlotLimit(slot);
+            }
+        }
         return Integer.MAX_VALUE;
     }
 
@@ -269,6 +341,22 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         this.onFluidChanged = onFluidChanged;
     }
 
+    public IItemHandlerModifiable getSubItemHandler() {
+        return subItemHandler;
+    }
+
+    public void setSubItemHandler(final IItemHandlerModifiable subItemHandler) {
+        this.subItemHandler = subItemHandler;
+    }
+
+    public IFluidHandler getSubFluidHandler() {
+        return subFluidHandler;
+    }
+
+    public void setSubFluidHandler(final IFluidHandler subFluidHandler) {
+        this.subFluidHandler = subFluidHandler;
+    }
+
     public void writeToNBT(final NBTTagCompound tag, final String subTagName) {
         NBTTagCompound subTag = new NBTTagCompound();
         final NBTTagList fluidList = new NBTTagList();
@@ -284,7 +372,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
                 .map(itemStack -> itemStack.writeToNBT(new NBTTagCompound()))
                 .forEach(itemList::appendTag);
         subTag.setTag("Items", itemList);
-        
+
         tag.setTag(subTagName, subTag);
     }
 
