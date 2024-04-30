@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.client.gui;
 
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.container.ContainerBase;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.inventory.Container;
 import net.minecraft.util.ResourceLocation;
@@ -24,6 +25,11 @@ public abstract class GuiContainerBase<T extends Container> extends GuiContainer
 
     public static final ResourceLocation TEXTURES_EMPTY_GUI = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guismartinterface.png");
     protected final T container;
+
+    public GuiContainerBase(ContainerBase<?> container) {
+        super(container);
+        this.container = (T) container;
+    }
 
     public GuiContainerBase(T container) {
         super(container);
