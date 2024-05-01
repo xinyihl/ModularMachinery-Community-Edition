@@ -80,7 +80,7 @@ public class PktMEPatternProviderHandlerItems implements IMessage, IMessageHandl
         if (!(cur instanceof GuiMEPatternProvider patternProvider)) {
             return;
         }
-        patternProvider.setStackList(itemStackList, fluidStackList);
+        Minecraft.getMinecraft().addScheduledTask(() -> patternProvider.setStackList(itemStackList, fluidStackList));
     }
 
 }
