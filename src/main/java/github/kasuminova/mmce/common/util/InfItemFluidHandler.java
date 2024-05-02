@@ -177,14 +177,11 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
         if (trueSlot >= itemStackList.size()) {
             itemStackList.add(stack);
-            if (onItemChanged != null) {
-                onItemChanged.accept(itemStackList.size() - 1);
-            }
         } else {
             itemStackList.set(trueSlot, stack);
-            if (onItemChanged != null) {
-                onItemChanged.accept(trueSlot);
-            }
+        }
+        if (onItemChanged != null) {
+            onItemChanged.accept(trueSlot);
         }
     }
 
@@ -248,11 +245,12 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     public synchronized void appendItem(@Nonnull final ItemStack stack) {
         int toAppend = stack.getCount();
 
-        for (final ItemStack stackInSlot : itemStackList) {
+        for (int i = 0; i < itemStackList.size(); i++) {
+            final ItemStack stackInSlot = itemStackList.get(i);
             if (stackInSlot.isEmpty()) {
-                itemStackList.set(itemStackList.indexOf(stackInSlot), stack.copy());
+                itemStackList.set(i, stack.copy());
                 if (onItemChanged != null) {
-                    onItemChanged.accept(itemStackList.indexOf(stackInSlot));
+                    onItemChanged.accept(i);
                 }
                 return;
             } else if (stackInSlot.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stackInSlot, stack)) {

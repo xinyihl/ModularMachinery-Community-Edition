@@ -353,7 +353,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (IntStream.range(0, patterns.getSlots()).mapToObj(patterns::getStackInSlot).anyMatch(stackInSlot -> !stackInSlot.isEmpty())) {
             return false;
         }
-        return handler.isEmpty() && !blockingMode;
+        return !blockingMode && handler.isEmpty();
     }
 
     public void sendHandlerItemsToClient() {
