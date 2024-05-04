@@ -19,7 +19,6 @@ import appeng.fluids.util.IAEFluidInventory;
 import appeng.fluids.util.IAEFluidTank;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.AppEngInternalOversizedInventory;
 import appeng.util.Platform;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
@@ -68,7 +67,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     public static final int PATTERNS = 36;
     public static final int SUB_ITEM_HANDLER_SLOTS = 2;
 
-    protected final AppEngInternalInventory subItemHandler = createOverSizedInventory(this, SUB_ITEM_HANDLER_SLOTS, Integer.MAX_VALUE);
+    protected final AppEngInternalInventory subItemHandler = new AppEngInternalInventory(this, SUB_ITEM_HANDLER_SLOTS);
     protected final AEFluidInventoryUpgradeable subFluidHandler = new AEFluidInventoryUpgradeable(this, 1, Integer.MAX_VALUE);
     protected final InfItemFluidHandler handler = new InfItemFluidHandler(subItemHandler, subFluidHandler);
 
@@ -78,16 +77,6 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     protected boolean blockingMode = false;
     protected boolean shouldReturnItems = false;
     protected boolean handlerDirty = false;
-
-    protected static AppEngInternalInventory createOverSizedInventory(final IAEAppEngInventory inv, final int size, final int maxStack) {
-        try {
-            // AE2EL
-            return new AppEngInternalOversizedInventory(inv, size, maxStack);
-        } catch (Exception | Error e) {
-            // Default AE2
-            return new AppEngInternalInventory(inv, size, Math.min(64, maxStack));
-        }
-    }
 
     public MEPatternProvider() {
         // Initialize details...
