@@ -2,6 +2,7 @@ package github.kasuminova.mmce.common.network;
 
 import github.kasuminova.mmce.common.container.ContainerMEPatternProvider;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -35,18 +36,20 @@ public class PktMEPatternProviderAction implements IMessage, IMessageHandler<Pkt
         if (!(player.openContainer instanceof final ContainerMEPatternProvider patternProvider)) {
             return null;
         }
-        MEPatternProvider provider = patternProvider.getOwner();
-        switch (message.action) {
-            case ENABLE_BLOCKING_MODE -> {
-                provider.setBlockingMode(true);
-                provider.markChunkDirty();
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            MEPatternProvider provider = patternProvider.getOwner();
+            switch (message.action) {
+                case ENABLE_BLOCKING_MODE -> {
+                    provider.setBlockingMode(true);
+                    provider.markChunkDirty();
+                }
+                case DISABLE_BLOCKING_MODE -> {
+                    provider.setBlockingMode(false);
+                    provider.markChunkDirty();
+                }
+                case RETURN_ITEMS -> provider.returnItemsScheduled();
             }
-            case DISABLE_BLOCKING_MODE -> {
-                provider.setBlockingMode(false);
-                provider.markChunkDirty();
-            }
-            case RETURN_ITEMS -> provider.returnItemsScheduled();
-        }
+        });
         return null;
     }
 

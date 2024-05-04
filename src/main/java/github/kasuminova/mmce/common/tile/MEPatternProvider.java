@@ -300,6 +300,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         this.blockingMode = blockingMode;
     }
 
+    @Override
+    public boolean hasCapability(@Nonnull final Capability<?> capability, @Nullable final EnumFacing facing) {
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+    }
+
     @Nullable
     @Override
     public <T> T getCapability(@Nonnull final Capability<T> capability, @Nullable final EnumFacing facing) {
