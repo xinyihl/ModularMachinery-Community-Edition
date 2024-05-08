@@ -93,7 +93,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         int ly = light / 65536;
 
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        OpenGlHelper.setLightmapTextureCoords(GL11.GL_TEXTURE_2D, lx, ly);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lx, ly);
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
 
         GlStateManager.pushMatrix();
