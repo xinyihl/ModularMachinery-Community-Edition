@@ -7,6 +7,7 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
+import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -21,7 +22,6 @@ import org.lwjgl.opengl.GL11;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimatableModel;
 import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.util.Color;
 import software.bernie.geckolib3.geo.render.built.*;
 
 import javax.vecmath.Vector3f;
@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-@Optional.Interface(iface = "software.bernie.geckolib3.renderers.geo.IGeoRenderer", modid = "geckolib3")
 public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMultiblockMachineController> {
 
     public static final MachineControllerRenderer INSTANCE = new MachineControllerRenderer();
@@ -70,21 +69,14 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         }
     }
 
-    private static EnumFacing getFacing(TileMultiblockMachineController tile) {
-        return tile.getControllerRotation();
-    }
-
-    public static Color getRenderColor(TileMultiblockMachineController animatable, float partialTicks) {
-        return Color.ofRGBA(255, 255, 255, 255);
-    }
-
-    public static int getUniqueID(TileMultiblockMachineController animatable) {
-        return animatable.hashCode();
-    }
-
     @Override
     public void render(TileMultiblockMachineController te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
-        this.render(te, x, y, z, partialTicks, destroyStage);
+        try {
+            this.render(te, x, y, z, partialTicks, destroyStage);
+        } catch (Throwable e) {
+            ModularMachinery.log.warn("Failed to render controller model!");
+            ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
+        }
     }
 
     @Optional.Method(modid = "geckolib3")
@@ -102,40 +94,47 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lx, ly);
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
 
-        GlStateManager.pushMatrix();
-        GlStateManager.translate(x, y, z);
-        GlStateManager.translate(0, 0.01f, 0);
-        GlStateManager.translate(0.5, 0, 0.5);
-
-        rotateBlock(getFacing(tile));
-
         Minecraft.getMinecraft().renderEngine.bindTexture(modelProvider.getTextureLocation());
-        render(modelProvider, tile, partialTicks);
-        GlStateManager.popMatrix();
+        render(modelProvider, tile, x, y, z, partialTicks);
     }
 
     @Optional.Method(modid = "geckolib3")
     public void render(final MachineControllerModel modelProvider,
                        final TileMultiblockMachineController tile,
+                       double x, double y, double z,
                        final float partialTicks)
     {
         GlStateManager.disableCull();
         GlStateManager.enableRescaleNormal();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        GlStateManager.alphaFunc(516, 0.1F);
+        GlStateManager.enableBlend();
+        GlStateManager.depthMask(true);
+        GlStateManager.shadeModel(7425);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, z);
+        GlStateManager.translate(0, 0.01f, 0);
+        GlStateManager.translate(0.5, 0, 0.5);
+        rotateBlock(tile.getControllerRotation());
 
         if (Config.asyncControllerModelRender) {
-            renderWithBuffer(tile, partialTicks);
+            renderWithBuffer(tile);
         } else {
-            renderWithDefault(modelProvider, tile, partialTicks);
+            renderWithDefault(modelProvider, tile);
         }
 
+        GlStateManager.popMatrix();
+        GlStateManager.resetColor();
         GlStateManager.disableRescaleNormal();
         GlStateManager.enableCull();
     }
 
-    private void renderWithBuffer(final TileMultiblockMachineController animatable, final float partialTicks) {
+    @Optional.Method(modid = "geckolib3")
+    private void renderWithBuffer(final TileMultiblockMachineController animatable) {
         GeoModelRenderTask task = TASKS.get(animatable);
         if (task == null) {
-            task = new GeoModelRenderTask(this, animatable, partialTicks);
+            task = new GeoModelRenderTask(this, animatable);
             task.compute();
         } else if (!task.isDone()) {
             long current = System.currentTimeMillis();
@@ -146,73 +145,57 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
             }
         }
 
-        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-        GlStateManager.alphaFunc(516, 0.1F);
-        GlStateManager.enableBlend();
-        GlStateManager.depthMask(true);
-        GlStateManager.shadeModel(7425);
-
         task.draw();
-
-        GlStateManager.resetColor();
-
         task.reinitialize();
         TASKS.put(animatable, (GeoModelRenderTask) TaskExecutor.FORK_JOIN_POOL.submit(task));
     }
 
+    @Optional.Method(modid = "geckolib3")
     private void renderWithDefault(final MachineControllerModel modelProvider,
-                                   final TileMultiblockMachineController tile,
-                                   final float partialTicks)
+                                   final TileMultiblockMachineController ctrl)
     {
         GeoModel model = modelProvider.getModel();
-        modelProvider.setLivingAnimations(tile, getUniqueID(tile));
+        modelProvider.setLivingAnimations(ctrl, ctrl.hashCode());
         
         BufferBuilder builder = Tessellator.getInstance().getBuffer();
-
         builder.begin(GL11.GL_QUADS, VERTEX_FORMAT);
-
-        Color renderColor = getRenderColor(tile, partialTicks);
-        float r = (float) renderColor.getRed() / 255f;
-        float g = (float) renderColor.getGreen() / 255f;
-        float b = (float) renderColor.getBlue() / 255f;
-        float a = (float) renderColor.getAlpha() / 255f;
 
         // Render all top level bones
         for (GeoBone group : model.topLevelBones) {
-            renderRecursively(builder, group, r, g, b, a);
+            renderRecursively(builder, group, 1F, 1F, 1F, 1F);
         }
 
         Tessellator.getInstance().draw();
     }
 
-    public void renderAsync(TileMultiblockMachineController tile, BufferBuilder buffer, BufferBuilder emissiveBuffer, float partialTicks) {
+    @Optional.Method(modid = "geckolib3")
+    public void renderAsync(TileMultiblockMachineController tile,
+                            BufferBuilder buffer, BufferBuilder emissiveBuffer)
+    {
         MachineControllerModel modelProvider = tile.getCurrentModel();
         if (modelProvider == null) {
             return;
         }
         GeoModel model = modelProvider.getModel();
         synchronized (model) {
-            modelProvider.setLivingAnimations(tile, getUniqueID(tile));
-
+            modelProvider.setLivingAnimations(tile, tile.hashCode());
             buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
-
-            Color renderColor = getRenderColor(tile, partialTicks);
-            float r = (float) renderColor.getRed() / 255f;
-            float g = (float) renderColor.getGreen() / 255f;
-            float b = (float) renderColor.getBlue() / 255f;
-            float a = (float) renderColor.getAlpha() / 255f;
+            emissiveBuffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
 
             // Render all top level bones
             for (GeoBone group : model.topLevelBones) {
-                renderRecursively(buffer, emissiveBuffer, group, r, g, b, a);
+                renderRecursively(buffer, emissiveBuffer, group, 1F, 1F, 1F, 1F);
             }
 
+            emissiveBuffer.finishDrawing();
             buffer.finishDrawing();
         }
     }
 
     @Optional.Method(modid = "geckolib3")
-    public void renderRecursively(BufferBuilder buffer, GeoBone bone, float red, float green, float blue, float alpha) {
+    public void renderRecursively(BufferBuilder buffer, GeoBone bone,
+                                  float red, float green, float blue, float alpha)
+    {
         boolean emissive = bone.name.equals("emissive");
         float lastBrightnessX = 0;
         float lastBrightnessY = 0;
@@ -221,7 +204,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
             lastBrightnessX = OpenGlHelper.lastBrightnessX;
             lastBrightnessY = OpenGlHelper.lastBrightnessY;
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
         }
 
         MatrixStack matrixStack = MATRIX_STACK.get();
@@ -250,12 +233,15 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         if (emissive) {
             Tessellator.getInstance().draw();
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
+            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
         }
     }
 
     @Optional.Method(modid = "geckolib3")
-    public void renderRecursively(BufferBuilder buffer, BufferBuilder emissiveBuffer, GeoBone bone, float red, float green, float blue, float alpha) {
+    public void renderRecursively(BufferBuilder buffer, BufferBuilder emissiveBuffer,
+                                  GeoBone bone,
+                                  float red, float green, float blue, float alpha)
+    {
         boolean emissive = bone.name.equals("emissive");
 
         MatrixStack matrixStack = MATRIX_STACK.get();
@@ -284,7 +270,10 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     }
 
     @Optional.Method(modid = "geckolib3")
-    public void renderCube(final BufferBuilder builder, final GeoCube cube, final float red, final float green, final float blue, final float alpha) {
+    public void renderCube(final BufferBuilder builder,
+                           final GeoCube cube,
+                           final float red, final float green, final float blue, final float alpha)
+    {
         MatrixStack matrixStack = MATRIX_STACK.get();
         matrixStack.moveToPivot(cube);
         matrixStack.rotate(cube);

@@ -14,27 +14,25 @@ public class GeoModelRenderTask extends RecursiveAction {
     
     private final MachineControllerRenderer renderer;
     private final TileMultiblockMachineController ctrl;
-    private final float partialTicks;
     private volatile BufferBuilder buffer;
     private volatile BufferBuilder emissiveBuffer;
 
-    public GeoModelRenderTask(final MachineControllerRenderer renderer, final TileMultiblockMachineController ctrl, final float partialTicks) {
+    public GeoModelRenderTask(final MachineControllerRenderer renderer, final TileMultiblockMachineController ctrl) {
         this.renderer = renderer;
         this.ctrl = ctrl;
-        this.partialTicks = partialTicks;
         this.buffer = BufferBuilderPool.borrowBuffer(1024);
         this.emissiveBuffer = BufferBuilderPool.borrowBuffer(128);
     }
 
     @Override
-    protected void compute() {
+    protected synchronized void compute() {
         if (buffer == null) {
             buffer = BufferBuilderPool.borrowBuffer(1024);
         }
         if (emissiveBuffer == null) {
             emissiveBuffer = BufferBuilderPool.borrowBuffer(128);
         }
-        renderer.renderAsync(ctrl, buffer, emissiveBuffer, partialTicks);
+        renderer.renderAsync(ctrl, buffer, emissiveBuffer);
     }
 
     public synchronized void draw() {
@@ -50,9 +48,14 @@ public class GeoModelRenderTask extends RecursiveAction {
 
     @Override
     @SuppressWarnings("deprecation")
-    protected synchronized void finalize() throws Throwable {
-        try {
-            Minecraft.getMinecraft().addScheduledTask(() -> {
+    protected void finalize() throws Throwable {
+        if (buffer == null && emissiveBuffer == null) {
+            super.finalize();
+            return;
+        }
+
+        Minecraft.getMinecraft().addScheduledTask(() -> {
+            synchronized (this) {
                 if (buffer != null) {
                     BufferBuilderPool.returnBuffer(buffer);
                     buffer = null;
@@ -61,10 +64,10 @@ public class GeoModelRenderTask extends RecursiveAction {
                     BufferBuilderPool.returnBuffer(emissiveBuffer);
                     emissiveBuffer = null;
                 }
-            });
-        } finally {
-            super.finalize();
-        }
+            }
+        });
+
+        super.finalize();
     }
 
 }

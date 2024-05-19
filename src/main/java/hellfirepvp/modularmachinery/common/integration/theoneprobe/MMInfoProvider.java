@@ -107,7 +107,13 @@ public class MMInfoProvider implements IProbeInfoProvider {
         perfBox.text(String.format("%sCPU Avg Usage: %sμs%s, Recipe Search: %sms",
                 TextFormatting.AQUA, formatCPUUsage(machine.getTimeRecorder().usedTimeAvg()),
                 TextFormatting.AQUA, formatRecipeSearchUsage(machine.getTimeRecorder().recipeSearchUsedTimeAvg())));
-        perfBox.text(String.format("%sWorkMode: %s", TextFormatting.AQUA, machine.getWorkMode().getDisplayName()));
+        TileMultiblockMachineController.WorkMode workMode = machine.getWorkMode();
+        long groupId = machine.getExecuteGroupId();
+        if (workMode == TileMultiblockMachineController.WorkMode.ASYNC && groupId != 0) {
+            perfBox.text(String.format("%sWorkMode: %s (GroupID: %s)", TextFormatting.AQUA, workMode.getDisplayName(), groupId));
+        } else {
+            perfBox.text(String.format("%sWorkMode: %s", TextFormatting.AQUA, workMode.getDisplayName()));
+        }
     }
 
     // TODO: Really long...

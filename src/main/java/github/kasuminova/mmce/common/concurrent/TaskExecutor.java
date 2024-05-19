@@ -143,7 +143,7 @@ public class TaskExecutor {
         while ((action = mainThreadActions.poll()) != null) {
             try {
                 action.doAction();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 ModularMachinery.log.warn("An error occurred during synchronous task execution!");
                 ModularMachinery.log.warn(ThrowableUtil.stackTraceToString(e));
             }
