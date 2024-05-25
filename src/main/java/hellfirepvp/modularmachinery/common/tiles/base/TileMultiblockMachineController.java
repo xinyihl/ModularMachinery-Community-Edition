@@ -671,6 +671,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected void updateComponents() {
         if (this.foundMachine == null || this.foundPattern == null || this.controllerRotation == null || this.foundReplacements == null) {
+            this.foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
             this.foundComponents.clear();
             this.foundModifiers.clear();
             this.foundSmartInterfaces.clear();
@@ -684,6 +685,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         this.foundUpgrades.clear();
         this.foundUpgradeBuses.clear();
+        this.foundComponents.forEach((te, component) -> MachineComponentManager.INSTANCE.removeOwner(te, this));
         this.foundComponents.clear();
         this.foundSmartInterfaces.clear();
         this.foundParallelControllers.clear();

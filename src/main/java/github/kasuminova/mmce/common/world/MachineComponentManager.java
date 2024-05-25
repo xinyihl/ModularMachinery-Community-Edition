@@ -4,6 +4,7 @@ import com.github.bsideup.jabel.Desugar;
 import github.kasuminova.mmce.common.util.concurrent.ExecuteGroup;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -43,10 +44,10 @@ public class MachineComponentManager {
         Map<BlockPos, ComponentInfo> posComponentMap = componentMap.computeIfAbsent(world, v -> new ConcurrentHashMap<>());
 
         ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
-                component, pos, new ObjectArraySet<>(Collections.singleton(ctrl))));
+                component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
 
         if (!info.areTileEntityEquals(component)) {
-            ComponentInfo newInfo = new ComponentInfo(component, pos, new ObjectArraySet<>(Collections.singleton(ctrl)));
+            ComponentInfo newInfo = new ComponentInfo(component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl)));
             posComponentMap.put(pos, newInfo);
             return;
         }
@@ -62,20 +63,13 @@ public class MachineComponentManager {
                 return;
             }
 
-            long groupId = -1;
-            for (final TileMultiblockMachineController owner : owners) {
-                if (owner.getExecuteGroupId() != -1) {
-                    groupId = owner.getExecuteGroupId();
-                }
-            }
+            long groupId = owners.stream()
+                    .filter(owner -> owner.getExecuteGroupId() != -1)
+                    .findFirst()
+                    .map(TileMultiblockMachineController::getExecuteGroupId)
+                    .orElse(ExecuteGroup.newGroupId());
 
-            if (groupId == -1) {
-                groupId = ExecuteGroup.newGroupId();
-            }
-
-            for (final TileMultiblockMachineController owner : owners) {
-                owner.setExecuteGroupId(groupId);
-            }
+            owners.forEach(owner -> owner.setExecuteGroupId(groupId));
         }
     }
 

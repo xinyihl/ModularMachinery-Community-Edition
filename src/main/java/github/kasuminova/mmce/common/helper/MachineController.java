@@ -22,7 +22,7 @@ public class MachineController {
      * @return 如果无控制器则返回 null，否则返回 IMachineController 实例。
      */
     @ZenMethod
-    static IMachineController getControllerAt(IWorld worldCT, IBlockPos posCT) {
+    public static IMachineController getControllerAt(IWorld worldCT, IBlockPos posCT) {
         World world = CraftTweakerMC.getWorld(worldCT);
         BlockPos pos = CraftTweakerMC.getBlockPos(posCT);
         if (world == null || pos == null || !world.isBlockLoaded(pos)) {
@@ -40,7 +40,7 @@ public class MachineController {
      * @return 如果无控制器则返回 null，否则返回 IMachineController 实例。
      */
     @ZenMethod
-    static IMachineController getControllerAt(IWorld worldCT, int x, int y, int z) {
+    public static IMachineController getControllerAt(IWorld worldCT, int x, int y, int z) {
         World world = CraftTweakerMC.getWorld(worldCT);
         BlockPos pos = new BlockPos(x, y, z);
 
