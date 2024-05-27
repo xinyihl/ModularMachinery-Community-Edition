@@ -43,21 +43,20 @@ public class MachineComponentManager {
 
         Map<BlockPos, ComponentInfo> posComponentMap = componentMap.computeIfAbsent(world, v -> new ConcurrentHashMap<>());
 
-        ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
-                component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
+        synchronized (component) {
+            ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
+                    component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
 
-        if (!info.areTileEntityEquals(component)) {
-            ComponentInfo newInfo = new ComponentInfo(component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl)));
-            posComponentMap.put(pos, newInfo);
-            return;
-        }
+            if (!info.areTileEntityEquals(component)) {
+                ComponentInfo newInfo = new ComponentInfo(component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl)));
+                posComponentMap.put(pos, newInfo);
+                return;
+            }
 
-        Set<TileMultiblockMachineController> owners = info.owners;
-        if (owners.contains(ctrl)) {
-            return;
-        }
-
-        synchronized (owners) {
+            Set<TileMultiblockMachineController> owners = info.owners;
+            if (owners.contains(ctrl)) {
+                return;
+            }
             owners.add(ctrl);
             if (owners.size() <= 1) {
                 return;
