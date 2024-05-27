@@ -1270,11 +1270,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Nonnull
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
-        if (!isStructureFormed()) {
-            return super.getRenderBoundingBox();
-        }
-        BlockPos pos = getPos();
-        return new AxisAlignedBB(pos.add(foundPattern.getMin()), pos.add(foundPattern.getMax()));
+        return INFINITE_EXTENT_AABB;
     }
 
     @Override

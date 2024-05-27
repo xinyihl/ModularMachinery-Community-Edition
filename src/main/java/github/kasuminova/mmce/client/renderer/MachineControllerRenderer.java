@@ -176,9 +176,10 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         if (modelProvider == null) {
             return;
         }
-        GeoModel model = modelProvider.getModel();
+        MachineControllerModel renderInst = modelProvider.getRenderInstance();
+        GeoModel model = renderInst.getModel();
         synchronized (model) {
-            modelProvider.setLivingAnimations(tile, tile.hashCode());
+            renderInst.setLivingAnimations(tile, tile.hashCode());
             buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
             emissiveBuffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
 
@@ -189,6 +190,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
 
             emissiveBuffer.finishDrawing();
             buffer.finishDrawing();
+            renderInst.returnRenderInst();
         }
     }
 

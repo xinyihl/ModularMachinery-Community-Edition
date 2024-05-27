@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "2.0.0-pre6"
+version = "2.0.0-pre7"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -215,6 +215,8 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:guideapi-228832:2645992"))
     compileOnly(rfg.deobf("curse.maven:patchouli-306770:3162874"))
     compileOnly(rfg.deobf("curse.maven:thaumic-augmentation-319441:4486505"))
+    // Performance Test Tool
+    runtimeOnly(rfg.deobf("curse.maven:spark-361579:3542217"))
 }
 
 // Publishing to a Maven repository
