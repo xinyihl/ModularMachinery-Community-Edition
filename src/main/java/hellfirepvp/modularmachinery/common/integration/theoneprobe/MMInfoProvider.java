@@ -339,7 +339,11 @@ public class MMInfoProvider implements IProbeInfoProvider {
     }
 
     private static RequirementEnergy getRequirementEnergy(RecipeThread thread, IOType ioType) {
-        List<ComponentRequirement<?, ?>> energyRequirements = thread.getContext().getRequirementBy(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
+        RecipeCraftingContext context = thread.getContext();
+        if (context == null) {
+            return null;
+        }
+        List<ComponentRequirement<?, ?>> energyRequirements = context.getRequirementBy(RequirementTypesMM.REQUIREMENT_ENERGY, ioType);
         if (energyRequirements.isEmpty()) {
             return null;
         }
