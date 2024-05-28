@@ -1313,7 +1313,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
     public MachineControllerModel getCurrentModel() {
         String modelName = getCurrentModelName();
-        if (modelName != null && modelName.isEmpty()) {
+        if (modelName != null && !modelName.isEmpty()) { // (╯°□°）╯︵ ┻━┻
             MachineControllerModel model = DynamicMachineModelRegistry.INSTANCE.getMachineModel(modelName);
             if (model != null) {
                 return model;
