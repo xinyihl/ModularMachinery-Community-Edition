@@ -5,6 +5,7 @@ import github.kasuminova.mmce.common.util.concurrent.ExecuteGroup;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -45,10 +46,10 @@ public class MachineComponentManager {
 
         synchronized (component) {
             ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
-                    component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
+                    component, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl)))));
 
             if (!info.areTileEntityEquals(component)) {
-                ComponentInfo newInfo = new ComponentInfo(component, pos, new ReferenceOpenHashSet<>(Collections.singleton(ctrl)));
+                ComponentInfo newInfo = new ComponentInfo(component, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
                 posComponentMap.put(pos, newInfo);
                 return;
             }

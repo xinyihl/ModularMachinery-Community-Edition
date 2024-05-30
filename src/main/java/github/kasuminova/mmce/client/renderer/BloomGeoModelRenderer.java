@@ -10,7 +10,6 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.texture.TextureMap;
 
 import javax.annotation.Nonnull;
@@ -30,9 +29,6 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
     
     protected boolean postProcessing = false;
 
-    protected float lastBrightnessX;
-    protected float lastBrightnessY;
-
     public void registerGlobal(final TileMultiblockMachineController ctrl) {
         if (!initialized) {
             initialized = true;
@@ -47,14 +43,14 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
 
     @Override
     public void preDraw(@Nonnull final BufferBuilder bufferBuilder) {
-        this.lastBrightnessX = OpenGlHelper.lastBrightnessX;
-        this.lastBrightnessY = OpenGlHelper.lastBrightnessY;
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
+//        this.lastBrightnessX = OpenGlHelper.lastBrightnessX;
+//        this.lastBrightnessY = OpenGlHelper.lastBrightnessY;
+//        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
     }
 
     @Override
     public void postDraw(@Nonnull final BufferBuilder bufferBuilder) {
-        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, this.lastBrightnessX, this.lastBrightnessY);
+//        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, this.lastBrightnessX, this.lastBrightnessY);
     }
 
     @Override
@@ -63,7 +59,8 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
 
         List<TileMultiblockMachineController> toRemove = new ArrayList<>();
         controllers.forEach(ctrl -> {
-            if (ctrl.isInvalid()) {
+            //noinspection ConstantValue
+            if (ctrl.isInvalid() || ctrl.getWorld() == null || ctrl.getWorld() != Minecraft.getMinecraft().world) {
                 toRemove.add(ctrl);
                 return;
             }
