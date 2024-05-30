@@ -19,8 +19,6 @@ public class ModelPool {
     private final Map<MachineControllerModel, GeoModel> renderInstMap = new ConcurrentHashMap<>();
     private final Queue<MachineControllerModel> renderInstPool = new ArrayBlockingQueue<>(POOL_LIMIT);
 
-    private int modelCount = 0;
-
     public ModelPool(final MachineControllerModel original) {
         this.original = original;
         this.renderInstPool.offer(original);
@@ -38,26 +36,25 @@ public class ModelPool {
     }
 
     public synchronized MachineControllerModel borrowRenderInst() {
-        if (renderInstPool.isEmpty() && modelCount < POOL_LIMIT) {
-            modelCount++;
+        if (renderInstPool.isEmpty()) {
             GeoModel loaded = GeoModelExternalLoader.INSTANCE.load(original.modelLocation);
-            if (loaded != null) {
-                MachineControllerModel renderInst = original.createRenderInstance();
-                renderInstMap.put(renderInst, loaded);
-                return renderInst;
+            if (loaded == null) {
+                throw new NullPointerException("Model file not found: " + original.modelLocation);
             }
+            MachineControllerModel renderInst = original.createRenderInstance();
+            renderInstMap.put(renderInst, loaded);
+            return renderInst;
         }
         return renderInstPool.poll();
     }
 
-    public void returnRenderInst(MachineControllerModel model) {
+    public synchronized void returnRenderInst(MachineControllerModel model) {
         renderInstPool.offer(model);
     }
 
     public synchronized void reset() {
         renderInstPool.clear();
         renderInstMap.clear();
-        modelCount = 0;
     }
 
 }

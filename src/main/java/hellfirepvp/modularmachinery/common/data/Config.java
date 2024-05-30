@@ -39,7 +39,7 @@ public class Config {
     public static boolean enableFluxNetworksIntegration = true;
     public static boolean enableFactoryControllerByDefault = false;
     public static boolean controllerOutputComparatorSignal = true;
-    public static boolean asyncControllerModelRender = false;
+    public static boolean asyncControllerModelRender = true;
     public static boolean enableDurationMultiplier = true;
     public static int machineColor;
     public static int maxMachineParallelism = 2048;

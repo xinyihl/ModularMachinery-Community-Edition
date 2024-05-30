@@ -91,8 +91,9 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
     }
 
     public synchronized GeoModel load(ResourceLocation location) {
-        if (modelSource == null) {
-            return null;
+        GeoModel model = geoModels.get(location);
+        if (model == null) {
+            throw new NullPointerException("Model file not found: " + location.toString());
         }
         try {
             return geoModelLoader.loadModel(modelSource, location);

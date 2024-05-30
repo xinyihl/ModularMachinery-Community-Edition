@@ -112,6 +112,9 @@ listOf(configurations.runtimeClasspath, configurations.testRuntimeClasspath).for
 
 // Dependencies
 repositories {
+    flatDir {
+        dirs("libs")
+    }
     maven {
         url = uri("https://maven.aliyun.com/nexus/content/groups/public/")
     }
@@ -196,7 +199,8 @@ dependencies {
     implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     implementation(rfg.deobf("curse.maven:ae2-fluid-crafting-rework-623955:5278333"))
 //    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
-    compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4799055"))
+    compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:5322654"))
+    implementation(rfg.deobf("kasuminova:lumenized:1.0.3:dev"))
 
     // GeckoLib
     implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))

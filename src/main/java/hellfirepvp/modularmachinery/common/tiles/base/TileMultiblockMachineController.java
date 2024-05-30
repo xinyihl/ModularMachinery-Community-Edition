@@ -7,6 +7,7 @@ import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
 import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import github.kasuminova.mmce.client.model.MachineControllerModel;
+import github.kasuminova.mmce.client.renderer.BloomGeoModelRenderer;
 import github.kasuminova.mmce.client.world.BlockModelHider;
 import github.kasuminova.mmce.common.event.Phase;
 import github.kasuminova.mmce.common.event.client.ControllerModelAnimationEvent;
@@ -27,6 +28,7 @@ import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -64,6 +66,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
@@ -1071,6 +1075,23 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void validate() {
         super.validate();
+        if (!FMLCommonHandler.instance().getSide().isClient()) {
+            return;
+        }
+
+        ClientProxy.clientScheduler.addRunnable(() -> {
+            BlockModelHider.hideOrShowBlocks(this);
+            notifyStructureFormedState(isStructureFormed());
+        }, 0);
+        loaded = true;
+
+        if (world.isRemote) {
+            if (Mods.GREGTECHCEU.isPresent()) {
+                registerBloomRenderer();
+            } else if (Mods.LUMENIZED.isPresent()) {
+                registerBloomRendererLumenized();
+            }
+        }
     }
 
     @Override
@@ -1086,12 +1107,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     @Override
     public void onLoad() {
+        super.onLoad();
+    }
+
+    @Override
+    public void onChunkUnload() {
+        super.onChunkUnload();
         if (FMLCommonHandler.instance().getSide().isClient()) {
-            ClientProxy.clientScheduler.addRunnable(() -> {
-                BlockModelHider.hideOrShowBlocks(this);
-                notifyStructureFormedState(isStructureFormed());
-            }, 0);
-            loaded = true;
+            if (Mods.GREGTECHCEU.isPresent()) {
+                unregisterBloomRenderer();
+            } else if (Mods.LUMENIZED.isPresent()) {
+                unregisterBloomRendererLumenized();
+            }
         }
     }
 
@@ -1274,6 +1301,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     @Override
+    public double getMaxRenderDistanceSquared() {
+        return 65536D;
+    }
+
+    @Override
     @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
     public void registerControllers(final AnimationData data) {
         data.addAnimationController(new AnimationController<>(this, "controller", 0, this::animationPredicate));
@@ -1328,6 +1360,34 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         ControllerModelGetEvent event = new ControllerModelGetEvent(this);
         event.postEvent();
         return event.getModelName();
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "gregtech")
+    public void registerBloomRenderer() {
+        if (Mods.GREGTECHCEU.isPresent()) {
+            BloomGeoModelRenderer.INSTANCE.registerGlobal(this);
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "lumenized")
+    public void registerBloomRendererLumenized() {
+        BloomGeoModelRenderer.INSTANCE.registerGlobal(this);
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "gregtech")
+    public void unregisterBloomRenderer() {
+        if (Mods.GREGTECHCEU.isPresent()) {
+            BloomGeoModelRenderer.INSTANCE.unregisterGlobal(this);
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "lumenized")
+    public void unregisterBloomRendererLumenized() {
+        BloomGeoModelRenderer.INSTANCE.unregisterGlobal(this);
     }
 
     public enum StructureCheckMode {
