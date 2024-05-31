@@ -8,6 +8,7 @@ import gregtech.client.utils.EffectRenderContext;
 import gregtech.client.utils.IBloomEffect;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -59,10 +60,11 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
         GlStateManager.pushMatrix();
 
         List<TileMultiblockMachineController> toRemove = new ArrayList<>();
+        WorldClient mcWorld = Minecraft.getMinecraft().world;
         controllers.forEach(ctrl -> {
             World world = ctrl.getWorld();
             //noinspection ConstantValue
-            if (ctrl.isInvalid() || world == null || world != Minecraft.getMinecraft().world || world.getTileEntity(ctrl.getPos()) != ctrl) {
+            if (ctrl.isInvalid() || world == null || world != mcWorld || mcWorld.getTileEntity(ctrl.getPos()) != ctrl) {
                 toRemove.add(ctrl);
                 return;
             }

@@ -329,10 +329,10 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         subFluidHandler.readFromNBT(compound, "subFluidHandler");
         handler.readFromNBT(compound, "handler");
         patterns.readFromNBT(compound, "patterns");
+        workMode = WorkModeSetting.values()[compound.getByte("workMode")];
         if (compound.hasKey("blockingMode") && compound.getBoolean("blockingMode")) {
             workMode = WorkModeSetting.BLOCKING_MODE;
         }
-        workMode = WorkModeSetting.values()[compound.getByte("workMode")];
     }
 
     @Override
