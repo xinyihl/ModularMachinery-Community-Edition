@@ -19,6 +19,10 @@ import javax.annotation.Nullable;
 
 public class MEFluidOutputBus extends MEFluidBus {
 
+    public MEFluidOutputBus() {
+        this.tanks.setOneFluidOneSlot(true);
+    }
+
     @Override
     public ItemStack getVisualItemStack() {
         return new ItemStack(ItemsMM.meFluidOutputBus);

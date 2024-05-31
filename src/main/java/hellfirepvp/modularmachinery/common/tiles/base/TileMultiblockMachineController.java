@@ -112,6 +112,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected final TimeRecorder timeRecorder = new TimeRecorder();
 
+    protected boolean searchRecipeImmediately = false;
+
     protected EnumFacing controllerRotation = null;
     protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
 
@@ -237,6 +239,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public TimeRecorder getTimeRecorder() {
         return timeRecorder;
+    }
+
+    public boolean isSearchRecipeImmediately() {
+        return searchRecipeImmediately;
+    }
+
+    public void setSearchRecipeImmediately(final boolean searchRecipeImmediately) {
+        this.searchRecipeImmediately = searchRecipeImmediately;
     }
 
     public int getMaxParallelism() {

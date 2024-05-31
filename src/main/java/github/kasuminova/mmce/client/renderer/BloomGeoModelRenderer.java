@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -59,8 +60,9 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
 
         List<TileMultiblockMachineController> toRemove = new ArrayList<>();
         controllers.forEach(ctrl -> {
+            World world = ctrl.getWorld();
             //noinspection ConstantValue
-            if (ctrl.isInvalid() || ctrl.getWorld() == null || ctrl.getWorld() != Minecraft.getMinecraft().world) {
+            if (ctrl.isInvalid() || world == null || world != Minecraft.getMinecraft().world || world.getTileEntity(ctrl.getPos()) != ctrl) {
                 toRemove.add(ctrl);
                 return;
             }
