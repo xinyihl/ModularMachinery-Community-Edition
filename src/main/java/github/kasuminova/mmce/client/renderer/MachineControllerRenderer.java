@@ -9,12 +9,15 @@ import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Optional;
+import org.lwjgl.opengl.GL11;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.IAnimatableModel;
 import software.bernie.geckolib3.core.controller.AnimationController;
@@ -84,6 +87,17 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         this.render(te, x, y, z, partialTicks, destroyStage);
     }
 
+    public void renderDummy(TileMultiblockMachineController ctrl, MachineControllerModel model) {
+        rendererDispatcher.renderEngine.bindTexture(model.getTextureLocation());
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(0, 0.01f, 0);
+        GlStateManager.translate(0.5f, 0, 0.5f);
+
+        renderWithDefault(model, ctrl);
+
+        GlStateManager.popMatrix();
+    }
+
     @Optional.Method(modid = "geckolib3")
     public void render(TileMultiblockMachineController tile, double x, double y, double z, float partialTicks, int destroyStage) {
         MachineControllerModel modelProvider = tile.getCurrentModel();
@@ -139,23 +153,23 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         }
     }
 
-//    @Optional.Method(modid = "geckolib3")
-//    private void renderWithDefault(final MachineControllerModel modelProvider,
-//                                   final TileMultiblockMachineController ctrl)
-//    {
-//        GeoModel model = modelProvider.getModel();
-//        modelProvider.setLivingAnimations(ctrl, ctrl.hashCode());
-//        
-//        BufferBuilder builder = Tessellator.getInstance().getBuffer();
-//        builder.begin(GL11.GL_QUADS, VERTEX_FORMAT);
-//
-//        // Render all top level bones
-//        for (GeoBone group : model.topLevelBones) {
-//            renderRecursively(builder, group, 1F, 1F, 1F, 1F);
-//        }
-//
-//        Tessellator.getInstance().draw();
-//    }
+    @Optional.Method(modid = "geckolib3")
+    private void renderWithDefault(final MachineControllerModel modelProvider,
+                                   final TileMultiblockMachineController ctrl)
+    {
+        GeoModel model = modelProvider.getModel();
+        modelProvider.setLivingAnimations(ctrl, ctrl.hashCode());
+
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(GL11.GL_QUADS, VERTEX_FORMAT);
+
+        // Render all top level bones
+        for (GeoBone group : model.topLevelBones) {
+            renderRecursively(builder, group, 1F, 1F, 1F, 1F);
+        }
+
+        Tessellator.getInstance().draw();
+    }
 
     @Optional.Method(modid = "geckolib3")
     public void renderAsync(TileMultiblockMachineController tile,
@@ -191,50 +205,61 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         }
     }
 
-//    @Optional.Method(modid = "geckolib3")
-//    public void renderRecursively(BufferBuilder buffer, GeoBone bone,
-//                                  float red, float green, float blue, float alpha)
-//    {
-//        boolean emissive = bone.name.equals("emissive");
-//        float lastBrightnessX = 0;
-//        float lastBrightnessY = 0;
-//        if (emissive) {
-//            Tessellator.getInstance().draw();
-//            lastBrightnessX = OpenGlHelper.lastBrightnessX;
-//            lastBrightnessY = OpenGlHelper.lastBrightnessY;
-//            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
-//            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
-//        }
-//
-//        MatrixStack matrixStack = MATRIX_STACK.get();
-//        matrixStack.push();
-//
-//        matrixStack.translate(bone);
-//        matrixStack.moveToPivot(bone);
-//        matrixStack.rotate(bone);
-//        matrixStack.scale(bone);
-//        matrixStack.moveBackFromPivot(bone);
-//
-//        if (!bone.isHidden()) {
-//            for (GeoCube cube : bone.childCubes) {
-//                matrixStack.push();
-//                renderCube(buffer, cube, red, green, blue, alpha);
-//                matrixStack.pop();
-//            }
-//        }
-//        if (!bone.childBonesAreHiddenToo()) {
-//            for (GeoBone childBone : bone.childBones) {
-//                renderRecursively(buffer, childBone, red, green, blue, alpha);
-//            }
-//        }
-//
-//        matrixStack.pop();
-//        if (emissive) {
-//            Tessellator.getInstance().draw();
-//            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-//            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
-//        }
-//    }
+    @Optional.Method(modid = "geckolib3")
+    public void renderRecursively(BufferBuilder buffer, GeoBone bone,
+                                  float red, float green, float blue, float alpha)
+    {
+        boolean emissive = bone.name.startsWith("emissive") || bone.name.startsWith("bloom");
+        boolean transparent = bone.name.startsWith("transparent") || bone.name.startsWith("emissive_transparent") || bone.name.startsWith("bloom_transparent");
+        float lastBrightnessX = 0;
+        float lastBrightnessY = 0;
+        if (emissive || transparent) {
+            Tessellator.getInstance().draw();
+            if (emissive) {
+                lastBrightnessX = OpenGlHelper.lastBrightnessX;
+                lastBrightnessY = OpenGlHelper.lastBrightnessY;
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
+            }
+            if (transparent) {
+                GlStateManager.depthMask(false);
+            }
+            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
+        }
+
+        MatrixStack matrixStack = MATRIX_STACK.get();
+        matrixStack.push();
+
+        matrixStack.translate(bone);
+        matrixStack.moveToPivot(bone);
+        matrixStack.rotate(bone);
+        matrixStack.scale(bone);
+        matrixStack.moveBackFromPivot(bone);
+
+        if (!bone.isHidden()) {
+            for (GeoCube cube : bone.childCubes) {
+                matrixStack.push();
+                renderCube(buffer, cube, red, green, blue, alpha);
+                matrixStack.pop();
+            }
+        }
+        if (!bone.childBonesAreHiddenToo()) {
+            for (GeoBone childBone : bone.childBones) {
+                renderRecursively(buffer, childBone, red, green, blue, alpha);
+            }
+        }
+
+        matrixStack.pop();
+        if (emissive || transparent) {
+            Tessellator.getInstance().draw();
+            if (emissive) {
+                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
+            }
+            if (transparent) {
+                GlStateManager.depthMask(true);
+            }
+            buffer.begin(GL11.GL_QUADS, VERTEX_FORMAT);
+        }
+    }
 
     @Optional.Method(modid = "geckolib3")
     public void renderRecursively(BufferProvider bufferProvider,

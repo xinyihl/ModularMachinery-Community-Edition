@@ -54,10 +54,12 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
         ResourceLocation texture = currentModel.getTextureLocation();
 
         if (buffer != null) {
-            ControllerModelRenderManager.INSTANCE.addBuffer(RenderType.DEFAULT, texture, buffer);
+            ControllerModelRenderManager.INSTANCE.addBuffer(
+                    ctrl.getWorld().getCombinedLight(ctrl.getPos(), 0), RenderType.DEFAULT, texture, buffer);
         }
         if (transparentBuffer != null) {
-            ControllerModelRenderManager.INSTANCE.addBuffer(RenderType.TRANSPARENT, texture, transparentBuffer);
+            ControllerModelRenderManager.INSTANCE.addBuffer(
+                    ctrl.getWorld().getCombinedLight(ctrl.getPos(), 0), RenderType.TRANSPARENT, texture, transparentBuffer);
         }
     }
 
@@ -72,10 +74,12 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
         ResourceLocation texture = currentModel.getTextureLocation();
 
         if (bloomBuffer != null) {
-            ControllerModelRenderManager.INSTANCE.addBuffer(RenderType.BLOOM, texture, bloomBuffer);
+            ControllerModelRenderManager.INSTANCE.addBuffer(
+                    -1, RenderType.BLOOM, texture, bloomBuffer);
         }
         if (bloomTransparentBuffer != null) {
-            ControllerModelRenderManager.INSTANCE.addBuffer(RenderType.BLOOM_TRANSPARENT, texture, bloomTransparentBuffer);
+            ControllerModelRenderManager.INSTANCE.addBuffer(
+                    -1, RenderType.BLOOM_TRANSPARENT, texture, bloomTransparentBuffer);
         }
 
         if (postProcessing) {

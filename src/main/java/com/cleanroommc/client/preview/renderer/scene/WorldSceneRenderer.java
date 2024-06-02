@@ -3,6 +3,7 @@ package com.cleanroommc.client.preview.renderer.scene;
 import com.cleanroommc.client.util.*;
 import com.cleanroommc.client.util.world.LRDummyWorld;
 import github.kasuminova.mmce.client.util.BufferBuilderPool;
+import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
@@ -664,7 +665,7 @@ public abstract class WorldSceneRenderer {
 //                    }
                     TileEntity tile = getWorld().getTileEntity(pos);
                     if (tile != null) {
-                        if (tile.shouldRenderInPass(pass)) {
+                        if (tile.shouldRenderInPass(pass) && !(tile instanceof TileMultiblockMachineController)) {
                             TileEntityRendererDispatcher.instance.render(tile, pos.getX(), pos.getY(), pos.getZ(), particle);
                         }
                     }
@@ -673,7 +674,7 @@ public abstract class WorldSceneRenderer {
         } else {
             for (BlockPos pos : tileEntities) {
                 TileEntity tile = getWorld().getTileEntity(pos);
-                if (tile != null && tile.shouldRenderInPass(pass)) {
+                if (tile != null && tile.shouldRenderInPass(pass) && !(tile instanceof TileMultiblockMachineController)) {
                     TileEntityRendererDispatcher.instance.render(tile, pos.getX(), pos.getY(), pos.getZ(), particle);
                 }
             }
