@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.util;
 
+import github.kasuminova.mmce.client.util.ItemStackUtils;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.item.ItemStack;
@@ -370,7 +371,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         final NBTTagList itemList = new NBTTagList();
         itemStackList.stream()
                 .filter(itemStack -> !itemStack.isEmpty())
-                .map(itemStack -> itemStack.writeToNBT(new NBTTagCompound()))
+                .map(ItemStackUtils::writeNBTOversize)
                 .forEach(itemList::appendTag);
         subTag.setTag("Items", itemList);
 
@@ -391,7 +392,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         final NBTTagList itemList = subTag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
         IntStream.range(0, itemList.tagCount())
                 .mapToObj(itemList::getCompoundTagAt)
-                .map(ItemStack::new)
+                .map(ItemStackUtils::readNBTOversize)
                 .filter(itemStack -> !itemStack.isEmpty())
                 .forEach(itemStackList::add);
     }
