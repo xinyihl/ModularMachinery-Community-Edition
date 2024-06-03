@@ -198,6 +198,7 @@ dependencies {
 //    implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
     implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5147702"))
     implementation(rfg.deobf("curse.maven:ae2-fluid-crafting-rework-623955:5278333"))
+    implementation(rfg.deobf("curse.maven:mekanism-energistics-1027681:5393252"))
 //    compileOnly(rfg.deobf("curse.maven:gregtech-293327:3266351"))
     compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:5322654"))
     implementation(rfg.deobf("kasuminova:lumenized:1.0.3:dev"))
