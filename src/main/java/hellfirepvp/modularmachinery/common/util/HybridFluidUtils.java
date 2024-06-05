@@ -85,7 +85,7 @@ public class HybridFluidUtils {
                     }
                 }
                 case OUTPUT -> {
-                    if (handler.canReceiveGas(null, stack.getGas())) {
+                    if (!handler.canReceiveGas(null, stack.getGas())) {
                         continue;
                     }
                     totalIO += handler.receiveGas(null, stack, false);
@@ -117,7 +117,7 @@ public class HybridFluidUtils {
                     }
                 }
                 case OUTPUT -> {
-                    if (handler.canReceiveGas(null, stack.getGas())) {
+                    if (!handler.canReceiveGas(null, stack.getGas())) {
                         continue;
                     }
                     totalIO += handler.receiveGas(null, stack, true);
