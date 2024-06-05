@@ -1,48 +1,48 @@
 package github.kasuminova.mmce.client.gui.widget.slot;
 
 import appeng.api.AEApi;
-import appeng.api.storage.channels.IFluidStorageChannel;
-import appeng.fluids.client.render.FluidStackSizeRenderer;
+import com.mekeng.github.client.render.GasStackSizeRenderer;
+import com.mekeng.github.common.me.storage.IGasStorageChannel;
 import github.kasuminova.mmce.client.gui.util.MousePos;
 import github.kasuminova.mmce.client.gui.util.RenderPos;
 import github.kasuminova.mmce.client.gui.util.RenderSize;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import hellfirepvp.modularmachinery.common.base.Mods;
+import mekanism.api.gas.GasStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fluids.FluidStack;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class SlotFluidVirtual extends SlotVirtual {
-    protected static final FluidStackSizeRenderer SIZE_RENDERER = new FluidStackSizeRenderer();
+public class SlotGasVirtual extends SlotVirtual {
+    protected static final GasStackSizeRenderer SIZE_RENDERER = new GasStackSizeRenderer();
 
-    protected FluidStack fluidStack = null;
+    protected GasStack gasStack = null;
 
-    public SlotFluidVirtual(final FluidStack fluidStack) {
-        this.fluidStack = fluidStack;
+    public SlotGasVirtual(final GasStack gasStack) {
+        this.gasStack = gasStack;
     }
 
-    public SlotFluidVirtual() {
+    public SlotGasVirtual() {
     }
 
-    public static SlotFluidVirtual of() {
-        return new SlotFluidVirtual();
+    public static SlotGasVirtual of() {
+        return new SlotGasVirtual();
     }
 
-    public static SlotFluidVirtual of(final FluidStack fluidStack) {
-        return new SlotFluidVirtual(fluidStack);
+    public static SlotGasVirtual of(final GasStack gasStack) {
+        return new SlotGasVirtual(gasStack);
     }
 
-    public static SlotFluidVirtual ofJEI(final FluidStack fluidStack) {
-        return Mods.JEI.isPresent() ? new SlotFluidVirtualJEI(fluidStack) : new SlotFluidVirtual(fluidStack);
+    public static SlotGasVirtual ofJEI(final GasStack gasStack) {
+        return Mods.JEI.isPresent() ? new SlotGasVirtualJEI(gasStack) : new SlotGasVirtual(gasStack);
     }
 
     @Override
@@ -58,14 +58,14 @@ public class SlotFluidVirtual extends SlotVirtual {
             gui.getGui().drawTexturedModalRect(rx, ry, slotTexX, slotTexY, getWidth(), getHeight());
         }
 
-        if (fluidStack != null && fluidStack.amount > 0) {
-            int fluidColor = fluidStack.getFluid().getColor(fluidStack);
+        if (gasStack != null && gasStack.amount > 0) {
+            int fluidColor = gasStack.getGas().getTint();
             float red = (fluidColor >> 16 & 0xFF) / 255F;
             float green = (fluidColor >> 8 & 0xFF) / 255F;
             float blue = (fluidColor & 0xFF) / 255F;
             GlStateManager.color(red, green, blue, 1.0F);
 
-            ResourceLocation rl = fluidStack.getFluid().getStill(fluidStack);
+            ResourceLocation rl = gasStack.getGas().getIcon();
             TextureAtlasSprite tas = mc.getTextureMapBlocks().getTextureExtry(rl.toString());
             if (tas == null) {
                 tas = mc.getTextureMapBlocks().getMissingSprite();
@@ -79,8 +79,8 @@ public class SlotFluidVirtual extends SlotVirtual {
             mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             gui.getGui().drawTexturedModalRect(rx, ry, tas, width, height);
 
-            IFluidStorageChannel channel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
-            SIZE_RENDERER.renderStackSize(mc.fontRenderer, channel.createStack(fluidStack), rx, ry);
+            IGasStorageChannel channel = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
+            SIZE_RENDERER.renderStackSize(mc.fontRenderer, channel.createStack(gasStack), rx, ry);
             drawHoverOverlay(mousePos, rx, ry);
 
             GlStateManager.disableLighting();
@@ -96,7 +96,7 @@ public class SlotFluidVirtual extends SlotVirtual {
      */
     @Override
     public void postRender(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
-        if (fluidStack == null || !mouseOver) {
+        if (gasStack == null || !mouseOver) {
             return;
         }
         mouseOver = false;
@@ -104,15 +104,15 @@ public class SlotFluidVirtual extends SlotVirtual {
 
     @Override
     public List<String> getHoverTooltips(final WidgetGui widgetGui, final MousePos mousePos) {
-        if (fluidStack == null) {
+        if (gasStack == null) {
             return Collections.emptyList();
         }
         mouseOver = true;
 
         List<String> toolTips = new ArrayList<>();
-        toolTips.add(fluidStack.getLocalizedName());
-        toolTips.add(fluidStack.amount + "mB");
-        toolTips.add(I18n.format("tooltip.fluidhatch.fluid"));
+        toolTips.add(gasStack.getGas().getLocalizedName());
+        toolTips.add(gasStack.amount + "mB");
+        toolTips.add(I18n.format("tooltip.fluidhatch.gas"));
 
         return toolTips;
     }

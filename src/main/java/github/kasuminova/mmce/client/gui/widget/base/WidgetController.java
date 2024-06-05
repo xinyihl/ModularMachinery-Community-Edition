@@ -159,14 +159,14 @@ public class WidgetController {
             MousePos relativeMousePos = mousePos.relativeTo(renderPos);
 
             container.onMouseClickGlobal(relativeMousePos, relativeRenderPos, mouseButton);
-            if (container.isMouseOver(relativeMousePos) && !mouseClickEventCancelled) {
+            if (!mouseClickEventCancelled && container.isMouseOver(relativeMousePos)) {
                 if (container.onMouseClick(relativeMousePos, relativeRenderPos, mouseButton)) {
                     mouseClickEventCancelled = true;
                 }
             }
         }
 
-        return !mouseClickEventCancelled;
+        return mouseClickEventCancelled;
     }
 
     public boolean onMouseClickMove(final MousePos mousePos, final int mouseButton) {

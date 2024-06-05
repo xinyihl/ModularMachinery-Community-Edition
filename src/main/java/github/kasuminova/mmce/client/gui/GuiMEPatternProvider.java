@@ -212,12 +212,12 @@ public class GuiMEPatternProvider extends AEBaseGuiContainerDynamic {
 
     public void updateGUIState() {
         InfItemFluidHandler infHandler = owner.getInfHandler();
-        stackList.setStackList(infHandler.getItemStackList(), infHandler.getFluidStackList());
+        stackList.setStackList(infHandler.getItemStackList(), infHandler.getFluidStackList(), infHandler.getGasStackList());
         workModeSetting.setCurrentSelection(owner.getWorkMode());
     }
 
-    public void setStackList(final List<ItemStack> itemStackList, final List<FluidStack> fluidStackList) {
-        stackList.setStackList(itemStackList, fluidStackList);
+    public void setStackList(final List<ItemStack> itemStackList, final List<FluidStack> fluidStackList, final List<?> gasStackList) {
+        stackList.setStackList(itemStackList, fluidStackList, gasStackList);
     }
 
 }

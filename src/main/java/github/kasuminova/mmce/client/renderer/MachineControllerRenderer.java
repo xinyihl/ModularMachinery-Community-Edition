@@ -148,6 +148,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
 
         if (Mods.GREGTECHCEU.isPresent() || Mods.LUMENIZED.isPresent()) {
             task.renderDefault();
+            task.setAvailable(true);
         } else {
             task.renderAll();
         }
@@ -195,6 +196,9 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
 
             // Render all top level bones
             for (GeoBone group : model.topLevelBones) {
+                if (group.isHidden() && group.childBonesAreHiddenToo()) {
+                    continue;
+                }
                 renderRecursively(bufferProvider, group, 1F, 1F, 1F, 1F, false, false);
             }
 

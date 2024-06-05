@@ -86,8 +86,12 @@ public class BloomGeoModelRenderer implements IRenderSetup, IBloomEffect {
         }
 
         Minecraft.getMinecraft().renderEngine.bindTexture(currentModel.getTextureLocation());
+        GeoModelRenderTask task = MachineControllerRenderer.INSTANCE.getTask(ctrl);
+        if (!task.isAvailable()) {
+            return;
+        }
         // BloomEffectUtil do twice render, prevent twice reinitialize, just do once.
-        MachineControllerRenderer.INSTANCE.getTask(ctrl).renderBloom(postProcessing);
+        task.renderBloom(postProcessing);
     }
 
     @Override

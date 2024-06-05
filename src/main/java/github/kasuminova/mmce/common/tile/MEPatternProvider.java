@@ -24,6 +24,8 @@ import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import com.glodblock.github.common.item.fake.FakeFluids;
 import com.glodblock.github.common.item.fake.FakeItemRegister;
+import com.mekeng.github.common.me.data.IAEGasStack;
+import com.mekeng.github.common.me.storage.IGasStorageChannel;
 import github.kasuminova.mmce.client.gui.GuiMEPatternProvider;
 import github.kasuminova.mmce.common.container.ContainerMEPatternProvider;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
@@ -43,6 +45,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTileNotifiable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import mekanism.api.gas.GasStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -54,6 +57,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -108,7 +112,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         return new MachineComponent<>(IOType.INPUT) {
             @Override
             public ComponentType getComponentType() {
-                return ComponentTypesMM.COMPONENT_ITEM_FLUID;
+                return ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS;
             }
 
             @Override
@@ -258,12 +262,36 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
                         fluidStackList.set(i, null);
                     }
                 }
+                
+                if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
+                    returnGases();
+                }
             }
         } catch (GridAccessException ignored) {
         }
 
         handlerDirty = true;
         markChunkDirty();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Optional.Method(modid = "mekeng")
+    private void returnGases() throws GridAccessException {
+        List<GasStack> gasStackList = (List<GasStack>) handler.getGasStackList();
+        IGasStorageChannel gasChannel = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
+        IMEMonitor<IAEGasStack> gasInv = proxy.getStorage().getInventory(gasChannel);
+        for (int i = 0; i < gasStackList.size(); i++) {
+            final GasStack stack = gasStackList.get(i);
+            if (stack == null) {
+                continue;
+            }
+            IAEGasStack notInserted = insertStackToAE(gasInv, gasChannel.createStack(stack));
+            if (notInserted != null) {
+                gasStackList.set(i, notInserted.getGasStack());
+            } else {
+                gasStackList.set(i, null);
+            }
+        }
     }
 
     private <T extends IAEStack<T>> T insertStackToAE(final IMEMonitor<T> inv, final T stack) throws GridAccessException {
@@ -295,6 +323,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
 
     public void setWorkMode(final WorkModeSetting workMode) {
         this.workMode = workMode;
+        if (workMode != WorkModeSetting.CRAFTING_LOCK_MODE) {
+            this.machineCompleted = true;
+        }
     }
 
     @Override
@@ -319,7 +350,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (compound.hasKey("machineCompleted")) {
             machineCompleted = compound.getBoolean("machineCompleted");
         }
-        if (FMLCommonHandler.instance().getSide().isClient()) {
+        if (FMLCommonHandler.instance().getEffectiveSide().isClient()) {
             processClientGUIUpdate();
         }
     }

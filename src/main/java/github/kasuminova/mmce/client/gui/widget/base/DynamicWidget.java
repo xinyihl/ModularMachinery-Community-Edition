@@ -323,7 +323,7 @@ public abstract class DynamicWidget {
 
         int endX = startX + getWidth();
         int endY = startY + getHeight();
-        return mouseX >= startX && mouseX <= endX && mouseY >= startY && mouseY <= endY;
+        return mouseX >= startX && mouseX < endX && mouseY >= startY && mouseY < endY;
     }
 
     // Width Height

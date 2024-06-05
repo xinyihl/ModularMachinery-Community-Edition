@@ -1085,7 +1085,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void validate() {
         super.validate();
-        if (!FMLCommonHandler.instance().getSide().isClient()) {
+        if (!FMLCommonHandler.instance().getEffectiveSide().isClient()) {
             return;
         }
 
@@ -1123,7 +1123,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void onChunkUnload() {
         super.onChunkUnload();
-        if (FMLCommonHandler.instance().getSide().isClient()) {
+        if (FMLCommonHandler.instance().getEffectiveSide().isClient()) {
             if (Mods.GREGTECHCEU.isPresent()) {
                 unregisterBloomRenderer();
             } else if (Mods.LUMENIZED.isPresent()) {
@@ -1149,7 +1149,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         readMachineNBT(compound);
 
-        if (loaded && FMLCommonHandler.instance().getSide().isClient()) {
+        if (loaded && FMLCommonHandler.instance().getEffectiveSide().isClient()) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 BlockModelHider.hideOrShowBlocks(this);
                 notifyStructureFormedState(isStructureFormed());

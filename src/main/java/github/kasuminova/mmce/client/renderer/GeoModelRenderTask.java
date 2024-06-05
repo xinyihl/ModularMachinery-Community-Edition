@@ -23,6 +23,8 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
     protected volatile BufferBuilder transparentBuffer;
     protected volatile BufferBuilder bloomTransparentBuffer;
 
+    protected boolean available = true;
+
     public GeoModelRenderTask(final MachineControllerRenderer renderer, final TileMultiblockMachineController ctrl) {
         this.renderer = renderer;
         this.ctrl = ctrl;
@@ -92,12 +94,21 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
 
     @Override
     public void reinitialize() {
+        available = false;
         super.reinitialize();
     }
 
     @Override
     public BufferBuilder getBuffer() {
         return buffer;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(final boolean available) {
+        this.available = available;
     }
 
     @Override
