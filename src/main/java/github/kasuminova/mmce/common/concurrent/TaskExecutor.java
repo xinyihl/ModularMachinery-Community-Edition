@@ -40,7 +40,8 @@ public class TaskExecutor {
     private final Queue<ActionExecutor> submitted = Queues.createConcurrentQueue();
 
     private final Queue<ActionExecutor> executors = Queues.createConcurrentQueue();
-    private final Long2ObjectMap<ExecuteGroup> executeGroups = new Long2ObjectOpenHashMap<>();
+    // TODO: may cause performance issues.
+    private final Long2ObjectMap<ExecuteGroup> executeGroups = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 
     private final Queue<ForkJoinTask<?>> forkJoinTasks = Queues.createConcurrentQueue();
 

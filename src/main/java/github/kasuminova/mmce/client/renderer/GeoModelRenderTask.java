@@ -94,6 +94,7 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
 
     @Override
     public void reinitialize() {
+        clean();
         available = false;
         super.reinitialize();
     }

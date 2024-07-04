@@ -36,7 +36,7 @@ public class MEItemInputBus extends MEItemBus {
         inv.setStackLimit(Integer.MAX_VALUE, slotIDs);
         inv.setListener(slot -> {
             synchronized (this) {
-                changedSlots.set(slot);
+                changedSlots[slot] = true;
             }
         });
         return inv;
@@ -59,7 +59,7 @@ public class MEItemInputBus extends MEItemBus {
         inv.setMiscSlots(slotIDs);
         inv.setListener(slot -> {
             synchronized (this) {
-                changedSlots.set(slot);
+                changedSlots[slot] = true;
             }
         });
         return inv;
@@ -139,6 +139,7 @@ public class MEItemInputBus extends MEItemBus {
 
             synchronized (inventory) {
                 for (final int slot : getNeedUpdateSlots()) {
+                    changedSlots[slot] = false;
                     ItemStack cfgStack = configInventory.getStackInSlot(slot);
                     ItemStack invStack = inventory.getStackInSlot(slot);
 
@@ -191,10 +192,9 @@ public class MEItemInputBus extends MEItemBus {
                 }
             }
 
-            changedSlots.clear();
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
-            changedSlots.clear();
+            changedSlots = new boolean[changedSlots.length];
             return TickRateModulation.IDLE;
         }
     }
@@ -231,7 +231,7 @@ public class MEItemInputBus extends MEItemBus {
 
     @Override
     public void markNoUpdate() {
-        if (proxy.isActive() && !changedSlots.isEmpty()) {
+        if (proxy.isActive() && hasChangedSlots()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {
@@ -256,7 +256,7 @@ public class MEItemInputBus extends MEItemBus {
         configInventory = IOInventory.deserialize(this, compound);
         configInventory.setListener(slot -> {
             synchronized (this) {
-                changedSlots.set(slot);
+                changedSlots[slot] = true;
             }
         });
 

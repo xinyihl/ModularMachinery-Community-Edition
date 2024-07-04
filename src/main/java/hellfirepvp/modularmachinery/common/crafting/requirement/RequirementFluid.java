@@ -139,7 +139,7 @@ public class RequirementFluid extends ComponentRequirement.MultiCompParallelizab
         MachineComponent<?> cmp = component.component();
         ComponentType cmpType = cmp.getComponentType();
         if (Mods.MEKANISM.isPresent() && required instanceof HybridFluidGas) {
-            return (cmpType.equals(ComponentTypesMM.COMPONENT_GAS) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))
+            return (cmp.getContainerProvider() instanceof IExtendedGasHandler)
                     && cmp.ioType == this.actionType;
         } else {
             return (cmpType.equals(ComponentTypesMM.COMPONENT_FLUID) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))

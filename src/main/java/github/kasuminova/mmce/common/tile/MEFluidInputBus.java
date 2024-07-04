@@ -90,6 +90,7 @@ public class MEFluidInputBus extends MEFluidBus {
 
             synchronized (tanks) {
                 for (final int slot : getNeedUpdateSlots()) {
+                    changedSlots[slot] = false;
                     IAEFluidStack cfgStack = config.getFluidInSlot(slot);
                     IAEFluidStack invStack = tanks.getFluidInSlot(slot);
 
@@ -147,10 +148,9 @@ public class MEFluidInputBus extends MEFluidBus {
                 }
             }
 
-            changedSlots.clear();
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
-            changedSlots.clear();
+            changedSlots = new boolean[TANK_SLOT_AMOUNT];
             return TickRateModulation.IDLE;
         }
     }
