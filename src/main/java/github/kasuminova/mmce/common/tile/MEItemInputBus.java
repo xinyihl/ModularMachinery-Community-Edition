@@ -132,6 +132,8 @@ public class MEItemInputBus extends MEItemBus {
             return TickRateModulation.IDLE;
         }
 
+        inTick = true;
+
         try {
             boolean successAtLeastOnce = false;
 
@@ -192,8 +194,10 @@ public class MEItemInputBus extends MEItemBus {
                 }
             }
 
+            inTick = false;
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
+            inTick = false;
             changedSlots = new boolean[changedSlots.length];
             return TickRateModulation.IDLE;
         }

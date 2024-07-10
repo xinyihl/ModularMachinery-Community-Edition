@@ -18,6 +18,7 @@ public class BufferBuilderPool {
     public static BufferBuilder borrowBuffer(int initSize) {
         BufferBuilder buffer;
         if ((buffer = POOL.poll()) != null) {
+            buffer.reset();
             return buffer;
         }
         BufferBuilder newBuffer = new BufferBuilder(initSize);

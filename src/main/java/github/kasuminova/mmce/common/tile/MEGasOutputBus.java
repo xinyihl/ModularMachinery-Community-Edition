@@ -4,36 +4,45 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.me.GridAccessException;
 import appeng.util.Platform;
-import github.kasuminova.mmce.common.tile.base.MEFluidBus;
+import com.mekeng.github.common.me.data.IAEGasStack;
+import com.mekeng.github.common.me.data.impl.AEGasStack;
+import github.kasuminova.mmce.common.tile.base.MEGasBus;
+import github.kasuminova.mmce.common.util.IExtendedGasHandler;
+import hellfirepvp.modularmachinery.common.crafting.ComponentType;
+import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import mekanism.api.gas.GasStack;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Objects;
 
-public class MEFluidOutputBus extends MEFluidBus {
+public class MEGasOutputBus extends MEGasBus {
 
-    public MEFluidOutputBus() {
-        this.tanks.setOneFluidOneSlot(true);
+    public MEGasOutputBus() {
     }
 
     @Override
     public ItemStack getVisualItemStack() {
-        return new ItemStack(ItemsMM.meFluidOutputBus);
+        return new ItemStack(ItemsMM.meGasOutputBus);
     }
 
     @Nullable
     @Override
-    public MachineComponent<IFluidHandler> provideComponent() {
-        return new MachineComponent.FluidHatch(IOType.OUTPUT) {
+    public MachineComponent<IExtendedGasHandler> provideComponent() {
+        return new MachineComponent<>(IOType.OUTPUT) {
             @Override
-            public IFluidHandler getContainerProvider() {
+            public ComponentType getComponentType() {
+                return ComponentTypesMM.COMPONENT_GAS;
+            }
+
+            @Override
+            public IExtendedGasHandler getContainerProvider() {
                 return tanks;
             }
         };
@@ -42,7 +51,7 @@ public class MEFluidOutputBus extends MEFluidBus {
     @Nonnull
     @Override
     public TickingRequest getTickingRequest(@Nonnull final IGridNode node) {
-        return new TickingRequest(5, 60, !hasFluid(), true);
+        return new TickingRequest(5, 60, !hasGas(), true);
     }
 
     @Nonnull
@@ -56,27 +65,27 @@ public class MEFluidOutputBus extends MEFluidBus {
         boolean successAtLeastOnce = false;
 
         try {
-            IMEMonitor<IAEFluidStack> inv = proxy.getStorage().getInventory(channel);
+            IMEMonitor<IAEGasStack> inv = proxy.getStorage().getInventory(channel);
             synchronized (tanks) {
                 for (final int slot : getNeedUpdateSlots()) {
                     changedSlots[slot] = false;
-                    IAEFluidStack fluid = tanks.getFluidInSlot(slot);
+                    GasStack gas = tanks.getGasStack(slot);
 
-                    if (fluid == null) {
+                    if (gas == null) {
                         continue;
                     }
 
-                    IAEFluidStack left = Platform.poweredInsert(proxy.getEnergy(), inv, fluid.copy(), source);
+                    IAEGasStack left = Platform.poweredInsert(proxy.getEnergy(), inv, Objects.requireNonNull(AEGasStack.of(gas)), source);
 
                     if (left != null) {
-                        if (fluid.getStackSize() != left.getStackSize()) {
+                        if (gas.amount != left.getStackSize()) {
                             successAtLeastOnce = true;
                         }
                     } else {
                         successAtLeastOnce = true;
                     }
 
-                    tanks.setFluidInSlot(slot, left);
+                    tanks.setGas(slot, left == null ? null : left.getGasStack());
                 }
             }
         } catch (GridAccessException e) {
@@ -89,9 +98,9 @@ public class MEFluidOutputBus extends MEFluidBus {
         return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
 
-    public boolean hasFluid() {
-        for (int i = 0; i < tanks.getSlots(); i++) {
-            IAEFluidStack stack = tanks.getFluidInSlot(i);
+    public boolean hasGas() {
+        for (int i = 0; i < tanks.size(); i++) {
+            GasStack stack = tanks.getGasStack(i);
             if (stack != null) {
                 return true;
             }
@@ -101,7 +110,7 @@ public class MEFluidOutputBus extends MEFluidBus {
 
     @Override
     public void markNoUpdate() {
-        if (proxy.isActive() && hasFluid()) {
+        if (proxy.isActive() && hasGas()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {
@@ -111,6 +120,5 @@ public class MEFluidOutputBus extends MEFluidBus {
 
         super.markNoUpdate();
     }
-
 
 }

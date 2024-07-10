@@ -4,26 +4,27 @@ import appeng.api.AEApi;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.ticking.IGridTickable;
-import appeng.api.storage.channels.IFluidStorageChannel;
 import appeng.api.util.IConfigManager;
-import appeng.fluids.util.IAEFluidInventory;
-import appeng.fluids.util.IAEFluidTank;
 import appeng.parts.automation.StackUpgradeInventory;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
-import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
+import com.mekeng.github.common.me.inventory.IGasInventory;
+import com.mekeng.github.common.me.inventory.IGasInventoryHost;
+import com.mekeng.github.common.me.inventory.impl.GasInventory;
+import com.mekeng.github.common.me.storage.IGasStorageChannel;
+import github.kasuminova.mmce.common.util.GasInventoryHandler;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import mekanism.api.gas.IGasHandler;
+import mekanism.common.capabilities.Capabilities;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
@@ -31,8 +32,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.stream.IntStream;
 
-public abstract class MEFluidBus extends MEMachineComponent implements
-        IAEFluidInventory,
+public abstract class MEGasBus extends MEMachineComponent implements
+        IGasInventoryHost,
         IUpgradeableHost,
         IConfigManagerHost,
         IAEAppEngInventory,
@@ -41,18 +42,16 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     public static final int TANK_SLOT_AMOUNT = 9;
     public static final int TANK_DEFAULT_CAPACITY = 8000;
 
-    protected final IFluidStorageChannel channel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
+    protected final IGasStorageChannel channel = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
     protected final ConfigManager cm = new ConfigManager(this);
-    // TODO: May cause some machine fatal error, but why?
-//    protected final BitSet changedSlots = new BitSet();
     protected final UpgradeInventory upgrades;
-    protected final AEFluidInventoryUpgradeable tanks;
+    protected final GasInventoryHandler tanks;
     protected boolean[] changedSlots;
     protected int fullCheckCounter = 5;
     protected boolean inTick = false;
 
-    public MEFluidBus() {
-        this.tanks = new AEFluidInventoryUpgradeable(this, TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY);
+    public MEGasBus() {
+        this.tanks = new GasInventoryHandler(TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY, this);
         this.upgrades = new StackUpgradeInventory(proxy.getMachineRepresentation(), this, 5);
         this.changedSlots = new boolean[TANK_SLOT_AMOUNT];
     }
@@ -61,7 +60,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         fullCheckCounter++;
         if (fullCheckCounter >= 5) {
             fullCheckCounter = 0;
-            return IntStream.range(0, tanks.getSlots()).toArray();
+            return IntStream.range(0, tanks.size()).toArray();
         }
         IntList list = new IntArrayList();
         IntStream.range(0, changedSlots.length)
@@ -70,19 +69,19 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         return list.toArray(new int[0]);
     }
 
-    public IAEFluidTank getTanks() {
+    public GasInventory getTanks() {
         return tanks;
     }
 
     @Override
     public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
-        return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+        return capability == Capabilities.GAS_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
     }
 
     @Nullable
     @Override
     public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
-        Capability<IFluidHandler> cap = CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY;
+        Capability<IGasHandler> cap = Capabilities.GAS_HANDLER_CAPABILITY;
         if (capability == cap) {
             return cap.cast(tanks);
         }
@@ -94,7 +93,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         super.readCustomNBT(compound);
 
         upgrades.readFromNBT(compound, "upgrades");
-        tanks.readFromNBT(compound, "tanks");
+        tanks.load(compound.getCompoundTag("tanks"));
         updateTankCapacity();
     }
 
@@ -103,7 +102,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         super.writeCustomNBT(compound);
 
         upgrades.writeToNBT(compound, "upgrades");
-        tanks.writeToNBT(compound, "tanks");
+        compound.setTag("tanks", tanks.save());
     }
 
     // AE Compat
@@ -127,7 +126,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         if (upgrades == null) {
             return 0;
         }
-        return upgrades.getInstalledUpgrades( u );
+        return upgrades.getInstalledUpgrades(u);
     }
 
     @Override
@@ -141,17 +140,17 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         markNoUpdateSync();
     }
 
-    private void updateTankCapacity() {
-        tanks.setCapacity(
-                (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEFluidBus.TANK_DEFAULT_CAPACITY / 4)));
-    }
-
     @Override
-    public synchronized void onFluidInventoryChanged(final IAEFluidTank inv, final int slot) {
+    public void onGasInventoryChanged(final IGasInventory iGasInventory, final int slot) {
         if (!inTick) {
             changedSlots[slot] = true;
         }
         markNoUpdateSync();
+    }
+
+    private void updateTankCapacity() {
+        tanks.setCap(
+                (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEGasBus.TANK_DEFAULT_CAPACITY / 4)));
     }
 
     @Override

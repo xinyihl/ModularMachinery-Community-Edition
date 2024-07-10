@@ -25,7 +25,7 @@ public class MEFluidInputBus extends MEFluidBus {
 
     @Override
     public ItemStack getVisualItemStack() {
-        return new ItemStack(ItemsMM.meFluidinputBus);
+        return new ItemStack(ItemsMM.meFluidInputBus);
     }
 
     @Override
@@ -81,6 +81,8 @@ public class MEFluidInputBus extends MEFluidBus {
         if (!proxy.isActive()) {
             return TickRateModulation.IDLE;
         }
+
+        inTick = true;
 
         try {
             boolean successAtLeastOnce = false;
@@ -148,8 +150,10 @@ public class MEFluidInputBus extends MEFluidBus {
                 }
             }
 
+            inTick = false;
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
+            inTick = false;
             changedSlots = new boolean[TANK_SLOT_AMOUNT];
             return TickRateModulation.IDLE;
         }

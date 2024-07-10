@@ -27,6 +27,7 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
     protected IOInventory inventory = buildInventory();
     protected boolean[] changedSlots = new boolean[inventory.getSlots()];
     protected int fullCheckCounter = 5;
+    protected boolean inTick = false;
 
     public abstract IOInventory buildInventory();
 

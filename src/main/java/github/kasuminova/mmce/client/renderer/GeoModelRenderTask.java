@@ -8,8 +8,10 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
 import java.util.concurrent.RecursiveAction;
@@ -86,8 +88,15 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
 
         if (postProcessing) {
             ControllerModelRenderManager.INSTANCE.addReinitializeCallback(this, () -> {
+                WorldClient mcWorld = Minecraft.getMinecraft().world;
+                World world = ctrl.getWorld();
                 reinitialize();
-                MachineControllerRenderer.INSTANCE.tasks.put(ctrl, (GeoModelRenderTask) TaskExecutor.FORK_JOIN_POOL.submit(this));
+                //noinspection ConstantValue
+                if (ctrl.isInvalid() || world == null || world != mcWorld || mcWorld.getTileEntity(ctrl.getPos()) != ctrl) {
+                    MachineControllerRenderer.INSTANCE.tasks.put(ctrl, (GeoModelRenderTask) TaskExecutor.FORK_JOIN_POOL.submit(this));
+                } else {
+                    MachineControllerRenderer.INSTANCE.tasks.remove(ctrl);
+                }
             });
         }
     }
