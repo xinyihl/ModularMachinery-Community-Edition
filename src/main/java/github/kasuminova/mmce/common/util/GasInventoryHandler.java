@@ -5,8 +5,10 @@ import com.mekeng.github.common.me.inventory.impl.GasInventory;
 import mekanism.api.gas.Gas;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.GasTank;
+import mekanism.api.gas.GasTankInfo;
 import net.minecraft.util.EnumFacing;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class GasInventoryHandler extends GasInventory implements IExtendedGasHandler {
@@ -38,14 +40,20 @@ public class GasInventoryHandler extends GasInventory implements IExtendedGasHan
             if (!tank.canDraw(toDraw.getGas())) {
                 continue;
             }
+
             if (ret == null) {
-                ret = tank.draw(toDraw.amount, false);
+                ret = tank.draw(toDraw.amount, doTransfer);
+                if (ret.amount >= toDraw.amount) {
+                    return ret;
+                }
                 continue;
             }
-            if (ret.amount < Integer.MAX_VALUE) {
-                GasStack drawn = tank.draw(Math.min(toDraw.amount - ret.amount, Integer.MAX_VALUE - ret.amount), false);
-                if (drawn != null) {
-                    ret.amount += drawn.amount;
+
+            GasStack drawn = tank.draw(toDraw.amount - ret.amount, doTransfer);
+            if (drawn != null) {
+                ret.amount += drawn.amount;
+                if (ret.amount >= toDraw.amount) {
+                    return ret;
                 }
             }
         }
@@ -81,11 +89,14 @@ public class GasInventoryHandler extends GasInventory implements IExtendedGasHan
         GasStack ret = null;
         for (final GasTank tank : getTanks()) {
             if (ret == null) {
-                ret = tank.draw(amount, false);
+                ret = tank.draw(amount, doTransfer);
+                continue;
+            }
+            if (!tank.canDraw(ret.getGas())) {
                 continue;
             }
             if (ret.amount < Integer.MAX_VALUE) {
-                GasStack drawn = tank.draw(Math.min(amount - ret.amount, Integer.MAX_VALUE - ret.amount), false);
+                GasStack drawn = tank.draw(Math.min(amount - ret.amount, Integer.MAX_VALUE - ret.amount), doTransfer);
                 if (drawn != null) {
                     ret.amount += drawn.amount;
                 }
@@ -115,4 +126,9 @@ public class GasInventoryHandler extends GasInventory implements IExtendedGasHan
         return false;
     }
 
+    @Nonnull
+    @Override
+    public GasTankInfo[] getTankInfo() {
+        return getTanks();
+    }
 }

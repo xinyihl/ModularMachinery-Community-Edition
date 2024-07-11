@@ -113,14 +113,14 @@ public class HybridFluidUtils {
                 case INPUT -> {
                     GasStack drawn = handler.drawGas(stack, true);
                     if (drawn != null) {
-                        totalIO += drawn.amount;
+                        totalIO -= drawn.amount;
                     }
                 }
                 case OUTPUT -> {
                     if (!handler.canReceiveGas(null, stack.getGas())) {
                         continue;
                     }
-                    totalIO += handler.receiveGas(null, stack, true);
+                    totalIO -= handler.receiveGas(null, stack, true);
                 }
             }
 

@@ -405,7 +405,7 @@ public class TileFactoryController extends TileMultiblockMachineController {
             maxParallelism -= (activeRecipe.getParallelism() - 1);
         }
 
-        return maxParallelism;
+        return Math.max(1, maxParallelism);
     }
 
     /**
