@@ -431,13 +431,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     protected void distributeCasingColor() {
-        if (this.foundMachine != null && this.foundPattern != null) {
-            int color = this.foundMachine.getMachineColor();
-            tryColorize(getPos(), color);
-            for (BlockPos pos : this.foundPattern.getPattern().keySet()) {
-                tryColorize(this.getPos().add(pos), color);
-            }
+        if (this.foundMachine == null || this.foundPattern == null) {
+            return;
         }
+        int color = this.foundMachine.getMachineColor();
+        // Colorize Controller.
+        tryColorize(getPos(), color);
+        // Colorize Components.
+        this.foundPattern.getTileBlocksArray().keySet().forEach(pos -> tryColorize(this.getPos().add(pos), color));
     }
 
     /**
@@ -451,7 +452,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (te instanceof final ColorableMachineTile colorable) {
             if (colorable.getMachineColor() != color) {
                 colorable.setMachineColor(color);
-                getWorld().addBlockEvent(pos, getWorld().getBlockState(pos).getBlock(), 1, 1);
             }
         }
     }
@@ -546,13 +546,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         if (workMode == WorkMode.SYNC) {
-            distributeCasingColor();
             notifyStructureFormedState(true);
         } else {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
-                distributeCasingColor();
-                notifyStructureFormedState(true);
-            });
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> notifyStructureFormedState(true));
         }
 
         resetStructureCheckCounter();
@@ -706,6 +702,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
+        if (workMode == WorkMode.SYNC) {
+            distributeCasingColor();
+        } else {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
+        }
     }
 
     private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final Map<TileEntity, ProcessingComponent<?>> found) {
