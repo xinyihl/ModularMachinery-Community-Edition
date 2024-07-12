@@ -43,7 +43,7 @@ public class MEGasOutputBus extends MEGasBus {
 
             @Override
             public IExtendedGasHandler getContainerProvider() {
-                return tanks;
+                return handler;
             }
         };
     }

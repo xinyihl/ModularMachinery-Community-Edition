@@ -10,7 +10,6 @@ import com.mekeng.github.common.me.data.IAEGasStack;
 import com.mekeng.github.common.me.data.impl.AEGasStack;
 import com.mekeng.github.common.me.inventory.impl.GasInventory;
 import github.kasuminova.mmce.common.tile.base.MEGasBus;
-import github.kasuminova.mmce.common.util.GasInventoryHandler;
 import github.kasuminova.mmce.common.util.IExtendedGasHandler;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
@@ -26,7 +25,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class MEGasInputBus extends MEGasBus {
-    private final GasInventoryHandler config = new GasInventoryHandler(MEGasBus.TANK_SLOT_AMOUNT, this);
+    private final GasInventory config = new GasInventory(MEGasBus.TANK_SLOT_AMOUNT, this);
 
     @Override
     public ItemStack getVisualItemStack() {
@@ -188,7 +187,7 @@ public class MEGasInputBus extends MEGasBus {
 
             @Override
             public IExtendedGasHandler getContainerProvider() {
-                return tanks;
+                return handler;
             }
         };
     }

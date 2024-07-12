@@ -80,6 +80,9 @@ public class ControllerModelRenderManager {
         alive.clear();
     }
 
+    /**
+     * TODO: Prevents precision overflow due to oversize coordinates.
+     */
     public void draw() {
         GlStateManager.pushMatrix();
         GlStateManager.translate(-TileEntityRendererDispatcher.staticPlayerX, -TileEntityRendererDispatcher.staticPlayerY, -TileEntityRendererDispatcher.staticPlayerZ);

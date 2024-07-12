@@ -45,13 +45,15 @@ public abstract class MEGasBus extends MEMachineComponent implements
     protected final IGasStorageChannel channel = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
     protected final ConfigManager cm = new ConfigManager(this);
     protected final UpgradeInventory upgrades;
-    protected final GasInventoryHandler tanks;
+    protected final GasInventory tanks;
+    protected final GasInventoryHandler handler;
     protected boolean[] changedSlots;
     protected int fullCheckCounter = 5;
     protected boolean inTick = false;
 
     public MEGasBus() {
-        this.tanks = new GasInventoryHandler(TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY, this);
+        this.tanks = new GasInventory(TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY, this);
+        this.handler = new GasInventoryHandler(tanks);
         this.upgrades = new StackUpgradeInventory(proxy.getMachineRepresentation(), this, 5);
         this.changedSlots = new boolean[TANK_SLOT_AMOUNT];
     }
@@ -83,7 +85,7 @@ public abstract class MEGasBus extends MEMachineComponent implements
     public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         Capability<IGasHandler> cap = Capabilities.GAS_HANDLER_CAPABILITY;
         if (capability == cap) {
-            return cap.cast(tanks);
+            return cap.cast(handler);
         }
         return super.getCapability(capability, facing);
     }
