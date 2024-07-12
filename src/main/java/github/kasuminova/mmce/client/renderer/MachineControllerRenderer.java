@@ -126,11 +126,11 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         if (MachineControllerRenderer.shouldUseBloom()) {
             task.renderDefault();
             task.setAvailable(true);
-            if (task.shouldReRenderStatic()) {
-                render(animatable, task, true);
-            }
         } else {
             task.renderAll();
+        }
+        if (task.shouldReRenderStatic()) {
+            render(animatable, task, true);
         }
     }
 
@@ -265,7 +265,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         matrixStack.scale(bone);
         matrixStack.moveBackFromPivot(bone);
 
-        if (!bone.isHidden() && (isStatic && STATIC_MODEL_BONES.get().isStaticBone(bone.name) || !isStatic && !STATIC_MODEL_BONES.get().isStaticBone(bone.name))) {
+        if (!bone.isHidden() && ((isStatic && STATIC_MODEL_BONES.get().isStaticBone(bone.name)) || (!isStatic && !STATIC_MODEL_BONES.get().isStaticBone(bone.name)))) {
             for (GeoCube cube : bone.childCubes) {
                 matrixStack.push();
                 renderCube(bufferProvider.getBuffer(bloom, transparent, isStatic), cube, red, green, blue, alpha);

@@ -6,11 +6,14 @@ import github.kasuminova.mmce.client.util.BufferBuilderPool;
 import github.kasuminova.mmce.client.util.BufferProvider;
 import github.kasuminova.mmce.common.concurrent.TaskExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import io.netty.util.internal.ThrowableUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.GL11;
 
 import java.util.concurrent.RecursiveAction;
@@ -47,6 +50,25 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
     public GeoModelRenderTask(final MachineControllerRenderer renderer, final TileMultiblockMachineController ctrl) {
         this.renderer = renderer;
         this.ctrl = ctrl;
+        if (Mods.GREGTECHCEU.isPresent()) {
+            registerBloomRenderer();
+        } else if (Mods.LUMENIZED.isPresent()) {
+            registerBloomRendererLumenized();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "gregtech")
+    public void registerBloomRenderer() {
+        if (Mods.GREGTECHCEU.isPresent()) {
+            BloomGeoModelRenderer.INSTANCE.registerGlobal(ctrl);
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @net.minecraftforge.fml.common.Optional.Method(modid = "lumenized")
+    public void registerBloomRendererLumenized() {
+        BloomGeoModelRenderer.INSTANCE.registerGlobal(ctrl);
     }
 
     @Override
@@ -87,7 +109,7 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
             ControllerModelRenderManager.INSTANCE.addBuffer(combinedLight, RenderType.DEFAULT, texture, staticBuffer);
         }
         if (staticTransparentBuffer != null) {
-            ControllerModelRenderManager.INSTANCE.addBuffer(combinedLight, RenderType.BLOOM, texture, staticTransparentBuffer);
+            ControllerModelRenderManager.INSTANCE.addBuffer(combinedLight, RenderType.TRANSPARENT, texture, staticTransparentBuffer);
         }
     }
 
