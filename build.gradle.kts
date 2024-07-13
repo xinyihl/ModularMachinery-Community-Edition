@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "2.0.0-pre7"
+version = "2.0.0-pre8"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
