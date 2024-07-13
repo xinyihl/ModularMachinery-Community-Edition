@@ -49,6 +49,7 @@ public abstract class MEGasBus extends MEMachineComponent implements
     protected final GasInventoryHandler handler;
     protected boolean[] changedSlots;
     protected int fullCheckCounter = 5;
+
     protected boolean inTick = false;
 
     public MEGasBus() {

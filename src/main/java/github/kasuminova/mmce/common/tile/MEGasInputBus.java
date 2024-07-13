@@ -73,7 +73,7 @@ public class MEGasInputBus extends MEGasBus {
                 return true;
             }
 
-            if (!cfgStack.equals(invStack) || invStack.amount != capacity) {
+            if (!cfgStack.isGasEqual(invStack) || invStack.amount != capacity) {
                 return true;
             }
         }
@@ -108,11 +108,11 @@ public class MEGasInputBus extends MEGasBus {
                         continue;
                     }
 
-                    if (!cfgStack.equals(invStack)) {
+                    if (!cfgStack.isGasEqual(invStack)) {
                         if (invStack != null) {
-                            IAEGasStack stack = insertStackToAE(inv, invStack);
-                            if (stack != null) {
-                                tanks.setGas(slot, stack.getGasStack());
+                            IAEGasStack left = insertStackToAE(inv, invStack);
+                            if (left != null) {
+                                tanks.setGas(slot, left.getGasStack());
                                 continue;
                             }
                         }
@@ -127,6 +127,8 @@ public class MEGasInputBus extends MEGasBus {
                         continue;
                     }
 
+                    // Because cfgStack is not null and cfgStack.isGasEqual(invStack) is true.
+                    //noinspection DataFlowIssue
                     if (capacity == invStack.amount) {
                         continue;
                     }
@@ -147,12 +149,12 @@ public class MEGasInputBus extends MEGasBus {
                         int countToExtract = invStack.amount - capacity;
                         GasStack copied = invStack.copy();
                         copied.amount = countToExtract;
-                        IAEGasStack stack = insertStackToAE(inv, copied);
-                        if (stack == null) {
+                        IAEGasStack left = insertStackToAE(inv, copied);
+                        if (left == null) {
                             copied.amount = invStack.amount - countToExtract;
                             tanks.setGas(slot, copied);
                         } else {
-                            copied.amount = (int) (invStack.amount - countToExtract + stack.getStackSize());
+                            copied.amount = (int) ((invStack.amount - countToExtract) + left.getStackSize());
                             tanks.setGas(slot, copied);
                         }
                         successAtLeastOnce = true;

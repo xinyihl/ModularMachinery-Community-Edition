@@ -28,9 +28,11 @@ public class RegistryRequirementTypes {
 
     public static void initialize() {
         REQUIREMENT_ITEM = register(new RequirementTypeItem(), KEY_REQUIREMENT_ITEM);
+        REQUIREMENT_ITEM_DURABILITY = register(new RequirementTypeItemDurability(), KEY_REQUIREMENT_ITEM_DURABILITY);
         REQUIREMENT_INGREDIENT_ARRAY = register(new RequirementTypeIngredientArray(), KEY_REQUIREMENT_INGREDIENT_ARRAY);
         REQUIREMENT_FLUID = register(new RequirementTypeFluid(), KEY_REQUIREMENT_FLUID);
         REQUIREMENT_FLUID_PERTICK = register(new RequirementTypeFluidPerTick(), KEY_REQUIREMENT_FLUID_PERTICK);
+        REQUIREMENT_GAS_PERTICK = register(new RequirementTypeGasPerTick(), KEY_REQUIREMENT_GAS_PERTICK);
         REQUIREMENT_ENERGY = register(new RequirementTypeEnergy(), KEY_REQUIREMENT_ENERGY);
         REQUIREMENT_GAS = register(new RequirementTypeGas(), KEY_REQUIREMENT_GAS);
         REQUIREMENT_INTERFACE_NUMBER_INPUT = register(new RequirementTypeInterfaceNumInput(), KEY_INTERFACE_NUMBER_INPUT);
