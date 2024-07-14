@@ -1,20 +1,19 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement.jei;
 
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
-import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGasPerTick;
+import hellfirepvp.modularmachinery.common.crafting.requirement.RequirementGas;
 import hellfirepvp.modularmachinery.common.integration.recipe.RecipeLayoutPart;
-import hellfirepvp.modularmachinery.common.machine.IOType;
 import mekanism.api.gas.GasStack;
-import net.minecraft.client.resources.I18n;
 
 import java.awt.Point;
 import java.util.Collections;
 import java.util.List;
 
-public class JEIComponentGasPerTick  extends ComponentRequirement.JEIComponent<GasStack> {
-    private final RequirementGasPerTick requirement;
+public class JEIComponentGas extends ComponentRequirement.JEIComponent<GasStack> {
 
-    public JEIComponentGasPerTick(RequirementGasPerTick requirement) {
+    private final RequirementGas requirement;
+
+    public JEIComponentGas(RequirementGas requirement) {
         this.requirement = requirement;
     }
 
@@ -25,7 +24,7 @@ public class JEIComponentGasPerTick  extends ComponentRequirement.JEIComponent<G
 
     @Override
     public List<GasStack> getJEIIORequirements() {
-        return Collections.singletonList(requirement.required.copy());
+        return Collections.singletonList(requirement.required);
     }
 
     @Override
@@ -35,11 +34,6 @@ public class JEIComponentGasPerTick  extends ComponentRequirement.JEIComponent<G
 
     @Override
     public void onJEIHoverTooltip(int slotIndex, boolean input, GasStack ingredient, List<String> tooltip) {
-        IOType ioType = requirement.getActionType();
-        if (ioType == IOType.INPUT) {
-            tooltip.add(I18n.format("tooltip.fluid_pertick.in", ingredient.amount));
-        } else if (ioType == IOType.OUTPUT) {
-            tooltip.add(I18n.format("tooltip.fluid_pertick.out", ingredient.amount));
-        }
+        JEIComponentItem.addChanceTooltip(input, tooltip, requirement.chance);
     }
 }

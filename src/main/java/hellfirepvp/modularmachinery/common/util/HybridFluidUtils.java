@@ -166,22 +166,4 @@ public class HybridFluidUtils {
         return list;
     }
 
-    @Nonnull
-    @SuppressWarnings("unchecked")
-    @Optional.Method(modid = "mekanism")
-    public static List<ProcessingComponent<?>> copyGasHandlerComponents(final List<ProcessingComponent<?>> components) {
-        List<ProcessingComponent<?>> list = new ArrayList<>();
-        for (ProcessingComponent<?> component : components) {
-            if (!(component.getProvidedComponent() instanceof IGasHandler)) {
-                continue;
-            }
-            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component(),
-                    new MultiGasTank((IGasHandler) component.getProvidedComponent()),
-                    component.getTag());
-            list.add(objectProcessingComponent);
-        }
-        return list;
-    }
-
 }
