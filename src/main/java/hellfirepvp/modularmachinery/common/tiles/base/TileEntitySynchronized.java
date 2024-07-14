@@ -26,12 +26,14 @@ import javax.annotation.Nonnull;
  * Date: 28.06.2017 / 17:15
  */
 public class TileEntitySynchronized extends TileEntity {
+    protected boolean requireUpdateComparatorLevel = false;
+
     private boolean inUpdateTask = false;
     private boolean inMarkTask = false;
 
     private long lastUpdateTick = 0;
 
-    public final void readFromNBT(NBTTagCompound compound) {
+    public final void readFromNBT(@Nonnull NBTTagCompound compound) {
         super.readFromNBT(compound);
         readCustomNBT(compound);
     }
@@ -86,7 +88,12 @@ public class TileEntitySynchronized extends TileEntity {
         if (world == null) {
             return;
         }
-        markDirty();
+
+        if (requireUpdateComparatorLevel) {
+            world.updateComparatorOutputLevel(this.pos, this.getBlockType());
+        }
+        world.markChunkDirty(this.pos, this);
+
         inMarkTask = false;
         lastUpdateTick = world.getTotalWorldTime();
     }

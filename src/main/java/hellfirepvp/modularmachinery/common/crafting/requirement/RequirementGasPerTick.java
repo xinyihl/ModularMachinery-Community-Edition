@@ -1,14 +1,12 @@
 package hellfirepvp.modularmachinery.common.crafting.requirement;
 
 import github.kasuminova.mmce.common.util.IExtendedGasHandler;
-import hellfirepvp.modularmachinery.common.crafting.ComponentType;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentGasPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeGasPerTick;
-import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
 import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -34,9 +32,7 @@ public class RequirementGasPerTick extends ComponentRequirement.PerTickParalleli
     @Override
     public boolean isValidComponent(ProcessingComponent<?> component, RecipeCraftingContext ctx) {
         MachineComponent<?> cmp = component.component();
-        ComponentType cmpType = cmp.getComponentType();
-        return (cmpType.equals(ComponentTypesMM.COMPONENT_FLUID) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))
-                && cmp.ioType == actionType;
+        return (cmp.getContainerProvider() instanceof IExtendedGasHandler) && cmp.ioType == this.actionType;
     }
 
     @Override

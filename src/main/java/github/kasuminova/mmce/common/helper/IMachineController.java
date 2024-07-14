@@ -3,9 +3,11 @@ package github.kasuminova.mmce.common.helper;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.block.IBlockState;
 import crafttweaker.api.data.IData;
+import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
+import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.machine.RecipeThread;
@@ -250,6 +252,50 @@ public interface IMachineController {
     @Nullable
     @ZenMethod
     IDynamicPatternInfo getDynamicPattern(String patternName);
+
+    /**
+     * 获取控制器的结构中指定方块的存在数量，只能在控制器成型时使用。<br/>
+     * 会过滤空气方块。<br/>
+     * 注意：此操作的性能开销稍大，通常情况下只建议在 {@link MachineStructureUpdateEvent} 事件触发时使用。
+     *
+     * @param blockStack 要判断的方块对应的物品，会被自动转换成对应的 IBlockState，如果转换出现问题会输出错误日志。
+     * @return 存在数量。
+     */
+    @ZenMethod
+    int getBlocksInPattern(final IItemStack blockStack);
+
+    /**
+     * 获取控制器的结构中指定方块的存在数量，只能在控制器成型时使用。<br/>
+     * 会过滤空气方块。<br/>
+     * 注意：此操作的<strong>性能开销稍大</strong>，通常情况下只建议在 {@link MachineStructureUpdateEvent} 事件触发时使用。
+     *
+     * @param blockState 要判断的方块对应的 IBlockState
+     * @return 存在数量。
+     */
+    @ZenMethod
+    int getBlocksInPattern(final IBlockState blockState);
+
+    /**
+     * 获取控制器的结构中指定方块的存在数量，只能在控制器成型时使用。<br/>
+     * 会过滤空气方块。<br/>
+     * 注意：此操作的<strong>性能开销稍大</strong>，通常情况下只建议在 {@link MachineStructureUpdateEvent} 事件触发时使用。
+     *
+     * @param blockName 要判断的方块对应的注册名，解析方式参考机械 JSON 文件的格式。
+     * @return 存在数量。
+     */
+    @ZenMethod
+    int getBlocksInPattern(final String blockName);
+
+    /**
+     * 获取控制器的结构中指定方块的存在数量，只能在控制器成型时使用。<br/>
+     * 会过滤空气方块。<br/>
+     * 注意：此操作的<strong>性能开销稍大</strong>，通常情况下只建议在 {@link MachineStructureUpdateEvent} 事件触发时使用。
+     *
+     * @param predicate 自定义判断逻辑。
+     * @return 存在数量。
+     */
+    @ZenMethod
+    int getBlocksInPattern(final IBlockStatePredicate predicate);
 
     TileMultiblockMachineController getController();
 }

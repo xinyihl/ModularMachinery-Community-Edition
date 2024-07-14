@@ -1,6 +1,8 @@
 package hellfirepvp.modularmachinery.common.tiles.base;
 
+import crafttweaker.CraftTweakerAPI;
 import crafttweaker.api.data.IData;
+import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
@@ -15,6 +17,7 @@ import github.kasuminova.mmce.common.event.machine.MachineStructureFormedEvent;
 import github.kasuminova.mmce.common.event.machine.MachineStructureUpdateEvent;
 import github.kasuminova.mmce.common.event.machine.MachineTickEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeCheckEvent;
+import github.kasuminova.mmce.common.helper.IBlockStatePredicate;
 import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import github.kasuminova.mmce.common.machine.component.MachineComponentProxyRegistry;
@@ -49,6 +52,8 @@ import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
 import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -65,6 +70,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.oredict.OreDictionary;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -81,6 +87,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
@@ -501,6 +508,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         } else {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> updateStatedMachineComponent(working));
         }
+        requireUpdateComparatorLevel = true;
         markForUpdateSync();
     }
 
@@ -551,6 +559,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> notifyStructureFormedState(true));
         }
 
+        requireUpdateComparatorLevel = true;
         resetStructureCheckCounter();
         markNoUpdateSync();
     }
@@ -1067,6 +1076,103 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return foundDynamicPatterns.get(patternName);
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
+    public int getBlocksInPattern(final IItemStack blockStack) {
+        if (foundPattern == null) {
+            return 0;
+        }
+
+        ItemStack stack = CraftTweakerMC.getItemStack(blockStack);
+        if (stack.isEmpty()) {
+            return 0;
+        }
+
+        Item item = stack.getItem();
+        int meta = stack.getMetadata();
+        Block block = Block.getBlockFromItem(item);
+        if (block == Blocks.AIR) {
+            CraftTweakerAPI.logError("[ModularMachinery] " + stack.getDisplayName() + " cannot convert to Block!");
+            return 0;
+        }
+
+        return getBlocksInPatternInternal(block.getStateFromMeta(meta));
+    }
+
+    @Override
+    public int getBlocksInPattern(final crafttweaker.api.block.IBlockState blockStateCT) {
+        if (foundPattern == null) {
+            return 0;
+        }
+        return getBlocksInPatternInternal(CraftTweakerMC.getBlockState(blockStateCT));
+    }
+
+    @Override
+    public int getBlocksInPattern(final String blockName) {
+        if (foundPattern == null) {
+            return 0;
+        }
+        List<IBlockState> applicable = BlockArray.BlockInformation.getDescriptor(blockName).applicable;
+        return getBlocksInPatternInternal(state -> {
+            for (final IBlockState blockState : applicable) {
+                Block block = blockState.getBlock();
+                int meta = block.getMetaFromState(blockState);
+                if (state.getBlock() != block) {
+                    continue;
+                }
+                if (meta == OreDictionary.WILDCARD_VALUE) {
+                    return true;
+                }
+                int metaFromState = block.getMetaFromState(state);
+                if (metaFromState == meta) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    @Override
+    public int getBlocksInPattern(final IBlockStatePredicate predicate) {
+        if (foundPattern == null) {
+            return 0;
+        }
+        return getBlocksInPatternInternal(state -> predicate.test(CraftTweakerMC.getBlockState(state)));
+    }
+
+    public int getBlocksInPatternInternal(final Predicate<IBlockState> predicate) {
+        if (foundPattern == null) {
+            return 0;
+        }
+        int count = 0;
+        for (final BlockPos pos : foundPattern.getPattern().keySet()) {
+            BlockPos realPos = getPos().add(pos.getX(), pos.getY(), pos.getZ());
+            IBlockState state = getWorld().getBlockState(realPos);
+            if (state.getBlock() == Blocks.AIR) {
+                continue;
+            }
+            if (predicate.test(state)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getBlocksInPatternInternal(IBlockState blockState) {
+        Block block = blockState.getBlock();
+        int meta = block.getMetaFromState(blockState);
+        return getBlocksInPatternInternal(state -> {
+            if (state.getBlock() != block) {
+                return false;
+            }
+            if (meta == OreDictionary.WILDCARD_VALUE) {
+                return true;
+            }
+            int metaFromState = block.getMetaFromState(state);
+            return metaFromState == meta;
+        });
+    }
+
     public Map<String, DynamicPattern.Status> getDynamicPatterns() {
         return foundDynamicPatterns;
     }
@@ -1077,6 +1183,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     public void incrementRecipeSearchRetryCount() {
         recipeResearchRetryCounter++;
+    }
+
+    @Override
+    public void markNoUpdate() {
+        super.markNoUpdate();
+        requireUpdateComparatorLevel = false;
     }
 
     @Override
