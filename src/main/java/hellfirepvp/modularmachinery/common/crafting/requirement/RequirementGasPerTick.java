@@ -6,7 +6,6 @@ import hellfirepvp.modularmachinery.common.crafting.helper.ComponentRequirement;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftCheck;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentFluidPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.jei.JEIComponentGasPerTick;
 import hellfirepvp.modularmachinery.common.crafting.requirement.type.RequirementTypeGasPerTick;
 import hellfirepvp.modularmachinery.common.lib.ComponentTypesMM;
@@ -49,8 +48,7 @@ public class RequirementGasPerTick extends ComponentRequirement.PerTickParalleli
     public RequirementGasPerTick deepCopyModified(List<RecipeModifier> modifiers) {
         GasStack stack = this.required.copy();
         stack.amount = ((int) Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_GAS, actionType, (double) stack.amount, false)));
-        RequirementGasPerTick gas = new RequirementGasPerTick(actionType, stack);
-        return gas;
+        return new RequirementGasPerTick(actionType, stack);
     }
 
     @Nonnull
