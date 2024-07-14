@@ -10,6 +10,7 @@ package hellfirepvp.modularmachinery.common.integration;
 
 import com.google.common.collect.Lists;
 import hellfirepvp.modularmachinery.ModularMachinery;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -36,9 +37,13 @@ import mezz.jei.config.Config;
 import mezz.jei.input.InputHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.Optional;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -142,11 +147,20 @@ public class ModIntegrationJEI implements IModPlugin {
     public void registerIngredients(IModIngredientRegistration registry) {
         try {
             registry.register(() -> HybridFluid.class, Lists.newArrayList(), new HybridStackHelper<>(), new HybridFluidRenderer<>());
+            if (Mods.MEKANISM.isPresent()) {
+                registerHybridGas(registry);
+            }
         } catch (Exception exc) {
             ModularMachinery.log.warn("Error setting up HybridFluid JEI registration! Check the log after this for more details! Report this error!");
             exc.printStackTrace();
             throw exc;
         }
+    }
+
+
+    @Optional.Method(modid = "mekanism")
+    private void registerHybridGas(IModIngredientRegistration registry) {
+        registry.register(() -> HybridFluidGas.class, Lists.newArrayList(), new HybridStackHelper<>(), new HybridFluidRenderer<>());
     }
 
     @Override
