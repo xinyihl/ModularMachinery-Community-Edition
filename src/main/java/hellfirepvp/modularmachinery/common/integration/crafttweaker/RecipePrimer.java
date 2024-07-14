@@ -30,7 +30,6 @@ import hellfirepvp.modularmachinery.common.crafting.requirement.*;
 import hellfirepvp.modularmachinery.common.data.Config;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemCheckerCT;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.helper.AdvancedItemModifierCT;
-import hellfirepvp.modularmachinery.common.lib.RequirementTypesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
@@ -260,6 +259,7 @@ public class RecipePrimer implements PreparedRecipe {
 
     /**
      * 设置此配方只能被指定的核心线程执行。
+     *
      * @param name 线程名
      */
     @ZenMethod
@@ -386,8 +386,8 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addInput(IIngredient input) {
         if (input instanceof IItemStack ||
-            input instanceof IOreDictEntry ||
-            input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
+                input instanceof IOreDictEntry ||
+                input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
             addItemInput(input);
         } else if (input instanceof ILiquidStack liquidStack) {
             addFluidInput(liquidStack);
@@ -409,8 +409,8 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addOutput(IIngredient output) {
         if (output instanceof IItemStack ||
-            output instanceof IOreDictEntry ||
-            output instanceof IngredientStack && output.getInternal() instanceof IOreDictEntry) {
+                output instanceof IOreDictEntry ||
+                output instanceof IngredientStack && output.getInternal() instanceof IOreDictEntry) {
             addItemOutput(output);
         } else if (output instanceof ILiquidStack) {
             addFluidOutput((ILiquidStack) output);
@@ -767,7 +767,7 @@ public class RecipePrimer implements PreparedRecipe {
                     gasName, amount, gasName, amount
             ));
         }
-        RequirementFluid req = RequirementFluid.createMekanismGasRequirement(RequirementTypesMM.REQUIREMENT_GAS, ioType, gasStack);
+        RequirementGas req = new RequirementGas(ioType, gasStack);
         appendComponent(req);
     }
 
@@ -778,7 +778,7 @@ public class RecipePrimer implements PreparedRecipe {
             appendComponent(req);
             return;
         }
-        RequirementFluid req = RequirementFluid.createMekanismGasRequirement(RequirementTypesMM.REQUIREMENT_GAS, ioType, (GasStack) gasStack.getInternal());
+        RequirementGas req = new RequirementGas(ioType, (GasStack) gasStack.getInternal());
         appendComponent(req);
     }
 
