@@ -118,12 +118,12 @@ public class RequirementGas extends ComponentRequirement.MultiCompParallelizable
         int mul = doGasIOInternal(components, context, parallelism);
         if (mul < parallelism) {
             return switch (actionType) {
-                case INPUT -> CraftCheck.failure("craftcheck.failure.fluid.input");
+                case INPUT -> CraftCheck.failure("craftcheck.failure.gas.input");
                 case OUTPUT -> {
                     if (ignoreOutputCheck) {
                         yield CraftCheck.success();
                     }
-                    yield CraftCheck.failure("craftcheck.failure.fluid.output.space");
+                    yield CraftCheck.failure("craftcheck.failure.gas.output.space");
                 }
             };
         }
@@ -131,19 +131,19 @@ public class RequirementGas extends ComponentRequirement.MultiCompParallelizable
     }
 
     private int doGasIOInternal(final List<ProcessingComponent<?>> components, final RecipeCraftingContext context, final int maxMultiplier) {
-        List<IExtendedGasHandler> fluidHandlers = HybridFluidUtils.castGasHandlerComponents(components);
+        List<IExtendedGasHandler> gasHandlers = HybridFluidUtils.castGasHandlerComponents(components);
 
         long required = Math.round(RecipeModifier.applyModifiers(context, this, (double) this.required.amount, false));
         long maxRequired = required * maxMultiplier;
 
         GasStack stack = this.required.copy();
-        long totalIO = HybridFluidUtils.doSimulateDrainOrFill(stack, fluidHandlers, maxRequired, actionType);
+        long totalIO = HybridFluidUtils.doSimulateDrainOrFill(stack, gasHandlers, maxRequired, actionType);
 
         if (totalIO < required) {
             return 0;
         }
 
-        HybridFluidUtils.doDrainOrFill(stack, totalIO, fluidHandlers, actionType);
+        HybridFluidUtils.doDrainOrFill(stack, totalIO, gasHandlers, actionType);
 
         return (int) (totalIO / required);
     }
