@@ -2,6 +2,7 @@ package github.kasuminova.mmce.common.helper;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.block.IBlockState;
+import crafttweaker.api.block.IBlockStateMatcher;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.world.IBlockPos;
@@ -269,11 +270,11 @@ public interface IMachineController {
      * 会过滤空气方块。<br/>
      * 注意：此操作的<strong>性能开销稍大</strong>，通常情况下只建议在 {@link MachineStructureUpdateEvent} 事件触发时使用。
      *
-     * @param blockState 要判断的方块对应的 IBlockState
+     * @param blockStateMatcher 要判断的方块对应的 IBlockStateMatcher
      * @return 存在数量。
      */
     @ZenMethod
-    int getBlocksInPattern(final IBlockState blockState);
+    int getBlocksInPattern(final IBlockStateMatcher blockStateMatcher);
 
     /**
      * 获取控制器的结构中指定方块的存在数量，只能在控制器成型时使用。<br/>
