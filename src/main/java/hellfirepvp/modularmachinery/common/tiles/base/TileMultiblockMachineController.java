@@ -1,6 +1,8 @@
 package hellfirepvp.modularmachinery.common.tiles.base;
 
 import crafttweaker.CraftTweakerAPI;
+import crafttweaker.api.block.IBlockDefinition;
+import crafttweaker.api.block.IBlockStateMatcher;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
@@ -1077,34 +1079,24 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public int getBlocksInPattern(final IItemStack blockStack) {
-        if (foundPattern == null) {
+        if (foundPattern == null || blockStack == null) {
             return 0;
         }
-
-        ItemStack stack = CraftTweakerMC.getItemStack(blockStack);
-        if (stack.isEmpty()) {
-            return 0;
+        IBlockDefinition blockDef = blockStack.asBlock().getDefinition();
+        if (blockStack.getMetadata() == OreDictionary.WILDCARD_VALUE) {
+            return getBlocksInPattern(blockDef.getDefaultState().matchBlock());
+        } else {
+            return getBlocksInPattern(blockDef.getStateFromMeta(blockStack.getMetadata()));
         }
-
-        Item item = stack.getItem();
-        int meta = stack.getMetadata();
-        Block block = Block.getBlockFromItem(item);
-        if (block == Blocks.AIR) {
-            CraftTweakerAPI.logError("[ModularMachinery] " + stack.getDisplayName() + " cannot convert to Block!");
-            return 0;
-        }
-
-        return getBlocksInPatternInternal(block.getStateFromMeta(meta));
     }
 
     @Override
-    public int getBlocksInPattern(final crafttweaker.api.block.IBlockState blockStateCT) {
+    public int getBlocksInPattern(final IBlockStateMatcher blockStateMatcher) {
         if (foundPattern == null) {
             return 0;
         }
-        return getBlocksInPatternInternal(CraftTweakerMC.getBlockState(blockStateCT));
+        return getBlocksInPatternInternal(state -> blockStateMatcher.matches(CraftTweakerMC.getBlockState(state)));
     }
 
     @Override
@@ -1113,23 +1105,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return 0;
         }
         List<IBlockState> applicable = BlockArray.BlockInformation.getDescriptor(blockName).applicable;
-        return getBlocksInPatternInternal(state -> {
-            for (final IBlockState blockState : applicable) {
-                Block block = blockState.getBlock();
-                int meta = block.getMetaFromState(blockState);
-                if (state.getBlock() != block) {
-                    continue;
-                }
-                if (meta == OreDictionary.WILDCARD_VALUE) {
-                    return true;
-                }
-                int metaFromState = block.getMetaFromState(state);
-                if (metaFromState == meta) {
-                    return true;
-                }
-            }
-            return false;
-        });
+        return getBlocksInPatternInternal(applicable::contains);
     }
 
     @Override
@@ -1156,21 +1132,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
         }
         return count;
-    }
-
-    public int getBlocksInPatternInternal(IBlockState blockState) {
-        Block block = blockState.getBlock();
-        int meta = block.getMetaFromState(blockState);
-        return getBlocksInPatternInternal(state -> {
-            if (state.getBlock() != block) {
-                return false;
-            }
-            if (meta == OreDictionary.WILDCARD_VALUE) {
-                return true;
-            }
-            int metaFromState = block.getMetaFromState(state);
-            return metaFromState == meta;
-        });
     }
 
     public Map<String, DynamicPattern.Status> getDynamicPatterns() {
