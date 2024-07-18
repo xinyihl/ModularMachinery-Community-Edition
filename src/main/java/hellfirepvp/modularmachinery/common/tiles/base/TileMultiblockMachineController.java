@@ -1,11 +1,12 @@
 package hellfirepvp.modularmachinery.common.tiles.base;
 
-import crafttweaker.CraftTweakerAPI;
+import com.mojang.authlib.GameProfile;
 import crafttweaker.api.block.IBlockDefinition;
 import crafttweaker.api.block.IBlockStateMatcher;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.minecraft.CraftTweakerMC;
+import crafttweaker.api.player.IPlayer;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
@@ -54,11 +55,12 @@ import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
 import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -577,13 +579,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             // Where is the controller?
             return;
         }
+        if (state.getValue(BlockController.FORMED) == formed) {
+            return;
+        }
 
         IBlockState newState = state.getBlock().getDefaultState()
                 .withProperty(BlockController.FACING, controllerRotation)
                 .withProperty(BlockController.FORMED, formed);
 
         if (world.isRemote) {
-            world.setBlockState(getPos(), newState, 2);
+            world.setBlockState(getPos(), newState, 8);
         } else {
             world.setBlockState(getPos(), newState, 3);
         }
@@ -868,6 +873,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return CraftTweakerMC.getIBlockPos(getPos());
     }
 
+    @Override
+    public IBlockPos rotateWithControllerFacing(final IBlockPos posCT) {
+        BlockPos pos = CraftTweakerMC.getBlockPos(posCT);
+        return CraftTweakerMC.getIBlockPos(MiscUtils.rotateYCCWNorthUntil(pos, controllerRotation == null ? EnumFacing.NORTH : controllerRotation));
+    }
+
     public String getFormedMachineName() {
         return isStructureFormed() ? foundMachine.getRegistryName().toString() : null;
     }
@@ -1132,6 +1143,41 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
         }
         return count;
+    }
+
+    @Nullable
+    @Override
+    @SuppressWarnings("ConstantValue")
+    public IPlayer getOwnerIPlayer() {
+        if (owner == null) {
+            return null;
+        }
+        MinecraftServer server = getWorld().getMinecraftServer();
+        if (server == null) {
+            return null;
+        }
+        EntityPlayerMP player = server.getPlayerList().getPlayerByUUID(owner);
+        return player != null ? CraftTweakerMC.getIPlayer(player) : null;
+    }
+
+    @Nullable
+    @Override
+    public String getOwnerName() {
+        if (owner == null) {
+            return null;
+        }
+        MinecraftServer server = getWorld().getMinecraftServer();
+        if (server == null) {
+            return null;
+        }
+        GameProfile profile = server.getPlayerProfileCache().getProfileByUUID(owner);
+        return profile != null ? profile.getName() : null;
+    }
+
+    @Nullable
+    @Override
+    public String getOwnerUUIDString() {
+        return owner == null ? null : owner.toString();
     }
 
     public Map<String, DynamicPattern.Status> getDynamicPatterns() {

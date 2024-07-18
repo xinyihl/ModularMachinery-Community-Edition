@@ -5,6 +5,7 @@ import crafttweaker.api.block.IBlockState;
 import crafttweaker.api.block.IBlockStateMatcher;
 import crafttweaker.api.data.IData;
 import crafttweaker.api.item.IItemStack;
+import crafttweaker.api.player.IPlayer;
 import crafttweaker.api.world.IBlockPos;
 import crafttweaker.api.world.IFacing;
 import crafttweaker.api.world.IWorld;
@@ -57,6 +58,15 @@ public interface IMachineController {
      */
     @ZenGetter("pos")
     IBlockPos getIPos();
+
+    /**
+     * 根据控制器的朝向，将给定的坐标旋转到控制器朝向。
+     *
+     * @param pos 原始坐标
+     * @return 旋转后的坐标
+     */
+    @ZenMethod
+    IBlockPos rotateWithControllerFacing(final IBlockPos pos);
 
     /**
      * 获取机械在当前世界运行的时间（非世界时间，进入退出世界会被重置）
@@ -297,6 +307,33 @@ public interface IMachineController {
      */
     @ZenMethod
     int getBlocksInPattern(final IBlockStatePredicate predicate);
+
+    /**
+     * 获取控制器的拥有者，如果玩家不在线则返回 null。
+     *
+     * @return 玩家
+     */
+    @Nullable
+    @ZenGetter("ownerPlayer")
+    IPlayer getOwnerIPlayer();
+
+    /**
+     * 获取控制器的拥有者名称，如果服务端无缓存则返回 null。
+     *
+     * @return 玩家名称
+     */
+    @Nullable
+    @ZenGetter("ownerName")
+    String getOwnerName();
+
+    /**
+     * 获取控制器的拥有者 UUID，如果没有所有者则返回 null。
+     *
+     * @return 玩家 UUID
+     */
+    @Nullable
+    @ZenGetter("ownerUUID")
+    String getOwnerUUIDString();
 
     TileMultiblockMachineController getController();
 }

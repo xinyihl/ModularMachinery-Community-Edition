@@ -25,41 +25,25 @@ public class StaticModelBones {
     }
 
     public void compile() {
-        model.topLevelBones.forEach(this::recursiveAdd);
-
-        animationFile.getAllAnimations().stream()
+        Set<String> animatedBones = animationFile.getAllAnimations().stream()
                 .flatMap(animation -> animation.boneAnimations.stream())
                 .map(boneAnimation -> boneAnimation.boneName)
-                .forEach(boneName -> staticBones.remove(boneName));
+                .collect(ImmutableSet.toImmutableSet());
 
-//        model.topLevelBones.stream()
-//                .filter(bone -> isStaticBone(bone.name))
-//                .filter(this::childBoneHasNonStatic)
-//                .forEach(this::recursiveRemove);
-
+        model.topLevelBones.forEach(bone -> recursiveAdd(bone, animatedBones));
         staticBones = ImmutableSet.copyOf(staticBones);
     }
 
-    private void recursiveAdd(final GeoBone bone) {
+    private void recursiveAdd(final GeoBone bone, final Set<String> animatedBones) {
+        if (animatedBones.contains(bone.name)) {
+            return;
+        }
+
         staticBones.add(bone.name);
         bone.childBones.stream()
                 .filter(childBone -> !childBone.childBones.isEmpty())
-                .forEach(this::recursiveAdd);
-    }
-
-    private boolean childBoneHasNonStatic(final GeoBone bone) {
-        if (!staticBones.contains(bone.name)) {
-            return true;
-        }
-        return bone.childBones.stream()
-                .anyMatch(this::childBoneHasNonStatic);
-    }
-
-    private void recursiveRemove(final GeoBone bone) {
-        staticBones.remove(bone.name);
-        bone.childBones.stream()
-                .filter(childBone -> !childBone.childBones.isEmpty())
-                .forEach(this::recursiveRemove);
+                .filter(childBone -> !animatedBones.contains(childBone.name))
+                .forEach(staticBone -> recursiveAdd(staticBone, animatedBones));
     }
 
     public boolean isStaticBone(final String boneName) {
