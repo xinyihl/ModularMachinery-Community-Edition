@@ -716,12 +716,12 @@ public class TileFactoryController extends TileMultiblockMachineController {
             return false;
         }
         for (FactoryRecipeThread thread : coreRecipeThreads.values()) {
-            if (thread.getActiveRecipe() != null) {
+            if (thread.getActiveRecipe() != null && thread.getStatus().isCrafting()) {
                 return true;
             }
         }
         for (FactoryRecipeThread thread : recipeThreadList) {
-            if (thread.getActiveRecipe() != null) {
+            if (thread.getActiveRecipe() != null && thread.getStatus().isCrafting()) {
                 return true;
             }
         }

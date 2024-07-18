@@ -182,6 +182,12 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         return true;
     }
 
+    @Nonnull
+    @Override
+    public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
+        return EnumBlockRenderType.MODEL;
+    }
+
     @Override
     public boolean isOpaqueCube(@Nonnull final IBlockState state) {
         return false;
