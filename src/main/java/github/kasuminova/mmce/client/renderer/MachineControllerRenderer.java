@@ -202,6 +202,8 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         if (emissive || transparent) {
             Tessellator.getInstance().draw();
             if (emissive) {
+                GlStateManager.doPolygonOffset(-3.0F, -3.0F);
+                GlStateManager.enablePolygonOffset();
                 lastBrightnessX = OpenGlHelper.lastBrightnessX;
                 lastBrightnessY = OpenGlHelper.lastBrightnessY;
                 OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240f, 240f);
@@ -238,6 +240,8 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
         if (emissive || transparent) {
             Tessellator.getInstance().draw();
             if (emissive) {
+                GlStateManager.doPolygonOffset(0.0F, 0.0F);
+                GlStateManager.disablePolygonOffset();
                 OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
             }
             if (transparent) {
