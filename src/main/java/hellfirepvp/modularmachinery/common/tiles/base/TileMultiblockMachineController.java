@@ -447,7 +447,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         int color = this.foundMachine.getMachineColor();
         // Colorize Controller.
-        tryColorize(getPos(), color);
+        setMachineColor(color);
         // Colorize Components.
         this.foundPattern.getTileBlocksArray().keySet().forEach(pos -> tryColorize(this.getPos().add(pos), color));
     }

@@ -3,10 +3,12 @@ package hellfirepvp.modularmachinery.common.util;
 import com.google.common.collect.Lists;
 import github.kasuminova.mmce.common.util.IExtendedGasHandler;
 import github.kasuminova.mmce.common.util.MultiFluidTank;
+import github.kasuminova.mmce.common.util.MultiGasTank;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import mekanism.api.gas.GasStack;
+import mekanism.api.gas.IGasHandler;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fml.common.Optional;
@@ -155,11 +157,31 @@ public class HybridFluidUtils {
     public static List<ProcessingComponent<?>> copyFluidHandlerComponents(final List<ProcessingComponent<?>> components) {
         List<ProcessingComponent<?>> list = new ArrayList<>();
         for (ProcessingComponent<?> component : components) {
-            ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                    (MachineComponent<Object>) component.component(),
-                    new MultiFluidTank((IFluidHandler) component.getProvidedComponent()),
-                    component.getTag());
-            list.add(objectProcessingComponent);
+            Object providedComponent = component.getProvidedComponent();
+            if (providedComponent instanceof IFluidHandler) {
+                ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                        (MachineComponent<Object>) component.component(),
+                        new MultiFluidTank((IFluidHandler) providedComponent),
+                        component.getTag());
+                list.add(objectProcessingComponent);
+            }
+        }
+        return list;
+    }
+
+    @Nonnull
+    @SuppressWarnings("unchecked")
+    public static List<ProcessingComponent<?>> copyGasHandlerComponents(final List<ProcessingComponent<?>> components) {
+        List<ProcessingComponent<?>> list = new ArrayList<>();
+        for (ProcessingComponent<?> component : components) {
+            Object providedComponent = component.getProvidedComponent();
+            if (providedComponent instanceof IGasHandler) {
+                ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
+                        (MachineComponent<Object>) component.component(),
+                        new MultiGasTank((IGasHandler) providedComponent),
+                        component.getTag());
+                list.add(objectProcessingComponent);
+            }
         }
         return list;
     }

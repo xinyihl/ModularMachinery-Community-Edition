@@ -74,7 +74,7 @@ public class RequirementGasPerTick extends ComponentRequirement.PerTickParalleli
     @Nonnull
     @Override
     public List<ProcessingComponent<?>> copyComponents(final List<ProcessingComponent<?>> components) {
-        return HybridFluidUtils.copyFluidHandlerComponents(components);
+        return HybridFluidUtils.copyGasHandlerComponents(components);
     }
 
     @Override
@@ -124,4 +124,5 @@ public class RequirementGasPerTick extends ComponentRequirement.PerTickParalleli
 
         return (int) (totalIO / required);
     }
+
 }

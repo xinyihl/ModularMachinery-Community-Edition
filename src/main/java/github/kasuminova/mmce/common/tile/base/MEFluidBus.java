@@ -67,7 +67,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         IntStream.range(0, changedSlots.length)
                 .filter(i -> changedSlots[i])
                 .forEach(list::add);
-        return list.toArray(new int[0]);
+        return list.toIntArray();
     }
 
     public IAEFluidTank getTanks() {
