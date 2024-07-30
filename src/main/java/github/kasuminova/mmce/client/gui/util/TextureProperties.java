@@ -1,7 +1,6 @@
 package github.kasuminova.mmce.client.gui.util;
 
 import com.github.bsideup.jabel.Desugar;
-import com.google.common.base.Preconditions;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -109,7 +108,11 @@ public record TextureProperties(@Nullable ResourceLocation texRes, int texX, int
         if (texRes != null) {
             bind(textureManager);
         } else {
-            bind(textureManager, Preconditions.checkNotNull(customTexRes, "texRes is null, but customTexRes is null too!"));
+            if (customTexRes != null) {
+                bind(textureManager, customTexRes);
+            } else {
+                return;
+            }
         }
         gui.drawTexturedModalRect(renderPos.posX(), renderPos.posY(), texX, texY, width, height);
     }
@@ -163,7 +166,11 @@ public record TextureProperties(@Nullable ResourceLocation texRes, int texX, int
         if (texRes != null) {
             bind(textureManager);
         } else {
-            bind(textureManager, Preconditions.checkNotNull(customTexRes, "texRes is null, but customTexRes is null too!"));
+            if (customTexRes != null) {
+                bind(textureManager, customTexRes);
+            } else {
+                return;
+            }
         }
         gui.drawTexturedModalRect(renderPos.posX(), renderPos.posY(), texX, texY, renderSize.width(), renderSize.height());
     }
