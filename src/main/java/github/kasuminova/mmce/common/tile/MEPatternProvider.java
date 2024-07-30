@@ -222,7 +222,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         }
 
         ICraftingPatternDetails detail = patternItem.getPatternForItem(pattern, getWorld());
-        if (detail != null) {
+        if (detail != null && !detail.isCraftable()) {
             details.set(slot, detail);
         }
     }

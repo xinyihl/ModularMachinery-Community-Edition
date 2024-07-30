@@ -1,6 +1,7 @@
 package github.kasuminova.mmce.client.gui.widget.impl.patternprovider;
 
 import github.kasuminova.mmce.client.gui.GuiMEPatternProvider;
+import github.kasuminova.mmce.client.gui.util.TextureProperties;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.container.Row;
 import github.kasuminova.mmce.client.gui.widget.impl.preview.IngredientList;
@@ -25,10 +26,10 @@ public class PatternProviderIngredientList extends IngredientList {
         scrollbar.setMargin(5, 1, 1, 1);
         scrollbar.setWidthHeight(9, 124);
         scrollbar.getScroll()
-                .setMouseDownTextureXY(198, 232)
-                .setHoveredTextureXY(187, 232)
-                .setTextureXY(176, 232)
-                .setUnavailableTextureXY(209, 232)
+                .setMouseDownTexture(198, 232)
+                .setHoveredTexture(187, 232)
+                .setTexture(176, 232)
+                .setUnavailableTexture(209, 232)
                 .setTextureLocation(GuiMEPatternProvider.GUI_TEXTURE)
                 .setWidthHeight(9, 18);
     }
@@ -71,7 +72,7 @@ public class PatternProviderIngredientList extends IngredientList {
     }
 
     protected static SlotVirtual initSlot(final SlotVirtual slot) {
-        return slot.setSlotTexLocation(GuiMEPatternProvider.GUI_TEXTURE).setSlotTexX(220).setSlotTexY(232);
+        return slot.setSlotTex(TextureProperties.of(GuiMEPatternProvider.GUI_TEXTURE, 220, 232));
     }
 
 }
