@@ -22,6 +22,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.items.IItemHandler;
@@ -152,6 +153,11 @@ public abstract class MEFluidBus extends MEMachineComponent implements
             changedSlots[slot] = true;
         }
         markNoUpdateSync();
+    }
+
+    @Override
+    public synchronized void onFluidInventoryChanged(final IAEFluidTank inv, final int slot, final InvOperation operation, final FluidStack added, final FluidStack removed) {
+        onFluidInventoryChanged(inv, slot);
     }
 
     @Override
