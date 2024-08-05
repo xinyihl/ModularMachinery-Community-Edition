@@ -225,6 +225,9 @@ dependencies {
     compileOnly(rfg.deobf("curse.maven:thaumic-augmentation-319441:4486505"))
     // Performance Test Tool
     runtimeOnly(rfg.deobf("curse.maven:spark-361579:3542217"))
+    // Optimization
+    implementation(rfg.deobf("curse.maven:stellarcore-1064321:5560444"))
+    implementation(rfg.deobf("curse.maven:configanytime-870276:5212709"))
 }
 
 // Publishing to a Maven repository

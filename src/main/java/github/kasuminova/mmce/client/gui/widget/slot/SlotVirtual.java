@@ -26,6 +26,8 @@ public abstract class SlotVirtual extends DynamicWidget {
             GlStateManager.colorMask(true, true, true, false);
             GuiScreen.drawRect(rx, ry, rx + 16, ry + 16, new Color(255, 255, 255, 150).getRGB());
             GlStateManager.colorMask(true, true, true, true);
+            GlStateManager.color(1F, 1F, 1F, 1F);
+            GlStateManager.enableBlend();
             GlStateManager.enableLighting();
             GlStateManager.enableDepth();
         }
