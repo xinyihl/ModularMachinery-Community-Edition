@@ -412,7 +412,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     }
 
     public void sendHandlerItemsToClient() {
-        if (world.isRemote) {
+        if (world.isRemote || !handlerDirty) {
             return;
         }
         List<EntityPlayerMP> players = new ArrayList<>();
@@ -430,6 +430,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             PktMEPatternProviderHandlerItems message = new PktMEPatternProviderHandlerItems(this);
             players.forEach(player -> ModularMachinery.NET_CHANNEL.sendTo(message, player));
         }
+        handlerDirty = false;
     }
 
     @SideOnly(Side.CLIENT)
@@ -445,7 +446,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public void validate() {
         super.validate();
-        ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::refreshPatterns);
+        if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::refreshPatterns);
+        }
     }
 
     @Override
@@ -456,9 +459,8 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public void markChunkDirty() {
         super.markChunkDirty();
-        if (handlerDirty) {
-            sendHandlerItemsToClient();
-            handlerDirty = false;
+        if (handlerDirty && FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+            ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::sendHandlerItemsToClient);
         }
     }
 
