@@ -37,6 +37,7 @@ import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
 import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
 import github.kasuminova.mmce.common.util.InfItemFluidHandler;
 import github.kasuminova.mmce.common.util.PatternItemFilter;
+import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
@@ -363,9 +364,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (compound.hasKey("machineCompleted")) {
             machineCompleted = compound.getBoolean("machineCompleted");
         }
-        if (world.isRemote) {
-            processClientGUIUpdate();
-        }
+        Sides.CLIENT.runIfPresent(this::processClientGUIUpdate);
     }
 
     public void readProviderNBT(final NBTTagCompound compound) {

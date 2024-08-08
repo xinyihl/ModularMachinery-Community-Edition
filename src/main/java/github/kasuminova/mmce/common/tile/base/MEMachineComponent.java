@@ -12,6 +12,7 @@ import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
 import appeng.me.helpers.MachineSource;
 import appeng.util.Platform;
+import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTile;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
@@ -38,14 +39,14 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        if (!world.isRemote) {
+        Sides.SERVER.runIfPresent(() -> {
             try {
                 proxy.readFromNBT(compound);
             } catch (IllegalStateException e) {
                 // Prevent loading data after part of a grid.
                 ModularMachinery.log.warn(e);
             }
-        }
+        });
     }
 
     @Override
@@ -122,9 +123,7 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void validate() {
         super.validate();
-        if (!world.isRemote) {
-            ModularMachinery.EXECUTE_MANAGER.addSyncTask(proxy::onReady);
-        }
+        Sides.SERVER.runIfPresent(() -> ModularMachinery.EXECUTE_MANAGER.addSyncTask(proxy::onReady));
     }
 
 }
