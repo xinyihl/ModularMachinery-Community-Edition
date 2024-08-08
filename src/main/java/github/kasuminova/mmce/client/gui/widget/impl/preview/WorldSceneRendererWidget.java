@@ -439,6 +439,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     public boolean onGuiEvent(final GuiEvent event) {
         if (event instanceof WorldRendererCacheCleanEvent) {
             renderer.deleteCacheBuffer();
+            renderer.getLRDummyWorld().setWorld(null).setAnotherWorld(null);
             return true;
         }
         return false;

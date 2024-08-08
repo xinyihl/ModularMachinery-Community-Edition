@@ -1,11 +1,11 @@
 package github.kasuminova.mmce.common.concurrent;
 
+import github.kasuminova.mmce.common.util.Sides;
 import github.kasuminova.mmce.common.util.concurrent.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import io.netty.util.internal.ThrowableUtil;
 import it.unimi.dsi.fastutil.longs.*;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -27,7 +27,7 @@ public class TaskExecutor {
             new PriorityBlockingQueue<>(),
             new CustomThreadFactory("MMCE-TaskExecutor-%s", SidedThreadGroups.SERVER));
 
-    public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(FMLCommonHandler.instance().getSide().isClient() ? CLIENT_THREAD_COUNT : THREAD_COUNT,
+    public static final ForkJoinPool FORK_JOIN_POOL = new ForkJoinPool(Sides.isClient() ? CLIENT_THREAD_COUNT : THREAD_COUNT,
             new CustomForkJoinWorkerThreadFactory("MMCE-ForkJoinPool-worker-%s"),
             null, true);
 

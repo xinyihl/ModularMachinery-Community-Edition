@@ -107,6 +107,7 @@ public enum Mods {
      * A addon mod provides bloom effect, extracted from GregTechCEu.
      */
     LUMENIZED("lumenized"),
+    ALFHEIM("alfheim")
     ;
 
     public final String modid;

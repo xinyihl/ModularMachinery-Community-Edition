@@ -57,7 +57,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -364,7 +363,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (compound.hasKey("machineCompleted")) {
             machineCompleted = compound.getBoolean("machineCompleted");
         }
-        if (FMLCommonHandler.instance().getEffectiveSide().isClient()) {
+        if (world.isRemote) {
             processClientGUIUpdate();
         }
     }
@@ -446,7 +445,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public void validate() {
         super.validate();
-        if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+        if (!world.isRemote) {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::refreshPatterns);
         }
     }
@@ -459,7 +458,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public void markChunkDirty() {
         super.markChunkDirty();
-        if (handlerDirty && FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+        if (handlerDirty && !world.isRemote) {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::sendHandlerItemsToClient);
         }
     }

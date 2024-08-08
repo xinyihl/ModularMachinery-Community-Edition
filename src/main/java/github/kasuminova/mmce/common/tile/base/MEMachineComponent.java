@@ -18,7 +18,6 @@ import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,7 +38,7 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        if (FMLCommonHandler.instance().getEffectiveSide().isServer()) {
+        if (!world.isRemote) {
             try {
                 proxy.readFromNBT(compound);
             } catch (IllegalStateException e) {
@@ -123,7 +122,7 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void validate() {
         super.validate();
-        if (!getWorld().isRemote) {
+        if (!world.isRemote) {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(proxy::onReady);
         }
     }

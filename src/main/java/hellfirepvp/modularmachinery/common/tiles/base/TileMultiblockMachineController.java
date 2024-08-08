@@ -72,7 +72,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.oredict.OreDictionary;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -1201,7 +1200,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @Override
     public void validate() {
         super.validate();
-        if (!FMLCommonHandler.instance().getEffectiveSide().isClient()) {
+        if (!world.isRemote) {
             return;
         }
 
@@ -1250,7 +1249,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         readMachineNBT(compound);
 
-        if (loaded && FMLCommonHandler.instance().getEffectiveSide().isClient()) {
+        if (loaded && world.isRemote) {
             ClientProxy.clientScheduler.addRunnable(() -> {
                 BlockModelHider.hideOrShowBlocks(this);
                 notifyStructureFormedState(isStructureFormed());
