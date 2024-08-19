@@ -364,7 +364,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (compound.hasKey("machineCompleted")) {
             machineCompleted = compound.getBoolean("machineCompleted");
         }
-        Sides.CLIENT.runIfPresent(this::processClientGUIUpdate);
+        if (Sides.isRunningOnClient()) {
+            processClientGUIUpdate();
+        }
     }
 
     public void readProviderNBT(final NBTTagCompound compound) {

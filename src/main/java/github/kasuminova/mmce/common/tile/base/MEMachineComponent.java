@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileColorableMachineComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -39,14 +40,19 @@ public abstract class MEMachineComponent extends TileColorableMachineComponent i
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        Sides.SERVER.runIfPresent(() -> {
+        if (!world.isRemote) {
             try {
                 proxy.readFromNBT(compound);
             } catch (IllegalStateException e) {
                 // Prevent loading data after part of a grid.
                 ModularMachinery.log.warn(e);
             }
-        });
+        }
+    }
+
+    @Override
+    protected void setWorldCreate(@Nonnull final World worldIn) {
+        setWorld(worldIn);
     }
 
     @Override
