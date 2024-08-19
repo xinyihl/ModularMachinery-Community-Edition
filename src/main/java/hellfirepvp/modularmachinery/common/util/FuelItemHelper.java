@@ -45,7 +45,7 @@ public class FuelItemHelper {
                     // https://github.com/KasumiNova/ModularMachinery-Community-Edition/issues/32
                     try {
                         item.getSubItems(tab, stacks);
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         ModularMachinery.log.warn("[ModularMachinery] Exception when loading FuelItems!", e);
                     }
                 }
@@ -57,7 +57,7 @@ public class FuelItemHelper {
                     if (burn > 0) {
                         out.add(stack);
                     }
-                } catch (Exception exc) {
+                } catch (Throwable exc) {
                 }
             }
             knownFuelStacks = ImmutableList.copyOf(out);
