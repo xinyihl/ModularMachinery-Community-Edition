@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.client.renderer;
 
+import com.cleanroommc.client.shader.ShaderManager;
 import github.kasuminova.mmce.client.model.MachineControllerModel;
 import github.kasuminova.mmce.client.model.StaticModelBones;
 import github.kasuminova.mmce.client.util.BufferProvider;
@@ -123,7 +124,7 @@ public class MachineControllerRenderer extends TileEntitySpecialRenderer<TileMul
     private void renderWithBuffer(final TileMultiblockMachineController animatable) {
         GeoModelRenderTask task = getTask(animatable);
 
-        if (MachineControllerRenderer.shouldUseBloom()) {
+        if (MachineControllerRenderer.shouldUseBloom() && !ShaderManager.isOptifineShaderPackLoaded()) {
             task.renderDefault();
             task.setAvailable(true);
         } else {

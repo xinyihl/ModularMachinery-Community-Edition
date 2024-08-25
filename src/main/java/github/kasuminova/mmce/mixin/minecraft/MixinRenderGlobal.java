@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.mixin.minecraft;
 
+import com.cleanroommc.client.shader.ShaderManager;
 import github.kasuminova.mmce.client.renderer.ControllerModelRenderManager;
 import github.kasuminova.mmce.client.renderer.MachineControllerRenderer;
 import hellfirepvp.modularmachinery.common.base.Mods;
@@ -27,11 +28,11 @@ public class MixinRenderGlobal {
     private void hookTESRComplete(final Entity renderViewEntity, final ICamera camera, final float partialTicks, final CallbackInfo ci) {
         // Use RenderPass 0, prevent twice render.
         if (Mods.GECKOLIB.isPresent() && MinecraftForgeClient.getRenderPass() == 0) {
-            if (!MachineControllerRenderer.shouldUseBloom()) {
+            if (MachineControllerRenderer.shouldUseBloom() && !ShaderManager.isOptifineShaderPackLoaded()) {
                 ControllerModelRenderManager.INSTANCE.draw();
-                ControllerModelRenderManager.INSTANCE.checkControllerState();
             } else {
                 ControllerModelRenderManager.INSTANCE.draw();
+                ControllerModelRenderManager.INSTANCE.checkControllerState();
             }
         }
     }

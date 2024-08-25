@@ -60,9 +60,7 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
     @SideOnly(Side.CLIENT)
     @net.minecraftforge.fml.common.Optional.Method(modid = "gregtech")
     public void registerBloomRenderer() {
-        if (Mods.GREGTECHCEU.isPresent()) {
-            BloomGeoModelRenderer.INSTANCE.registerGlobal(ctrl);
-        }
+        BloomGeoModelRenderer.INSTANCE.registerGlobal(ctrl);
     }
 
     @SideOnly(Side.CLIENT)
