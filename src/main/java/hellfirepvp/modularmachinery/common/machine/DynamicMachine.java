@@ -13,6 +13,7 @@ import com.google.gson.*;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.concurrent.RecipeCraftingContextPool;
 import github.kasuminova.mmce.common.event.machine.MachineEvent;
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
@@ -48,7 +49,7 @@ import java.util.*;
  * Date: 27.06.2017 / 13:57
  */
 public class DynamicMachine extends AbstractMachine {
-    private final Map<BlockPos, List<SingleBlockModifierReplacement>> modifiers = new HashMap<>();
+    private final Map<BlockPos, List<SingleBlockModifierReplacement>> modifiers = new BlockPos2ValueMap<>();
     private final List<MultiBlockModifierReplacement> multiBlockModifiers = new ArrayList<>();
 
     private final Map<Class<?>, List<IEventHandler<MachineEvent>>> machineEventHandlers = new HashMap<>();

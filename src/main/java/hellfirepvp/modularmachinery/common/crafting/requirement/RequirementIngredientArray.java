@@ -241,16 +241,18 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                     ItemStack stack = ItemUtils.copyStackWithSize(ingredient.itemStack, toConsume);
 
                     for (final IItemHandlerModifiable handler : handlers) {
-                        stack.setCount(maxConsume - consumed);
-                        if (checker != null) {
-                            consumed += ItemUtils.consumeAll(
-                                    handler, stack, checker, context.getMachineController()) / toConsume;
-                        } else {
-                            consumed += ItemUtils.consumeAll(
-                                    handler, stack, ingredient.tag);
-                        }
-                        if (consumed >= maxConsume) {
-                            break;
+                        synchronized (handler) {
+                            stack.setCount(maxConsume - consumed);
+                            if (checker != null) {
+                                consumed += ItemUtils.consumeAll(
+                                        handler, stack, checker, context.getMachineController()) / toConsume;
+                            } else {
+                                consumed += ItemUtils.consumeAll(
+                                        handler, stack, ingredient.tag);
+                            }
+                            if (consumed >= maxConsume) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -258,15 +260,17 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                     checker = ingredient.itemChecker;
 
                     for (final IItemHandlerModifiable handler : handlers) {
-                        if (checker != null) {
-                            consumed += ItemUtils.consumeAll(
-                                    handler, ingredient.oreDictName, maxConsume - consumed, checker, context.getMachineController());
-                        } else {
-                            consumed += ItemUtils.consumeAll(
-                                    handler, ingredient.oreDictName, maxConsume - consumed, ingredient.tag);
-                        }
-                        if (consumed >= maxConsume) {
-                            break;
+                        synchronized (handler) {
+                            if (checker != null) {
+                                consumed += ItemUtils.consumeAll(
+                                        handler, ingredient.oreDictName, maxConsume - consumed, checker, context.getMachineController());
+                            } else {
+                                consumed += ItemUtils.consumeAll(
+                                        handler, ingredient.oreDictName, maxConsume - consumed, ingredient.tag);
+                            }
+                            if (consumed >= maxConsume) {
+                                break;
+                            }
                         }
                     }
                 }

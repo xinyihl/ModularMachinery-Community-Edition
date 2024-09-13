@@ -293,18 +293,19 @@ public class Row extends WidgetContainer {
     @Override
     public int getWidth() {
         int width = 0;
+        int absWidgetMaxWidth = 0;
         for (final DynamicWidget widget : widgets) {
             if (widget.isDisabled()) {
                 continue;
             }
             int widgetWidth = widget.getMarginLeft() + widget.getWidth() + widget.getMarginRight();
             if (widget.isUseAbsPos()) {
-                width = Math.max(width, widgetWidth);
+                absWidgetMaxWidth = Math.max(widgetWidth + widget.getAbsX(), absWidgetMaxWidth);
                 continue;
             }
             width += widgetWidth;
         }
-        return width;
+        return Math.max(width, absWidgetMaxWidth);
     }
 
     @Override

@@ -13,7 +13,6 @@ import github.kasuminova.mmce.common.event.recipe.RecipeFailureEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeFinishEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeStartEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeTickEvent;
-import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
@@ -101,13 +100,11 @@ public class TileMachineController extends TileMultiblockMachineController {
                 }
             }
             case SYNC -> {
-                tickExecutor = new ActionExecutor(() -> {
-                    if (doAsyncStep()) {
-                        return;
-                    }
-                    doSyncStep(false);
-                });
-                tickExecutor.run();
+                tickExecutor = null;
+                if (doAsyncStep()) {
+                    return;
+                }
+                doSyncStep(false);
             }
         }
     }

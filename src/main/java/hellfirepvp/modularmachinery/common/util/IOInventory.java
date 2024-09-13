@@ -19,6 +19,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.Constants;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 /**
@@ -29,6 +31,8 @@ import java.util.function.Consumer;
  * Date: 28.06.2017 / 17:42
  */
 public class IOInventory extends IItemHandlerImpl {
+
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final TileEntitySynchronized owner;
     // TODO IntConsumer.
@@ -63,39 +67,56 @@ public class IOInventory extends IItemHandlerImpl {
     }
 
     @Override
-    public synchronized void setStackInSlot(int slot, @Nonnull ItemStack stack) {
-        super.setStackInSlot(slot, stack);
-        notifyOwner();
-        if (listener != null) {
-            listener.accept(slot);
+    public void setStackInSlot(int slot, @Nonnull ItemStack stack) {
+        try {
+            rwLock.writeLock().lock();
+            super.setStackInSlot(slot, stack);
+            notifyOwner();
+            if (listener != null) {
+                listener.accept(slot);
+            }
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 
     @Override
     @Nonnull
-    public synchronized ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) return stack;
-        ItemStack inserted = insertItemInternal(slot, stack, simulate);
-        if (!simulate) {
-            if (listener != null) {
-                listener.accept(slot);
-            }
-            notifyOwner();
+    public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
+        if (stack.isEmpty()) {
+            return stack;
         }
-        return inserted;
+        try {
+            (simulate ? rwLock.writeLock() : rwLock.readLock()).lock();
+            ItemStack inserted = insertItemInternal(slot, stack, simulate);
+            if (!simulate) {
+                if (listener != null) {
+                    listener.accept(slot);
+                }
+                notifyOwner();
+            }
+            return inserted;
+        } finally {
+            (simulate ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Override
     @Nonnull
-    public synchronized ItemStack extractItem(int slot, int amount, boolean simulate) {
-        ItemStack extracted = super.extractItem(slot, amount, simulate);
-        if (!simulate) {
-            if (listener != null) {
-                listener.accept(slot);
+    public ItemStack extractItem(int slot, int amount, boolean simulate) {
+        try {
+            (simulate ? rwLock.writeLock() : rwLock.readLock()).lock();
+            ItemStack extracted = super.extractItem(slot, amount, simulate);
+            if (!simulate) {
+                if (listener != null) {
+                    listener.accept(slot);
+                }
+                notifyOwner();
             }
-            notifyOwner();
+            return extracted;
+        } finally {
+            (simulate ? rwLock.writeLock() : rwLock.readLock()).unlock();
         }
-        return extracted;
     }
 
     private void notifyOwner() {

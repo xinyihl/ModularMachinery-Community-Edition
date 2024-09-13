@@ -13,6 +13,8 @@ import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -24,55 +26,103 @@ import javax.annotation.Nullable;
 @Optional.Interface(iface = "mekanism.api.gas.IGasHandler", modid = "mekanism")
 public class HybridTank extends FluidTank {
 
+    protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+
     public HybridTank(int capacity) {
         super(capacity);
     }
 
     @Nullable
     @Override
-    public synchronized FluidStack getFluid() {
-        return super.getFluid();
+    public FluidStack getFluid() {
+        try {
+            rwLock.readLock().lock();
+            return super.getFluid();
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public synchronized void setFluid(@Nullable FluidStack fluid) {
-        super.setFluid(fluid);
+    public void setFluid(@Nullable FluidStack fluid) {
+        try {
+            rwLock.writeLock().lock();
+            super.setFluid(fluid);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     @Override
-    public synchronized int getFluidAmount() {
-        return super.getFluidAmount();
+    public int getFluidAmount() {
+        try {
+            rwLock.readLock().lock();
+            return super.getFluidAmount();
+        } finally {
+            rwLock.readLock().unlock();
+        }
     }
 
     @Override
-    public synchronized int fill(FluidStack resource, boolean doFill) {
-        return super.fill(resource, doFill);
+    public int fill(FluidStack resource, boolean doFill) {
+        try {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.fill(resource, doFill);
+        } finally {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Override
-    public synchronized int fillInternal(FluidStack resource, boolean doFill) {
-        return super.fillInternal(resource, doFill);
+    public int fillInternal(FluidStack resource, boolean doFill) {
+        try {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.fillInternal(resource, doFill);
+        } finally {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Override
-    public synchronized FluidStack drain(FluidStack resource, boolean doDrain) {
-        return super.drain(resource, doDrain);
+    public FluidStack drain(FluidStack resource, boolean doDrain) {
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.drain(resource, doDrain);
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Override
-    public synchronized FluidStack drain(int maxDrain, boolean doDrain) {
-        return super.drain(maxDrain, doDrain);
+    public FluidStack drain(int maxDrain, boolean doDrain) {
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.drain(maxDrain, doDrain);
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Nullable
     @Override
-    public synchronized FluidStack drainInternal(FluidStack resource, boolean doDrain) {
-        return super.drainInternal(resource, doDrain);
+    public FluidStack drainInternal(FluidStack resource, boolean doDrain) {
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.drainInternal(resource, doDrain);
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
 
     @Nullable
     @Override
-    public synchronized FluidStack drainInternal(int maxDrain, boolean doDrain) {
-        return super.drainInternal(maxDrain, doDrain);
+    public FluidStack drainInternal(int maxDrain, boolean doDrain) {
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
+            return super.drainInternal(maxDrain, doDrain);
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
+        }
     }
+
 }

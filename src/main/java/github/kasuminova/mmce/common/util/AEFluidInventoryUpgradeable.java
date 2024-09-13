@@ -11,11 +11,15 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 import java.util.Objects;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * From: <a href="https://github.com/PrototypeTrousers/Applied-Energistics-2/blob/AE2-Omnifactory/src/main/java/appeng/fluids/util/AEFluidInventory.java">...</a>
  */
 public class AEFluidInventoryUpgradeable implements IAEFluidTank {
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+
     private final IAEFluidStack[] fluids;
     private final IAEFluidInventory handler;
     private int capacity;
@@ -52,23 +56,28 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     @Override
-    public synchronized void setFluidInSlot(final int slot, final IAEFluidStack fluid) {
-        if (slot >= 0 && slot < this.getSlots()) {
-            if (Objects.equals(this.fluids[slot], fluid)) {
-                if (fluid != null && fluid.getStackSize() != this.fluids[slot].getStackSize()) {
-                    this.fluids[slot].setStackSize(fluid.getStackSize());
+    public void setFluidInSlot(final int slot, final IAEFluidStack fluid) {
+        try {
+            rwLock.writeLock().lock();
+            if (slot >= 0 && slot < this.getSlots()) {
+                if (Objects.equals(this.fluids[slot], fluid)) {
+                    if (fluid != null && fluid.getStackSize() != this.fluids[slot].getStackSize()) {
+                        this.fluids[slot].setStackSize(fluid.getStackSize());
+                        this.onContentChanged(slot);
+                    }
+                } else {
+                    if (fluid == null) {
+                        this.fluids[slot] = null;
+                    } else {
+                        this.fluids[slot] = fluid.copy();
+                        this.fluids[slot].setStackSize(fluid.getStackSize());
+                    }
+
                     this.onContentChanged(slot);
                 }
-            } else {
-                if (fluid == null) {
-                    this.fluids[slot] = null;
-                } else {
-                    this.fluids[slot] = fluid.copy();
-                    this.fluids[slot].setStackSize(fluid.getStackSize());
-                }
-
-                this.onContentChanged(slot);
             }
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 
@@ -80,10 +89,15 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
     @Override
     public IAEFluidStack getFluidInSlot(final int slot) {
-        if (slot >= 0 && slot < this.getSlots()) {
-            return this.fluids[slot];
+        try {
+            rwLock.readLock().lock();
+            if (slot >= 0 && slot < this.getSlots()) {
+                return this.fluids[slot];
+            }
+            return null;
+        } finally {
+            rwLock.readLock().unlock();
         }
-        return null;
     }
 
     @Override
@@ -98,7 +112,6 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
             for (int i = 0; i < this.getSlots(); ++i) {
                 this.props[i] = new FluidTankPropertiesWrapper(i);
             }
-
         }
         return this.props;
     }
@@ -165,64 +178,74 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     @Override
-    public synchronized int fill(final FluidStack fluid, final boolean doFill) {
+    public int fill(final FluidStack fluid, final boolean doFill) {
         if (fluid == null || fluid.amount <= 0) {
             return 0;
         }
 
         final FluidStack insert = fluid.copy();
+        try {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
 
-        if (oneFluidOneSlot) {
-            int found = -1;
-            for (int i = 0; i < fluids.length; i++) {
-                final IAEFluidStack fluidInSlot = this.fluids[i];
-                if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
-                    found = i;
+            if (oneFluidOneSlot) {
+                int found = -1;
+                for (int i = 0; i < fluids.length; i++) {
+                    final IAEFluidStack fluidInSlot = this.fluids[i];
+                    if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
+                        found = i;
+                        break;
+                    }
+                }
+                if (found != -1) {
+                    return this.fill(found, insert, doFill);
+                }
+            }
+
+            int totalFillAmount = 0;
+            for (int slot = 0; slot < this.getSlots(); ++slot) {
+                int fillAmount = this.fill(slot, insert, doFill);
+                totalFillAmount += fillAmount;
+                insert.amount -= fillAmount;
+                if (insert.amount <= 0) {
                     break;
                 }
             }
-            if (found != -1) {
-                return this.fill(found, insert, doFill);
-            }
+            return totalFillAmount;
+        } finally {
+            (doFill ? rwLock.writeLock() : rwLock.readLock()).unlock();
         }
-
-        int totalFillAmount = 0;
-        for (int slot = 0; slot < this.getSlots(); ++slot) {
-            int fillAmount = this.fill(slot, insert, doFill);
-            totalFillAmount += fillAmount;
-            insert.amount -= fillAmount;
-            if (insert.amount <= 0) {
-                break;
-            }
-        }
-        return totalFillAmount;
     }
 
     @Override
-    public synchronized FluidStack drain(final FluidStack fluid, final boolean doDrain) {
+    public FluidStack drain(final FluidStack fluid, final boolean doDrain) {
         if (fluid == null || fluid.amount <= 0) {
             return null;
         }
 
         final FluidStack resource = fluid.copy();
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
 
-        FluidStack totalDrained = null;
-        for (int slot = 0; slot < this.getSlots(); ++slot) {
-            FluidStack drain = this.drain(slot, resource, doDrain);
-            if (drain != null) {
-                if (totalDrained == null) {
-                    totalDrained = drain;
-                } else {
-                    totalDrained.amount += drain.amount;
-                }
+            FluidStack totalDrained = null;
+            for (int slot = 0; slot < this.getSlots(); ++slot) {
+                FluidStack drain = this.drain(slot, resource, doDrain);
+                if (drain != null) {
+                    if (totalDrained == null) {
+                        totalDrained = drain;
+                    } else {
+                        totalDrained.amount += drain.amount;
+                    }
 
-                resource.amount -= drain.amount;
-                if (resource.amount <= 0) {
-                    break;
+                    resource.amount -= drain.amount;
+                    if (resource.amount <= 0) {
+                        break;
+                    }
                 }
             }
+            return totalDrained;
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
         }
-        return totalDrained;
     }
 
     @Override
@@ -233,28 +256,33 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
         FluidStack totalDrained = null;
         int toDrain = maxDrain;
+        try {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).lock();
 
-        for (int slot = 0; slot < this.getSlots(); ++slot) {
-            if (totalDrained == null) {
-                totalDrained = this.drain(slot, toDrain, doDrain);
-                if (totalDrained != null) {
-                    toDrain -= totalDrained.amount;
+            for (int slot = 0; slot < this.getSlots(); ++slot) {
+                if (totalDrained == null) {
+                    totalDrained = this.drain(slot, toDrain, doDrain);
+                    if (totalDrained != null) {
+                        toDrain -= totalDrained.amount;
+                    }
+                } else {
+                    FluidStack copy = totalDrained.copy();
+                    copy.amount = toDrain;
+                    FluidStack drain = this.drain(slot, copy, doDrain);
+                    if (drain != null) {
+                        totalDrained.amount += drain.amount;
+                        toDrain -= drain.amount;
+                    }
                 }
-            } else {
-                FluidStack copy = totalDrained.copy();
-                copy.amount = toDrain;
-                FluidStack drain = this.drain(slot, copy, doDrain);
-                if (drain != null) {
-                    totalDrained.amount += drain.amount;
-                    toDrain -= drain.amount;
+
+                if (toDrain <= 0) {
+                    break;
                 }
             }
-
-            if (toDrain <= 0) {
-                break;
-            }
+            return totalDrained;
+        } finally {
+            (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
         }
-        return totalDrained;
     }
 
     public void writeToNBT(final NBTTagCompound data, final String name) {

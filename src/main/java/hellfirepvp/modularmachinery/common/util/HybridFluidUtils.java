@@ -53,14 +53,16 @@ public class HybridFluidUtils {
         for (final IFluidHandler handler : fluidHandlers) {
             stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
 
-            switch (actionType) {
-                case INPUT -> {
-                    FluidStack drained = handler.drain(stack, true);
-                    if (drained != null) {
-                        totalIO -= drained.amount;
+            synchronized (handler) {
+                switch (actionType) {
+                    case INPUT -> {
+                        FluidStack drained = handler.drain(stack, true);
+                        if (drained != null) {
+                            totalIO -= drained.amount;
+                        }
                     }
+                    case OUTPUT -> totalIO -= handler.fill(stack, true);
                 }
-                case OUTPUT -> totalIO -= handler.fill(stack, true);
             }
 
             if (totalIO <= 0) {
@@ -109,18 +111,20 @@ public class HybridFluidUtils {
         for (final IExtendedGasHandler handler : gasHandlers) {
             stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
 
-            switch (actionType) {
-                case INPUT -> {
-                    GasStack drawn = handler.drawGas(stack, true);
-                    if (drawn != null) {
-                        totalIO -= drawn.amount;
+            synchronized (handler) {
+                switch (actionType) {
+                    case INPUT -> {
+                        GasStack drawn = handler.drawGas(stack, true);
+                        if (drawn != null) {
+                            totalIO -= drawn.amount;
+                        }
                     }
-                }
-                case OUTPUT -> {
-                    if (!handler.canReceiveGas(null, stack.getGas())) {
-                        continue;
+                    case OUTPUT -> {
+                        if (!handler.canReceiveGas(null, stack.getGas())) {
+                            continue;
+                        }
+                        totalIO -= handler.receiveGas(null, stack, true);
                     }
-                    totalIO -= handler.receiveGas(null, stack, true);
                 }
             }
 

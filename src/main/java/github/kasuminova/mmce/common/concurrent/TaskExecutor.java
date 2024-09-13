@@ -60,7 +60,7 @@ public class TaskExecutor {
         submitter.start();
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void onServerTick(final TickEvent.ServerTickEvent event) {
         if (event.side == Side.CLIENT) {
             return;

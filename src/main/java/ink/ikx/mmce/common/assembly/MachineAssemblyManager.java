@@ -1,17 +1,18 @@
 package ink.ikx.mmce.common.assembly;
 
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MachineAssemblyManager {
 
-    private static final HashMap<BlockPos, MachineAssembly> MACHINE_ASSEMBLY_MAP = new HashMap<>();
+    private static final Map<BlockPos, MachineAssembly> MACHINE_ASSEMBLY_MAP = new BlockPos2ValueMap<>();
 
     public static void addMachineAssembly(MachineAssembly machineAssembly) {
         MACHINE_ASSEMBLY_MAP.put(machineAssembly.getCtrlPos(), machineAssembly);

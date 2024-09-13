@@ -14,12 +14,14 @@ import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.helper.AdvancedBlockChecker;
 import github.kasuminova.mmce.common.machine.pattern.SpecialItemBlockProxy;
 import github.kasuminova.mmce.common.machine.pattern.SpecialItemBlockProxyRegistry;
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTJsonSerializer;
 import hellfirepvp.modularmachinery.common.util.nbt.NBTMatchingHelper;
 import ink.ikx.mmce.common.utils.StackUtils;
 import ink.ikx.mmce.common.utils.StructureIngredient;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -55,8 +57,8 @@ public class BlockArray {
 
     public final long traitNum;
 
-    protected Map<BlockPos, BlockInformation> pattern = new HashMap<>();
-    protected Map<BlockPos, BlockInformation> tileBlocksArray = new HashMap<>();
+    protected Map<BlockPos, BlockInformation> pattern = new BlockPos2ValueMap<>();
+    protected Map<BlockPos, BlockInformation> tileBlocksArray = new BlockPos2ValueMap<>();
     private BlockPos min = new BlockPos(0, 0, 0), max = new BlockPos(0, 0, 0), size = new BlockPos(0, 0, 0);
 
     public BlockArray() {
@@ -68,7 +70,7 @@ public class BlockArray {
     }
 
     public BlockArray(BlockArray other) {
-        this.pattern = new HashMap<>(other.pattern);
+        this.pattern = new BlockPos2ValueMap<>(other.pattern);
         this.min = new BlockPos(other.min.getX(), other.min.getY(), other.min.getZ());
         this.max = new BlockPos(other.max.getX(), other.max.getY(), other.max.getZ());
         this.size = new BlockPos(other.size.getX(), other.size.getY(), other.size.getZ());
@@ -103,7 +105,7 @@ public class BlockArray {
     }
 
     public void overwrite(BlockArray other) {
-        this.pattern = new HashMap<>(other.pattern);
+        this.pattern = new BlockPos2ValueMap<>(other.pattern);
         this.min = new BlockPos(other.min.getX(), other.min.getY(), other.min.getZ());
         this.max = new BlockPos(other.max.getX(), other.max.getY(), other.max.getZ());
         this.size = new BlockPos(other.size.getX(), other.size.getY(), other.size.getZ());
@@ -169,7 +171,7 @@ public class BlockArray {
     }
 
     public Map<BlockPos, BlockInformation> getPatternSlice(int slice) {
-        Map<BlockPos, BlockInformation> copy = new HashMap<>();
+        Map<BlockPos, BlockInformation> copy = new BlockPos2ValueMap<>();
         for (BlockPos pos : pattern.keySet()) {
             if (pos.getY() == slice) {
                 copy.put(pos, pattern.get(pos));
@@ -462,9 +464,9 @@ public class BlockArray {
     public static class BlockInformation {
 
         public static final int CYCLE_TICK_SPEED = 30;
-        public List<IBlockStateDescriptor> matchingStates = new ArrayList<>();
+        public List<IBlockStateDescriptor> matchingStates = new ObjectArrayList<>();
 
-        private List<IBlockState> samples = new ArrayList<>();
+        private List<IBlockState> samples = new ObjectArrayList<>();
 
         private boolean hasTileEntity;
         protected NBTTagCompound matchingTag = null;
@@ -611,7 +613,7 @@ public class BlockArray {
         }
 
         public BlockInformation copyRotateYCCW() {
-            List<IBlockStateDescriptor> newDescriptors = new ArrayList<>();
+            List<IBlockStateDescriptor> newDescriptors = new ObjectArrayList<>();
 
             boolean noBlockCanRotated = true;
             for (IBlockStateDescriptor desc : this.matchingStates) {
@@ -644,7 +646,7 @@ public class BlockArray {
         }
 
         public BlockInformation copy() {
-            List<IBlockStateDescriptor> descr = new ArrayList<>(this.matchingStates.size());
+            List<IBlockStateDescriptor> descr = new ObjectArrayList<>(this.matchingStates.size());
             for (IBlockStateDescriptor desc : this.matchingStates) {
                 IBlockStateDescriptor copy = new IBlockStateDescriptor();
                 copy.applicable.addAll(desc.applicable);

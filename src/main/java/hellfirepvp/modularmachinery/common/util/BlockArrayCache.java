@@ -16,8 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class BlockArrayCache {
     private static final LongObjectHashMap<EnumMap<EnumFacing, BlockArray>>
             BLOCK_ARRAY_CACHE_MAP = new LongObjectHashMap<>();
-    private static final LongObjectHashMap<EnumMap<EnumFacing, EnumMap<EnumFacing, BlockArray>>>
-            HORIZONTAL_BLOCK_ARRAY_CACHE_MAP = new LongObjectHashMap<>();
 
     private static final AtomicLong TRAIT_NUM_COUNTER = new AtomicLong(0);
 
@@ -41,31 +39,12 @@ public class BlockArrayCache {
                 blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).put(facing, blockArray);
     }
 
-    public static synchronized void addHorizontalBlockArrayCache(final TaggedPositionBlockArray blockArray,
-                                                                 final EnumFacing upDown,
-                                                                 final EnumFacing facing)
-    {
-        HORIZONTAL_BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
-                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).computeIfAbsent(
-                        upDown, e -> new EnumMap<>(EnumFacing.class)).put(facing, blockArray);
-    }
-
-    public static TaggedPositionBlockArray getHorizontalBlockArrayCache(final TaggedPositionBlockArray blockArray,
-                                                                        final EnumFacing upDown,
-                                                                        final EnumFacing facing)
-    {
-        return (TaggedPositionBlockArray) HORIZONTAL_BLOCK_ARRAY_CACHE_MAP.computeIfAbsent(
-                blockArray.traitNum, e -> new EnumMap<>(EnumFacing.class)).computeIfAbsent(
-                        upDown, e -> new EnumMap<>(EnumFacing.class)).get(facing);
-    }
-
     public static long nextTraitNum() {
         return TRAIT_NUM_COUNTER.getAndIncrement();
     }
 
     public static void buildCache(Collection<DynamicMachine> machines) {
         BLOCK_ARRAY_CACHE_MAP.clear();
-        HORIZONTAL_BLOCK_ARRAY_CACHE_MAP.clear();
 
         long start = System.currentTimeMillis();
         ModularMachinery.log.info("Building Machine Structure Cache...");
@@ -125,33 +104,6 @@ public class BlockArrayCache {
             }
 
             addBlockArrayCache(rotated, rotatedFacing);
-        }
-    }
-
-    private static void buildHorizontalPatternCache(TaggedPositionBlockArray blockArray, EnumFacing upDown) {
-        EnumFacing facing = EnumFacing.NORTH;
-        TaggedPositionBlockArray rotated = blockArray;
-        TaggedPositionBlockArray upDownRotated;
-
-        switch (upDown) {
-            case UP -> {
-                do {
-                    facing = facing.rotateYCCW();
-                    rotated = rotated.rotateYCCW();
-                    upDownRotated = rotated.rotateUp();
-                    upDownRotated.flushTileBlocksCache();
-                    addHorizontalBlockArrayCache(upDownRotated, upDown, facing);
-                } while (facing != EnumFacing.NORTH);
-            }
-            case DOWN -> {
-                do {
-                    facing = facing.rotateYCCW();
-                    rotated = rotated.rotateYCCW();
-                    upDownRotated = rotated.rotateDown();
-                    upDownRotated.flushTileBlocksCache();
-                    addHorizontalBlockArrayCache(upDownRotated, upDown, facing);
-                } while (facing != EnumFacing.NORTH);
-            }
         }
     }
 

@@ -8,6 +8,7 @@
 
 package hellfirepvp.modularmachinery.client.util;
 
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockCompatHelper;
@@ -42,7 +43,10 @@ import org.lwjgl.opengl.GL11;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -278,7 +282,7 @@ public class BlockArrayRenderHelper {
     }
 
     public static class WorldBlockArrayRenderAccess implements IBlockAccess {
-        final Map<BlockPos, BakedBlockData> blockRenderData = new HashMap<>();
+        final Map<BlockPos, BakedBlockData> blockRenderData = new BlockPos2ValueMap<>();
         private final BlockArray originalArray;
         private int currentRenderSlice = 0;
         private boolean respectRenderSlice = false;

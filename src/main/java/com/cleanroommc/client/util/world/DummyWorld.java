@@ -1,5 +1,6 @@
 package com.cleanroommc.client.util.world;
 
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -12,7 +13,6 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,7 +33,7 @@ public class DummyWorld extends World {
         this.calculateInitialSkylight();
         this.calculateInitialWeather();
         this.getWorldBorder().setSize(30000000);
-        ObfuscationReflectionHelper.setPrivateValue(World.class, this, null, FMLLaunchHandler.isDeobfuscatedEnvironment() ? "lightUpdateBlockList" : "field_72994_J");
+        ObfuscationReflectionHelper.setPrivateValue(World.class, this, null, ModularMachinery.isRunningInDevEnvironment() ? "lightUpdateBlockList" : "field_72994_J");
         // De-allocate alfheim lighting engine
         if (Mods.ALFHEIM.isPresent()) {
             ObfuscationReflectionHelper.setPrivateValue(World.class, this, null,

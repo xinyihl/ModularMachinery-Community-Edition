@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.machine;
 
 import crafttweaker.annotations.ZenRegister;
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import hellfirepvp.modularmachinery.common.crafting.helper.ComponentSelectorTag;
 import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
@@ -16,7 +17,6 @@ import net.minecraft.util.math.BlockPos;
 import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -29,7 +29,7 @@ import java.util.Map;
 @ZenRegister
 @ZenClass("mods.modularmachinery.TaggedPositionBlockArray")
 public class TaggedPositionBlockArray extends BlockArray {
-    private Map<BlockPos, ComponentSelectorTag> taggedPositions = new HashMap<>();
+    private Map<BlockPos, ComponentSelectorTag> taggedPositions = new BlockPos2ValueMap<>();
 
     public TaggedPositionBlockArray() {
     }
@@ -60,7 +60,7 @@ public class TaggedPositionBlockArray extends BlockArray {
     public void overwrite(final BlockArray other) {
         super.overwrite(other);
         if (other instanceof TaggedPositionBlockArray) {
-            this.taggedPositions = new HashMap<>(((TaggedPositionBlockArray) other).taggedPositions);
+            this.taggedPositions = new BlockPos2ValueMap<>(((TaggedPositionBlockArray) other).taggedPositions);
         }
     }
 

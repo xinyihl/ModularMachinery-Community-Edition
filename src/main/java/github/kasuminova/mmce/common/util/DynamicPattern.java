@@ -296,11 +296,7 @@ public class DynamicPattern {
     }
 
     public TaggedPositionBlockArray getPattern(EnumFacing patternOffset, EnumFacing facingOffset) {
-        if (patternOffset == EnumFacing.UP || patternOffset == EnumFacing.DOWN) {
-            return BlockArrayCache.getHorizontalBlockArrayCache(pattern, patternOffset, facingOffset);
-        } else {
-            return BlockArrayCache.getBlockArrayCache(pattern, facingOffset);
-        }
+        return BlockArrayCache.getBlockArrayCache(pattern, facingOffset);
     }
 
     public TaggedPositionBlockArray getPatternEnd() {
@@ -317,11 +313,7 @@ public class DynamicPattern {
             return null;
         }
 
-        if (patternOffset == EnumFacing.UP || patternOffset == EnumFacing.DOWN) {
-            return BlockArrayCache.getHorizontalBlockArrayCache(patternEnd, patternOffset, facingOffset);
-        } else {
-            return BlockArrayCache.getBlockArrayCache(patternEnd, patternOffset);
-        }
+        return BlockArrayCache.getBlockArrayCache(patternEnd, patternOffset);
     }
 
     @Desugar

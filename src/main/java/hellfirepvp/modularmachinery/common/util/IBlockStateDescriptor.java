@@ -1,6 +1,8 @@
 package hellfirepvp.modularmachinery.common.util;
 
-import com.google.common.collect.Lists;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
@@ -10,13 +12,13 @@ import java.util.List;
 
 public class IBlockStateDescriptor {
 
-    public final List<IBlockState> applicable = Lists.newArrayList();
+    public final List<IBlockState> applicable = new ObjectArrayList<>();
 
     public IBlockStateDescriptor() {
     }
 
     public IBlockStateDescriptor(Block block) {
-        List<Integer> usedMetas = Lists.newArrayList();
+        IntList usedMetas = new IntArrayList();
         if (!(block instanceof BlockLiquid) && !(block instanceof BlockFluidBase)) {
             for (IBlockState state : block.getBlockState().getValidStates()) {
                 int meta = block.getMetaFromState(state);

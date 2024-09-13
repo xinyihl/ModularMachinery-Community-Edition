@@ -4,6 +4,7 @@ import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.client.gui.widget.slot.SlotItemVirtual;
 import github.kasuminova.mmce.client.gui.widget.slot.SlotItemVirtualSelectable;
 import github.kasuminova.mmce.client.util.UpgradeIngredient;
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
@@ -24,7 +25,7 @@ public class UpgradeIngredientList extends IngredientListVertical {
     protected final WorldSceneRendererWidget renderer;
     protected final DynamicMachine machine;
 
-    protected final Map<BlockPos, List<SlotItemVirtualSelectable>> posToUpgradeSlot = new HashMap<>();
+    protected final Map<BlockPos, List<SlotItemVirtualSelectable>> posToUpgradeSlot = new BlockPos2ValueMap<>();
 
     public UpgradeIngredientList(WorldSceneRendererWidget renderer, DynamicMachine machine) {
         setWidthHeight(25, 114);

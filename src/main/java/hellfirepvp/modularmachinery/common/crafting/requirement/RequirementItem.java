@@ -373,10 +373,12 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
             case ITEMSTACKS -> {
                 for (final IItemHandlerModifiable handler : handlers) {
                     stack.setCount(maxConsume - consumed);
-                    if (itemChecker != null) {
-                        consumed += ItemUtils.consumeAll(handler, stack, itemChecker, context.getMachineController());
-                    } else {
-                        consumed += ItemUtils.consumeAll(handler, stack, tag);
+                    synchronized (handler) {
+                        if (itemChecker != null) {
+                            consumed += ItemUtils.consumeAll(handler, stack, itemChecker, context.getMachineController());
+                        } else {
+                            consumed += ItemUtils.consumeAll(handler, stack, tag);
+                        }
                     }
                     if (consumed >= maxConsume) {
                         break;
@@ -385,10 +387,12 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
             }
             case OREDICT -> {
                 for (final IItemHandlerModifiable handler : handlers) {
-                    if (itemChecker != null) {
-                        consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, itemChecker, context.getMachineController());
-                    } else {
-                        consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, tag);
+                    synchronized (handler) {
+                        if (itemChecker != null) {
+                            consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, itemChecker, context.getMachineController());
+                        } else {
+                            consumed += ItemUtils.consumeAll(handler, oreDictName, maxConsume - consumed, tag);
+                        }
                     }
                     if (consumed >= maxConsume) {
                         break;

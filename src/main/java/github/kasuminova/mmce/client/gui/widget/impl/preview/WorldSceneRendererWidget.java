@@ -20,6 +20,7 @@ import github.kasuminova.mmce.client.gui.widget.event.WorldRendererCacheCleanEve
 import github.kasuminova.mmce.client.model.DynamicMachineModelRegistry;
 import github.kasuminova.mmce.client.model.MachineControllerModel;
 import github.kasuminova.mmce.client.renderer.MachineControllerRenderer;
+import github.kasuminova.mmce.common.util.BlockPos2ValueMap;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import hellfirepvp.modularmachinery.client.ClientScheduler;
 import hellfirepvp.modularmachinery.common.block.BlockController;
@@ -59,7 +60,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     protected BlockPos offset = BlockPos.ORIGIN;
 
     protected BlockPos selected = null;
-    protected final Map<BlockPos, Color> blockOverlayMap = new HashMap<>();
+    protected final Map<BlockPos, Color> blockOverlayMap = new BlockPos2ValueMap<>();
 
     protected boolean useLayerRender = false;
     protected int renderLayer = 0;
@@ -126,7 +127,7 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         long tickSnap = this.tickSnap;
 
         TrackedDummyWorld world = renderer.getLRDummyWorld().getAnotherWorld();
-        Map<BlockPos, BlockInfo> converted = new HashMap<>();
+        Map<BlockPos, BlockInfo> converted = new BlockPos2ValueMap<>();
         BlockPos min = pattern.getMin();
         BlockPos max = pattern.getMax();
         BlockPos offset = this.offset = new BlockPos(0, getYOffset(min), 0);
