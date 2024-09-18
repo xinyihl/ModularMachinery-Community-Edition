@@ -261,7 +261,7 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder addSingleBlockModifier(int x, int y, int z, IBlockState ctBlockState, String description, RecipeModifier... modifiers) {
         List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
-        stateDescriptorList.add(new IBlockStateDescriptor(CraftTweakerMC.getBlockState(ctBlockState)));
+        stateDescriptorList.add(IBlockStateDescriptor.of(CraftTweakerMC.getBlockState(ctBlockState)));
         addSingleBlockModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
 
         return this;
@@ -283,7 +283,7 @@ public class MachineBuilder {
         Block block = Block.getBlockFromItem(item.getItem());
         if (block != Blocks.AIR) {
             List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
-            stateDescriptorList.add(new IBlockStateDescriptor(block));
+            stateDescriptorList.add(IBlockStateDescriptor.of(block));
             addSingleBlockModifier(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList), description, modifiers);
         } else {
             CraftTweakerAPI.logError("[ModularMachinery] " + item.getDisplayName() + " cannot convert to Block!");
@@ -454,11 +454,11 @@ public class MachineBuilder {
     @ZenMethod
     public MachineBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
-            lastInformation.nbtChecker = (world, pos, blockState, nbt) -> checker.isMatch(
+            lastInformation.setNBTChecker((world, pos, blockState, nbt) -> checker.isMatch(
                     CraftTweakerMC.getIWorld(world),
                     CraftTweakerMC.getIBlockPos(pos),
                     CraftTweakerMC.getBlockState(blockState),
-                    CraftTweakerMC.getIData(nbt));
+                    CraftTweakerMC.getIData(nbt)));
         }
         return this;
     }

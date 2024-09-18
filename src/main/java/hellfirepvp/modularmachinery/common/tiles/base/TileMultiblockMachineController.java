@@ -1114,7 +1114,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (foundPattern == null) {
             return 0;
         }
-        List<IBlockState> applicable = BlockArray.BlockInformation.getDescriptor(blockName).applicable;
+        List<IBlockState> applicable = BlockArray.BlockInformation.getDescriptor(blockName).getApplicable();
         return getBlocksInPatternInternal(applicable::contains);
     }
 

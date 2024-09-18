@@ -136,7 +136,7 @@ public class DynamicMachineRenderContext {
             for (BlockArray.BlockInformation info : informationList) {
                 Map<BlockPos, BlockArray.BlockInformation> pattern = blockArray.getPattern();
                 if (pattern.containsKey(pos)) {
-                    pattern.get(pos).addMatchingStates(info.matchingStates);
+                    pattern.get(pos).addMatchingStates(info.getMatchingStates());
                 } else {
                     pattern.put(pos, info);
                 }

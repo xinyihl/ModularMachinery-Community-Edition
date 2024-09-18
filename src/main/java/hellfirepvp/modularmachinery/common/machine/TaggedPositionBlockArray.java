@@ -34,8 +34,8 @@ public class TaggedPositionBlockArray extends BlockArray {
     public TaggedPositionBlockArray() {
     }
 
-    public TaggedPositionBlockArray(long traitNum) {
-        super(traitNum);
+    public TaggedPositionBlockArray(long uid) {
+        super(uid);
     }
 
     public TaggedPositionBlockArray(TaggedPositionBlockArray another) {
@@ -66,7 +66,7 @@ public class TaggedPositionBlockArray extends BlockArray {
 
     @Override
     public TaggedPositionBlockArray rotateYCCW() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
+        TaggedPositionBlockArray out = new TaggedPositionBlockArray(uid);
 
         for (Map.Entry<BlockPos, BlockInformation> entry : pattern.entrySet()) {
             out.addBlock(MiscUtils.rotateYCCW(entry.getKey()), entry.getValue().copyRotateYCCW());
@@ -79,33 +79,4 @@ public class TaggedPositionBlockArray extends BlockArray {
         return out;
     }
 
-    @Override
-    public TaggedPositionBlockArray rotateUp() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
-
-        Map<BlockPos, BlockInformation> outPattern = out.pattern;
-        for (BlockPos pos : pattern.keySet()) {
-            outPattern.put(MiscUtils.rotateUp(pos), pattern.get(pos).copy());
-        }
-        for (BlockPos pos : taggedPositions.keySet()) {
-            out.taggedPositions.put(MiscUtils.rotateUp(pos), taggedPositions.get(pos));
-        }
-
-        return out;
-    }
-
-    @Override
-    public TaggedPositionBlockArray rotateDown() {
-        TaggedPositionBlockArray out = new TaggedPositionBlockArray(traitNum);
-
-        Map<BlockPos, BlockInformation> outPattern = out.pattern;
-        for (BlockPos pos : pattern.keySet()) {
-            outPattern.put(MiscUtils.rotateDown(pos), pattern.get(pos).copy());
-        }
-        for (BlockPos pos : taggedPositions.keySet()) {
-            out.taggedPositions.put(MiscUtils.rotateDown(pos), taggedPositions.get(pos));
-        }
-
-        return out;
-    }
 }

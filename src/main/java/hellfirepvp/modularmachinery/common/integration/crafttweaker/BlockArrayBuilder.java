@@ -67,7 +67,7 @@ public class BlockArrayBuilder {
         }
         List<IBlockStateDescriptor> stateDescriptorList = new ArrayList<>();
         for (net.minecraft.block.state.IBlockState blockState : stateList) {
-            stateDescriptorList.add(new IBlockStateDescriptor(blockState));
+            stateDescriptorList.add(IBlockStateDescriptor.of(blockState));
         }
 
         addBlock(new BlockPos(x, y, z), new BlockArray.BlockInformation(stateDescriptorList));
@@ -135,7 +135,7 @@ public class BlockArrayBuilder {
             if (block != Blocks.AIR) {
                 try {
                     net.minecraft.block.state.IBlockState state = block.getStateFromMeta(meta);
-                    stateDescriptorList.add(new IBlockStateDescriptor(state));
+                    stateDescriptorList.add(IBlockStateDescriptor.of(state));
                 } catch (Exception e) {
                     CraftTweakerAPI.logError(String.format("[ModularMachinery] Failed to get BlockState from <%s>!",
                             stack.getItem().getRegistryName() + ":" + meta
@@ -293,11 +293,11 @@ public class BlockArrayBuilder {
     @ZenMethod
     public BlockArrayBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
-            lastInformation.nbtChecker = (world, pos, blockState, nbt) -> checker.isMatch(
+            lastInformation.setNBTChecker((world, pos, blockState, nbt) -> checker.isMatch(
                     CraftTweakerMC.getIWorld(world),
                     CraftTweakerMC.getIBlockPos(pos),
                     CraftTweakerMC.getBlockState(blockState),
-                    CraftTweakerMC.getIData(nbt));
+                    CraftTweakerMC.getIData(nbt)));
         }
         return this;
     }

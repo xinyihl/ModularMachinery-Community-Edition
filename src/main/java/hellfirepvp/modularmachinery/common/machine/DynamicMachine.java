@@ -630,7 +630,7 @@ public class DynamicMachine extends AbstractMachine {
                         String prim = p.getAsString();
                         BlockArray.BlockInformation descr = MachineLoader.VARIABLE_CONTEXT.get(prim);
                         if (descr != null) {
-                            descriptors.addAll(descr.copy().matchingStates);
+                            descriptors.addAll(descr.copy().getMatchingStates());
                         } else {
                             descriptors.add(BlockArray.BlockInformation.getDescriptor(prim));
                         }

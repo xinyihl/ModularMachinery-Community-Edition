@@ -26,7 +26,9 @@ import hellfirepvp.modularmachinery.common.lib.RegistriesMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
+import hellfirepvp.modularmachinery.common.util.BlockArray;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
+import hellfirepvp.modularmachinery.common.util.IBlockStateDescriptor;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentTranslation;
@@ -84,6 +86,9 @@ public class ModIntegrationCrafttweaker {
             loadedMachine.getModifiers().clear();
             loadedMachine.getMultiBlockModifiers().clear();
         }
+        // Clear Pool
+        IBlockStateDescriptor.clearPool();
+        BlockArray.BlockInformation.clearPool();
         // Reload JSON Machine
         MachineRegistry.preloadMachines();
         // Reload All Machine

@@ -238,7 +238,7 @@ public class BlockArrayRenderHelper {
         private BakedBlockData(BlockArrayRenderHelper ref, List<IBlockStateDescriptor> states, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
             this.ref = ref;
             for (IBlockStateDescriptor desc : states) {
-                for (IBlockState state : desc.applicable) {
+                for (IBlockState state : desc.getApplicable()) {
                     renderStates.add(new SampleRenderState(state, matchTag, context));
                 }
             }
@@ -293,7 +293,7 @@ public class BlockArrayRenderHelper {
                 BlockPos offset = entry.getKey();
                 BlockArray.BlockInformation info = entry.getValue();
                 BlockArray.TileInstantiateContext context = new BlockArray.TileInstantiateContext(Minecraft.getMinecraft().world, offset);
-                blockRenderData.put(offset, new BakedBlockData(ref, info.matchingStates, info.getPreviewTag(), context));
+                blockRenderData.put(offset, new BakedBlockData(ref, info.getMatchingStates(), info.getPreviewTag(), context));
             }
         }
 

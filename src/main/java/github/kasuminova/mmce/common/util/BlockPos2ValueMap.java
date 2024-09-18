@@ -16,10 +16,10 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
     protected final Long2ObjectMap<V> internal = new Long2ObjectOpenHashMap<>();
     protected EntrySet entrySet = null;
     protected KeySet keySet = null;
-    
+
     public BlockPos2ValueMap() {
     }
-    
+
     public BlockPos2ValueMap(final Long2ObjectMap<V> internal) {
         this.internal.putAll(internal);
     }
