@@ -41,6 +41,14 @@ public class SlotItemVirtual extends SlotVirtual {
         return new SlotItemVirtualSelectable(stackInSlot);
     }
 
+    public static SlotItemVirtualSelectable ofSelectableJEI() {
+        return Mods.JEI.isPresent() ? new SlotItemVirtualSelectableJEI() : new SlotItemVirtualSelectable();
+    }
+
+    public static SlotItemVirtualSelectable ofSelectableJEI(final ItemStack stackInSlot) {
+        return Mods.JEI.isPresent() ? new SlotItemVirtualSelectableJEI(stackInSlot) : new SlotItemVirtualSelectable(stackInSlot);
+    }
+
     public static SlotItemVirtual of() {
         return new SlotItemVirtual();
     }

@@ -19,6 +19,7 @@ import hellfirepvp.modularmachinery.common.block.BlockFactoryController;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.modifier.AbstractModifierReplacement;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
@@ -32,6 +33,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -148,7 +151,16 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         }
         stackList.add(bOut);
 
-        ingredients.setInputLists(VanillaTypes.ITEM, this.machine.getPattern().getIngredientList());
+        List<List<ItemStack>> ingredientList = this.machine.getPattern().getIngredientList();
+        machine.getModifiers().values().stream()
+                .flatMap(Collection::stream)
+                .map(AbstractModifierReplacement::getDescriptiveStack)
+                .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
+        machine.getMultiBlockModifiers().stream()
+                .map(AbstractModifierReplacement::getDescriptiveStack)
+                .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
+
+        ingredients.setInputLists(VanillaTypes.ITEM, ingredientList);
         ingredients.setOutputs(VanillaTypes.ITEM, stackList);
     }
 }

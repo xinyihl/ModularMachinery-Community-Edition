@@ -55,7 +55,7 @@ public class UpgradeIngredientList extends IngredientListVertical {
     public UpgradeIngredientList setUpgradeStackList(final List<UpgradeIngredient> ingredients) {
         getWidgets().clear();
         for (UpgradeIngredient upgradeIngredient : ingredients) {
-            SlotItemVirtualSelectable slot = SlotItemVirtual.ofSelectable(upgradeIngredient.descStack());
+            SlotItemVirtualSelectable slot = SlotItemVirtual.ofSelectableJEI(upgradeIngredient.descStack());
             slot.setOnClickedListener(__ -> onSlotSelectedStateChanged(slot, upgradeIngredient));
             slot.setTooltipFunction(stack -> {
                 List<String> tips = new ArrayList<>(upgradeIngredient.replacement().getDescriptionLines());
