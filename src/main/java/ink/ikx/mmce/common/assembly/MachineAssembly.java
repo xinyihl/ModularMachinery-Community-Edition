@@ -16,12 +16,16 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.BlockSnapshot;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fluids.IFluidBlock;
@@ -373,18 +377,28 @@ public class MachineAssembly {
             return;
         }
 
+        IBlockState originalBlockState = getWorld().getBlockState(realPos);
         world.setBlockState(realPos, state);
-        world.playSound(null, realPos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-        TileEntity te = world.getTileEntity(realPos);
-        if (te != null && ingredient.nbt() != null) {
-            try {
-                te.readFromNBT(ingredient.nbt());
-            } catch (Exception e) {
-                ModularMachinery.log.warn("Failed to apply NBT to TileEntity!", e);
-                world.removeTileEntity(realPos);
-                world.setTileEntity(realPos, state.getBlock().createTileEntity(world, state));
+        BlockSnapshot blockSnapshot = new BlockSnapshot(world, realPos, state);
+        BlockEvent.PlaceEvent event = new BlockEvent.PlaceEvent(blockSnapshot, originalBlockState, player, EnumHand.MAIN_HAND);
+        MinecraftForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            world.setBlockState(realPos, originalBlockState);
+            player.inventory.addItemStackToInventory(required);
+        } else {
+            world.playSound(null, realPos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+            TileEntity te = world.getTileEntity(realPos);
+            if (te != null && ingredient.nbt() != null) {
+                try {
+                    te.readFromNBT(ingredient.nbt());
+                } catch (Exception e) {
+                    ModularMachinery.log.warn("Failed to apply NBT to TileEntity!", e);
+                    world.removeTileEntity(realPos);
+                    world.setTileEntity(realPos, state.getBlock().createTileEntity(world, state));
+                }
             }
         }
+
         iterator.remove();
     }
 
@@ -420,8 +434,17 @@ public class MachineAssembly {
             return;
         }
 
+        IBlockState originalBlockState = getWorld().getBlockState(realPos);
         world.setBlockState(realPos, state);
-        world.playSound(null, realPos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        BlockSnapshot blockSnapshot = new BlockSnapshot(world, realPos, state);
+        BlockEvent.PlaceEvent event = new BlockEvent.PlaceEvent(blockSnapshot, originalBlockState, player, EnumHand.MAIN_HAND);
+        MinecraftForge.EVENT_BUS.post(event);
+        if (event.isCanceled()) {
+            world.setBlockState(realPos, originalBlockState);
+            fillInventoryFluid(required, getFluidHandlerItems(player.inventory.mainInventory));
+        } else {
+            world.playSound(null, realPos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0F, 1.0F);
+        }
         iterator.remove();
     }
 
@@ -429,6 +452,17 @@ public class MachineAssembly {
         for (final ItemStack invStack : inventory) {
             if (ItemUtils.matchStacks(invStack, required)) {
                 invStack.shrink(required.getCount());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean fillInventoryFluid(final FluidStack required, final List<IFluidHandlerItem> fluidHandlers) {
+        for (final IFluidHandlerItem fluidHandler : fluidHandlers) {
+            FluidStack drained = fluidHandler.drain(required.copy(), false);
+            if (drained == null) {
+                fluidHandler.fill(required.copy(), true);
                 return true;
             }
         }
