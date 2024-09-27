@@ -63,12 +63,14 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
                     return null;
                 }
                 return context;
-            } else if (highestValidity == null ||
-                    (result.getValidity() >= 0.5F && result.getValidity() > validity)) {
+            }
+
+            if (highestValidity == null || result.getValidity() > validity) {
                 highestValidity = recipe;
                 highestValidityResult = result;
                 validity = result.getValidity();
             }
+
             RecipeCraftingContextPool.returnCtx(context);
         }
 
