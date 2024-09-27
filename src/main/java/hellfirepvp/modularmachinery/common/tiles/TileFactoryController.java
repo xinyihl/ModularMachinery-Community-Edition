@@ -368,9 +368,11 @@ public class TileFactoryController extends TileMultiblockMachineController {
     @Override
     protected void resetMachine(boolean clearData) {
         super.resetMachine(clearData);
-        recipeThreadList.clear();
-        coreRecipeThreads.clear();
-        extraThreadCount = 0;
+        if (clearData) {
+            recipeThreadList.clear();
+            coreRecipeThreads.clear();
+            extraThreadCount = 0;
+        }
     }
 
     public List<FactoryRecipeThread> getFactoryRecipeThreadList() {

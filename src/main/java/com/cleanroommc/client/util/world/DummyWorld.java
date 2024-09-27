@@ -11,8 +11,8 @@ import net.minecraft.world.*;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.Optional;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -22,6 +22,7 @@ public class DummyWorld extends World {
 
     private static final WorldSettings DEFAULT_SETTINGS = new WorldSettings(1L, GameType.SURVIVAL, true, false, WorldType.DEFAULT);
 
+    @SuppressWarnings("deprecation")
     public DummyWorld() {
         super(new DummySaveHandler(), new WorldInfo(DEFAULT_SETTINGS, "DummyServer"), new WorldProviderSurface(), new Profiler(), true);
         // Guarantee the dimension ID was not reset by the provider
@@ -33,11 +34,14 @@ public class DummyWorld extends World {
         this.calculateInitialSkylight();
         this.calculateInitialWeather();
         this.getWorldBorder().setSize(30000000);
-        ObfuscationReflectionHelper.setPrivateValue(World.class, this, null, ModularMachinery.isRunningInDevEnvironment() ? "lightUpdateBlockList" : "field_72994_J");
-        // De-allocate alfheim lighting engine
-        if (Mods.ALFHEIM.isPresent()) {
-            ObfuscationReflectionHelper.setPrivateValue(World.class, this, null,
-                    "alfheim$lightingEngine");
+        try {
+            ReflectionHelper.setPrivateValue(World.class, this, null, ModularMachinery.isRunningInDevEnvironment() ? "lightUpdateBlockList" : "field_72994_J");
+            // De-allocate alfheim lighting engine
+            if (Mods.ALFHEIM.isPresent()) {
+                ReflectionHelper.setPrivateValue(World.class, this, null, "alfheim$lightingEngine");
+            }
+        } catch (Throwable e) {
+            ModularMachinery.log.warn("Failed to de-allocate lightUpdateBlockList!", e);
         }
     }
 

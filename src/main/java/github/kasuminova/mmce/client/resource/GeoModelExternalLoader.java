@@ -19,6 +19,7 @@ import software.bernie.shadowed.eliotlash.molang.MolangParser;
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -37,7 +38,7 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
     private GeoModelExternalLoader() {
     }
 
-    public void loadAllModelAndAnimations(final IResourceManager resourceManager) {
+    public synchronized void loadAllModelAndAnimations(final IResourceManager resourceManager) {
         modelSource = resourceManager;
 
         Map<ResourceLocation, GeoModel> geoModels = new ConcurrentHashMap<>();
@@ -108,8 +109,8 @@ public class GeoModelExternalLoader implements ISelectiveResourceReloadListener 
         return Preconditions.checkNotNull(geoModel, "Animation file not found: " + location.toString());
     }
 
-    public void onReload() {
-        loadAllModelAndAnimations(Minecraft.getMinecraft().getResourceManager());
+    public synchronized void onReload() {
+        CompletableFuture.runAsync(() -> loadAllModelAndAnimations(Minecraft.getMinecraft().getResourceManager()));
     }
 
     @Override

@@ -256,7 +256,7 @@ public class MachineStructurePreviewPanel extends Row {
 
         layerScrollbar.setOnScrollChanged(this::handleLayerScrollbarChanged);
         renderer.setOnPatternUpdate(r -> handleRendererPatternUpdate(machine, r, ingredientList));
-        renderer.setOnBlockSelected(relativePos -> handlePatternBlockSelected(relativePos, selectedBlockIngredientMain, selectedBlockIngredientList));
+        renderer.setOnBlockSelected(worldPos -> handlePatternBlockSelected(worldPos, selectedBlockIngredientMain, selectedBlockIngredientList));
     }
 
     // Machine extra info.
@@ -307,9 +307,9 @@ public class MachineStructurePreviewPanel extends Row {
 
     // Handler methods.
 
-    protected void handlePatternBlockSelected(final BlockPos relativePos, final SlotItemVirtual selectedBlockIngredientMain, final IngredientListVertical selectedBlockIngredientList) {
-        BlockPos pos = relativePos == null ? null : relativePos.subtract(renderer.getRenderOffset());
-        if (pos == null) {
+    protected void handlePatternBlockSelected(final BlockPos worldPos, final SlotItemVirtual selectedBlockIngredientMain, final IngredientListVertical selectedBlockIngredientList) {
+        BlockPos patternPos = worldPos == null ? null : worldPos.subtract(renderer.getRenderOffset());
+        if (patternPos == null) {
             selectedBlockIngredientMain.setStackInSlot(ItemStack.EMPTY);
             selectedBlockIngredientMain.setDisabled(true);
             selectedBlockIngredientList.setStackList(Collections.emptyList(), Collections.emptyList());
@@ -318,13 +318,13 @@ public class MachineStructurePreviewPanel extends Row {
         }
 
         World world = renderer.getWorldRenderer().getWorld();
-        IBlockState clickedBlock = world.getBlockState(relativePos);
-        BlockArray.BlockInformation clicked = renderer.getPattern().getPattern().get(pos);
+        IBlockState clickedBlock = world.getBlockState(worldPos);
+        BlockArray.BlockInformation clicked = renderer.getPattern().getPattern().get(patternPos);
         ItemStack clickedBlockStack = clickedBlock.getBlock().getPickBlock(
                 clickedBlock, renderer.getWorldRenderer().getLastTraceResult(),
-                world, pos,
+                world, worldPos,
                 Minecraft.getMinecraft().player);
-        List<ItemStack> replaceable = clicked.getIngredientList(pos, world).stream()
+        List<ItemStack> replaceable = clicked.getIngredientList(patternPos, world).stream()
                 .filter(replaceableStack -> !ItemUtils.matchStacks(clickedBlockStack, replaceableStack))
                 .collect(Collectors.toList());
         selectedBlockIngredientMain.setStackInSlot(clickedBlockStack);

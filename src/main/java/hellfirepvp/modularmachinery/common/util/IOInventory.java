@@ -9,6 +9,7 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import github.kasuminova.mmce.client.util.ItemStackUtils;
+import github.kasuminova.mmce.common.util.concurrent.ReadWriteLockProvider;
 import hellfirepvp.modularmachinery.common.tiles.base.SelectiveUpdateTileEntity;
 import hellfirepvp.modularmachinery.common.tiles.base.TileEntitySynchronized;
 import net.minecraft.item.ItemStack;
@@ -30,7 +31,7 @@ import java.util.function.Consumer;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 17:42
  */
-public class IOInventory extends IItemHandlerImpl {
+public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvider {
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -137,7 +138,7 @@ public class IOInventory extends IItemHandlerImpl {
         for (int slot = 0; slot < inventory.length; slot++) {
             SlotStackHolder holder = this.inventory[slot];
             NBTTagCompound holderTag = new NBTTagCompound();
-            ItemStack stack = holder.itemStack;
+            ItemStack stack = holder.itemStack.get();
 
             holderTag.setInteger("holderId", slot);
             if (stack.isEmpty()) {
@@ -179,7 +180,7 @@ public class IOInventory extends IItemHandlerImpl {
             }
 
             SlotStackHolder holder = new SlotStackHolder(slot);
-            holder.itemStack = stack;
+            holder.itemStack.set(stack);
             this.inventory[slot] = holder;
         }
 
@@ -203,6 +204,12 @@ public class IOInventory extends IItemHandlerImpl {
         }
         f = f / (float) getSlots();
         return MathHelper.floor(f * 14.0F) + (i > 0 ? 1 : 0);
+    }
+
+    @Nonnull
+    @Override
+    public ReadWriteLock getRWLock() {
+        return rwLock;
     }
 
 }

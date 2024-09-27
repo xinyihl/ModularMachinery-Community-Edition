@@ -8,10 +8,12 @@
 
 package hellfirepvp.modularmachinery.common.util;
 
+import github.kasuminova.mmce.common.util.concurrent.ReadWriteLockProvider;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fml.common.Optional;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -24,7 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Date: 26.08.2017 / 18:57
  */
 @Optional.Interface(iface = "mekanism.api.gas.IGasHandler", modid = "mekanism")
-public class HybridTank extends FluidTank {
+public class HybridTank extends FluidTank implements ReadWriteLockProvider {
 
     protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -123,6 +125,12 @@ public class HybridTank extends FluidTank {
         } finally {
             (doDrain ? rwLock.writeLock() : rwLock.readLock()).unlock();
         }
+    }
+
+    @Nonnull
+    @Override
+    public ReadWriteLock getRWLock() {
+        return rwLock;
     }
 
 }

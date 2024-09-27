@@ -15,6 +15,7 @@ import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -69,7 +70,7 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
 
             // Don't add fertilizers as input.
             ItemStack input = hasFertilizer 
-                    ? InsolatorManager.isItemFertilizer(primaryInput) ? secondaryInput : primaryInput 
+                    ? isFertilizer(primaryInput) ? secondaryInput : primaryInput 
                     : primaryInput;
             // Skip duplicated inputs.
             HashedItemStack hashed = HashedItemStack.ofUnsafe(input);
@@ -158,6 +159,10 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
         }
 
         return recipes;
+    }
+
+    private static boolean isFertilizer(final ItemStack primaryInput) {
+        return InsolatorManager.isItemFertilizer(primaryInput) || primaryInput.getItem() == Items.GLOWSTONE_DUST; // AE2 Seeds
     }
 
 }

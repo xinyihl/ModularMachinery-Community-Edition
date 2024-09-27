@@ -1308,7 +1308,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected void readMachineNBT(NBTTagCompound compound) {
         if (!compound.hasKey("machine") || !compound.hasKey("rotation")) {
-            resetMachine(false);
+            resetMachine(true);
             return;
         }
 
@@ -1316,7 +1316,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
         if (machine == null) {
             ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
-            resetMachine(false);
+            resetMachine(true);
             return;
         }
         this.foundMachine = machine;
@@ -1325,7 +1325,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {
             ModularMachinery.log.info(rl + " has a empty pattern cache! Please report this to the mod author.");
-            resetMachine(false);
+            resetMachine(true);
             return;
         }
         this.foundPattern = pattern;

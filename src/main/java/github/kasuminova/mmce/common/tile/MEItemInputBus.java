@@ -20,6 +20,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
 
 public class MEItemInputBus extends MEItemBus {
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
@@ -132,73 +133,79 @@ public class MEItemInputBus extends MEItemBus {
             return TickRateModulation.IDLE;
         }
 
-        inTick = true;
+        int[] needUpdateSlots = getNeedUpdateSlots();
+        if (needUpdateSlots.length == 0) {
+            return TickRateModulation.SLOWER;
+        }
+
+        ReadWriteLock rwLock = inventory.getRWLock();
 
         try {
+            rwLock.writeLock().lock();
+
             boolean successAtLeastOnce = false;
-
+            inTick = true;
             IMEMonitor<IAEItemStack> inv = proxy.getStorage().getInventory(channel);
+            for (final int slot : needUpdateSlots) {
+                changedSlots[slot] = false;
+                ItemStack cfgStack = configInventory.getStackInSlot(slot);
+                ItemStack invStack = inventory.getStackInSlot(slot);
 
-            synchronized (inventory) {
-                for (final int slot : getNeedUpdateSlots()) {
-                    changedSlots[slot] = false;
-                    ItemStack cfgStack = configInventory.getStackInSlot(slot);
-                    ItemStack invStack = inventory.getStackInSlot(slot);
-
-                    if (cfgStack.isEmpty()) {
-                        if (invStack.isEmpty()) {
-                            continue;
-                        }
-                        inventory.setStackInSlot(slot, insertStackToAE(inv, invStack));
+                if (cfgStack.isEmpty()) {
+                    if (invStack.isEmpty()) {
                         continue;
                     }
+                    inventory.setStackInSlot(slot, insertStackToAE(inv, invStack));
+                    continue;
+                }
 
-                    if (!ItemUtils.matchStacks(cfgStack, invStack)) {
-                        if (invStack.isEmpty() || insertStackToAE(inv, invStack).isEmpty()) {
-                            ItemStack stack = extractStackFromAE(inv, cfgStack);
-                            inventory.setStackInSlot(slot, stack);
-                            if (!stack.isEmpty()) {
-                                successAtLeastOnce = true;
-                            }
-                        }
-                        continue;
-                    }
-
-                    if (cfgStack.getCount() == invStack.getCount()) {
-                        continue;
-                    }
-
-                    if (cfgStack.getCount() > invStack.getCount()) {
-                        int countToReceive = cfgStack.getCount() - invStack.getCount();
-                        ItemStack stack = extractStackFromAE(inv, ItemUtils.copyStackWithSize(invStack, countToReceive));
+                if (!ItemUtils.matchStacks(cfgStack, invStack)) {
+                    if (invStack.isEmpty() || insertStackToAE(inv, invStack).isEmpty()) {
+                        ItemStack stack = extractStackFromAE(inv, cfgStack);
+                        inventory.setStackInSlot(slot, stack);
                         if (!stack.isEmpty()) {
-                            inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                    invStack, invStack.getCount() + stack.getCount())
-                            );
                             successAtLeastOnce = true;
                         }
-                    } else {
-                        int countToExtract = invStack.getCount() - cfgStack.getCount();
-                        ItemStack stack = insertStackToAE(inv, ItemUtils.copyStackWithSize(invStack, countToExtract));
-                        if (stack.isEmpty()) {
-                            inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                    invStack, invStack.getCount() - countToExtract)
-                            );
-                        } else {
-                            inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                    invStack, invStack.getCount() - countToExtract + stack.getCount())
-                            );
-                        }
+                    }
+                    continue;
+                }
+
+                if (cfgStack.getCount() == invStack.getCount()) {
+                    continue;
+                }
+
+                if (cfgStack.getCount() > invStack.getCount()) {
+                    int countToReceive = cfgStack.getCount() - invStack.getCount();
+                    ItemStack stack = extractStackFromAE(inv, ItemUtils.copyStackWithSize(invStack, countToReceive));
+                    if (!stack.isEmpty()) {
+                        inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
+                                invStack, invStack.getCount() + stack.getCount())
+                        );
                         successAtLeastOnce = true;
                     }
+                } else {
+                    int countToExtract = invStack.getCount() - cfgStack.getCount();
+                    ItemStack stack = insertStackToAE(inv, ItemUtils.copyStackWithSize(invStack, countToExtract));
+                    if (stack.isEmpty()) {
+                        inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
+                                invStack, invStack.getCount() - countToExtract)
+                        );
+                    } else {
+                        inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
+                                invStack, invStack.getCount() - countToExtract + stack.getCount())
+                        );
+                    }
+                    successAtLeastOnce = true;
                 }
             }
 
             inTick = false;
+            rwLock.writeLock().unlock();
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
             inTick = false;
             changedSlots = new boolean[changedSlots.length];
+            rwLock.writeLock().unlock();
             return TickRateModulation.IDLE;
         }
     }

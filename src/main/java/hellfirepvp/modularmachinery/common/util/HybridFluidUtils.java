@@ -1,6 +1,7 @@
 package hellfirepvp.modularmachinery.common.util;
 
 import com.google.common.collect.Lists;
+import github.kasuminova.mmce.common.concurrent.Sync;
 import github.kasuminova.mmce.common.util.IExtendedGasHandler;
 import github.kasuminova.mmce.common.util.MultiFluidTank;
 import github.kasuminova.mmce.common.util.MultiGasTank;
@@ -47,25 +48,25 @@ public class HybridFluidUtils {
     }
 
     public static void doDrainOrFill(final FluidStack drainOrFill, long maxDrainOrFill, final List<IFluidHandler> fluidHandlers, final IOType actionType) {
-        long totalIO = maxDrainOrFill;
+        final long[] totalIO = {maxDrainOrFill};
 
         FluidStack stack = drainOrFill.copy();
         for (final IFluidHandler handler : fluidHandlers) {
-            stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
+            stack.amount = totalIO[0] >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO[0];
 
-            synchronized (handler) {
+            Sync.executeSyncIfPresent(handler, () -> {
                 switch (actionType) {
                     case INPUT -> {
                         FluidStack drained = handler.drain(stack, true);
                         if (drained != null) {
-                            totalIO -= drained.amount;
+                            totalIO[0] -= drained.amount;
                         }
                     }
-                    case OUTPUT -> totalIO -= handler.fill(stack, true);
+                    case OUTPUT -> totalIO[0] -= handler.fill(stack, true);
                 }
-            }
+            });
 
-            if (totalIO <= 0) {
+            if (totalIO[0] <= 0) {
                 break;
             }
         }
@@ -104,31 +105,31 @@ public class HybridFluidUtils {
 
     @Optional.Method(modid = "mekanism")
     public static void doDrainOrFill(final GasStack drainOrFill, final long maxDrainOrFill, final List<IExtendedGasHandler> gasHandlers, final IOType actionType) {
-        long totalIO = maxDrainOrFill;
+        final long[] totalIO = {maxDrainOrFill};
 
         GasStack stack = drainOrFill.copy();
 
         for (final IExtendedGasHandler handler : gasHandlers) {
-            stack.amount = totalIO >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO;
+            stack.amount = totalIO[0] >= Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) totalIO[0];
 
-            synchronized (handler) {
+            Sync.executeSyncIfPresent(handler, () -> {
                 switch (actionType) {
                     case INPUT -> {
                         GasStack drawn = handler.drawGas(stack, true);
                         if (drawn != null) {
-                            totalIO -= drawn.amount;
+                            totalIO[0] -= drawn.amount;
                         }
                     }
                     case OUTPUT -> {
                         if (!handler.canReceiveGas(null, stack.getGas())) {
-                            continue;
+                            return;
                         }
-                        totalIO -= handler.receiveGas(null, stack, true);
+                        totalIO[0] -= handler.receiveGas(null, stack, true);
                     }
                 }
-            }
+            });
 
-            if (totalIO <= 0) {
+            if (totalIO[0] <= 0) {
                 break;
             }
         }

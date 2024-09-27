@@ -19,6 +19,7 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.concurrent.locks.ReadWriteLock;
 
 public class MEFluidInputBus extends MEFluidBus {
     private final AEFluidInventory config = new AEFluidInventory(this, MEFluidBus.TANK_SLOT_AMOUNT);
@@ -82,79 +83,86 @@ public class MEFluidInputBus extends MEFluidBus {
             return TickRateModulation.IDLE;
         }
 
-        inTick = true;
+        int[] needUpdateSlots = getNeedUpdateSlots();
+        if (needUpdateSlots.length == 0) {
+            return TickRateModulation.SLOWER;
+        }
+
+        ReadWriteLock rwLock = tanks.getRWLock();
 
         try {
-            boolean successAtLeastOnce = false;
+            rwLock.writeLock().lock();
 
+            boolean successAtLeastOnce = false;
+            inTick = true;
             IMEMonitor<IAEFluidStack> inv = proxy.getStorage().getInventory(channel);
             int capacity = tanks.getCapacity();
+            for (final int slot : needUpdateSlots) {
+                changedSlots[slot] = false;
+                IAEFluidStack cfgStack = config.getFluidInSlot(slot);
+                IAEFluidStack invStack = tanks.getFluidInSlot(slot);
 
-            synchronized (tanks) {
-                for (final int slot : getNeedUpdateSlots()) {
-                    changedSlots[slot] = false;
-                    IAEFluidStack cfgStack = config.getFluidInSlot(slot);
-                    IAEFluidStack invStack = tanks.getFluidInSlot(slot);
+                if (cfgStack == null) {
+                    if (invStack == null) {
+                        continue;
+                    }
+                    tanks.setFluidInSlot(slot, insertStackToAE(inv, invStack));
+                    continue;
+                }
 
-                    if (cfgStack == null) {
-                        if (invStack == null) {
+                if (!cfgStack.equals(invStack)) {
+                    if (invStack != null) {
+                        IAEFluidStack stack = insertStackToAE(inv, invStack);
+                        if (stack != null) {
+                            tanks.setFluidInSlot(slot, stack);
                             continue;
                         }
-                        tanks.setFluidInSlot(slot, insertStackToAE(inv, invStack));
-                        continue;
                     }
 
-                    if (!cfgStack.equals(invStack)) {
-                        if (invStack != null) {
-                            IAEFluidStack stack = insertStackToAE(inv, invStack);
-                            if (stack != null) {
-                                tanks.setFluidInSlot(slot, stack);
-                                continue;
-                            }
-                        }
-
-                        IAEFluidStack stack = extractStackFromAE(inv, cfgStack.copy().setStackSize(capacity));
-                        tanks.setFluidInSlot(slot, stack);
-                        if (stack != null) {
-                            successAtLeastOnce = true;
-                        }
-                        continue;
-                    }
-
-                    if (capacity == invStack.getStackSize()) {
-                        continue;
-                    }
-
-                    if (capacity > invStack.getStackSize()) {
-                        int countToReceive = (int) (capacity - invStack.getStackSize());
-
-                        IAEFluidStack stack = extractStackFromAE(inv, invStack.copy().setStackSize(countToReceive));
-                        if (stack != null) {
-                            tanks.setFluidInSlot(slot, invStack.copy()
-                                    .setStackSize(invStack.getStackSize() + stack.getStackSize()));
-                            successAtLeastOnce = true;
-                        }
-                    } else {
-                        int countToExtract = (int) (invStack.getStackSize() - capacity);
-                        IAEFluidStack stack = insertStackToAE(inv, invStack.copy().setStackSize(countToExtract));
-                        if (stack == null) {
-                            tanks.setFluidInSlot(slot, invStack.copy()
-                                    .setStackSize(invStack.getStackSize() - countToExtract));
-                        } else {
-                            tanks.setFluidInSlot(slot, invStack.copy()
-                                    .setStackSize(invStack.getStackSize() - countToExtract + stack.getStackSize())
-                            );
-                        }
+                    IAEFluidStack stack = extractStackFromAE(inv, cfgStack.copy().setStackSize(capacity));
+                    tanks.setFluidInSlot(slot, stack);
+                    if (stack != null) {
                         successAtLeastOnce = true;
                     }
+                    continue;
                 }
+
+                if (capacity == invStack.getStackSize()) {
+                    continue;
+                }
+
+                if (capacity > invStack.getStackSize()) {
+                    int countToReceive = (int) (capacity - invStack.getStackSize());
+
+                    IAEFluidStack stack = extractStackFromAE(inv, invStack.copy().setStackSize(countToReceive));
+                    if (stack != null) {
+                        tanks.setFluidInSlot(slot, invStack.copy()
+                                .setStackSize(invStack.getStackSize() + stack.getStackSize()));
+                        successAtLeastOnce = true;
+                    }
+                    continue;
+                }
+
+                int countToExtract = (int) (invStack.getStackSize() - capacity);
+                IAEFluidStack stack = insertStackToAE(inv, invStack.copy().setStackSize(countToExtract));
+                if (stack == null) {
+                    tanks.setFluidInSlot(slot, invStack.copy()
+                            .setStackSize(invStack.getStackSize() - countToExtract));
+                } else {
+                    tanks.setFluidInSlot(slot, invStack.copy()
+                            .setStackSize(invStack.getStackSize() - countToExtract + stack.getStackSize())
+                    );
+                }
+                successAtLeastOnce = true;
             }
 
             inTick = false;
+            rwLock.writeLock().unlock();
             return successAtLeastOnce ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
         } catch (GridAccessException e) {
             inTick = false;
             changedSlots = new boolean[TANK_SLOT_AMOUNT];
+            rwLock.writeLock().unlock();
             return TickRateModulation.IDLE;
         }
     }

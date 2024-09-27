@@ -6,28 +6,35 @@ import appeng.fluids.util.AEFluidStack;
 import appeng.fluids.util.IAEFluidInventory;
 import appeng.fluids.util.IAEFluidTank;
 import appeng.util.Platform;
+import github.kasuminova.mmce.common.util.concurrent.ReadWriteLockProvider;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * From: <a href="https://github.com/PrototypeTrousers/Applied-Energistics-2/blob/AE2-Omnifactory/src/main/java/appeng/fluids/util/AEFluidInventory.java">...</a>
  */
-public class AEFluidInventoryUpgradeable implements IAEFluidTank {
+@SuppressWarnings("unchecked")
+public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockProvider {
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    private final IAEFluidStack[] fluids;
+    private final AtomicReference<IAEFluidStack>[] fluids;
     private final IAEFluidInventory handler;
     private int capacity;
     private IFluidTankProperties[] props = null;
     private boolean oneFluidOneSlot = false;
 
     public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots, final int capacity) {
-        this.fluids = new IAEFluidStack[slots];
+        this.fluids = new AtomicReference[slots];
+        for (int i = 0; i < slots; i++) {
+            this.fluids[i] = new AtomicReference<>();
+        }
         this.handler = handler;
         this.capacity = capacity;
     }
@@ -60,17 +67,18 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
         try {
             rwLock.writeLock().lock();
             if (slot >= 0 && slot < this.getSlots()) {
-                if (Objects.equals(this.fluids[slot], fluid)) {
-                    if (fluid != null && fluid.getStackSize() != this.fluids[slot].getStackSize()) {
-                        this.fluids[slot].setStackSize(fluid.getStackSize());
+                if (Objects.equals(getFluid(slot), fluid)) {
+                    if (fluid != null && fluid.getStackSize() != getFluid(slot).getStackSize()) {
+                        getFluid(slot).setStackSize(fluid.getStackSize());
                         this.onContentChanged(slot);
                     }
                 } else {
                     if (fluid == null) {
-                        this.fluids[slot] = null;
+                        setFluid(slot, null);
                     } else {
-                        this.fluids[slot] = fluid.copy();
-                        this.fluids[slot].setStackSize(fluid.getStackSize());
+                        IAEFluidStack newFluid = fluid.copy();
+                        newFluid.setStackSize(fluid.getStackSize());
+                        setFluid(slot, newFluid);
                     }
 
                     this.onContentChanged(slot);
@@ -79,6 +87,14 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
         } finally {
             rwLock.writeLock().unlock();
         }
+    }
+
+    private IAEFluidStack getFluid(final int slot) {
+        return this.fluids[slot].get();
+    }
+
+    private void setFluid(final int slot, final IAEFluidStack fluid) {
+        this.fluids[slot].set(fluid);
     }
 
     private void onContentChanged(final int slot) {
@@ -92,7 +108,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
         try {
             rwLock.readLock().lock();
             if (slot >= 0 && slot < this.getSlots()) {
-                return this.fluids[slot];
+                return getFluid(slot);
             }
             return null;
         } finally {
@@ -121,7 +137,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
             return 0;
         }
 
-        final IAEFluidStack fluid = this.fluids[slot];
+        final IAEFluidStack fluid = getFluid(slot);
 
         if (fluid != null && !fluid.getFluidStack().isFluidEqual(resource)) {
             return 0;
@@ -148,7 +164,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     public FluidStack drain(final int slot, final FluidStack resource, final boolean doDrain) {
-        final IAEFluidStack fluid = this.fluids[slot];
+        final IAEFluidStack fluid = getFluid(slot);
         if (fluid == null || !fluid.getFluidStack().isFluidEqual(resource)) {
             return null;
         }
@@ -156,7 +172,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
     }
 
     public FluidStack drain(final int slot, final int maxDrain, boolean doDrain) {
-        final IAEFluidStack fluid = this.fluids[slot];
+        final IAEFluidStack fluid = getFluid(slot);
         if (fluid == null || maxDrain <= 0) {
             return null;
         }
@@ -170,7 +186,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
         if (doDrain) {
             fluid.setStackSize(fluid.getStackSize() - drained);
             if (fluid.getStackSize() <= 0) {
-                this.fluids[slot] = null;
+                setFluid(slot, null);
             }
             this.onContentChanged(slot);
         }
@@ -190,7 +206,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
             if (oneFluidOneSlot) {
                 int found = -1;
                 for (int i = 0; i < fluids.length; i++) {
-                    final IAEFluidStack fluidInSlot = this.fluids[i];
+                    final IAEFluidStack fluidInSlot = getFluid(i);
                     if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
                         found = i;
                         break;
@@ -296,8 +312,8 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
             try {
                 final NBTTagCompound c = new NBTTagCompound();
 
-                if (this.fluids[x] != null) {
-                    this.fluids[x].writeToNBT(c);
+                if (getFluid(x) != null) {
+                    getFluid(x).writeToNBT(c);
                 }
 
                 target.setTag("#" + x, c);
@@ -319,12 +335,18 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
                 final NBTTagCompound c = target.getCompoundTag("#" + x);
 
                 if (!c.isEmpty()) {
-                    this.fluids[x] = AEFluidStack.fromNBT(c);
+                    setFluid(x, AEFluidStack.fromNBT(c));
                 }
             } catch (final Exception e) {
                 AELog.debug(e);
             }
         }
+    }
+
+    @Nonnull
+    @Override
+    public ReadWriteLock getRWLock() {
+        return rwLock;
     }
 
     private class FluidTankPropertiesWrapper implements IFluidTankProperties {
@@ -336,12 +358,13 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank {
 
         @Override
         public FluidStack getContents() {
-            return fluids[this.slot] == null ? null : fluids[this.slot].getFluidStack();
+            IAEFluidStack fluid = getFluid(this.slot);
+            return fluid == null ? null : fluid.getFluidStack();
         }
 
         @Override
         public int getCapacity() {
-            IAEFluidStack fluid = fluids[this.slot];
+            IAEFluidStack fluid = getFluid(this.slot);
             if (fluid == null) {
                 return capacity;
             } else {
