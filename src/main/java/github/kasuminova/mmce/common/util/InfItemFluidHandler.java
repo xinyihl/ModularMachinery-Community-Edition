@@ -339,7 +339,9 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     }
 
     public boolean isEmpty() {
-        return itemStackList.stream().allMatch(ItemStack::isEmpty) && fluidStackList.stream().allMatch(Objects::isNull);
+        return itemStackList.stream().allMatch(ItemStack::isEmpty) &&
+               fluidStackList.stream().allMatch(Objects::isNull) &&
+               gasStackList.stream().allMatch(Objects::isNull);
     }
 
     public List<ItemStack> getItemStackList() {

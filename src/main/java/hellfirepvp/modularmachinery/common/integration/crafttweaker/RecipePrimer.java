@@ -606,11 +606,11 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addItemInput(IIngredient input) {
         if (input instanceof IItemStack) {
-            requireFuel(IOType.INPUT, (IItemStack) input);
+            requireItem(IOType.INPUT, (IItemStack) input);
         } else if (input instanceof IOreDictEntry) {
-            requireFuel(IOType.INPUT, ((IOreDictEntry) input).getName(), 1);
+            requireItem(IOType.INPUT, ((IOreDictEntry) input).getName(), 1);
         } else if (input instanceof IngredientStack && input.getInternal() instanceof IOreDictEntry) {
-            requireFuel(IOType.INPUT, ((IOreDictEntry) input.getInternal()).getName(), input.getAmount());
+            requireItem(IOType.INPUT, ((IOreDictEntry) input.getInternal()).getName(), input.getAmount());
         } else {
             CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid input type %s(%s)! Ignored.", input, input.getClass()));
         }
@@ -621,7 +621,7 @@ public class RecipePrimer implements PreparedRecipe {
     @Deprecated
     @ZenMethod
     public RecipePrimer addItemInput(IOreDictEntry oreDict, int amount) {
-        requireFuel(IOType.INPUT, oreDict.getName(), amount);
+        requireItem(IOType.INPUT, oreDict.getName(), amount);
         CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
                         "`addItemInput(<ore:%s>, %s)`! Consider using `addItemInput(<ore:%s> * %s)`",
                 oreDict.getName(), amount, oreDict.getName(), amount)
@@ -667,11 +667,11 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addItemOutput(IIngredient output) {
         if (output instanceof IItemStack) {
-            requireFuel(IOType.OUTPUT, (IItemStack) output);
+            requireItem(IOType.OUTPUT, (IItemStack) output);
         } else if (output instanceof IOreDictEntry) {
-            requireFuel(IOType.OUTPUT, ((IOreDictEntry) output).getName(), 1);
+            requireItem(IOType.OUTPUT, ((IOreDictEntry) output).getName(), 1);
         } else if (output instanceof IngredientStack && output.getInternal() instanceof IOreDictEntry) {
-            requireFuel(IOType.OUTPUT, ((IOreDictEntry) output.getInternal()).getName(), output.getAmount());
+            requireItem(IOType.OUTPUT, ((IOreDictEntry) output.getInternal()).getName(), output.getAmount());
         } else {
             CraftTweakerAPI.logError(String.format("[ModularMachinery] Invalid output type %s(%s)! Ignored.", output, output.getClass()));
         }
@@ -682,7 +682,7 @@ public class RecipePrimer implements PreparedRecipe {
     @Deprecated
     @ZenMethod
     public RecipePrimer addItemOutput(IOreDictEntry oreDict, int amount) {
-        requireFuel(IOType.OUTPUT, oreDict.getName(), amount);
+        requireItem(IOType.OUTPUT, oreDict.getName(), amount);
         CraftTweakerAPI.logWarning(String.format("[ModularMachinery] Deprecated method " +
                         "`addItemOutput(<ore:%s>, %s)`! Consider using `addItemOutput(<ore:%s> * %s)`",
                 oreDict.getName(), amount, oreDict.getName(), amount)
@@ -786,7 +786,7 @@ public class RecipePrimer implements PreparedRecipe {
         appendComponent(new RequirementItem(IOType.INPUT, requiredTotalBurnTime));
     }
 
-    private void requireFuel(IOType ioType, IItemStack stack) {
+    private void requireItem(IOType ioType, IItemStack stack) {
         ItemStack mcStack = CraftTweakerMC.getItemStack(stack);
         if (mcStack.isEmpty()) {
             CraftTweakerAPI.logError("[ModularMachinery] ItemStack not found/unknown item: " + stack.toString());
@@ -800,7 +800,7 @@ public class RecipePrimer implements PreparedRecipe {
         appendComponent(ri);
     }
 
-    private void requireFuel(IOType ioType, String oreDictName, int amount) {
+    private void requireItem(IOType ioType, String oreDictName, int amount) {
         appendComponent(new RequirementItem(ioType, oreDictName, amount));
     }
 

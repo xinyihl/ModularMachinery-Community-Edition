@@ -6,6 +6,7 @@ import software.bernie.geckolib3.geo.render.built.GeoModel;
 
 public class ModelBufferSize {
 
+    // 6 Faces, 4 Vertexes
     private static final int BYTES_PER_CUBE = MachineControllerRenderer.VERTEX_FORMAT.getSize() * (6 * 4);
 
     private int bufferSize = BYTES_PER_CUBE; // preventing last grow

@@ -197,15 +197,15 @@ public class MachineStructurePreviewPanel extends Row {
         Row bottomMenu = new Row();
         if (!machine.getDynamicPatterns().isEmpty()) {
             bottomMenu.addWidgets(
-                    dynamicPatternPlus.setMarginRight(2).setDisabled(true),
-                    dynamicPatternSubtract.setMarginRight(2).setDisabled(true)
+                    dynamicPatternPlus.setMarginRight(2),
+                    dynamicPatternSubtract.setMarginRight(2)
             );
         }
         bottomMenu.addWidgets(
-                placeWorldPreview.setMarginRight(2).setDisabled(true),
-                enableCycleReplaceableBlocks.setClicked(true).setMarginRight(2).setDisabled(true),
-                toggleLayerRender.setMarginRight(2).setDisabled(true),
-                menuBtn.setMarginRight(2)
+                placeWorldPreview.setMarginRight(2),
+                enableCycleReplaceableBlocks.setClicked(true).setMarginRight(2),
+                toggleLayerRender.setMarginRight(2),
+                menuBtn.setClicked(true).setMarginRight(2)
         );
         bottomMenu.setAbsXY(PANEL_WIDTH - (bottomMenu.getWidth() + 6), 161);
 

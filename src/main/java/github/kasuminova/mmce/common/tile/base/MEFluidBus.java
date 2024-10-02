@@ -15,8 +15,6 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -49,7 +47,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     protected final UpgradeInventory upgrades;
     protected final AEFluidInventoryUpgradeable tanks;
     protected boolean[] changedSlots;
-    protected int fullCheckCounter = 5;
+    protected long lastFullCheckTick = 0;
     protected boolean inTick = false;
 
     public MEFluidBus() {
@@ -59,16 +57,12 @@ public abstract class MEFluidBus extends MEMachineComponent implements
     }
 
     protected synchronized int[] getNeedUpdateSlots() {
-        fullCheckCounter++;
-        if (fullCheckCounter >= 5) {
-            fullCheckCounter = 0;
+        long current = world.getTotalWorldTime();
+        if (lastFullCheckTick + 100 < current) {
+            lastFullCheckTick = current;
             return IntStream.range(0, tanks.getSlots()).toArray();
         }
-        IntList list = new IntArrayList();
-        IntStream.range(0, changedSlots.length)
-                .filter(i -> changedSlots[i])
-                .forEach(list::add);
-        return list.toIntArray();
+        return IntStream.range(0, changedSlots.length).filter(i -> changedSlots[i]).toArray();
     }
 
     public IAEFluidTank getTanks() {

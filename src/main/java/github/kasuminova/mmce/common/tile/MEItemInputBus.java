@@ -23,6 +23,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 
 public class MEItemInputBus extends MEItemBus {
+    // A simple cache for AEItemStack.
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
     private IOInventory configInventory = buildConfigInventory();
 

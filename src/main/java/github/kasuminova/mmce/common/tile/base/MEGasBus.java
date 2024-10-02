@@ -16,8 +16,6 @@ import com.mekeng.github.common.me.inventory.IGasInventoryHost;
 import com.mekeng.github.common.me.inventory.impl.GasInventory;
 import com.mekeng.github.common.me.storage.IGasStorageChannel;
 import github.kasuminova.mmce.common.util.GasInventoryHandler;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import mekanism.api.gas.IGasHandler;
 import mekanism.common.capabilities.Capabilities;
 import net.minecraft.item.ItemStack;
@@ -48,7 +46,7 @@ public abstract class MEGasBus extends MEMachineComponent implements
     protected final GasInventory tanks;
     protected final GasInventoryHandler handler;
     protected boolean[] changedSlots;
-    protected int fullCheckCounter = 5;
+    protected long lastFullCheckTick = 0;
 
     protected boolean inTick = false;
 
@@ -60,16 +58,12 @@ public abstract class MEGasBus extends MEMachineComponent implements
     }
 
     protected synchronized int[] getNeedUpdateSlots() {
-        fullCheckCounter++;
-        if (fullCheckCounter >= 5) {
-            fullCheckCounter = 0;
+        long current = world.getTotalWorldTime();
+        if (lastFullCheckTick + 100 < current) {
+            lastFullCheckTick = current;
             return IntStream.range(0, tanks.size()).toArray();
         }
-        IntList list = new IntArrayList();
-        IntStream.range(0, changedSlots.length)
-                .filter(i -> changedSlots[i])
-                .forEach(list::add);
-        return list.toArray(new int[0]);
+        return IntStream.range(0, changedSlots.length).filter(i -> changedSlots[i]).toArray();
     }
 
     public GasInventory getTanks() {
