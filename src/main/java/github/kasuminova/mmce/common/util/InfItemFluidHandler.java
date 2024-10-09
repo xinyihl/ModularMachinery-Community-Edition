@@ -407,7 +407,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         tag.setTag(subTagName, subTag);
     }
 
-
     public void readFromNBT(final NBTTagCompound tag, final String subTagName) {
         NBTTagCompound subTag = tag.getCompoundTag(subTagName);
         fluidStackList.clear();

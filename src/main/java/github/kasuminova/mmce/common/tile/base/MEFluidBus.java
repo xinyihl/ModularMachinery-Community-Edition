@@ -15,6 +15,8 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.inv.IAEAppEngInventory;
 import appeng.util.inv.InvOperation;
 import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -62,7 +64,14 @@ public abstract class MEFluidBus extends MEMachineComponent implements
             lastFullCheckTick = current;
             return IntStream.range(0, tanks.getSlots()).toArray();
         }
-        return IntStream.range(0, changedSlots.length).filter(i -> changedSlots[i]).toArray();
+        IntList needUpdateSlots = new IntArrayList(changedSlots.length + 1);
+        int bound = changedSlots.length;
+        for (int i = 0; i < bound; i++) {
+            if (changedSlots[i]) {
+                needUpdateSlots.add(i);
+            }
+        }
+        return needUpdateSlots.toIntArray();
     }
 
     public IAEFluidTank getTanks() {

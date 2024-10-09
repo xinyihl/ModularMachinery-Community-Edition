@@ -106,6 +106,8 @@ public class GuiMEPatternProvider extends AEBaseGuiContainerDynamic {
                 .addElement(MEPatternProvider.WorkModeSetting.BLOCKING_MODE, TextureProperties.of(140 + 18, 196, 16, 16))
                 // ButtonTexture 3
                 .addElement(MEPatternProvider.WorkModeSetting.CRAFTING_LOCK_MODE, TextureProperties.of(140 + 18 + 18, 196, 16, 16))
+                // ButtonTexture 0
+                .addElement(MEPatternProvider.WorkModeSetting.ENHANCED_BLOCKING_MODE, TextureProperties.of(140 - 18, 196, 16, 16))
                 // ButtonTexture 5
                 .setMouseDownTexture(140 + 18 + 18 + 18 + 18 + 18, 196)
                 // ButtonTexture 5
@@ -123,6 +125,8 @@ public class GuiMEPatternProvider extends AEBaseGuiContainerDynamic {
                                  + I18n.format("gui.mepatternprovider.blocking_mode.desc"));
                     tooltips.add((current == MEPatternProvider.WorkModeSetting.CRAFTING_LOCK_MODE ? I18n.format("gui.mepatternprovider.current") : "") 
                                  + I18n.format("gui.mepatternprovider.crafting_lock_mode.desc"));
+                    tooltips.add((current == MEPatternProvider.WorkModeSetting.ENHANCED_BLOCKING_MODE ? I18n.format("gui.mepatternprovider.current") : "")
+                                 + I18n.format("gui.mepatternprovider.enhanced_blocking_mode.desc"));
                     return tooltips;
                 })
                 .setOnClickedListener((btn) -> {
@@ -132,8 +136,9 @@ public class GuiMEPatternProvider extends AEBaseGuiContainerDynamic {
                     }
                     switch (current) {
                         case DEFAULT -> ModularMachinery.NET_CHANNEL.sendToServer(new PktMEPatternProviderAction(PktMEPatternProviderAction.Action.ENABLE_DEFAULT_MODE));
-                        case BLOCKING_MODE ->ModularMachinery.NET_CHANNEL.sendToServer(new PktMEPatternProviderAction(PktMEPatternProviderAction.Action.ENABLE_BLOCKING_MODE));
+                        case BLOCKING_MODE -> ModularMachinery.NET_CHANNEL.sendToServer(new PktMEPatternProviderAction(PktMEPatternProviderAction.Action.ENABLE_BLOCKING_MODE));
                         case CRAFTING_LOCK_MODE -> ModularMachinery.NET_CHANNEL.sendToServer(new PktMEPatternProviderAction(PktMEPatternProviderAction.Action.ENABLE_CRAFTING_LOCK_MODE));
+                        case ENHANCED_BLOCKING_MODE -> ModularMachinery.NET_CHANNEL.sendToServer(new PktMEPatternProviderAction(PktMEPatternProviderAction.Action.ENABLE_ENHANCED_BLOCKING_MODE));
                     }
                 })
                 .setWidthHeight(16, 16);

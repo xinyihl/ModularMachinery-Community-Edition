@@ -4,6 +4,8 @@ import appeng.api.AEApi;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.channels.IItemStorageChannel;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -36,7 +38,14 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
             lastFullCheckTick = current;
             return IntStream.range(0, inventory.getSlots()).toArray();
         }
-        return IntStream.range(0, changedSlots.length).filter(i -> changedSlots[i]).toArray();
+        IntList needUpdateSlots = new IntArrayList(changedSlots.length + 1);
+        int bound = changedSlots.length;
+        for (int i = 0; i < bound; i++) {
+            if (changedSlots[i] && failureCounter[i] <= 0) {
+                needUpdateSlots.add(i);
+            }
+        }
+        return needUpdateSlots.toIntArray();
     }
 
     public IOInventory getInternalInventory() {

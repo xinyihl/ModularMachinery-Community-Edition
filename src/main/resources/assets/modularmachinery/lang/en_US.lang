@@ -82,7 +82,8 @@ gui.mepatternprovider.current=§a[Currently Enabled]
 gui.mepatternprovider.default.desc=Default: The provider works normally.
 gui.mepatternprovider.crafting_lock_mode.desc=Crafting Lock Mode: Items will only continue to be stored when the machine completes the recipe.
 gui.mepatternprovider.blocking_mode.desc=Blocking Mode: Items will not continue to be stored when there are items in the provider.
-gui.mepatternprovider.work_mode.desc=Provider work mode (Click to switch between the 3 modes):
+gui.mepatternprovider.enhanced_blocking_mode.desc=Enhanced Blocking Mode: builds on the blocking mode so that the current recipe can still continue to store items.
+gui.mepatternprovider.work_mode.desc=Provider work mode (Click to switch between the 4 modes):
 gui.mepatternprovider.return_items=Return Items
 gui.mepatternprovider.return_items.desc=Return all items and fluids in the provider to the ME network. This will reset the state of the Crafting Lock Mode.
 

@@ -88,6 +88,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     protected boolean shouldReturnItems = false;
     protected boolean handlerDirty = false;
 
+    protected int currentPatternIdx = -1;
+    protected ICraftingPatternDetails currentPattern = null;
+
     public MEPatternProvider() {
         // Initialize details...
         IntStream.range(0, 36).<ICraftingPatternDetails>mapToObj(i -> null).forEach(details::add);
@@ -151,7 +154,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
 
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
-        if (patternDetails.isCraftable() || !proxy.isActive() || !proxy.isPowered()) {
+        if (!acceptsPattern(patternDetails)) {
             return false;
         }
 
@@ -180,8 +183,27 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             handler.appendItem(stackInSlot);
         }
 
+        handleNewPattern(patternDetails);
         machineCompleted = workMode != WorkModeSetting.CRAFTING_LOCK_MODE;
         return true;
+    }
+
+    private boolean acceptsPattern(final ICraftingPatternDetails patternDetails) {
+        if (patternDetails.isCraftable() || !proxy.isActive() || !proxy.isPowered()) {
+            return false;
+        }
+        // If workMode is Enhanced Blocking Mode, and the handler is not empty, and the current pattern is not the same as the new pattern, return false.
+        return workMode != WorkModeSetting.ENHANCED_BLOCKING_MODE || handler.isEmpty() || currentPattern == null || currentPattern.equals(patternDetails);
+    }
+
+    private void handleNewPattern(final ICraftingPatternDetails patternDetails) {
+        if (workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE) {
+            if (!patternDetails.equals(currentPattern)) {
+                setCurrentPattern(patternDetails);
+            }
+        } else {
+            resetCurrentPattern();
+        }
     }
 
     @Override
@@ -206,6 +228,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         for (int i = 0; i < PATTERNS; i++) {
             refreshPattern(i);
         }
+        if (currentPatternIdx != -1 && currentPatternIdx < details.size()) {
+            setCurrentPattern(details.get(currentPatternIdx));
+        }
         try {
             this.getProxy().getGrid().postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
         } catch (GridAccessException ignored) {
@@ -224,6 +249,10 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         ICraftingPatternDetails detail = patternItem.getPatternForItem(pattern, getWorld());
         if (detail != null && !detail.isCraftable()) {
             details.set(slot, detail);
+        }
+
+        if (workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE && slot == currentPatternIdx && !currentPattern.equals(detail)) {
+            resetCurrentPattern();
         }
     }
 
@@ -315,6 +344,20 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         return Platform.poweredInsert(proxy.getEnergy(), inv, stack.copy(), source);
     }
 
+    private void resetCurrentPattern() {
+        currentPatternIdx = -1;
+        currentPattern = null;
+    }
+
+    private void setCurrentPattern(final ICraftingPatternDetails pattern) {
+        if (pattern == null) {
+            resetCurrentPattern();
+            return;
+        }
+        currentPatternIdx = details.indexOf(pattern);
+        currentPattern = pattern;
+    }
+
     public AppEngInternalInventory getSubItemHandler() {
         return subItemHandler;
     }
@@ -339,6 +382,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         this.workMode = workMode;
         if (workMode != WorkModeSetting.CRAFTING_LOCK_MODE) {
             this.machineCompleted = true;
+        }
+        if (workMode != WorkModeSetting.ENHANCED_BLOCKING_MODE) {
+            resetCurrentPattern();
         }
     }
 
@@ -375,8 +421,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         handler.readFromNBT(compound, "handler");
         patterns.readFromNBT(compound, "patterns");
         workMode = WorkModeSetting.values()[compound.getByte("workMode")];
-        if (compound.hasKey("blockingMode") && compound.getBoolean("blockingMode")) {
-            workMode = WorkModeSetting.BLOCKING_MODE;
+
+        if (compound.hasKey("currentPatternIdx") && workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE) {
+            currentPatternIdx = compound.getByte("currentPatternIdx");
+        } else {
+            resetCurrentPattern();
         }
     }
 
@@ -394,6 +443,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         subFluidHandler.writeToNBT(compound, "subFluidHandler");
         if (workMode != WorkModeSetting.DEFAULT) {
             compound.setByte("workMode", (byte) workMode.ordinal());
+        }
+        if (!handler.isEmpty() && currentPatternIdx != -1) {
+            compound.setByte("currentPatternIdx", (byte) currentPatternIdx);
         }
         return compound;
     }
@@ -493,6 +545,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         DEFAULT,
         BLOCKING_MODE,
         CRAFTING_LOCK_MODE,
+        ENHANCED_BLOCKING_MODE,
     }
 
 }

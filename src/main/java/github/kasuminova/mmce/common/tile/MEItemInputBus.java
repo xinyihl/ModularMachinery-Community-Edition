@@ -179,10 +179,13 @@ public class MEItemInputBus extends MEItemBus {
                     int countToReceive = cfgStack.getCount() - invStack.getCount();
                     ItemStack stack = extractStackFromAE(inv, ItemUtils.copyStackWithSize(invStack, countToReceive));
                     if (!stack.isEmpty()) {
-                        inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                invStack, invStack.getCount() + stack.getCount())
-                        );
+                        int newCount = invStack.getCount() + stack.getCount();
+                        inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(invStack, newCount));
                         successAtLeastOnce = true;
+                        failureCounter[slot] = 0;
+                    } else {
+                        // If AE doesn't have enough item?
+                        failureCounter[slot]++;
                     }
                 } else {
                     int countToExtract = invStack.getCount() - cfgStack.getCount();
