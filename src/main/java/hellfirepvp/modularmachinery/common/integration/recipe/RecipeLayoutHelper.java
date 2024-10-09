@@ -22,7 +22,7 @@ import net.minecraft.util.ResourceLocation;
  */
 public class RecipeLayoutHelper {
 
-    static final ResourceLocation LOCATION_JEI_ICONS = new ResourceLocation(ModularMachinery.MODID, "textures/gui/jeirecipeicons.png");
+    static final ResourceLocation LOCATION_JEI_ICONS = new ResourceLocation(ModularMachinery.MODID, "textures/gui/jeirecipeicons_ce.png");
 
     static RecipePart PART_TANK_SHELL;
     static RecipePart PART_GAS_TANK_SHELL;
