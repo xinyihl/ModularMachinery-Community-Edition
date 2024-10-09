@@ -175,7 +175,7 @@ public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvid
             checkInventoryLength(slot);
 
             ItemStack stack = ItemStack.EMPTY;
-            if (!holderTag.hasKey("holderEmpty") && holderTag.getBoolean("holderEmpty")) {
+            if (!holderTag.hasKey("holderEmpty") && !holderTag.getBoolean("holderEmpty")) {
                 stack = ItemStackUtils.readNBTOversize(holderTag);
             }
 
