@@ -251,8 +251,13 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             details.set(slot, detail);
         }
 
-        if (workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE && slot == currentPatternIdx && !currentPattern.equals(detail)) {
-            resetCurrentPattern();
+        if (workMode == WorkModeSetting.ENHANCED_BLOCKING_MODE && slot == currentPatternIdx) {
+            // If it is reading NBT.
+            if (currentPattern == null) {
+                currentPattern = detail;
+            } else if (!currentPattern.equals(detail)) {
+                resetCurrentPattern();
+            }
         }
     }
 

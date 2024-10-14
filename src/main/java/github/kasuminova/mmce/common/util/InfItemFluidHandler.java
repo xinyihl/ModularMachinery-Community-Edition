@@ -87,7 +87,15 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
         for (int i = 0; i < fluidStackList.size(); i++) {
             final FluidStack stackInSlot = fluidStackList.get(i);
-            if (stackInSlot != null && stackInSlot.isFluidEqual(resource)) {
+            if (stackInSlot == null) {
+                fluidStackList.set(i, resource.copy());
+                if (onFluidChanged != null) {
+                    onFluidChanged.accept(i);
+                }
+                toFill = 0;
+                break;
+            }
+            if (stackInSlot.isFluidEqual(resource)) {
                 int maxCanFill = Math.min(toFill, Integer.MAX_VALUE - stackInSlot.amount);
                 stackInSlot.amount += maxCanFill;
                 if (onFluidChanged != null) {
@@ -504,7 +512,16 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         int toReceiveAmount = toReceive.amount;
         for (int i = 0; i < gasStackList.size(); i++) {
             final GasStack stackInSlot = gasStackList.get(i);
-            if (stackInSlot == null || !stackInSlot.isGasEqual(toReceive)) {
+            if (stackInSlot == null) {
+                gasStackList.set(i, toReceive.copy());
+                if (onGasChanged != null) {
+                    onGasChanged.accept(i);
+                }
+                toReceiveAmount = 0;
+                break;
+            }
+
+            if (!stackInSlot.isGasEqual(toReceive)) {
                 continue;
             }
 

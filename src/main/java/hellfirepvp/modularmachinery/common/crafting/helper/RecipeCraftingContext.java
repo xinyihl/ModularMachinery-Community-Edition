@@ -111,7 +111,15 @@ public class RecipeCraftingContext {
                                       final TileMultiblockMachineController ctrl)
     {
         this.controller = ctrl;
-        this.activeRecipe = activeRecipe;
+        if (this.activeRecipe == null || this.activeRecipe.getRecipe() != activeRecipe.getRecipe()) {
+            this.activeRecipe = activeRecipe;
+            this.requirements.clear();
+            for (ComponentRequirement<?, ?> requirement : getParentRecipe().getCraftingRequirements()) {
+                this.requirements.add(this.requirements.size(), requirement.deepCopy().postDeepCopy(requirement));
+            }
+        } else {
+            this.activeRecipe = activeRecipe;
+        }
         this.commandSender = new ControllerCommandSender(this.controller);
 
         reset();
