@@ -369,11 +369,8 @@ public class TileMachineController extends TileMultiblockMachineController {
     }
 
     @Override
-    protected void resetMachine(boolean clearData) {
-        super.resetMachine(clearData);
-        if (clearData) {
-            this.recipeThread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
-        }
+    protected void resetRecipe() {
+        this.recipeThread.setActiveRecipe(null).setContext(null).getSemiPermanentModifiers().clear();
     }
 
     @Override

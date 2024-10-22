@@ -62,7 +62,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     // FluidStack
 
     @Override
-    public IFluidTankProperties[] getTankProperties() {
+    public synchronized IFluidTankProperties[] getTankProperties() {
         if (subFluidHandler != null) {
             return Stream.concat(
                     fluidStackList.stream().map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE)),

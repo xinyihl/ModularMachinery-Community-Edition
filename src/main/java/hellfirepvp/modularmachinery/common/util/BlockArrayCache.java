@@ -5,7 +5,8 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
-import io.netty.util.collection.LongObjectHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.EnumFacing;
 
 import java.util.Collection;
@@ -14,8 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockArrayCache {
-    private static final LongObjectHashMap<EnumMap<EnumFacing, BlockArray>>
-            BLOCK_ARRAY_CACHE_MAP = new LongObjectHashMap<>();
+    private static final Long2ObjectMap<EnumMap<EnumFacing, BlockArray>> BLOCK_ARRAY_CACHE_MAP = new Long2ObjectOpenHashMap<>();
 
     private static final AtomicLong UID_COUNTER = new AtomicLong(0);
 

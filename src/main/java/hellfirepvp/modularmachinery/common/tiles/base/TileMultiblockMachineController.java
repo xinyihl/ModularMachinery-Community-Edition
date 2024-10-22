@@ -127,6 +127,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected NBTTagCompound customData = new NBTTagCompound();
 
+    protected DynamicMachine prevMachine = null;
     protected DynamicMachine foundMachine = null;
     protected DynamicMachine parentMachine = null;
     protected TaggedPositionBlockArray foundPattern = null;
@@ -361,10 +362,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         updateStatedMachineComponentSync(false);
 
+        prevMachine = foundMachine;
         foundMachine = null;
         foundPattern = null;
         foundReplacements = null;
         foundDynamicPatterns.clear();
+    }
+
+    protected void resetRecipe() {
     }
 
     public void resetRecipeSearchRetryCount() {
@@ -564,6 +569,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         requireUpdateComparatorLevel = true;
         resetStructureCheckCounter();
+        if (prevMachine != null && !prevMachine.equals(foundMachine)) {
+            resetRecipe();
+        } else {
+            prevMachine = null;
+        }
         markNoUpdateSync();
     }
 
@@ -1273,6 +1283,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (this.parentMachine != null) {
             compound.setString("parentMachine", this.parentMachine.getRegistryName().toString());
         }
+        if (this.prevMachine != null) {
+            compound.setString("prevMachine", this.prevMachine.getRegistryName().toString());
+        }
         if (this.controllerRotation != null) {
             compound.setByte("rotation", (byte) this.controllerRotation.getHorizontalIndex());
         }
@@ -1321,6 +1334,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
         this.foundMachine = machine;
         this.controllerRotation = EnumFacing.byHorizontalIndex(compound.getByte("rotation"));
+
+        if (compound.hasKey("prevMachine")) {
+            this.prevMachine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(compound.getString("prevMachine")));
+        }
 
         TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {

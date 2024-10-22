@@ -1,7 +1,7 @@
 package com.cleanroommc.client.util.world;
 
-import io.netty.util.collection.LongObjectHashMap;
-import io.netty.util.collection.LongObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 public class DummyChunkProvider implements IChunkProvider {
 
     private final World world;
-    private final LongObjectMap<Chunk> loadedChunks = new LongObjectHashMap<>();
+    private final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>();
 
     public DummyChunkProvider(World world) {
         this.world = world;

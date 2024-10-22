@@ -79,6 +79,10 @@ public abstract class TileLifeEssenceProvider extends TileInventory implements M
 
         @Override
         public synchronized void doRestrictedTick() {
+            if (world.isRemote) {
+                return;
+            }
+
             SoulNetwork soulNetwork = getSoulNetwork();
             if (soulNetwork == null) {
                 return;
@@ -126,6 +130,10 @@ public abstract class TileLifeEssenceProvider extends TileInventory implements M
 
         @Override
         public synchronized void doRestrictedTick() {
+            if (world.isRemote) {
+                return;
+            }
+
             SoulNetwork soulNetwork = getSoulNetwork();
             if (soulNetwork == null) {
                 return;

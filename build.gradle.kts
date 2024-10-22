@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "2.1.1"
+version = "2.1.2"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -218,13 +218,13 @@ dependencies {
 
     // Modular Magic compact
     compileOnly(rfg.deobf("curse.maven:astral-sorcery-241721:3044416"))
-    compileOnly(rfg.deobf("curse.maven:blood-magic-224791:2822288"))
+    implementation(rfg.deobf("curse.maven:blood-magic-224791:2822288"))
     compileOnly(rfg.deobf("curse.maven:thaumcraft-223628:2629023"))
     compileOnly(rfg.deobf("curse.maven:extrautils2-225561:2678374"))
     compileOnly(rfg.deobf("curse.maven:naturesaura-306626:2882138"))
     compileOnly(rfg.deobf("curse.maven:botania-225643:3330934"))
     compileOnly(rfg.deobf("curse.maven:baubles-227083:2518667"))
-    compileOnly(rfg.deobf("curse.maven:guideapi-228832:2645992"))
+    implementation(rfg.deobf("curse.maven:guideapi-228832:2645992"))
     compileOnly(rfg.deobf("curse.maven:patchouli-306770:3162874"))
     compileOnly(rfg.deobf("curse.maven:thaumic-augmentation-319441:4486505"))
     // Performance Test Tool
