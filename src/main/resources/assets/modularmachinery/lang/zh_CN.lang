@@ -176,6 +176,7 @@ message.assembly.tip.already_assembly=模块化组装：机器已在组装队列
 message.assembly.tip.success=模块化组装：组装完成！
 message.assembly.tip.cancelled=模块化组装：组装已取消！
 message.assembly.tip.cannot_replace=模块化组装: 无法在 %s 放置方块，请检查目标坐标是否存在方块！
+message.assembly.tip.too_high=模块化组装: 无法在 %s 放置方块，因为超过建筑高度限制！
 message.assembly.tip.skipped=模块化组装：已跳过 %s 的方块放置。
 message.assembly.tip.missing=模块化组装：%s 需要物品组装，但是物品栏中缺少方块或桶！
 message.assembly.tip.required=模块化组装：缺失材料，需要以下材料：

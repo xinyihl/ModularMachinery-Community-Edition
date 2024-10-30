@@ -177,6 +177,7 @@ message.assembly.tip.already_assembly=Modular Assembly: The machine is in the as
 message.assembly.tip.success=Modular Assembly: Assembled successfully!
 message.assembly.tip.cancelled=Modular Assembly: Assembled cancelled!
 message.assembly.tip.cannot_replace=Modular Assembly: Cannot place a block at %s, please check if a block exists at the target position!
+message.assembly.tip.too_high=Modular Assembly: Cannot place a block at %s, because building height limit is exceeded!
 message.assembly.tip.skipped=Modular Assembly: Placement of block that have skipped %s.
 message.assembly.tip.missing=Modular Assembly: %s Needs item assembly, but inventory is missing block or bucket!
 message.assembly.tip.required=Modular assembly: Missing ingredients, the following ingredients are required:

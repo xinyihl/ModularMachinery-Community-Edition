@@ -2,6 +2,7 @@ package github.kasuminova.mmce.common.upgrade.registry;
 
 import crafttweaker.annotations.ZenRegister;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import stanhebben.zenscript.annotations.ZenClass;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class RegistryUpgrade {
 
     public static final HashMap<String, MachineUpgrade> UPGRADES = new HashMap<>();
-    public static final Map<Item, UpgradeInfo> ITEM_UPGRADES = new HashMap<>();
+    public static final Map<Item, UpgradeInfo> ITEM_UPGRADES = new Reference2ObjectOpenHashMap<>();
 
     public static void clearAll() {
         RegistryUpgrade.UPGRADES.clear();

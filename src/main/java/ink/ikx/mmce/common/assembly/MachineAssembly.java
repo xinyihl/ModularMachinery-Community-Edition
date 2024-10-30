@@ -483,6 +483,13 @@ public class MachineAssembly {
     }
 
     public static boolean replaceCheck(final BlockPos realPos, final World world, final EntityPlayer player) {
+        if (world.isOutsideBuildHeight(realPos)) {
+            String posToString = hellfirepvp.modularmachinery.common.util.MiscUtils.posToString(realPos);
+            player.sendMessage(new TextComponentTranslation("message.assembly.tip.too_high", posToString));
+            player.sendMessage(new TextComponentTranslation("message.assembly.tip.skipped", posToString));
+            return false;
+        }
+
         IBlockState blockState = world.getBlockState(realPos);
         Block block = blockState.getBlock();
         if (world.isAirBlock(realPos) ||
