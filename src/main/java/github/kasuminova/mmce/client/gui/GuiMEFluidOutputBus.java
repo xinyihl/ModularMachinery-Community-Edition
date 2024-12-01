@@ -12,7 +12,7 @@ import hellfirepvp.modularmachinery.common.base.Mods;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import java.util.List;
 
@@ -43,10 +43,10 @@ public class GuiMEFluidOutputBus extends GuiUpgradeable {
                 this.guiSlots.add(guiTank);
             } else {
                 // Default AE2
-                int x = ReflectionHelper.getPrivateValue(GuiCustomSlot.class, guiTank, "x");
-                int y = ReflectionHelper.getPrivateValue(GuiCustomSlot.class, guiTank, "y");
-                ReflectionHelper.setPrivateValue(GuiCustomSlot.class, guiTank, getGuiLeft() + x, "x");
-                ReflectionHelper.setPrivateValue(GuiCustomSlot.class, guiTank, getGuiTop() + y, "y");
+                int x = ObfuscationReflectionHelper.getPrivateValue(GuiCustomSlot.class, guiTank, "x");
+                int y = ObfuscationReflectionHelper.getPrivateValue(GuiCustomSlot.class, guiTank, "y");
+                ObfuscationReflectionHelper.setPrivateValue(GuiCustomSlot.class, guiTank, getGuiLeft() + x, "x");
+                ObfuscationReflectionHelper.setPrivateValue(GuiCustomSlot.class, guiTank, getGuiTop() + y, "y");
                 List<Object> buttonList = (List) this.buttonList;
                 buttonList.add(guiTank);
             }

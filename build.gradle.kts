@@ -12,7 +12,7 @@ plugins {
 
 // Project properties
 group = "hellfirepvp.modularmachinery"
-version = "2.1.3"
+version = "2.1.4"
 
 // Set the toolchain version to decouple the Java we run Gradle with from the Java used to compile and run the mod
 java {
@@ -208,7 +208,7 @@ dependencies {
     implementation(rfg.deobf("curse.maven:mekanism-energistics-1027681:5408319"))
 
     // GeckoLib
-    implementation(rfg.deobf("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31"))
+    implementation("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31")
     // GTCEu / Bloom Effect Support
     compileOnly(rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:5322654"))
     // Bloom Effect Support
