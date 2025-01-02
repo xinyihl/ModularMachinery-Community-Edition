@@ -67,7 +67,6 @@ gui.meiteminputbus.inv_action.decrease=Press the %s key combination to decrease 
 gui.meiteminputbus.items_marked=Items marked: %s
 gui.meitembus.item_cached=Items Cached: %s
 gui.meitembus.nbt_stored=Items have been stored internally.
-gui.mepatternprovider.nbt_stored=Provider Configured.
 
 gui.mefluidoutputbus.title=ME Machinery Fluid Output Bus
 gui.mefluidinputbus.title=ME Machinery Fluid Input Bus
@@ -86,6 +85,7 @@ gui.mepatternprovider.enhanced_blocking_mode.desc=Enhanced Blocking Mode: builds
 gui.mepatternprovider.work_mode.desc=Provider work mode (Click to switch between the 4 modes):
 gui.mepatternprovider.return_items=Return Items
 gui.mepatternprovider.return_items.desc=Return all items and fluids in the provider to the ME network. This will reset the state of the Crafting Lock Mode.
+gui.mepatternprovider.nbt_stored=Provider Configured.
 
 gui.preview.button.menu.tip=Click to open the Preview Options menu.
 gui.preview.button.machine_info=Extra Info:
@@ -183,6 +183,8 @@ message.assembly.tip.missing=Modular Assembly: %s Needs item assembly, but inven
 message.assembly.tip.required=Modular assembly: Missing ingredients, the following ingredients are required:
 message.assembly.tip.or=or
 message.assembly.tip.partial_assembly=Modular Assembly: despite the absence of some materials, the assembly §cwill continue using the existing materials!
+message.assembly.tip.too_quickly=Modular Assembly: You need to wait a moment before you can start assembly again.
+
 
 message.reloading=Modular Machinery: Reloading!
 message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client! Machinery upgrades in the upgrade bus need to be repositioned to refresh their effects!
@@ -382,6 +384,8 @@ tile.modularmachinery.blockmeitemoutputbus.name=ME Machinery Item Output Bus
 tile.modularmachinery.blockmeiteminputbus.name=ME Machinery Item Input Bus
 tile.modularmachinery.blockmefluidoutputbus.name=ME Machinery Fluid Output Bus
 tile.modularmachinery.blockmefluidinputbus.name=ME Machinery Fluid Input Bus
+tile.modularmachinery.blockmegasoutputbus.name=ME Mechanical gas output bus
+tile.modularmachinery.blockmegasinputbus.name=ME Machinery Gas Input Bus
 tile.modularmachinery.blockmepatternprovider.name=ME Machinery Pattern Provider
 
 error.modularmachinery.requirement.lifeessence=Error while checking Life Essence requirement
@@ -436,3 +440,6 @@ tile.modularmachinery.blockmanaproviderinput.name=Mana Input Hatch
 tile.modularmachinery.blockmanaprovideroutput.name=Mana Output Hatch
 tile.modularmachinery.blockimpetusproviderinput.name=Impetus Input Hatch
 tile.modularmachinery.blockimpetusprovideroutput.name=Impetus Output Hatch
+
+
+tooltip.modularcontroller.machine_projector=Right-click on the controller while crouching to project the blueprint of his machine into the world.

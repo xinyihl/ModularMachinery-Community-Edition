@@ -58,6 +58,7 @@ gui.upgradebus.incompatible=§e警告：%s 与此机械不兼容。
 
 gui.meitemoutputbus.title=ME 机械物品输出总线
 gui.meiteminputbus.title=ME 机械物品输入总线
+
 gui.meiteminputbus.inv_action=使用滚轮和 SHIFT, CONTROL, ALT 组合键来修改标记物品的数量。
 gui.meiteminputbus.inv_action.increase.normal=滚轮向上滚动增加 1 个物品数量。
 gui.meiteminputbus.inv_action.decrease.normal=滚轮向下滚动或右击物品减少 1 个物品数量。
@@ -121,10 +122,6 @@ gui.preview.optifine_shader_pack_warn=§4Optifine 光影不兼容！预览性能
 gui.preview.vbo_unsupported_warn=§4显卡不兼容顶点缓冲器！预览性能将大幅下降。
 gui.preview.vbo_disabled_warn=§4顶点缓冲器未启用！预览性能将大幅下降。
 
-gui.blueprint.popout.info=潜行以将当前预览锁定在当前世界中。
-gui.blueprint.popout.place=右击以显示预览；远离或放置其他结构预览（蓝图）将会清除此前世界中的结构预览；视角面对控制器时可以根据其朝向自动旋转。
-gui.blueprint.popout.placed.dynamic_pattern=投影期间使用自动组装时会优先使用投影的动态结构大小。
-
 top.recipe.progress=进度
 top.machine.owner=所有者：
 top.machine.owner.self=你
@@ -161,6 +158,10 @@ component.missing.modularmachinery.gas.input=没有找到流体输入口！
 component.missing.modularmachinery.item.output=没有找到物品输出口！
 component.missing.modularmachinery.item.input=没有找到物品输入口！
 component.missing.modularmachinery.interface.number=没有找到对应类型的智能数据接口！
+
+gui.blueprint.popout.info=潜行以将当前预览锁定在当前世界中。
+gui.blueprint.popout.place=右击以显示预览；远离或放置其他结构预览（蓝图）将会清除此前世界中的结构预览；视角面对控制器时可以根据其朝向自动旋转。
+gui.blueprint.popout.placed.dynamic_pattern=投影期间使用自动组装时会优先使用投影的动态结构大小。
 
 jei.category.preview=结构预览
 
@@ -439,3 +440,5 @@ tile.modularmachinery.blockimpetusproviderinput.name=元动输入接口
 tile.modularmachinery.blockimpetusprovideroutput.name=元动输出接口
 
 tooltip.modularcontroller.machine_projector=蹲下时右击控制器以投影其机器的蓝图至世界。
+
+
