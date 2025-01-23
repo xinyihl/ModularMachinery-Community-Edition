@@ -44,4 +44,15 @@ public class ItemBlockCustomName extends ItemBlock {
         }
         return super.getUnlocalizedNameInefficiently(stack);
     }
+    @Nonnull
+    @Override
+    public String getTranslationKey(@Nonnull ItemStack stack)
+    {
+        Block block = getBlock();
+        if (block instanceof BlockCustomName) {
+            String identifier = ((BlockCustomName) block).getIdentifierForMeta(stack.getItemDamage());
+            return super.getTranslationKey(stack) + "." + identifier;
+        }
+        return super.getTranslationKey(stack);
+    }
 }
