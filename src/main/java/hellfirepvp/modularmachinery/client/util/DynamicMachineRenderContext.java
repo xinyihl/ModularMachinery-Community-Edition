@@ -136,9 +136,12 @@ public class DynamicMachineRenderContext {
             for (BlockArray.BlockInformation info : informationList) {
                 Map<BlockPos, BlockArray.BlockInformation> pattern = blockArray.getPattern();
                 if (pattern.containsKey(pos)) {
-                    pattern.get(pos).addMatchingStates(info.getMatchingStates());
+                    // Clone the block info, we don't want to modify the canonical instance.
+                    BlockArray.BlockInformation newInfo = pattern.get(pos).copy();
+                    newInfo.addMatchingStates(info.getMatchingStates());
+                    blockArray.addBlock(pos, newInfo);
                 } else {
-                    pattern.put(pos, info);
+                    blockArray.addBlock(pos, info);
                 }
             }
         }

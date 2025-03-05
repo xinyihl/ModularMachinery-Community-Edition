@@ -247,7 +247,7 @@ public class DynamicMachine extends AbstractMachine {
             return out;
         }
 
-        private static void addModifierWithPattern(DynamicMachine machine, TaggedPositionBlockArray pattern, SingleBlockModifierReplacement mod, JsonObject part) throws JsonParseException {
+        private static void addModifierWithPattern(DynamicMachine machine, SingleBlockModifierReplacement mod, JsonObject part) throws JsonParseException {
             List<Integer> avX = new ArrayList<>();
             List<Integer> avY = new ArrayList<>();
             List<Integer> avZ = new ArrayList<>();
@@ -259,10 +259,6 @@ public class DynamicMachine extends AbstractMachine {
                 if (permutation.getX() == 0 && permutation.getY() == 0 && permutation.getZ() == 0) {
                     continue; //We're not going to overwrite the controller.
                 }
-                // Clone the block info, we don't want to modify the canonical instance.
-                BlockArray.BlockInformation info = pattern.getPattern().get(permutation).copy();
-                info.addMatchingStates(mod.getBlockInformation().getMatchingStates());
-                pattern.addBlock(permutation, info);
                 machine.modifiers.putIfAbsent(permutation, Lists.newArrayList());
                 machine.modifiers.get(permutation).add(mod.setPos(permutation));
             }
@@ -379,7 +375,7 @@ public class DynamicMachine extends AbstractMachine {
 
             // Modifiers
             if (root.has("modifiers")) {
-                addModifiers(context, root, machine, machine.pattern);
+                addModifiers(context, root, machine);
             }
 
             // DynamicPatterns
@@ -554,7 +550,7 @@ public class DynamicMachine extends AbstractMachine {
             }
         }
 
-        private static void addModifiers(final JsonDeserializationContext context, final JsonObject root, final DynamicMachine machine, final TaggedPositionBlockArray pattern) {
+        private static void addModifiers(final JsonDeserializationContext context, final JsonObject root, final DynamicMachine machine) {
             JsonElement partModifiers = root.get("modifiers");
             if (!partModifiers.isJsonArray()) {
                 throw new JsonParseException("'modifiers' has to be an array of modifiers!");
@@ -565,7 +561,7 @@ public class DynamicMachine extends AbstractMachine {
                 if (!modifier.isJsonObject()) {
                     throw new JsonParseException("Elements of 'modifiers' have to be objects!");
                 }
-                addModifierWithPattern(machine, pattern, context.deserialize(modifier.getAsJsonObject(), SingleBlockModifierReplacement.class), modifier.getAsJsonObject());
+                addModifierWithPattern(machine, context.deserialize(modifier.getAsJsonObject(), SingleBlockModifierReplacement.class), modifier.getAsJsonObject());
             }
         }
 

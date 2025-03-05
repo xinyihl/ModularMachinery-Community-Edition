@@ -177,7 +177,10 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         Map<BlockPos, BlockArray.BlockInformation> pattern = this.pattern.getPattern();
         machine.getModifiersAsMatchingReplacements().forEach((pos, infoList) -> infoList.forEach(info -> {
             if (pattern.containsKey(pos)) {
-                pattern.get(pos).addMatchingStates(info.getMatchingStates());
+                // Clone the block info, we don't want to modify the canonical instance.
+                BlockArray.BlockInformation newInfo = pattern.get(pos).copy();
+                newInfo.addMatchingStates(info.getMatchingStates());
+                this.pattern.addBlock(pos, newInfo);
             } else {
                 this.pattern.addBlock(pos, info);
             }
