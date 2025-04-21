@@ -7,29 +7,39 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.me.GridAccessException;
 import appeng.util.Platform;
+import github.kasuminova.mmce.client.gui.GuiMEItemInputBus;
 import github.kasuminova.mmce.common.tile.base.MEItemBus;
+import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 
 public class MEItemInputBus extends MEItemBus {
     // A simple cache for AEItemStack.
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
+
     private IOInventory configInventory = buildConfigInventory();
+    // Текущий режим обработки слотов
+    private MERequestMode meRequestMode = MERequestMode.DEFAULT;
+
+    private int thresholdValue = 50;
 
     @Override
     public IOInventory buildInventory() {
-        int size = 16;
+        int size = 30;
         int[] slotIDs = new int[size];
         for (int slotID = 0; slotID < size; slotID++) {
             slotIDs[slotID] = slotID;
@@ -50,7 +60,7 @@ public class MEItemInputBus extends MEItemBus {
     }
 
     public IOInventory buildConfigInventory() {
-        int size = 16;
+        int size = 30;
 
         int[] slotIDs = new int[size];
         for (int slotID = 0; slotID < size; slotID++) {
@@ -74,6 +84,18 @@ public class MEItemInputBus extends MEItemBus {
         if (compound.hasKey("configInventory")) {
             readConfigInventoryNBT(compound.getCompoundTag("configInventory"));
         }
+        // Загрузка режима обработки
+        if (compound.hasKey("slotProcessMode")) {
+            meRequestMode = MERequestMode.fromName(compound.getString("slotProcessMode"));
+        }
+
+        if (compound.hasKey("thresholdValue")) {
+            thresholdValue = (compound.getInteger("thresholdValue"));
+        }
+
+        if (Sides.isRunningOnClient()) {
+            processClientGUIUpdate();
+        }
     }
 
     @Override
@@ -81,10 +103,34 @@ public class MEItemInputBus extends MEItemBus {
         super.writeCustomNBT(compound);
 
         compound.setTag("configInventory", configInventory.writeNBT());
+        // Сохранение режима обработки
+        compound.setString("slotProcessMode", meRequestMode.getName());
+
+        compound.setInteger("thresholdValue", thresholdValue);
     }
 
     public IOInventory getConfigInventory() {
         return configInventory;
+    }
+
+    // Установка режима обработки слотов
+    public void setSlotProcessMode(MERequestMode mode) {
+        this.meRequestMode = mode;
+        markDirty();
+    }
+
+    // Получение текущего режима обработки слотов
+    public MERequestMode getMERequestMode() {
+        return meRequestMode;
+    }
+
+    public int getThresholdValue() {
+        return thresholdValue;
+    }
+
+    public void setThresholdValue(final int thresholdValue) {
+        this.thresholdValue =  thresholdValue;
+        markDirty();
     }
 
     @Nullable
@@ -152,6 +198,15 @@ public class MEItemInputBus extends MEItemBus {
                 ItemStack cfgStack = configInventory.getStackInSlot(slot);
                 ItemStack invStack = inventory.getStackInSlot(slot);
 
+                int stackAmountInAE = getStackAmountFromAE(inv, cfgStack);
+
+                if (meRequestMode == MEItemInputBus.MERequestMode.THRESHOLD) {
+                    if (stackAmountInAE < thresholdValue) {
+                        // skip request if below amount
+                        continue;
+                    }
+                }
+
                 if (cfgStack.isEmpty()) {
                     if (invStack.isEmpty()) {
                         continue;
@@ -162,8 +217,11 @@ public class MEItemInputBus extends MEItemBus {
 
                 if (!ItemUtils.matchStacks(cfgStack, invStack)) {
                     if (invStack.isEmpty() || insertStackToAE(inv, invStack).isEmpty()) {
+
                         ItemStack stack = extractStackFromAE(inv, cfgStack);
+
                         inventory.setStackInSlot(slot, stack);
+
                         if (!stack.isEmpty()) {
                             successAtLeastOnce = true;
                         }
@@ -212,6 +270,22 @@ public class MEItemInputBus extends MEItemBus {
             rwLock.writeLock().unlock();
             return TickRateModulation.IDLE;
         }
+    }
+
+
+    private int getStackAmountFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) {
+        IAEItemStack aeStack = createStack(stack);
+        if (aeStack == null) {
+            return 0;
+        }
+
+        for (IAEItemStack storedStack : inv.getStorageList()) {
+            if (storedStack.isSameType(aeStack)) {
+                return (int) storedStack.getStackSize();
+            }
+        }
+
+        return 0;
     }
 
     private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
@@ -280,5 +354,39 @@ public class MEItemInputBus extends MEItemBus {
             slotIDs[slotID] = slotID;
         }
         configInventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
+    }
+
+    @SideOnly(Side.CLIENT)
+    protected void processClientGUIUpdate() {
+        if (world != null && world.isRemote) {
+            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+            if (currentScreen instanceof GuiMEItemInputBus busGUI && busGUI.getOwner() == this) {
+                busGUI.updateGUIState();
+            }
+        }
+    }
+
+    public enum MERequestMode {
+        DEFAULT("default"),
+        THRESHOLD("threshold");
+
+        private final String name;
+
+        MERequestMode(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public static MERequestMode fromName(String name) {
+            for (MERequestMode mode : values()) {
+                if (mode.name.equals(name)) {
+                    return mode;
+                }
+            }
+            return DEFAULT;
+        }
     }
 }

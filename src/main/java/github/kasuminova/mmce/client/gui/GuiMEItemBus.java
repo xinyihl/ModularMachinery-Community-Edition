@@ -21,7 +21,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
 
-public abstract class GuiMEItemBus extends AEBaseGui {
+public abstract class GuiMEItemBus extends AEBaseGuiContainerDynamic {
 
     protected final StackSizeRenderer stackSizeRenderer = Mods.AE2EL.isPresent() ? null : new StackSizeRenderer();
 
