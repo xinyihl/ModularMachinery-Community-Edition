@@ -58,11 +58,12 @@ public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEIn
         if (!(player.openContainer instanceof final ContainerMEItemInputBus inputBus)) {
             return null;
         }
+
         ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
             MEItemInputBus provider = inputBus.getOwner();
             switch (message.action) {
-                case ENABLE_THRESHOLD_MODE -> provider.setSlotProcessMode(MEItemInputBus.MERequestMode.THRESHOLD);
-                case ENABLE_DEFAULT_MODE -> provider.setSlotProcessMode(MEItemInputBus.MERequestMode.DEFAULT);
+                case ENABLE_THRESHOLD_MODE -> provider.setMERequestMode(MEItemInputBus.MERequestMode.THRESHOLD);
+                case ENABLE_DEFAULT_MODE -> provider.setMERequestMode(MEItemInputBus.MERequestMode.DEFAULT);
                 case SET_THRESHOLD -> provider.setThresholdValue(message.thresholdValue);
             }
         });

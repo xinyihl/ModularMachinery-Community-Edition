@@ -1,5 +1,11 @@
 package hellfirepvp.modularmachinery.client.gui;
 
+import github.kasuminova.mmce.client.gui.GuiContainerDynamic;
+import github.kasuminova.mmce.client.gui.util.TextureProperties;
+import github.kasuminova.mmce.client.gui.widget.ButtonElements;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
+import github.kasuminova.mmce.client.gui.widget.container.Row;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.gui.widget.GuiScrollbar;
@@ -8,6 +14,7 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
 import hellfirepvp.modularmachinery.common.machine.factory.FactoryRecipeThread;
+import hellfirepvp.modularmachinery.common.network.PktTileFactoryControllerAction;
 import hellfirepvp.modularmachinery.common.tiles.TileFactoryController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
@@ -26,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class GuiFactoryController extends GuiContainerBase<ContainerFactoryController> {
+public class GuiFactoryController extends GuiContainerDynamic<ContainerFactoryController> {
     public static final double FONT_SCALE = 0.72;
     private static final ResourceLocation TEXTURES_FACTORY = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guifactory.png");
     private static final ResourceLocation TEXTURES_FACTORY_ELEMENTS = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guifactoryelements.png");
@@ -44,17 +51,79 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
     private final GuiScrollbar scrollbar = new GuiScrollbar();
     private final TileFactoryController factory;
 
+    protected final ButtonElements<TileMultiblockMachineController.InputMode> modeButtonElements = new ButtonElements<>();
+
     public GuiFactoryController(TileFactoryController factory, EntityPlayer player) {
         super(new ContainerFactoryController(factory, player));
         this.factory = factory;
         this.xSize = 280;
         this.ySize = 213;
+
+        initWidgetController();
+        initModeButtonElements();
+
+        updateGUIState();
+    }
+
+    private void initWidgetController() {
+        this.guiLeft = (this.width - this.xSize) / 2;
+        this.guiTop = (this.height - this.ySize) / 2;
+
+        this.widgetController = new WidgetController(WidgetGui.of(this, this.xSize, this.ySize, guiLeft, guiTop));
+    }
+
+    public TileFactoryController getFactory() {
+        return factory;
+    }
+
+    private void initModeButtonElements() {
+        modeButtonElements
+                .addElement(TileMultiblockMachineController.InputMode.DEFAULT, TextureProperties.of(0, 229, 15, 16))
+                .addElement(TileMultiblockMachineController.InputMode.SEPARATE_INPUT, TextureProperties.of(15, 229, 15, 16))
+                .setMouseDownTexture(15, 213)
+                .setHoveredTexture(30, 213)
+                .setTexture(0, 213)
+                .setTextureLocation(TEXTURES_FACTORY)
+                .setTooltipFunction(this::createModeTooltips)
+                .setOnClickedListener(this::handleModeButtonClick)
+                .setWidthHeight(15, 16)
+                .setEnabled(true)
+                .setVisible(true);
+
+        // Init Widget Containers...
+        Row row = new Row();
+        row.addWidgets(modeButtonElements).setAbsXY(283, 100);
+
+        this.widgetController.addWidget(row);
+    }
+
+    private void handleModeButtonClick(Object btn) {
+        TileMultiblockMachineController.InputMode current = modeButtonElements.getCurrentSelection();
+        if (current == null) {
+            return;
+        }
+        switch (current) {
+            case DEFAULT -> ModularMachinery.NET_CHANNEL.sendToServer(new PktTileFactoryControllerAction(PktTileFactoryControllerAction.Action.ENABLE_DEFAULT_MODE));
+            case SEPARATE_INPUT -> ModularMachinery.NET_CHANNEL.sendToServer(new PktTileFactoryControllerAction(PktTileFactoryControllerAction.Action.ENABLE_SEPARATE_INPUT_MODE));
+        }
+    }
+
+    private List<String> createModeTooltips(Object btn) {
+        TileMultiblockMachineController.InputMode current = modeButtonElements.getCurrentSelection();
+        List<String> tooltips = new ArrayList<>();
+        tooltips.add(I18n.format("gui.controller.input_mode.desc"));
+        tooltips.add((current == TileMultiblockMachineController.InputMode.DEFAULT ? I18n.format("gui.controller.input_mode.current") : "")
+                + I18n.format("gui.controller.input_mode.default.desc"));
+        tooltips.add((current == TileMultiblockMachineController.InputMode.SEPARATE_INPUT ? I18n.format("gui.controller.input_mode.current") : "")
+                + I18n.format("gui.controller.input_mode.separate_input.desc"));
+        return tooltips;
     }
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
         drawRecipeQueue();
         drawFactoryStatus();
+        super.drawGuiContainerForegroundLayer(mouseX, mouseY);
     }
 
     @Override
@@ -63,10 +132,11 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         this.mc.getTextureManager().bindTexture(TEXTURES_FACTORY);
         final int x = (this.width - this.xSize) / 2;
         final int y = (this.height - this.ySize) / 2;
-        Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, this.xSize, this.ySize, this.xSize, this.ySize);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, this.xSize, this.ySize, this.xSize, this.ySize + 43);
 
         updateScrollbar(x, y);
         scrollbar.draw(this, mc);
+        super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
     }
 
     private void drawRecipeQueue() {
@@ -383,7 +453,7 @@ public class GuiFactoryController extends GuiContainerBase<ContainerFactoryContr
         super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
     }
 
-    @Override
-    protected void setWidthHeight() {
+    public void updateGUIState() {
+        modeButtonElements.setCurrentSelection(factory.getInputMode());
     }
 }

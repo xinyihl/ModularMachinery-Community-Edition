@@ -27,12 +27,15 @@ import github.kasuminova.mmce.common.machine.component.MachineComponentProxyRegi
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
+import github.kasuminova.mmce.common.util.InfItemFluidHandler;
+import github.kasuminova.mmce.common.util.Sides;
 import github.kasuminova.mmce.common.util.TimeRecorder;
 import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.gui.GuiMachineController;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -42,10 +45,7 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
-import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.machine.*;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
@@ -55,6 +55,8 @@ import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
 import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -72,6 +74,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.oredict.OreDictionary;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -91,6 +95,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
@@ -151,6 +156,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected Object animationFactory = null;
 
     protected boolean loaded = false;
+
+    protected InputMode inputMode = InputMode.DEFAULT;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -723,7 +730,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         Map<TileEntity, ProcessingComponent<?>> found = new HashMap<>();
 
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
-        this.foundComponents.putAll(found);
+        // Find components based on input mode
+        if (inputMode == InputMode.SEPARATE_INPUT) {
+            putAllSeparateInput(found);
+        } else {
+            putAllDefault(found);
+        }
+
         this.foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
@@ -732,6 +745,88 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         } else {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
         }
+    }
+
+    private int lastUsedIndex = -1;
+
+    public void searchForNewLastUsedIndex(int inputEntriesSize) {
+        if (++lastUsedIndex >= inputEntriesSize) {
+            lastUsedIndex = 0;
+        }
+    }
+
+    private boolean isContainerEmpty(ProcessingComponent<?> processingComponent) {
+        Object component = processingComponent.getProvidedComponent();
+
+        if (component instanceof InfItemFluidHandler) {
+            return ((InfItemFluidHandler) component).isEmpty();
+        }
+        else if (component instanceof IOInventory) {
+            return ((IOInventory) component).isEmpty();
+        }
+
+        if (component instanceof EmptinessCheckable) {
+            return ((EmptinessCheckable) component).isEmpty();
+        }
+
+        // For unknown types, consider them empty
+        return true;
+    }
+
+    /* TODO It's working but can cause delays between search and will slowdown crafting process a bit but it's an easy solution
+    / and should not break anything
+    */
+    private void putAllSeparateInput(Map<TileEntity, ProcessingComponent<?>> found) {
+        if (found.isEmpty()) {
+            foundComponents.clear();
+            return;
+        }
+
+        // Clear first to avoid unnecessary work
+        foundComponents.clear();
+
+        // Directly add non-separate-input components
+        found.forEach((tile, component) -> {
+            if (!isAffectedBySeparateMode(component)) {
+                foundComponents.put(tile, component);
+            }
+        });
+
+        // Filter separate-input components and find a non-empty one
+        List<Map.Entry<TileEntity, ProcessingComponent<?>>> inputEntries = found.entrySet()
+                .stream()
+                .filter(entry -> isAffectedBySeparateMode(entry.getValue()))
+                .collect(Collectors.toList());
+
+        if (inputEntries.isEmpty()) {
+            return;
+        }
+
+        // Find first non-empty container starting from lastUsedIndex
+        int originalIndex = lastUsedIndex == -1 ? 0 : lastUsedIndex;
+        int size = inputEntries.size();
+
+        for (int i = 0; i < size; i++) {
+            int currentIndex = (originalIndex + i) % size;
+            Map.Entry<TileEntity, ProcessingComponent<?>> entry = inputEntries.get(currentIndex);
+
+            if (!isContainerEmpty(entry.getValue())) {
+                foundComponents.put(entry.getKey(), entry.getValue());
+                lastUsedIndex = currentIndex;
+                return;
+            }
+        }
+
+        // Update lastUsedIndex even if all containers are empty
+        lastUsedIndex = (originalIndex + 1) % size;
+    }
+
+    private void putAllDefault(Map<TileEntity, ProcessingComponent<?>> found) {
+        this.foundComponents.putAll(found);
+    }
+
+    private boolean isAffectedBySeparateMode(ProcessingComponent<?> processingComponent) {
+        return processingComponent.component().isAffectedBySeparateInput();
     }
 
     private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final Map<TileEntity, ProcessingComponent<?>> found) {
@@ -1268,6 +1363,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 }
             }, 0);
         }
+
+        if (compound.hasKey("inputMode")) {
+            this.inputMode = InputMode.values()[compound.getByte("inputMode")];
+        }
+
+        if (Sides.isRunningOnClient()) {
+            processClientGUIUpdate();
+        }
     }
 
     @Override
@@ -1317,6 +1420,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 compound.setTag("customModifier", tagList);
             }
         }
+        compound.setByte("inputMode", (byte) inputMode.ordinal());
     }
 
     protected void readMachineNBT(NBTTagCompound compound) {
@@ -1403,6 +1507,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @ZenMethod
     public int getTicksExisted() {
         return ticksExisted;
+    }
+
+    public InputMode getInputMode() {
+        return inputMode;
+    }
+
+    public void setInputMode(final InputMode inputMode) {
+        this.inputMode = inputMode;
     }
 
     public WorkMode getWorkMode() {
@@ -1520,5 +1632,20 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return "gui.controller.status." + this.name().toLowerCase();
         }
 
+    }
+
+    @SideOnly(Side.CLIENT)
+    protected void processClientGUIUpdate() {
+        if (world != null && world.isRemote) {
+            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+            if (currentScreen instanceof GuiMachineController controllerGUI && controllerGUI.getController() == this) {
+                controllerGUI.updateGUIState();
+            }
+        }
+    }
+
+    public enum InputMode {
+        DEFAULT,
+        SEPARATE_INPUT
     }
 }

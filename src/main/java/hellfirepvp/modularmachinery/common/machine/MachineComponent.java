@@ -33,6 +33,10 @@ public abstract class MachineComponent<T> {
         return ioType;
     }
 
+    public boolean isAffectedBySeparateInput() {
+        return false;
+    }
+
     public boolean isAsyncSupported() {
         return true;
     }

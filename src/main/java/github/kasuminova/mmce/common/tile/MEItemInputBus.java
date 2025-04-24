@@ -13,6 +13,7 @@ import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
+import hellfirepvp.modularmachinery.common.util.EmptinessCheckable;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import net.minecraft.client.Minecraft;
@@ -27,15 +28,15 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 
-public class MEItemInputBus extends MEItemBus {
+public class MEItemInputBus extends MEItemBus implements EmptinessCheckable {
     // A simple cache for AEItemStack.
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
 
     private IOInventory configInventory = buildConfigInventory();
-    // Текущий режим обработки слотов
+
     private MERequestMode meRequestMode = MERequestMode.DEFAULT;
 
-    private int thresholdValue = 50;
+    private int thresholdValue = 256;
 
     @Override
     public IOInventory buildInventory() {
@@ -78,15 +79,20 @@ public class MEItemInputBus extends MEItemBus {
     }
 
     @Override
+    public boolean isEmpty() {
+        return inventory.isEmpty();
+    }
+
+    @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
 
         if (compound.hasKey("configInventory")) {
             readConfigInventoryNBT(compound.getCompoundTag("configInventory"));
         }
-        // Загрузка режима обработки
-        if (compound.hasKey("slotProcessMode")) {
-            meRequestMode = MERequestMode.fromName(compound.getString("slotProcessMode"));
+
+        if (compound.hasKey("meRequestMode")) {
+            meRequestMode = MERequestMode.fromName(compound.getString("meRequestMode"));
         }
 
         if (compound.hasKey("thresholdValue")) {
@@ -103,8 +109,8 @@ public class MEItemInputBus extends MEItemBus {
         super.writeCustomNBT(compound);
 
         compound.setTag("configInventory", configInventory.writeNBT());
-        // Сохранение режима обработки
-        compound.setString("slotProcessMode", meRequestMode.getName());
+
+        compound.setString("meRequestMode", meRequestMode.getName());
 
         compound.setInteger("thresholdValue", thresholdValue);
     }
@@ -113,13 +119,10 @@ public class MEItemInputBus extends MEItemBus {
         return configInventory;
     }
 
-    // Установка режима обработки слотов
-    public void setSlotProcessMode(MERequestMode mode) {
+    public void setMERequestMode(MERequestMode mode) {
         this.meRequestMode = mode;
-        markDirty();
     }
 
-    // Получение текущего режима обработки слотов
     public MERequestMode getMERequestMode() {
         return meRequestMode;
     }
@@ -130,7 +133,6 @@ public class MEItemInputBus extends MEItemBus {
 
     public void setThresholdValue(final int thresholdValue) {
         this.thresholdValue =  thresholdValue;
-        markDirty();
     }
 
     @Nullable
@@ -140,6 +142,11 @@ public class MEItemInputBus extends MEItemBus {
             @Override
             public IOInventory getContainerProvider() {
                 return inventory;
+            }
+
+            @Override
+            public boolean isAffectedBySeparateInput() {
+                return true;
             }
         };
     }

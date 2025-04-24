@@ -63,6 +63,15 @@ public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvid
         return this;
     }
 
+    public boolean isEmpty() {
+        for (int i = 0; i < this.getSlots(); i++) {
+            if (!this.getStackInSlot(i).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public TileEntitySynchronized getOwner() {
         return owner;
     }

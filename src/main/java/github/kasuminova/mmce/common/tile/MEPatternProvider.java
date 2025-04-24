@@ -46,6 +46,7 @@ import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.tiles.base.MachineComponentTileNotifiable;
+import hellfirepvp.modularmachinery.common.util.EmptinessCheckable;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mekanism.api.gas.GasStack;
 import net.minecraft.client.Minecraft;
@@ -71,7 +72,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory, MachineComponentTileNotifiable {
+public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory, MachineComponentTileNotifiable, EmptinessCheckable {
 
     public static final int PATTERNS = 36;
     public static final int SUB_ITEM_HANDLER_SLOTS = 2;
@@ -129,7 +130,17 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             public InfItemFluidHandler getContainerProvider() {
                 return handler;
             }
+
+            @Override
+            public boolean isAffectedBySeparateInput() {
+                return true;
+            }
         };
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return handler.isEmpty();
     }
 
     @MENetworkEventSubscribe

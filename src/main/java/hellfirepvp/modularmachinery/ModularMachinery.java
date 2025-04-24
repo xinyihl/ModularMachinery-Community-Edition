@@ -92,6 +92,9 @@ public class ModularMachinery {
         NET_CHANNEL.registerMessage(PktSyncSelection.class, PktSyncSelection.class, 1, Side.CLIENT);
         NET_CHANNEL.registerMessage(PktPerformanceReport.class, PktPerformanceReport.class, 2, Side.CLIENT);
         NET_CHANNEL.registerMessage(PktAssemblyReport.class, PktAssemblyReport.class, 3, Side.CLIENT);
+        NET_CHANNEL.registerMessage(PktTileMachineControllerAction.class, PktTileMachineControllerAction.class, 201, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktTileFactoryControllerAction.class, PktTileFactoryControllerAction.class, 202, Side.SERVER);
+
         if (Mods.AE2.isPresent()) {
             NET_CHANNEL.registerMessage(PktMEPatternProviderHandlerItems.class, PktMEPatternProviderHandlerItems.class, 4, Side.CLIENT);
         }
