@@ -60,7 +60,10 @@ public class GuiFactoryController extends GuiContainerDynamic<ContainerFactoryCo
         this.ySize = 213;
 
         initWidgetController();
-        initModeButtonElements();
+
+        if (factory.canToggleInputMode()) {
+            initModeButtonElements();
+        }
 
         updateGUIState();
     }

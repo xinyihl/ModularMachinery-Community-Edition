@@ -95,7 +95,8 @@ public class MachineBuilder {
             RecipeFailureActions failureAction,
             int color,
             boolean hasFactory,
-            boolean factoryOnly)
+            boolean factoryOnly,
+            boolean canToggleInputMode)
     {
         this.machine = new DynamicMachine(registryName);
         this.pattern = this.machine.getPattern();
@@ -106,6 +107,7 @@ public class MachineBuilder {
         this.machine.setRequiresBlueprint(requiresBlueprint);
         this.machine.setHasFactory(hasFactory);
         this.machine.setFactoryOnly(factoryOnly);
+        this.machine.setCanToggleInputMode(canToggleInputMode);
     }
 
     /**
@@ -162,13 +164,14 @@ public class MachineBuilder {
             RecipeFailureActions failureAction,
             int color,
             boolean hasFactory,
-            boolean factoryOnly)
+            boolean factoryOnly,
+            boolean canToggleInputMode)
     {
         if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
             return;
         }
         MachineBuilder builder = new MachineBuilder(
-                registryName, localizedName, requiresBlueprint, failureAction, color, hasFactory, factoryOnly);
+                registryName, localizedName, requiresBlueprint, failureAction, color, hasFactory, factoryOnly, canToggleInputMode);
         PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 

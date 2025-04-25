@@ -46,6 +46,11 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
             machine.setFactoryOnly(getFactoryOnly(root));
         }
 
+        // Input Mode Toggle
+        if (root.has("toggle-input-mode")) {
+            machine.setCanToggleInputMode(getCanToggleInputMode(root));
+        }
+
         return machine;
     }
 
@@ -126,5 +131,13 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
             throw new JsonParseException("'factory-only' has to be either 'true' or 'false'!");
         }
         return elementFactoryOnly.getAsJsonPrimitive().getAsBoolean();
+    }
+
+    public static boolean getCanToggleInputMode(JsonObject root) throws JsonParseException {
+        JsonElement elementCanToggleInputMode = root.get("toggle-input-mode");
+        if (!elementCanToggleInputMode.isJsonPrimitive() || !elementCanToggleInputMode.getAsJsonPrimitive().isBoolean()) {
+            throw new JsonParseException("'toggle-input-mode' has to be either 'true' or 'false'!");
+        }
+        return elementCanToggleInputMode.getAsJsonPrimitive().getAsBoolean();
     }
 }

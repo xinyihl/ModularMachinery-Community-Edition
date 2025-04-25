@@ -26,6 +26,7 @@ public abstract class AbstractMachine {
     protected boolean parallelizable = Config.machineParallelizeEnabledByDefault;
     protected boolean hasFactory = Config.enableFactoryControllerByDefault;
     protected boolean factoryOnly = false;
+    protected boolean canToggleInputMode = Config.enableControllercanToggleInputModeByDefault;
     protected RecipeFailureActions failureAction = RecipeFailureActions.getDefaultAction();
 
     public AbstractMachine(String registryName) {
@@ -124,6 +125,14 @@ public abstract class AbstractMachine {
 
     public void setFactoryOnly(boolean factoryOnly) {
         this.factoryOnly = factoryOnly;
+    }
+
+    public void setCanToggleInputMode(boolean canToggleInputMode) {
+        this.canToggleInputMode = canToggleInputMode;
+    }
+
+    public boolean canToggleInputMode() {
+        return  this.canToggleInputMode;
     }
 
     public int getMaxThreads() {

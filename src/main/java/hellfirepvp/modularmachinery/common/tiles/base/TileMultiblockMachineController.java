@@ -731,11 +731,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
         // Find components based on input mode
-        if (inputMode == InputMode.SEPARATE_INPUT) {
-            putAllSeparateInput(found);
-        } else {
+        if (!canToggleInputMode()) {
             putAllDefault(found);
+        } else {
+            if (inputMode == InputMode.SEPARATE_INPUT) {
+                putAllSeparateInput(found);
+            } else {
+                putAllDefault(found);
+            }
         }
+
 
         this.foundModifiers.clear();
         updateModifiers();
@@ -827,6 +832,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     private boolean isAffectedBySeparateMode(ProcessingComponent<?> processingComponent) {
         return processingComponent.component().isAffectedBySeparateInput();
+    }
+
+    public boolean canToggleInputMode() {
+        return this.parentMachine.canToggleInputMode();
     }
 
     private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final Map<TileEntity, ProcessingComponent<?>> found) {

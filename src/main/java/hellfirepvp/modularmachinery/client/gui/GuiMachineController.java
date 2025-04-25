@@ -54,7 +54,10 @@ public class GuiMachineController extends GuiContainerDynamic<ContainerControlle
         this.ySize = 213;
 
         initWidgetController();
-        initModeButtonElements();
+
+        if (controller.canToggleInputMode()) {
+            initModeButtonElements();
+        }
 
         updateGUIState();
     }
