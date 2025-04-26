@@ -95,7 +95,7 @@ public class GuiFactoryController extends GuiContainerDynamic<ContainerFactoryCo
 
         // Init Widget Containers...
         Row row = new Row();
-        row.addWidgets(modeButtonElements).setAbsXY(283, 100);
+        row.addWidgets(modeButtonElements).setAbsXY(-20, 2);
 
         this.widgetController.addWidget(row);
     }

@@ -89,7 +89,7 @@ public class GuiMachineController extends GuiContainerDynamic<ContainerControlle
 
         // Init Widget Containers...
         Row row = new Row();
-        row.addWidgets(modeButtonElements).setAbsXY(177, 100);
+        row.addWidgets(modeButtonElements).setAbsXY(-20, 2);
 
         this.widgetController.addWidget(row);
     }

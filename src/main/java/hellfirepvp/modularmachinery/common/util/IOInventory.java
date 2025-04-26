@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  * Created by HellFirePvP
  * Date: 28.06.2017 / 17:42
  */
-public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvider {
+public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvider, EmptinessCheckable {
 
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 

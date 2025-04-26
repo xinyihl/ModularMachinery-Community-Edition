@@ -13,7 +13,6 @@ import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.util.EmptinessCheckable;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import net.minecraft.client.Minecraft;
@@ -28,7 +27,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 
-public class MEItemInputBus extends MEItemBus implements EmptinessCheckable {
+public class MEItemInputBus extends MEItemBus {
     // A simple cache for AEItemStack.
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
 
@@ -76,11 +75,6 @@ public class MEItemInputBus extends MEItemBus implements EmptinessCheckable {
             }
         });
         return inv;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return inventory.isEmpty();
     }
 
     @Override

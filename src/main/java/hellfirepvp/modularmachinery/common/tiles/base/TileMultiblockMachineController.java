@@ -35,6 +35,7 @@ import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.gui.GuiFactoryController;
 import hellfirepvp.modularmachinery.client.gui.GuiMachineController;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
@@ -761,69 +762,74 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     private boolean isContainerEmpty(ProcessingComponent<?> processingComponent) {
-        Object component = processingComponent.getProvidedComponent();
-
-        if (component instanceof InfItemFluidHandler) {
-            return ((InfItemFluidHandler) component).isEmpty();
-        }
-        else if (component instanceof IOInventory) {
-            return ((IOInventory) component).isEmpty();
-        }
+        Object component = processingComponent.providedComponent();
 
         if (component instanceof EmptinessCheckable) {
             return ((EmptinessCheckable) component).isEmpty();
         }
-
         // For unknown types, consider them empty
         return true;
     }
 
-    /* TODO It's working but can cause delays between search and will slowdown crafting process a bit but it's an easy solution
-    / and should not break anything
-    */
     private void putAllSeparateInput(Map<TileEntity, ProcessingComponent<?>> found) {
-        if (found.isEmpty()) {
-            foundComponents.clear();
-            return;
-        }
-
-        // Clear first to avoid unnecessary work
         foundComponents.clear();
 
-        // Directly add non-separate-input components
-        found.forEach((tile, component) -> {
-            if (!isAffectedBySeparateMode(component)) {
-                foundComponents.put(tile, component);
-            }
-        });
-
-        // Filter separate-input components and find a non-empty one
-        List<Map.Entry<TileEntity, ProcessingComponent<?>>> inputEntries = found.entrySet()
-                .stream()
-                .filter(entry -> isAffectedBySeparateMode(entry.getValue()))
-                .collect(Collectors.toList());
-
-        if (inputEntries.isEmpty()) {
+        if (found.isEmpty()) {
             return;
         }
 
-        // Find first non-empty container starting from lastUsedIndex
-        int originalIndex = lastUsedIndex == -1 ? 0 : lastUsedIndex;
-        int size = inputEntries.size();
+        // Разделяем компоненты на две группы сразу при одном проходе
+        List<Map.Entry<TileEntity, ProcessingComponent<?>>> separateInputEntries = null;
 
-        for (int i = 0; i < size; i++) {
-            int currentIndex = (originalIndex + i) % size;
+        for (Map.Entry<TileEntity, ProcessingComponent<?>> entry : found.entrySet()) {
+            ProcessingComponent<?> component = entry.getValue();
+
+            if (!isAffectedBySeparateMode(component)) {
+                foundComponents.put(entry.getKey(), component);
+            } else {
+                // Создаём список только если действительно нашли подходящие компоненты
+                if (separateInputEntries == null) {
+                    separateInputEntries = new ArrayList<>();
+                }
+                separateInputEntries.add(entry);
+            }
+        }
+
+        // Обрабатываем компоненты с разделённым вводом, если такие есть
+        if (separateInputEntries != null && !separateInputEntries.isEmpty()) {
+            addSingleSeparateInput(separateInputEntries);
+        }
+    }
+
+    private void addSingleSeparateInput(List<Map.Entry<TileEntity, ProcessingComponent<?>>> inputEntries) {
+        int size = inputEntries.size();
+        if (size == 0) {
+            return;
+        }
+
+        // Инициализируем lastUsedIndex при первом использовании
+        if (lastUsedIndex == -1 || lastUsedIndex >= size) {
+            lastUsedIndex = 0;
+        }
+
+        // Запоминаем начальный индекс для одного полного цикла
+        int startIndex = lastUsedIndex;
+        int currentIndex = startIndex;
+
+        do {
             Map.Entry<TileEntity, ProcessingComponent<?>> entry = inputEntries.get(currentIndex);
 
             if (!isContainerEmpty(entry.getValue())) {
                 foundComponents.put(entry.getKey(), entry.getValue());
-                lastUsedIndex = currentIndex;
+                lastUsedIndex = (currentIndex + 1) % size;
                 return;
             }
-        }
 
-        // Update lastUsedIndex even if all containers are empty
-        lastUsedIndex = (originalIndex + 1) % size;
+            currentIndex = (currentIndex + 1) % size;
+        } while (currentIndex != startIndex);
+
+        // Если все контейнеры пусты, просто обновляем индекс
+        lastUsedIndex = (startIndex + 1) % size;
     }
 
     private void putAllDefault(Map<TileEntity, ProcessingComponent<?>> found) {
@@ -1645,11 +1651,19 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     @SideOnly(Side.CLIENT)
     protected void processClientGUIUpdate() {
-        if (world != null && world.isRemote) {
-            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
-            if (currentScreen instanceof GuiMachineController controllerGUI && controllerGUI.getController() == this) {
-                controllerGUI.updateGUIState();
-            }
+        if (world == null || !world.isRemote) {
+            return;
+        }
+
+        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+        if (currentScreen == null) {
+            return;
+        }
+
+        if (currentScreen instanceof GuiMachineController machineController && machineController.getController() == this) {
+            machineController.updateGUIState();
+        } else if (currentScreen instanceof GuiFactoryController factoryController && factoryController.getFactory() == this) {
+            factoryController.updateGUIState();
         }
     }
 
