@@ -203,21 +203,38 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
         try {
             (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
 
+            int totalFillAmount = 0;
+
             if (oneFluidOneSlot) {
-                int found = -1;
+                // Looking for the slots with same liquid
                 for (int i = 0; i < fluids.length; i++) {
                     final IAEFluidStack fluidInSlot = getFluid(i);
                     if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
-                        found = i;
-                        break;
+                        int fillAmount = this.fill(i, insert, doFill);
+                        totalFillAmount += fillAmount;
+                        insert.amount -= fillAmount;
+                        if (insert.amount <= 0) {
+                            return totalFillAmount;
+                        }
                     }
                 }
-                if (found != -1) {
-                    return this.fill(found, insert, doFill);
+
+                if (insert.amount > 0) {
+                    for (int i = 0; i < fluids.length; i++) {
+                        final IAEFluidStack fluidInSlot = getFluid(i);
+                        if (fluidInSlot == null) {
+                            int fillAmount = this.fill(i, insert, doFill);
+                            totalFillAmount += fillAmount;
+                            insert.amount -= fillAmount;
+                            if (insert.amount <= 0) {
+                                break;
+                            }
+                        }
+                    }
                 }
+                return totalFillAmount;
             }
 
-            int totalFillAmount = 0;
             for (int slot = 0; slot < this.getSlots(); ++slot) {
                 int fillAmount = this.fill(slot, insert, doFill);
                 totalFillAmount += fillAmount;
