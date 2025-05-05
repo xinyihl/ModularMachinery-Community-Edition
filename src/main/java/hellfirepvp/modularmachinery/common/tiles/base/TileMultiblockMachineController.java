@@ -24,15 +24,18 @@ import github.kasuminova.mmce.common.helper.IBlockStatePredicate;
 import github.kasuminova.mmce.common.helper.IDynamicPatternInfo;
 import github.kasuminova.mmce.common.helper.IMachineController;
 import github.kasuminova.mmce.common.machine.component.MachineComponentProxyRegistry;
+import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
+import github.kasuminova.mmce.common.util.InfItemFluidHandler;
 import github.kasuminova.mmce.common.util.TimeRecorder;
 import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
 import hellfirepvp.modularmachinery.common.block.prop.WorkingState;
@@ -68,10 +71,12 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.oredict.OreDictionary;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -152,6 +157,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     protected boolean loaded = false;
 
+    protected final Set<InfItemFluidHandler> componentSet = new HashSet<>();
+
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
@@ -188,8 +195,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
+        T handler = component.getContainerProvider();
+        if (handler instanceof InfItemFluidHandler ifh) {
+            if (componentSet.contains(ifh)) {
+                return;
+            }
+            componentSet.add(ifh);
+        }
         MachineComponentManager.INSTANCE.checkComponentShared(te, this);
-        components.put(te, new ProcessingComponent<>(component, component.getContainerProvider(), tag));
+        components.put(te, new ProcessingComponent<>(component, handler, tag));
     }
 
     @Override
@@ -469,6 +483,24 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 colorable.setMachineColor(color);
             }
         }
+        //在上色的同时，对ME机械样板供应器写入控制器名称
+        if (Mods.AE2.isPresent()){
+            writeName(te);
+        }
+    }
+
+    @Method(modid = "appliedenergistics2")
+    private void writeName(TileEntity te){
+        if (te instanceof MEPatternProvider mep) {
+            var machine = this.foundMachine;
+            var registry = machine.getRegistryName();
+            var localizationKey = registry.getNamespace() + "." + registry.getPath();
+            if (I18n.canTranslate(localizationKey)) {
+                mep.setMachineName(localizationKey);
+            } else {
+                mep.setMachineName(machine.getOriginalLocalizedName().replaceAll("§.", "").replaceAll("#([A-Fa-f0-9]{3,6}(?:-[A-Fa-f0-9]{3,6})*)", ""));
+            }
+        }
     }
 
     public void resetStructureCheckCounter() {
@@ -722,6 +754,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.foundParallelControllers.clear();
         Map<TileEntity, ProcessingComponent<?>> found = new HashMap<>();
 
+        componentSet.clear();
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
         this.foundComponents.putAll(found);
         this.foundModifiers.clear();
@@ -1253,7 +1286,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             try {
                 this.owner = UUID.fromString(ownerUUIDStr);
             } catch (Exception e) {
-                ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
+                ModularMachinery.log.warn("Invalid owner uuid {}", ownerUUIDStr, e);
             }
         }
 
@@ -1328,7 +1361,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         ResourceLocation rl = new ResourceLocation(compound.getString("machine"));
         DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
         if (machine == null) {
-            ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
+            ModularMachinery.log.info("Couldn't find machine named {} for controller at {}", rl, getPos());
             resetMachine(true);
             return;
         }
@@ -1341,7 +1374,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {
-            ModularMachinery.log.info(rl + " has a empty pattern cache! Please report this to the mod author.");
+            ModularMachinery.log.info("{} has a empty pattern cache! Please report this to the mod author.", rl);
             resetMachine(true);
             return;
         }
@@ -1382,7 +1415,6 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
     @Nullable
     @Override
-    @SuppressWarnings("unchecked")
     public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return (T) inventory;
@@ -1433,18 +1465,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     }
 
     @Override
-    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    @Method(modid = "geckolib3")
     public void registerControllers(final AnimationData data) {
         data.addAnimationController(new AnimationController<>(this, "controller", 0, this::animationPredicate));
     }
 
     @Override
-    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    @Method(modid = "geckolib3")
     public AnimationFactory getFactory() {
         return (AnimationFactory) (animationFactory == null ? animationFactory = new AnimationFactory(this) : animationFactory);
     }
 
-    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    @Method(modid = "geckolib3")
     public PlayState animationPredicate(AnimationEvent<TileMultiblockMachineController> event) {
         if (!isStructureFormed()) {
             return PlayState.STOP;
@@ -1469,7 +1501,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         };
     }
 
-    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    @Method(modid = "geckolib3")
     public MachineControllerModel getCurrentModel() {
         String modelName = getCurrentModelName();
         if (modelName != null && !modelName.isEmpty()) {
@@ -1482,7 +1514,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return DynamicMachineModelRegistry.INSTANCE.getMachineDefaultModel(foundMachine);
     }
 
-    @net.minecraftforge.fml.common.Optional.Method(modid = "geckolib3")
+    @Method(modid = "geckolib3")
     public String getCurrentModelName() {
         ControllerModelGetEvent event = new ControllerModelGetEvent(this);
         event.postEvent();

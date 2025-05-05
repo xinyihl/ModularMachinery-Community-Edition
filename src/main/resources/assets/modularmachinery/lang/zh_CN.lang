@@ -191,6 +191,11 @@ message.cleared.recipes=模块化机械：已清理 %s 个旧配方。
 message.reloaded.recipes=模块化机械：已重载 %s 个配方。
 message.reloaded.machines=模块化机械：已重载 %s 个机械结构。
 
+message.blockmepatternprovider.save=已保存供应器坐标！
+message.blockmepatternprovider.load=已写入供应器坐标！
+message.blockmepatternprovider.tip0=使用内存卡绑定ME机械样板供应器！
+message.blockmepatternprovider.tip1=绑定供应器坐标位于 X:%s,Y:%s,Z:%s
+
 tooltip.item.controller.owner.self=§a你是控制器的所有者。
 tooltip.item.controller.owner.not_self=§c你不是控制器的所有者。
 
@@ -385,6 +390,7 @@ tile.modularmachinery.blockmefluidinputbus.name=ME机械流体输入总线
 tile.modularmachinery.blockmegasoutputbus.name=ME机械气体输出总线
 tile.modularmachinery.blockmegasinputbus.name=ME机械气体输入总线
 tile.modularmachinery.blockmepatternprovider.name=ME机械样板供应器
+tile.modularmachinery.blockmepatternmirrorimage.name=ME机械样板镜像
 
 error.modularmachinery.requirement.lifeessence=检查生命源质需求时发生错误！
 error.modularmachinery.requirement.lifeessence.orb=缺失或未绑定气血宝珠！

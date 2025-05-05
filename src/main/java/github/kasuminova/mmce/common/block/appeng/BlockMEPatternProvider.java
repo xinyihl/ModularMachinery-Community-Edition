@@ -1,10 +1,12 @@
 package github.kasuminova.mmce.common.block.appeng;
 
+import appeng.api.implementations.items.IMemoryCard;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -13,6 +15,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -23,15 +26,29 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
     @Override
     public boolean onBlockActivated(
             @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
-            @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand,
+            @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
             @Nonnull EnumFacing facing,
             float hitX, float hitY, float hitZ)
     {
-        if (!worldIn.isRemote) {
-            TileEntity te = worldIn.getTileEntity(pos);
-            if (te instanceof MEPatternProvider) {
-                playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_PATTERN_PROVIDER.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
+        if (worldIn.isRemote)return false;
+        if (hand == EnumHand.MAIN_HAND && !player.getHeldItem(hand).isEmpty()) {
+            var heldItem = player.getHeldItem(hand);
+            if (player.isSneaking()) {
+                if (heldItem.getItem() instanceof IMemoryCard memoryCard) {
+                    final String name = this.getTranslationKey();
+
+                    final NBTTagCompound data = new NBTTagCompound();
+                    data.setLong("Pos",pos.toLong());
+                    memoryCard.setMemoryCardContents(heldItem, name, data);
+                    player.sendStatusMessage(new TextComponentString(I18n.format("message.blockmepatternprovider.save")),false);
+
+                    return true;
+                }
             }
+        }
+        TileEntity te = worldIn.getTileEntity(pos);
+        if (te instanceof MEPatternProvider) {
+            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_PATTERN_PROVIDER.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
         }
         return true;
     }
@@ -86,5 +103,4 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
             provider.readProviderNBT(tag.getCompoundTag("patternProvider"));
         }
     }
-
 }
