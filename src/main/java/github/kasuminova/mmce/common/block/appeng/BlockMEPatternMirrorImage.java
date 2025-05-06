@@ -8,7 +8,6 @@ import hellfirepvp.modularmachinery.common.block.BlockMachineComponent;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -17,7 +16,7 @@ import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -56,7 +55,7 @@ public class BlockMEPatternMirrorImage extends BlockMachineComponent {
 
                     if (mep.equals(savedName)) {
                         tileEntity.providerPos = BlockPos.fromLong(data.getLong("Pos"));
-                        player.sendStatusMessage(new TextComponentString(I18n.format("message.blockmepatternprovider.load")),false);
+                        player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.load"));
                     } else {
                         memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
                     }
@@ -67,9 +66,9 @@ public class BlockMEPatternMirrorImage extends BlockMachineComponent {
         }
         var pPos = tileEntity.providerPos;
         if (tileEntity.providerPos == null) {
-            player.sendStatusMessage(new TextComponentString(I18n.format("message.blockmepatternprovider.tip0")), false);
+            player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.tip0"));
         } else {
-            player.sendStatusMessage(new TextComponentString(I18n.format("message.blockmepatternprovider.tip1",pPos.getX(),pPos.getY(),pPos.getZ())), false);
+            player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.tip1",pPos.getX(),pPos.getY(),pPos.getZ()));
         }
         return true;
     }

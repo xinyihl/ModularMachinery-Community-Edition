@@ -6,7 +6,6 @@ import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -15,7 +14,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -40,7 +39,7 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
                     final NBTTagCompound data = new NBTTagCompound();
                     data.setLong("Pos",pos.toLong());
                     memoryCard.setMemoryCardContents(heldItem, name, data);
-                    player.sendStatusMessage(new TextComponentString(I18n.format("message.blockmepatternprovider.save")),false);
+                    player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.save"));
 
                     return true;
                 }
