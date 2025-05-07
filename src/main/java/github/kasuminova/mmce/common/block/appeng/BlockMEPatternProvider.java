@@ -1,6 +1,10 @@
 package github.kasuminova.mmce.common.block.appeng;
 
 import appeng.api.implementations.items.IMemoryCard;
+import appeng.api.util.AEPartLocation;
+import appeng.core.sync.GuiBridge;
+import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
+import appeng.util.Platform;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
@@ -16,6 +20,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -43,6 +48,20 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
 
                     return true;
                 }
+            }
+
+            if (heldItem.getItem() instanceof ToolQuartzCuttingKnife) {
+                if (ForgeEventFactory.onItemUseStart(player, heldItem, 1) <= 0) {
+                    return false;
+                }
+
+                TileEntity te = worldIn.getTileEntity(pos);
+
+                if (te instanceof MEPatternProvider) {
+                    Platform.openGUI(player, te, AEPartLocation.fromFacing(facing), GuiBridge.GUI_RENAMER);
+                    return true;
+                }
+                return false;
             }
         }
         TileEntity te = worldIn.getTileEntity(pos);
