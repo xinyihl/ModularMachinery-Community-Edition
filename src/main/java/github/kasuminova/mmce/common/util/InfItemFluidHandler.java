@@ -295,7 +295,9 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         }
 
         if (toAppend > 0) {
-            itemStackList.add(stack.copy());
+            var item = stack.copy();
+            item.setCount(toAppend);
+            itemStackList.add(item);
             if (onItemChanged != null) {
                 onItemChanged.accept(itemStackList.size() - 1);
             }
