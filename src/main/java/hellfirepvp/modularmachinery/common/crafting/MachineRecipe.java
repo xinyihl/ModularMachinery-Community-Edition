@@ -51,6 +51,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
     protected static int counter = 0;
 
+    protected final boolean loadJEI;
     protected final int sortId;
     protected final String recipeFilePath;
     protected final ResourceLocation owningMachine, registryName;
@@ -81,12 +82,13 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tooltipList = new ArrayList<>();
         this.threadName = "";
         this.maxThreads = -1;
+        this.loadJEI = true;
     }
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
                          int tickTime, int configuredPriority, boolean voidPerTickFailure, boolean parallelized,
                          Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers, List<String> tooltipList,
-                         String threadName, int maxThreads) {
+                         String threadName, int maxThreads, boolean loadJEI) {
         this.sortId = counter;
         counter++;
         this.recipeFilePath = path;
@@ -100,6 +102,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tooltipList = tooltipList;
         this.threadName = threadName;
         this.maxThreads = maxThreads;
+        this.loadJEI = loadJEI;
     }
 
     public MachineRecipe(PreparedRecipe preparedRecipe) {
@@ -116,6 +119,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         this.tooltipList = preparedRecipe.getTooltipList();
         this.threadName = preparedRecipe.getThreadName();
         this.maxThreads = preparedRecipe.getMaxThreads();
+        this.loadJEI = preparedRecipe.getLoadJEI();
     }
 
     public void mergeAdapter(final RecipeAdapterBuilder adapterBuilder) {
@@ -148,7 +152,6 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked")
     public <H extends RecipeEvent> void addRecipeEventHandler(Class<?> hClass, IEventHandler<H> handler) {
         recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
         recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
@@ -169,6 +172,10 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
     public String getRecipeFilePath() {
         return recipeFilePath;
+    }
+
+    public boolean getLoadJEI(){
+        return loadJEI;
     }
 
     public ResourceLocation getRegistryName() {
@@ -236,7 +243,9 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                 this.recipeEventHandlers,
                 this.tooltipList,
                 this.threadName,
-                this.maxThreads);
+                this.maxThreads,
+                this.loadJEI
+        );
 
         for (ComponentRequirement<?, ?> requirement : this.getCraftingRequirements()) {
             copy.addRequirement(requirement.deepCopyModified(modifiers).postDeepCopy(requirement));
@@ -433,8 +442,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             if (requirementType == null) {
                 requirementType = IntegrationTypeHelper.searchRequirementType(type);
                 if (requirementType != null) {
-                    ModularMachinery.log.info("[Modular Machinery]: Deprecated requirement name '"
-                            + type + "'! Consider using " + requirementType.getRegistryName().toString());
+                    ModularMachinery.log.info("[Modular Machinery]: Deprecated requirement name '{}'! Consider using {}", type, requirementType.getRegistryName().toString());
                 }
             }
             if (requirementType == null) {
