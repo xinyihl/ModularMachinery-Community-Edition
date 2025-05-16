@@ -20,6 +20,7 @@ public abstract class AbstractMachine {
 
     protected int maxParallelism = Config.maxMachineParallelism;
     protected int internalParallelism = 0;
+    protected int additionalParallelism = 0;
 
     protected int maxThreads = Config.defaultFactoryMaxThread;
     protected boolean requiresBlueprint = false;
@@ -109,6 +110,18 @@ public abstract class AbstractMachine {
             this.maxParallelism = internalParallelism;
         }
         this.internalParallelism = internalParallelism;
+    }
+
+    public int getAdditionalParallelism() {
+        return additionalParallelism;
+    }
+
+    public void setAdditionalParallelism(final int additionalParallelism) {
+        this.additionalParallelism = additionalParallelism;
+    }
+
+    public int getTotalParallelism() {
+        return internalParallelism + additionalParallelism;
     }
 
     public boolean isHasFactory() {

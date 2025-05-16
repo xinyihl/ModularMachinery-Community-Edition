@@ -264,9 +264,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.searchRecipeImmediately = searchRecipeImmediately;
     }
 
+    public void setAdditionalParallelism(int additionalParallelism) {
+        foundMachine.setAdditionalParallelism(additionalParallelism);
+    }
+
+    public int getAdditionalParallelism() {
+        return foundMachine.getAdditionalParallelism();
+    }
+
     public int getMaxParallelism() {
-        int parallelism = foundMachine.getInternalParallelism();
+        int parallelism = foundMachine.getTotalParallelism();
         int maxParallelism = foundMachine.getMaxParallelism();
+
         for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
             parallelism += provider.getParallelism();
 
