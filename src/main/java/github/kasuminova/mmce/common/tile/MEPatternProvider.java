@@ -34,10 +34,7 @@ import github.kasuminova.mmce.common.event.recipe.FactoryRecipeFinishEvent;
 import github.kasuminova.mmce.common.event.recipe.RecipeFinishEvent;
 import github.kasuminova.mmce.common.network.PktMEPatternProviderHandlerItems;
 import github.kasuminova.mmce.common.tile.base.MEMachineComponent;
-import github.kasuminova.mmce.common.util.AEFluidInventoryUpgradeable;
-import github.kasuminova.mmce.common.util.InfItemFluidHandler;
-import github.kasuminova.mmce.common.util.PatternItemFilter;
-import github.kasuminova.mmce.common.util.Sides;
+import github.kasuminova.mmce.common.util.*;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.crafting.ComponentType;
@@ -58,6 +55,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -79,6 +77,8 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     protected final AppEngInternalInventory subItemHandler = new AppEngInternalInventory(this, SUB_ITEM_HANDLER_SLOTS);
     protected final AEFluidInventoryUpgradeable subFluidHandler = new AEFluidInventoryUpgradeable(this, 1, Integer.MAX_VALUE);
     protected final InfItemFluidHandler handler = new InfItemFluidHandler(subItemHandler, subFluidHandler);
+
+    protected final MEPatternProviderHandler patternProviderHandler = new MEPatternProviderHandler(this, handler);
 
     protected final AppEngInternalInventory patterns = new AppEngInternalInventory(this, PATTERNS, 1, PatternItemFilter.INSTANCE);
     protected final List<ICraftingPatternDetails> details = new ObjectArrayList<>(PATTERNS);
@@ -109,6 +109,14 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
                 markChunkDirty();
             });
         }
+    }
+
+    public boolean isMachineCompleted() {
+        return machineCompleted;
+    }
+
+    public ICraftingPatternDetails getCurrentPattern() {
+        return currentPattern;
     }
 
     @Override
@@ -399,16 +407,17 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     }
 
     @Override
-    public boolean hasCapability(@Nonnull final Capability<?> capability, @Nullable final EnumFacing facing) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || super.hasCapability(capability, facing);
+    public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ||
+                capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY ||
+                super.hasCapability(capability, facing);
     }
 
     @Nullable
     @Override
-    public <T> T getCapability(@Nonnull final Capability<T> capability, @Nullable final EnumFacing facing) {
-        Capability<IItemHandler> cap = CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
-        if (capability == cap) {
-            return cap.cast(patterns);
+    public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY || capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+            return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(patternProviderHandler);
         }
         return super.getCapability(capability, facing);
     }
