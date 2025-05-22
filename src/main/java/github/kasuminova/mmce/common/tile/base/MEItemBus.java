@@ -3,10 +3,10 @@ package github.kasuminova.mmce.common.tile.base;
 import appeng.api.AEApi;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.channels.IItemStorageChannel;
+import appeng.me.GridAccessException;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -89,6 +89,14 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
             slotIDs[slotID] = slotID;
         }
         inventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
+
+        if (inventory.isEmpty()) return;
+
+        try {
+            proxy.getTick().alertDevice(proxy.getNode());
+        } catch (GridAccessException e) {
+            // oh god
+        }
     }
 
     @Override
@@ -99,13 +107,7 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
     }
 
     public boolean hasItem() {
-        for (int i = 0; i < inventory.getSlots(); i++) {
-            ItemStack stack = inventory.getStackInSlot(i);
-            if (!stack.isEmpty()) {
-                return true;
-            }
-        }
-        return false;
+        return inventory.isEmpty();
     }
     
     public boolean hasChangedSlots() {
