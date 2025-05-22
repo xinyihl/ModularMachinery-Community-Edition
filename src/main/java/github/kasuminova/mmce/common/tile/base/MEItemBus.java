@@ -107,7 +107,7 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
     }
 
     public boolean hasItem() {
-        return inventory.isEmpty();
+        return !inventory.isEmpty();
     }
     
     public boolean hasChangedSlots() {
