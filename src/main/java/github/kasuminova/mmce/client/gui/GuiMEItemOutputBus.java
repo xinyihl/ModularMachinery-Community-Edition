@@ -5,14 +5,15 @@ import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
 import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
 import github.kasuminova.mmce.common.container.ContainerMEItemOutputBus;
 import github.kasuminova.mmce.common.tile.MEItemOutputBus;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
 public class GuiMEItemOutputBus extends GuiMEItemBus {
-    // For convenience, the Sky Chest resource was used :P
-    private static final ResourceLocation TEXTURES_OUTPUT_BUS = new ResourceLocation("appliedenergistics2", "textures/guis/skychest.png");
+    // No more Sky Chest texture :C
+    private static final ResourceLocation TEXTURES_OUTPUT_BUS = new ResourceLocation(ModularMachinery.MODID, "textures/gui/meitemioutputbus.png");
 
     public GuiMEItemOutputBus(final MEItemOutputBus te, final EntityPlayer player) {
         super(new ContainerMEItemOutputBus(te, player));
