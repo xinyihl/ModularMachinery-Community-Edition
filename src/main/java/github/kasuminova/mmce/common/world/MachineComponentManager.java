@@ -1,6 +1,8 @@
 package github.kasuminova.mmce.common.world;
 
 import com.github.bsideup.jabel.Desugar;
+import github.kasuminova.mmce.common.tile.MEPatternMirrorImage;
+import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import github.kasuminova.mmce.common.util.concurrent.ExecuteGroup;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
@@ -9,6 +11,8 @@ import it.unimi.dsi.fastutil.objects.ReferenceSets;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 
 import java.util.Collections;
 import java.util.Map;
@@ -40,16 +44,26 @@ public class MachineComponentManager {
 
     public void checkComponentShared(TileEntity component, TileMultiblockMachineController ctrl) {
         World world = component.getWorld();
-        BlockPos pos = component.getPos();
+        BlockPos pos;
+        TileEntity te;
+
+        if (Loader.isModLoaded("appliedenergistics2")){
+            Object[] result = getResult(component, world);
+            pos = (BlockPos) result[0];
+            te = (TileEntity) result[1];
+        } else {
+            te = component;
+            pos = component.getPos();
+        }
 
         Map<BlockPos, ComponentInfo> posComponentMap = componentMap.computeIfAbsent(world, v -> new ConcurrentHashMap<>());
 
-        synchronized (component) {
+        synchronized (te) {
             ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
-                    component, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl)))));
+                    te, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl)))));
 
-            if (!info.areTileEntityEquals(component)) {
-                ComponentInfo newInfo = new ComponentInfo(component, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
+            if (!info.areTileEntityEquals(te)) {
+                ComponentInfo newInfo = new ComponentInfo(te, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
                 posComponentMap.put(pos, newInfo);
                 return;
             }
@@ -73,9 +87,36 @@ public class MachineComponentManager {
         }
     }
 
+    @Optional.Method(modid = "appliedenergistics2")
+    private static Object[] getResult(TileEntity component, World world) {
+        BlockPos pos = component.getPos();
+        TileEntity te = component;
+
+        if (component instanceof MEPatternMirrorImage mepi){
+            if (mepi.providerPos != null){
+                TileEntity tileEntity = world.getTileEntity(mepi.providerPos);
+                if (tileEntity instanceof MEPatternProvider mep){
+                    te = mep;
+                    pos = mep.getPos();
+                }
+            }
+        }
+        return new Object[]{pos,te};
+    }
+
     public void removeOwner(TileEntity component, TileMultiblockMachineController ctrl) {
         World world = component.getWorld();
-        BlockPos pos = component.getPos();
+        BlockPos pos;
+        TileEntity te;
+
+        if (Loader.isModLoaded("appliedenergistics2")){
+            Object[] result = getResult(component, world);
+            pos = (BlockPos) result[0];
+            te = (TileEntity) result[1];
+        } else {
+            te = component;
+            pos = component.getPos();
+        }
 
         Map<BlockPos, ComponentInfo> posComponentMap = componentMap.computeIfAbsent(world, v -> new ConcurrentHashMap<>());
 
@@ -84,8 +125,8 @@ public class MachineComponentManager {
             return;
         }
 
-        if (!info.areTileEntityEquals(component)) {
-            ComponentInfo newInfo = new ComponentInfo(component, pos, new ObjectArraySet<>());
+        if (!info.areTileEntityEquals(te)) {
+            ComponentInfo newInfo = new ComponentInfo(te, pos, new ObjectArraySet<>());
             posComponentMap.put(pos, newInfo);
         } else {
             Set<TileMultiblockMachineController> owners = info.owners;
