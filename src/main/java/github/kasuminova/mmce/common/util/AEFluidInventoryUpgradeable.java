@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * From: <a href="https://github.com/PrototypeTrousers/Applied-Energistics-2/blob/AE2-Omnifactory/src/main/java/appeng/fluids/util/AEFluidInventory.java">...</a>
  */
 @SuppressWarnings("unchecked")
-public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockProvider {
+public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockProvider, IOneToOneFluidHandler {
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final AtomicReference<IAEFluidStack>[] fluids;
@@ -54,6 +54,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
         }
     }
 
+    @Override
     public boolean isOneFluidOneSlot() {
         return oneFluidOneSlot;
     }

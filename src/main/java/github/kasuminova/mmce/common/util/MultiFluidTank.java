@@ -15,6 +15,8 @@ public class MultiFluidTank implements IFluidHandler {
     private final IFluidTankProperties[] props;
     private int capacity;
 
+    private boolean oneToOne;
+
     public MultiFluidTank(int capacity, int tankCount) {
         this.capacity = capacity;
         this.contents = new FluidStack[tankCount];
@@ -49,6 +51,10 @@ public class MultiFluidTank implements IFluidHandler {
                 contents[i] = stack.copy();
             }
         }
+
+        if (from instanceof IOneToOneFluidHandler oneToOneHandler) {
+            this.oneToOne = oneToOneHandler.isOneFluidOneSlot();
+        }
     }
 
     public int getCapacity() {
@@ -72,6 +78,22 @@ public class MultiFluidTank implements IFluidHandler {
         }
 
         final FluidStack insert = fluid.copy();
+
+        if (oneToOne) {
+            // Find the distinct slot
+            int foundSlot = -1;
+            for (int i = 0; i < props.length; i++) {
+                FluidStack fluidInSlot = props[i].getContents();
+                if (fluidInSlot != null && fluidInSlot.getFluid() == fluid.getFluid()) {
+                    foundSlot = i;
+                    break;
+                }
+            }
+            if (foundSlot >= 0) {
+                return fill(foundSlot, insert, doFill);
+            }
+            // Didn't find existing fluid, resume normal logic.
+        }
 
         int totalFillAmount = 0;
         for (int i = 0; i < contents.length; i++) {
@@ -151,7 +173,7 @@ public class MultiFluidTank implements IFluidHandler {
             int drained = drainedStack.amount;
             totalDrainAmount += drained;
 
-            if (drained >= res.amount) {
+            if (drained >= res.amount || oneToOne) {
                 break;
             }
             res.amount -= drained;
