@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.util;
 
+import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidHandler;
@@ -10,7 +11,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @SuppressWarnings("unused")
-public class MultiFluidTank implements IFluidHandler {
+public class MultiFluidTank implements IFluidHandler, IOneToOneFluidHandler {
     private final FluidStack[] contents;
     private final IFluidTankProperties[] props;
     private int capacity;
@@ -67,6 +68,11 @@ public class MultiFluidTank implements IFluidHandler {
     }
 
     @Override
+    public boolean isOneFluidOneSlot() {
+        return oneToOne;
+    }
+
+    @Override
     public IFluidTankProperties[] getTankProperties() {
         return props;
     }
@@ -79,20 +85,9 @@ public class MultiFluidTank implements IFluidHandler {
 
         final FluidStack insert = fluid.copy();
 
-        if (oneToOne) {
-            // Find the distinct slot
-            int foundSlot = -1;
-            for (int i = 0; i < props.length; i++) {
-                FluidStack fluidInSlot = props[i].getContents();
-                if (fluidInSlot != null && fluidInSlot.getFluid() == fluid.getFluid()) {
-                    foundSlot = i;
-                    break;
-                }
-            }
-            if (foundSlot >= 0) {
-                return fill(foundSlot, insert, doFill);
-            }
-            // Didn't find existing fluid, resume normal logic.
+        int foundSlot = HybridFluidUtils.findSlotWithFluid(this, props, fluid);
+        if (foundSlot >= 0) {
+            return fill(foundSlot, insert, doFill);
         }
 
         int totalFillAmount = 0;
