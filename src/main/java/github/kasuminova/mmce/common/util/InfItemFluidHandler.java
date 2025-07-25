@@ -44,8 +44,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     protected volatile IntConsumer onFluidChanged = null;
     protected volatile IntConsumer onGasChanged = null;
 
-    protected final int MAX_SAFE_SLOT_INDEX = 32;
-
     public InfItemFluidHandler() {
     }
 
@@ -238,30 +236,9 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     @Nonnull
     @Override
     public synchronized ItemStack insertItem(final int slot, @Nonnull final ItemStack stack, final boolean simulate) {
-        if (stack.isEmpty()) {
-            return ItemStack.EMPTY;
-        }
-        // Overkill but ok
         if (slot >= itemStackList.size()) {
-            if (slot > MAX_SAFE_SLOT_INDEX) {
-                return stack;
-            }
-
-            if (simulate) {
-                return ItemStack.EMPTY;
-            }
-
-            while (itemStackList.size() <= slot) {
-                itemStackList.add(ItemStack.EMPTY);
-            }
-
-            itemStackList.set(slot, stack.copy());
-            if (onItemChanged != null) {
-                onItemChanged.accept(slot);
-            }
-            return ItemStack.EMPTY;
+            return stack;
         }
-
         ItemStack stackInSlot = itemStackList.get(slot);
         if (stackInSlot.isEmpty()) {
             if (!simulate) {
