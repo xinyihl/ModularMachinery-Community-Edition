@@ -304,7 +304,7 @@ public abstract class WorldSceneRenderer {
         int width = positionedRect.getSize().width;
         int height = positionedRect.getSize().height;
 
-        // GlStateManager.pushAttrib();
+        GlStateManager.pushAttrib();
 
         Minecraft.getMinecraft().entityRenderer.disableLightmap();
         GlStateManager.disableLighting();
@@ -357,7 +357,7 @@ public abstract class WorldSceneRenderer {
 
         // TODO: Might need to properly reset remaining attributes?
         // but this method shouldn't be used - see Forge#1637
-        // GlStateManager.popAttrib();
+        GlStateManager.popAttrib();
         RenderHelper.disableStandardItemLighting();
     }
 

@@ -495,7 +495,6 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         handlerDirty = false;
     }
 
-    @SideOnly(Side.CLIENT)
     protected void processClientGUIUpdate() {
         if (world != null && world.isRemote) {
             GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;

@@ -1592,7 +1592,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         AnimationBuilder animationBuilder = new AnimationBuilder();
         for (final ControllerModelAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
             animationBuilder.addAnimation(animation.animationName(),
-                    animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.PLAY_ONCE);
+                    animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.HOLD_ON_LAST_FRAME);
         }
         event.getController().setAnimation(animationBuilder);
 
