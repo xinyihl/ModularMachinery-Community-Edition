@@ -53,7 +53,7 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
         super(new ContainerMEItemInputBus(owner, player));
 
         this.owner = owner;
-        this.ySize = 205;
+        this.ySize = 223;
         this.xSize = 256;
 
         initWidgetController();
@@ -84,7 +84,7 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
 
         // Init Widget Containers...
         Row stackListButtons = new Row();
-        stackListButtons.addWidgets(modeButtonElements).setAbsXY(265, 100);
+        stackListButtons.addWidgets(modeButtonElements).setAbsXY(176, 141);
 
         this.widgetController.addWidget(stackListButtons);
     }
@@ -130,7 +130,7 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
     public void initGui() {
         super.initGui();
 
-        thresholdField = new GuiTextField(0, this.fontRenderer, this.guiLeft + 265, this.guiTop + 135, 70, 12);
+        thresholdField = new GuiTextField(0, this.fontRenderer, this.guiLeft + 176, this.guiTop + 179, 70, 12);
         thresholdField.setMaxStringLength(7);
         thresholdField.setText(String.valueOf(thresholdValue));
         thresholdField.setEnableBackgroundDrawing(true);
@@ -149,10 +149,6 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
         if (localRequestMode == MEItemInputBus.MERequestMode.THRESHOLD) {
             thresholdField.drawTextBox();
 
-            // Draw threshold label
-            this.fontRenderer.drawString(I18n.format("gui.meiteminputbus.threshold.field.title"),
-                    this.guiLeft + 265, this.guiTop + 120, 0xbfbfbf);
-
             // Show tooltip on hover
             if (isMouseOverThresholdLabel(mouseX, mouseY)) {
                 List<String> tooltip = new ArrayList<>();
@@ -163,8 +159,8 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
     }
 
     private boolean isMouseOverThresholdLabel(int mouseX, int mouseY) {
-        return mouseX >= this.guiLeft + 285 && mouseX <= this.guiLeft + 315 &&
-                mouseY >= this.guiTop + 110 && mouseY <= this.guiTop + 132;
+        return mouseX >= this.guiLeft + 175 && mouseX <= this.guiLeft + 247 &&
+                mouseY >= this.guiTop + 162 && mouseY <= this.guiTop + 173;
     }
 
     @Override
@@ -354,10 +350,16 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRenderer.drawStringWithShadow(I18n.format("gui.meiteminputbus.title"), 0, -25, 0xffffff);
-        this.fontRenderer.drawStringWithShadow(GuiText.Config.getLocal(), 8, -10, 0xbfbfbf);
-        this.fontRenderer.drawStringWithShadow(GuiText.StoredItems.getLocal(), (float) xSize / 2 + 8, -10, 0xbfbfbf);
-        this.fontRenderer.drawString(GuiText.inventory.getLocal(), 55, this.ySize - 98, 0x404040);
+        this.fontRenderer.drawStringWithShadow(I18n.format("gui.meiteminputbus.title"), 8, 8, 0xffffff);
+        this.fontRenderer.drawString(GuiText.Config.getLocal(), 8, 21, 0x404040);
+        this.fontRenderer.drawString(GuiText.StoredItems.getLocal(), xSize / 2 + 12, 21, 0x404040);
+        this.fontRenderer.drawString(GuiText.inventory.getLocal(), 8, this.ySize - 94, 0x404040);
+
+        if (localRequestMode == MEItemInputBus.MERequestMode.THRESHOLD) {
+            // Draw threshold label
+            this.fontRenderer.drawString(I18n.format("gui.meiteminputbus.threshold.field.title"),
+                    176, 163, 0x404040);
+        }
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
     }
@@ -378,11 +380,11 @@ public class GuiMEItemInputBus extends GuiMEItemBus {
 
     private void drawSlots(int i, int j) {
         // Fake slots
-        drawSlotGrid(i, j, 11, 8, 6, 5, 0, 205);
+        drawSlotGrid(i, j, 7, 33, 6, 5, 48, 223);
 
         // Real slots
         int slotOffsetX = 7 * 18;
-        drawSlotGrid(i, j, 11 + slotOffsetX, 8, 6, 5, 18, 205);
+        drawSlotGrid(i, j, 15 + slotOffsetX, 33, 6, 5, 66, 223);
     }
 
     @SuppressWarnings("SameParameterValue")

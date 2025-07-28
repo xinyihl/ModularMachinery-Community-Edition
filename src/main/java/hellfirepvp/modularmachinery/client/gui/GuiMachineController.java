@@ -77,8 +77,8 @@ public class GuiMachineController extends GuiContainerDynamic<ContainerControlle
         modeButtonElements
                 .addElement(TileMultiblockMachineController.InputMode.DEFAULT, TextureProperties.of(0, 229, 16, 16))
                 .addElement(TileMultiblockMachineController.InputMode.SEPARATE_INPUT, TextureProperties.of(16, 229, 16, 16))
-                .setMouseDownTexture(16, 213)
-                .setHoveredTexture(32, 213)
+                .setMouseDownTexture(32, 213)
+                .setHoveredTexture(16, 213)
                 .setTexture(0, 213)
                 .setTextureLocation(TEXTURES_CONTROLLER)
                 .setTooltipFunction(this::createModeTooltips)
@@ -89,7 +89,7 @@ public class GuiMachineController extends GuiContainerDynamic<ContainerControlle
 
         // Init Widget Containers...
         Row row = new Row();
-        row.addWidgets(modeButtonElements).setAbsXY(-20, 2);
+        row.addWidgets(modeButtonElements).setAbsXY(151, 102);
 
         this.widgetController.addWidget(row);
     }

@@ -81,21 +81,21 @@ public class GuiFactoryController extends GuiContainerDynamic<ContainerFactoryCo
 
     private void initModeButtonElements() {
         modeButtonElements
-                .addElement(TileMultiblockMachineController.InputMode.DEFAULT, TextureProperties.of(0, 229, 15, 16))
-                .addElement(TileMultiblockMachineController.InputMode.SEPARATE_INPUT, TextureProperties.of(15, 229, 15, 16))
-                .setMouseDownTexture(15, 213)
-                .setHoveredTexture(30, 213)
-                .setTexture(0, 213)
-                .setTextureLocation(TEXTURES_FACTORY)
+                .addElement(TileMultiblockMachineController.InputMode.DEFAULT, TextureProperties.of(86, 16, 16, 16))
+                .addElement(TileMultiblockMachineController.InputMode.SEPARATE_INPUT, TextureProperties.of(102, 16, 16, 16))
+                .setMouseDownTexture(118, 0)
+                .setHoveredTexture(102, 0)
+                .setTexture(86, 0)
+                .setTextureLocation(TEXTURES_FACTORY_ELEMENTS)
                 .setTooltipFunction(this::createModeTooltips)
                 .setOnClickedListener(this::handleModeButtonClick)
-                .setWidthHeight(15, 16)
+                .setWidthHeight(16, 16)
                 .setEnabled(true)
                 .setVisible(true);
 
         // Init Widget Containers...
         Row row = new Row();
-        row.addWidgets(modeButtonElements).setAbsXY(-20, 2);
+        row.addWidgets(modeButtonElements).setAbsXY(255, 102);
 
         this.widgetController.addWidget(row);
     }
@@ -135,7 +135,7 @@ public class GuiFactoryController extends GuiContainerDynamic<ContainerFactoryCo
         this.mc.getTextureManager().bindTexture(TEXTURES_FACTORY);
         final int x = (this.width - this.xSize) / 2;
         final int y = (this.height - this.ySize) / 2;
-        Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, this.xSize, this.ySize, this.xSize, this.ySize + 43);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, this.xSize, this.ySize, this.xSize, this.ySize);
 
         updateScrollbar(x, y);
         scrollbar.draw(this, mc);

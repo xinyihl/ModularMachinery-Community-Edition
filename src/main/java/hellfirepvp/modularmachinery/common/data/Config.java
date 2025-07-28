@@ -39,7 +39,7 @@ public class Config {
     public static boolean recipeParallelizeEnabledByDefault = true;
     public static boolean enableFluxNetworksIntegration = true;
     public static boolean enableFactoryControllerByDefault = false;
-    public static boolean enableControllercanToggleInputModeByDefault = true;
+    public static boolean enableControllercanToggleInputModeByDefault = false;
     public static boolean controllerOutputComparatorSignal = true;
     public static boolean asyncControllerModelRender = true;
     public static boolean enableDurationMultiplier = true;
@@ -125,6 +125,6 @@ public class Config {
                 "Sets the maximum number of threads in the factory system by default.");
         // Input Mode
         enableControllercanToggleInputModeByDefault = lastReadConfig.getBoolean("enable-controller-input-mode-toggle-bydefault",
-                "general", true, "If enabled, allows all the mechanism and its factory to change input modes by default.");
+                "general", false, "If enabled, allows all the mechanism and its factory to change input modes by default.");
     }
 }
