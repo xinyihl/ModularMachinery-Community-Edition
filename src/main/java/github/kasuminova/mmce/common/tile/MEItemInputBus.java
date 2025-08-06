@@ -276,17 +276,10 @@ public class MEItemInputBus extends MEItemBus {
 
     private int getStackAmountFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) {
         IAEItemStack aeStack = createStack(stack);
-        if (aeStack == null) {
-            return 0;
-        }
+        if (aeStack == null) return 0;
 
-        for (IAEItemStack storedStack : inv.getStorageList()) {
-            if (storedStack.isSameType(aeStack)) {
-                return (int) storedStack.getStackSize();
-            }
-        }
-
-        return 0;
+        IAEItemStack found = inv.getStorageList().findPrecise(aeStack);
+        return found != null ? (int) found.getStackSize() : 0;
     }
 
     private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
