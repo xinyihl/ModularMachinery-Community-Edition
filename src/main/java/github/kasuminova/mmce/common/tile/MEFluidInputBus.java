@@ -10,6 +10,7 @@ import appeng.fluids.util.IAEFluidTank;
 import appeng.me.GridAccessException;
 import appeng.util.Platform;
 import github.kasuminova.mmce.common.tile.base.MEFluidBus;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -21,7 +22,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.locks.ReadWriteLock;
 
-public class MEFluidInputBus extends MEFluidBus {
+public class MEFluidInputBus extends MEFluidBus implements SettingsTransfer {
+
+    private static final String CONFIG_TAG_KEY = "config";
+
     private final AEFluidInventory config = new AEFluidInventory(this, MEFluidBus.TANK_SLOT_AMOUNT);
 
     @Override
@@ -32,13 +36,13 @@ public class MEFluidInputBus extends MEFluidBus {
     @Override
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        config.readFromNBT(compound, "config");
+        config.readFromNBT(compound, CONFIG_TAG_KEY);
     }
 
     @Override
     public void writeCustomNBT(final NBTTagCompound compound) {
         super.writeCustomNBT(compound);
-        config.writeToNBT(compound, "config");
+        config.writeToNBT(compound, CONFIG_TAG_KEY);
     }
 
     public IAEFluidTank getConfig() {
@@ -197,5 +201,23 @@ public class MEFluidInputBus extends MEFluidBus {
         }
 
         super.markNoUpdate();
+    }
+
+    @Override
+    public NBTTagCompound downloadSettings() {
+        NBTTagCompound tag = new NBTTagCompound();
+        config.writeToNBT(tag, CONFIG_TAG_KEY);
+        return tag;
+    }
+
+    @Override
+    public void uploadSettings(NBTTagCompound settings) {
+        config.readFromNBT(settings, CONFIG_TAG_KEY);
+        this.markForUpdate();
+        try {
+            proxy.getTick().alertDevice(proxy.getNode());
+        } catch (GridAccessException e) {
+            ModularMachinery.log.warn("Error while uploading settings", e);
+        }
     }
 }
