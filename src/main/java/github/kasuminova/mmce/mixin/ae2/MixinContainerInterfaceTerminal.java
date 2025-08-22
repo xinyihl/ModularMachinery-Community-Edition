@@ -7,7 +7,6 @@ import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerInterfaceTerminal;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
-import com.glodblock.github.coremod.CoreModHooks;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -85,7 +84,7 @@ public class MixinContainerInterfaceTerminal extends AEBaseContainer {
 
     @Inject(method = "regenList",at = @At(value = "INVOKE", target = "Lappeng/api/networking/IGridNode;isActive()Z",ordinal = 0,shift = At.Shift.BY,by = 2),remap = false)
     public void regenListMixin(CallbackInfo ci) {
-        for(IGridNode gn : CoreModHooks.getMachines(this.grid, MEPatternProvider.class)) {
+        for(IGridNode gn : this.grid.getMachines(MEPatternProvider.class)) {
             if (gn.isActive()) {
                 try {
                     IInterfaceHost ih = (IInterfaceHost)gn.getMachine();
