@@ -3,6 +3,8 @@ import org.jetbrains.gradle.ext.RunConfigurationContainer
 import java.util.*
 
 plugins {
+    kotlin("jvm") version "2.2.0"
+    kotlin("plugin.serialization") version "2.2.0"
     id("java-library")
     id("maven-publish")
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.1.7"
@@ -24,6 +26,10 @@ java {
     // Generate sources and javadocs jars when building and publishing
     withSourcesJar()
     withJavadocJar()
+}
+
+kotlin {
+    jvmToolchain(8)
 }
 
 // Most RFG configuration lives here, see the JavaDoc for com.gtnewhorizons.retrofuturagradle.MinecraftExtension
@@ -180,6 +186,13 @@ dependencies {
     annotationProcessor (mixin) {
         isTransitive = false
     }
+
+    // Kotlin Support
+    runtimeOnly("io.github.chaosunity.forgelin:Forgelin-Continuous:2.2.0.0") {
+        isTransitive = false
+    }
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:2.2.0")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 
     implementation("CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.+")
     implementation(rfg.deobf("curse.maven:had-enough-items-557549:4810661"))
