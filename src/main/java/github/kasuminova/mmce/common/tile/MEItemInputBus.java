@@ -8,6 +8,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.me.GridAccessException;
 import appeng.util.Platform;
 import github.kasuminova.mmce.common.tile.base.MEItemBus;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
@@ -22,7 +23,10 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 
-public class MEItemInputBus extends MEItemBus {
+public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
+
+    private static final String CONFIG_TAG_KEY = "configInventory";
+
     // A simple cache for AEItemStack.
     private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
     private IOInventory configInventory = buildConfigInventory();
@@ -71,8 +75,8 @@ public class MEItemInputBus extends MEItemBus {
     public void readCustomNBT(final NBTTagCompound compound) {
         super.readCustomNBT(compound);
 
-        if (compound.hasKey("configInventory")) {
-            readConfigInventoryNBT(compound.getCompoundTag("configInventory"));
+        if (compound.hasKey(CONFIG_TAG_KEY)) {
+            readConfigInventoryNBT(compound.getCompoundTag(CONFIG_TAG_KEY));
         }
     }
 
@@ -80,7 +84,7 @@ public class MEItemInputBus extends MEItemBus {
     public void writeCustomNBT(final NBTTagCompound compound) {
         super.writeCustomNBT(compound);
 
-        compound.setTag("configInventory", configInventory.writeNBT());
+        compound.setTag(CONFIG_TAG_KEY, configInventory.writeNBT());
     }
 
     public IOInventory getConfigInventory() {
@@ -280,5 +284,22 @@ public class MEItemInputBus extends MEItemBus {
             slotIDs[slotID] = slotID;
         }
         configInventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
+    }
+
+    @Override
+    public NBTTagCompound downloadSettings() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setTag(CONFIG_TAG_KEY, configInventory.writeNBT());
+        return tag;
+    }
+
+    @Override
+    public void uploadSettings(NBTTagCompound settings) {
+        readConfigInventoryNBT(settings.getCompoundTag(CONFIG_TAG_KEY));
+        try {
+            proxy.getTick().alertDevice(proxy.getNode());
+        } catch (GridAccessException e) {
+            ModularMachinery.log.warn("Error while uploading settings", e);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package github.kasuminova.mmce.common.block.appeng;
 
+import appeng.api.implementations.items.IMemoryCard;
 import github.kasuminova.mmce.common.tile.MEItemInputBus;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
@@ -31,7 +32,15 @@ public class BlockMEItemInputBus extends BlockMEItemBus {
     {
         if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
-            if (te instanceof MEItemInputBus) {
+            if (te instanceof MEItemInputBus itemInputBus) {
+                ItemStack heldItem = playerIn.getHeldItem(hand);
+                if (heldItem.getItem() instanceof IMemoryCard memoryCard) {
+                    boolean handled = handleSettingsTransfer(itemInputBus, memoryCard, playerIn, heldItem);
+                    if (handled) {
+                        return true;
+                    }
+                }
+
                 playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_ITEM_INPUT_BUS.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
             }
         }
