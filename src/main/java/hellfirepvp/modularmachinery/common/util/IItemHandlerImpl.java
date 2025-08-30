@@ -9,14 +9,12 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class IItemHandlerImpl implements IItemHandlerModifiable {
-    public static final int DEFAULT_SLOT_LIMIT = 64;
-
-    protected int[] slotLimits = {64}; // Value not present means default, aka 64.
-    protected SlotStackHolder[] inventory = {new SlotStackHolder(0)};
-
-    public boolean allowAnySlots = false;
-    public EnumFacing[] accessibleSides = {};
-    protected int[] inSlots = new int[0], outSlots = new int[0], miscSlots = new int[0];
+    public static final int               DEFAULT_SLOT_LIMIT = 64;
+    public              boolean           allowAnySlots      = false;
+    public              EnumFacing[]      accessibleSides    = {};
+    protected           int[]             slotLimits         = {64}; // Value not present means default, aka 64.
+    protected           SlotStackHolder[] inventory          = {new SlotStackHolder(0)};
+    protected           int[]             inSlots            = new int[0], outSlots = new int[0], miscSlots = new int[0];
 
     protected IItemHandlerImpl() {
     }
@@ -29,7 +27,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         this.inSlots = inSlots;
         this.outSlots = outSlots;
 
-        int max = Math.max(getArrayMax(inSlots), getArrayMax(outSlots)) ;
+        int max = Math.max(getArrayMax(inSlots), getArrayMax(outSlots));
         this.inventory = new SlotStackHolder[max + 1];
         this.slotLimits = new int[max + 1];
 
@@ -39,7 +37,7 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         }
 
         this.accessibleSides = accessibleFrom;
-        System.arraycopy(accessibleFrom, 0,  this.accessibleSides, 0, accessibleFrom.length);
+        System.arraycopy(accessibleFrom, 0, this.accessibleSides, 0, accessibleFrom.length);
     }
 
     public IItemHandlerImpl(IItemHandlerModifiable handler) {
@@ -71,6 +69,27 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
         }
     }
 
+    protected static boolean arrayContains(int[] array, int i) {
+        return Arrays.binarySearch(array, i) >= 0;
+    }
+
+    protected static boolean canMergeItemStacks(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
+        if (stack.isEmpty() || other.isEmpty() || !stack.isStackable() || !other.isStackable()) {
+            return false;
+        }
+        return stack.isItemEqual(other) && ItemStack.areItemStackTagsEqual(stack, other);
+    }
+
+    protected static int getArrayMax(final int[] slots) {
+        int max = 0;
+        for (final int slot : slots) {
+            if (slot > max) {
+                max = slot;
+            }
+        }
+        return max;
+    }
+
     public IItemHandlerImpl copy() {
         IItemHandlerImpl copy = new IItemHandlerImpl(inSlots, outSlots, accessibleSides);
         for (int i = 0; i < inventory.length; i++) {
@@ -93,17 +112,6 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
 
         copy.slotLimits = slotLimits;
         return copy;
-    }
-
-    protected static boolean arrayContains(int[] array, int i) {
-        return Arrays.binarySearch(array, i) >= 0;
-    }
-
-    protected static boolean canMergeItemStacks(@Nonnull ItemStack stack, @Nonnull ItemStack other) {
-        if (stack.isEmpty() || other.isEmpty() || !stack.isStackable() || !other.isStackable()) {
-            return false;
-        }
-        return stack.isItemEqual(other) && ItemStack.areItemStackTagsEqual(stack, other);
     }
 
     public IItemHandlerImpl setMiscSlots(int... miscSlots) {
@@ -171,7 +179,9 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
     @Override
     @Nonnull
     public ItemStack insertItem(int slot, @Nonnull ItemStack stack, boolean simulate) {
-        if (stack.isEmpty()) return stack;
+        if (stack.isEmpty()) {
+            return stack;
+        }
         return insertItemInternal(slot, stack, simulate);
     }
 
@@ -293,16 +303,6 @@ public class IItemHandlerImpl implements IItemHandlerModifiable {
             System.arraycopy(inventory, 0, tmp, 0, invLength);
             this.inventory = tmp;
         }
-    }
-
-    protected static int getArrayMax(final int[] slots) {
-        int max = 0;
-        for (final int slot : slots) {
-            if (slot > max) {
-                max = slot;
-            }
-        }
-        return max;
     }
 
     public static class SlotStackHolder {

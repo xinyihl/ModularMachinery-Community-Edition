@@ -6,7 +6,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Use long to express BlockPos, using less memory, from StellarCore.
@@ -14,8 +18,8 @@ import java.util.*;
 public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
 
     protected final Long2ObjectMap<V> internal = new Long2ObjectOpenHashMap<>();
-    protected EntrySet entrySet = null;
-    protected KeySet keySet = null;
+    protected       EntrySet          entrySet = null;
+    protected       KeySet            keySet   = null;
 
     public BlockPos2ValueMap() {
     }
@@ -113,6 +117,29 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
         return internal.hashCode();
     }
 
+    public static class Entry<V> implements Map.Entry<BlockPos, V> {
+        private final Long2ObjectMap.Entry<V> parent;
+
+        public Entry(Long2ObjectMap.Entry<V> parent) {
+            this.parent = parent;
+        }
+
+        @Override
+        public BlockPos getKey() {
+            return BlockPos.fromLong(parent.getLongKey());
+        }
+
+        @Override
+        public V getValue() {
+            return parent.getValue();
+        }
+
+        @Override
+        public V setValue(final V value) {
+            return parent.setValue(value);
+        }
+    }
+
     public class EntrySet extends AbstractSet<Map.Entry<BlockPos, V>> {
         @Override
         public int size() {
@@ -144,28 +171,5 @@ public class BlockPos2ValueMap<V> implements Map<BlockPos, V> {
             return internal.size();
         }
 
-    }
-
-    public static class Entry<V> implements Map.Entry<BlockPos, V> {
-        private final Long2ObjectMap.Entry<V> parent;
-
-        public Entry(Long2ObjectMap.Entry<V> parent) {
-            this.parent = parent;
-        }
-
-        @Override
-        public BlockPos getKey() {
-            return BlockPos.fromLong(parent.getLongKey());
-        }
-
-        @Override
-        public V getValue() {
-            return parent.getValue();
-        }
-
-        @Override
-        public V setValue(final V value) {
-            return parent.setValue(value);
-        }
     }
 }

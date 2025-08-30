@@ -26,10 +26,10 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final AtomicReference<IAEFluidStack>[] fluids;
-    private final IAEFluidInventory handler;
-    private int capacity;
-    private IFluidTankProperties[] props = null;
-    private boolean oneFluidOneSlot = false;
+    private final IAEFluidInventory                handler;
+    private       int                              capacity;
+    private       IFluidTankProperties[]           props           = null;
+    private       boolean                          oneFluidOneSlot = false;
 
     public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots, final int capacity) {
         this.fluids = new AtomicReference[slots];

@@ -24,9 +24,9 @@ public class MachineAssemblyManager {
 
     public static Collection<MachineAssembly> getMachineAssemblyListFromPlayer(EntityPlayer player) {
         return MACHINE_ASSEMBLY_MAP.values().stream()
-                .filter(assembly -> player.getGameProfile().getId().equals(
-                        assembly.getPlayer().getGameProfile().getId()))
-                .collect(Collectors.toList());
+                                   .filter(assembly -> player.getGameProfile().getId().equals(
+                                       assembly.getPlayer().getGameProfile().getId()))
+                                   .collect(Collectors.toList());
     }
 
     public static void removeMachineAssembly(BlockPos ctrlPos) {

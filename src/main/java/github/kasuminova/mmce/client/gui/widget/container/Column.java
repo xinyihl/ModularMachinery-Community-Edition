@@ -16,7 +16,7 @@ import java.util.List;
 public class Column extends WidgetContainer {
     protected final List<DynamicWidget> widgets = new ArrayList<>();
 
-    protected boolean leftAligned = true;
+    protected boolean leftAligned  = true;
     protected boolean rightAligned = false;
 
     @Override

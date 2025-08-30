@@ -29,12 +29,13 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
 
     @Override
     public boolean onBlockActivated(
-            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
-            @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
-            @Nonnull EnumFacing facing,
-            float hitX, float hitY, float hitZ)
-    {
-        if (worldIn.isRemote)return false;
+        @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
+        @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
+        @Nonnull EnumFacing facing,
+        float hitX, float hitY, float hitZ) {
+        if (worldIn.isRemote) {
+            return false;
+        }
         if (hand == EnumHand.MAIN_HAND && !player.getHeldItem(hand).isEmpty()) {
             var heldItem = player.getHeldItem(hand);
             if (player.isSneaking()) {
@@ -42,7 +43,7 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
                     final String name = this.getTranslationKey();
 
                     final NBTTagCompound data = new NBTTagCompound();
-                    data.setLong("Pos",pos.toLong());
+                    data.setLong("Pos", pos.toLong());
                     memoryCard.setMemoryCardContents(heldItem, name, data);
                     player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.save"));
 
@@ -84,8 +85,7 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
     @Override
     public void breakBlock(final World worldIn,
                            @Nonnull final BlockPos pos,
-                           @Nonnull final IBlockState state)
-    {
+                           @Nonnull final IBlockState state) {
         TileEntity te = worldIn.getTileEntity(pos);
 
         if (te == null) {
@@ -111,8 +111,7 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
                                 @Nonnull final BlockPos pos,
                                 @Nonnull final IBlockState state,
                                 @Nonnull final EntityLivingBase placer,
-                                @Nonnull final ItemStack stack)
-    {
+                                @Nonnull final ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
         TileEntity te = worldIn.getTileEntity(pos);

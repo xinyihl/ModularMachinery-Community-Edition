@@ -35,7 +35,7 @@ import java.util.List;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class RequirementFluid extends ComponentRequirement.MultiCompParallelizable<Object, RequirementTypeFluid>
-        implements ComponentRequirement.ChancedRequirement, Asyncable {
+    implements ComponentRequirement.ChancedRequirement, Asyncable {
 
     public final FluidStack required;
 
@@ -112,7 +112,7 @@ public class RequirementFluid extends ComponentRequirement.MultiCompParallelizab
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = this.requirementType.getRegistryName();
         return String.format("component.missing.%s.%s.%s",
-                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
+            compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
@@ -120,7 +120,7 @@ public class RequirementFluid extends ComponentRequirement.MultiCompParallelizab
         MachineComponent<?> cmp = component.component();
         ComponentType cmpType = cmp.getComponentType();
         return (cmpType.equals(ComponentTypesMM.COMPONENT_FLUID) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))
-               && cmp.ioType == actionType;
+            && cmp.ioType == actionType;
     }
 
     @Override

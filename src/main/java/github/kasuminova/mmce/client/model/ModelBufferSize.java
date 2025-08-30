@@ -7,29 +7,34 @@ import software.bernie.geckolib3.geo.render.built.GeoModel;
 public class ModelBufferSize {
 
     // 6 Faces, 4 Vertexes
-    private static final int BYTES_PER_CUBE = MachineControllerRenderer.VERTEX_FORMAT.getSize() * (6 * 4);
-
-    private int bufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int bloomBufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int transparentBufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int bloomTransparentBufferSize = BYTES_PER_CUBE; // preventing last grow
-
-    private int staticBufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int staticBloomBufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int staticTransparentBufferSize = BYTES_PER_CUBE; // preventing last grow
-    private int staticBloomTransparentBufferSize = BYTES_PER_CUBE; // preventing last grow
-
-    private final GeoModel model;
-    private final StaticModelBones staticModelBones;
-
-    public static ModelBufferSize calculate(final GeoModel model, final StaticModelBones staticModelBones) {
-        return new ModelBufferSize(model, staticModelBones);
-    }
+    private static final int              BYTES_PER_CUBE                   = MachineControllerRenderer.VERTEX_FORMAT.getSize() * (6 * 4);
+    private final        GeoModel         model;
+    private final        StaticModelBones staticModelBones;
+    private              int              bufferSize                       = BYTES_PER_CUBE; // preventing last grow
+    private              int              bloomBufferSize                  = BYTES_PER_CUBE; // preventing last grow
+    private              int              transparentBufferSize            = BYTES_PER_CUBE; // preventing last grow
+    private              int              bloomTransparentBufferSize       = BYTES_PER_CUBE; // preventing last grow
+    private              int              staticBufferSize                 = BYTES_PER_CUBE; // preventing last grow
+    private              int              staticBloomBufferSize            = BYTES_PER_CUBE; // preventing last grow
+    private              int              staticTransparentBufferSize      = BYTES_PER_CUBE; // preventing last grow
+    private              int              staticBloomTransparentBufferSize = BYTES_PER_CUBE; // preventing last grow
 
     private ModelBufferSize(final GeoModel model, final StaticModelBones staticModelBones) {
         this.model = model;
         this.staticModelBones = staticModelBones;
         calculate();
+    }
+
+    public static ModelBufferSize calculate(final GeoModel model, final StaticModelBones staticModelBones) {
+        return new ModelBufferSize(model, staticModelBones);
+    }
+
+    private static boolean isBloom(final GeoBone bone) {
+        return bone.name.startsWith("emissive") || bone.name.startsWith("bloom");
+    }
+
+    private static boolean isTransparent(final GeoBone bone) {
+        return bone.name.startsWith("transparent") || bone.name.startsWith("emissive_transparent") || bone.name.startsWith("bloom_transparent");
     }
 
     private void calculate() {
@@ -40,7 +45,7 @@ public class ModelBufferSize {
 
     public void calculateRecursive(final GeoBone bone, boolean bloom, boolean transparent) {
         boolean isStatic = staticModelBones.isStaticBone(bone.name);
-        
+
         if ((bloom && transparent) || (isBloom(bone) && isTransparent(bone))) {
             bloom = true;
             transparent = true;
@@ -108,13 +113,5 @@ public class ModelBufferSize {
 
     public int getStaticBloomTransparentBufferSize() {
         return staticBloomTransparentBufferSize;
-    }
-
-    private static boolean isBloom(final GeoBone bone) {
-        return bone.name.startsWith("emissive") || bone.name.startsWith("bloom");
-    }
-
-    private static boolean isTransparent(final GeoBone bone) {
-        return bone.name.startsWith("transparent") || bone.name.startsWith("emissive_transparent") || bone.name.startsWith("bloom_transparent");
     }
 }

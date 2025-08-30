@@ -57,7 +57,7 @@ import java.util.Optional;
  */
 public class BlockArrayRenderHelper {
 
-    private final BlockArray blocks;
+    private final BlockArray                  blocks;
     private final WorldBlockArrayRenderAccess renderAccess;
     long sampleSnap = -1;
     private double rotX, rotY, rotZ;
@@ -117,7 +117,9 @@ public class BlockArrayRenderHelper {
 
     public void render3DGUI(double x, double y, float scaleMultiplier, float pTicks, Optional<Integer> slice) {
         GuiScreen scr = Minecraft.getMinecraft().currentScreen;
-        if (scr == null) return;
+        if (scr == null) {
+            return;
+        }
 
         GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         GL11.glPushMatrix();
@@ -139,11 +141,17 @@ public class BlockArrayRenderHelper {
         if (!slice.isPresent()) {
             double maxLength = 0;
             double pointDst = max.getX() - min.getX();
-            if (pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) {
+                maxLength = pointDst;
+            }
             pointDst = max.getY() - min.getY();
-            if (pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) {
+                maxLength = pointDst;
+            }
             pointDst = max.getZ() - min.getZ();
-            if (pointDst > maxLength) maxLength = pointDst;
+            if (pointDst > maxLength) {
+                maxLength = pointDst;
+            }
             maxLength -= 5;
 
             if (maxLength > 0) {
@@ -194,11 +202,11 @@ public class BlockArrayRenderHelper {
                     brd.renderBlock(actRenderState, offset, renderAccess, vb);
                 } catch (Exception exc) {
                     brd.getBlockModelRenderer().renderModel(
-                            renderAccess,
-                            brd.getBlockModelShapes().getModelManager().getMissingModel(),
-                            state.state,
-                            offset,
-                            vb, true);
+                        renderAccess,
+                        brd.getBlockModelShapes().getModelManager().getMissingModel(),
+                        state.state,
+                        offset,
+                        vb, true);
                 }
             }
         }
@@ -232,7 +240,7 @@ public class BlockArrayRenderHelper {
 
     static class BakedBlockData {
 
-        private final BlockArrayRenderHelper ref;
+        private final BlockArrayRenderHelper  ref;
         private final List<SampleRenderState> renderStates = new ArrayList<>();
 
         private BakedBlockData(BlockArrayRenderHelper ref, List<IBlockStateDescriptor> states, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
@@ -258,7 +266,7 @@ public class BlockArrayRenderHelper {
 
     static class SampleRenderState {
 
-        final IBlockState state;
+        final IBlockState          state;
         final TileEntityRenderData renderData;
 
         private SampleRenderState(IBlockState state, @Nullable NBTTagCompound matchTag, BlockArray.TileInstantiateContext context) {
@@ -272,7 +280,7 @@ public class BlockArrayRenderHelper {
 
     static class TileEntityRenderData {
 
-        final TileEntity tileEntity;
+        final TileEntity                            tileEntity;
         final TileEntitySpecialRenderer<TileEntity> renderer;
 
         private TileEntityRenderData(TileEntity tileEntity) {
@@ -282,10 +290,10 @@ public class BlockArrayRenderHelper {
     }
 
     public static class WorldBlockArrayRenderAccess implements IBlockAccess {
-        final Map<BlockPos, BakedBlockData> blockRenderData = new BlockPos2ValueMap<>();
-        private final BlockArray originalArray;
-        private int currentRenderSlice = 0;
-        private boolean respectRenderSlice = false;
+        final         Map<BlockPos, BakedBlockData> blockRenderData    = new BlockPos2ValueMap<>();
+        private final BlockArray                    originalArray;
+        private       int                           currentRenderSlice = 0;
+        private       boolean                       respectRenderSlice = false;
 
         private WorldBlockArrayRenderAccess(BlockArrayRenderHelper ref, BlockArray array) {
             this.originalArray = array;

@@ -28,8 +28,8 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
     private static final String CONFIG_TAG_KEY = "configInventory";
 
     // A simple cache for AEItemStack.
-    private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
-    private IOInventory configInventory = buildConfigInventory();
+    private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE  = new WeakHashMap<>();
+    private              IOInventory                  configInventory = buildConfigInventory();
 
     @Override
     public IOInventory buildInventory() {
@@ -196,11 +196,11 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
                     ItemStack stack = insertStackToAE(inv, ItemUtils.copyStackWithSize(invStack, countToExtract));
                     if (stack.isEmpty()) {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                invStack, invStack.getCount() - countToExtract)
+                            invStack, invStack.getCount() - countToExtract)
                         );
                     } else {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                                invStack, invStack.getCount() - countToExtract + stack.getCount())
+                            invStack, invStack.getCount() - countToExtract + stack.getCount())
                         );
                     }
                     successAtLeastOnce = true;

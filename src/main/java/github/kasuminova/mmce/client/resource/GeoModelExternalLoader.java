@@ -26,11 +26,11 @@ import java.util.function.Predicate;
 public class GeoModelExternalLoader implements ISelectiveResourceReloadListener {
     public static final GeoModelExternalLoader INSTANCE = new GeoModelExternalLoader();
 
-    private final GeoModelLoader geoModelLoader = new GeoModelLoader();
+    private final GeoModelLoader      geoModelLoader      = new GeoModelLoader();
     private final AnimationFileLoader animationFileLoader = new AnimationFileLoader();
-    private final MolangParser molangParser = new MolangParser();
+    private final MolangParser        molangParser        = new MolangParser();
 
-    private volatile Map<ResourceLocation, GeoModel> geoModels = new ConcurrentHashMap<>();
+    private volatile Map<ResourceLocation, GeoModel>      geoModels  = new ConcurrentHashMap<>();
     private volatile Map<ResourceLocation, AnimationFile> animations = new ConcurrentHashMap<>();
 
     private volatile IResourceManager modelSource = null;

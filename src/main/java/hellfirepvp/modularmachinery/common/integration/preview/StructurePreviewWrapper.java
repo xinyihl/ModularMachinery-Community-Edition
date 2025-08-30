@@ -69,8 +69,8 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
         recipeWrapper = field;
     }
 
-    private final DynamicMachine machine;
-    private GuiBlueprintScreenJEI gui = null;
+    private final DynamicMachine        machine;
+    private       GuiBlueprintScreenJEI gui = null;
 
     public StructurePreviewWrapper(DynamicMachine machine) {
         this.machine = machine;
@@ -164,12 +164,12 @@ public class StructurePreviewWrapper implements IRecipeWrapper {
             ingredientList = this.machine.getPattern().getIngredientList();
         }
         machine.getModifiers().values().stream()
-                .flatMap(Collection::stream)
-                .map(AbstractModifierReplacement::getDescriptiveStack)
-                .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
+               .flatMap(Collection::stream)
+               .map(AbstractModifierReplacement::getDescriptiveStack)
+               .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
         machine.getMultiBlockModifiers().stream()
-                .map(AbstractModifierReplacement::getDescriptiveStack)
-                .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
+               .map(AbstractModifierReplacement::getDescriptiveStack)
+               .forEach(stack -> ingredientList.add(Collections.singletonList(stack)));
 
         ingredients.setInputLists(VanillaTypes.ITEM, ingredientList);
         ingredients.setOutputs(VanillaTypes.ITEM, stackList);

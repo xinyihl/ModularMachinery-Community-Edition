@@ -19,7 +19,11 @@ import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.MachineRecipe;
 import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
-import hellfirepvp.modularmachinery.common.machine.*;
+import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.machine.MachineRecipeThread;
+import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
+import hellfirepvp.modularmachinery.common.machine.RecipeThread;
+import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
@@ -36,8 +40,8 @@ import java.util.concurrent.TimeUnit;
  * <p>Completely refactored community edition mechanical controller with powerful asynchronous logic and extremely low performance consumption.</p>
  */
 public class TileMachineController extends TileMultiblockMachineController {
-    private MachineRecipeThread recipeThread = new MachineRecipeThread(this);
-    private BlockController parentController = null;
+    private MachineRecipeThread recipeThread     = new MachineRecipeThread(this);
+    private BlockController     parentController = null;
 
     private boolean redstoneEffected = false;
 
@@ -283,7 +287,7 @@ public class TileMachineController extends TileMultiblockMachineController {
 
         MachineRecipe recipe = activeRecipe.getRecipe();
         RecipeFailureEvent event = new RecipeFailureEvent(
-                this, recipeThread, recipeThread.getStatus().getUnlocMessage(), recipe.doesCancelRecipeOnPerTickFailure());
+            this, recipeThread, recipeThread.getStatus().getUnlocMessage(), recipe.doesCancelRecipeOnPerTickFailure());
         event.postEvent();
 
         return event.isDestructRecipe();
@@ -304,7 +308,9 @@ public class TileMachineController extends TileMultiblockMachineController {
     @Override
     protected void checkAllPatterns() {
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-            if (machine.isRequiresBlueprint() || machine.isFactoryOnly()) continue;
+            if (machine.isRequiresBlueprint() || machine.isFactoryOnly()) {
+                continue;
+            }
             TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), controllerRotation);
             if (matchesRotation(pattern, machine, controllerRotation)) {
                 onStructureFormed();

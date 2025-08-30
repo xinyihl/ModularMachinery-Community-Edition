@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 public abstract class MEMachineComponent extends TileColorableMachineComponent implements SelectiveUpdateTileEntity, MachineComponentTile, IActionHost, IGridProxyable {
 
     protected final AENetworkProxy proxy = new AENetworkProxy(this, "aeProxy", getVisualItemStack(), true);
-    protected final IActionSource source;
+    protected final IActionSource  source;
 
     public MEMachineComponent() {
         this.source = new MachineSource(this);

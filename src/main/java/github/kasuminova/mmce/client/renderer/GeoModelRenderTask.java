@@ -20,7 +20,7 @@ import java.util.concurrent.RecursiveAction;
 
 @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
 public class GeoModelRenderTask extends RecursiveAction implements BufferProvider {
-    protected final MachineControllerRenderer renderer;
+    protected final MachineControllerRenderer       renderer;
     protected final TileMultiblockMachineController ctrl;
 
     protected volatile BufferBuilder buffer;
@@ -28,9 +28,9 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
     protected volatile BufferBuilder transparentBuffer;
     protected volatile BufferBuilder bloomTransparentBuffer;
 
-    protected int bufferSize = 0;
-    protected int bloomBufferSize = 0;
-    protected int transparentBufferSize = 0;
+    protected int bufferSize                 = 0;
+    protected int bloomBufferSize            = 0;
+    protected int transparentBufferSize      = 0;
     protected int bloomTransparentBufferSize = 0;
 
     protected volatile BufferBuilder staticBuffer;
@@ -38,9 +38,9 @@ public class GeoModelRenderTask extends RecursiveAction implements BufferProvide
     protected volatile BufferBuilder staticTransparentBuffer;
     protected volatile BufferBuilder staticBloomTransparentBuffer;
 
-    protected int staticBufferSize = 0;
-    protected int staticBloomBufferSize = 0;
-    protected int staticTransparentBufferSize = 0;
+    protected int staticBufferSize                 = 0;
+    protected int staticBloomBufferSize            = 0;
+    protected int staticTransparentBufferSize      = 0;
     protected int staticBloomTransparentBufferSize = 0;
 
     protected boolean available = true;

@@ -12,18 +12,17 @@ import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import net.minecraft.util.ResourceLocation;
 
 public class FactoryRecipeSearchTask extends RecipeSearchTask {
-    private final FactoryRecipeThread thread;
+    private final FactoryRecipeThread                  thread;
     private final Object2IntArrayMap<ResourceLocation> runningRecipes = new Object2IntArrayMap<>();
-    private final TileFactoryController factory;
+    private final TileFactoryController                factory;
 
     public FactoryRecipeSearchTask(
-            TileFactoryController controller,
-            DynamicMachine currentMachine,
-            int maxParallelism,
-            Iterable<MachineRecipe> recipeList,
-            FactoryRecipeThread thread,
-            ActiveMachineRecipe[] running)
-    {
+        TileFactoryController controller,
+        DynamicMachine currentMachine,
+        int maxParallelism,
+        Iterable<MachineRecipe> recipeList,
+        FactoryRecipeThread thread,
+        ActiveMachineRecipe[] running) {
         super(controller, currentMachine, maxParallelism, recipeList, thread);
         this.factory = controller;
 
@@ -40,7 +39,9 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
     protected RecipeCraftingContext computeTask() {
         TileFactoryController factory = this.factory;
         DynamicMachine foundMachine = factory.getFoundMachine();
-        if (foundMachine == null) return null;
+        if (foundMachine == null) {
+            return null;
+        }
 
         MachineRecipe highestValidity = null;
         RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
@@ -76,10 +77,10 @@ public class FactoryRecipeSearchTask extends RecipeSearchTask {
 
         if (highestValidity != null) {
             status = CraftingStatus.failure(
-                    highestValidityResult.getFirstErrorMessage(""));
+                highestValidityResult.getFirstErrorMessage(""));
         } else {
             status = CraftingStatus.failure(
-                    TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
+                TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
         }
 
         return null;

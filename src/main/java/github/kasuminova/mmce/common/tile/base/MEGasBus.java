@@ -33,22 +33,22 @@ import javax.annotation.Nullable;
 import java.util.stream.IntStream;
 
 public abstract class MEGasBus extends MEMachineComponent implements
-        IGasInventoryHost,
-        IUpgradeableHost,
-        IConfigManagerHost,
-        IAEAppEngInventory,
-        IGridTickable {
+    IGasInventoryHost,
+    IUpgradeableHost,
+    IConfigManagerHost,
+    IAEAppEngInventory,
+    IGridTickable {
 
-    public static final int TANK_SLOT_AMOUNT = 9;
+    public static final int TANK_SLOT_AMOUNT      = 9;
     public static final int TANK_DEFAULT_CAPACITY = 8000;
 
-    protected final IGasStorageChannel channel = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
-    protected final ConfigManager cm = new ConfigManager(this);
-    protected final UpgradeInventory upgrades;
-    protected final GasInventory tanks;
+    protected final IGasStorageChannel  channel           = AEApi.instance().storage().getStorageChannel(IGasStorageChannel.class);
+    protected final ConfigManager       cm                = new ConfigManager(this);
+    protected final UpgradeInventory    upgrades;
+    protected final GasInventory        tanks;
     protected final GasInventoryHandler handler;
-    protected boolean[] changedSlots;
-    protected long lastFullCheckTick = 0;
+    protected       boolean[]           changedSlots;
+    protected       long                lastFullCheckTick = 0;
 
     protected boolean inTick = false;
 
@@ -156,7 +156,7 @@ public abstract class MEGasBus extends MEMachineComponent implements
 
     private void updateTankCapacity() {
         tanks.setCap(
-                (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEGasBus.TANK_DEFAULT_CAPACITY / 4)));
+            (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEGasBus.TANK_DEFAULT_CAPACITY / 4)));
     }
 
     @Override

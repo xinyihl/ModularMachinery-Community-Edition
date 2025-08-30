@@ -68,22 +68,22 @@ public class ButtonElements<E> extends Button4State {
         return current == null ? null : current.element();
     }
 
+    public ButtonElements<E> setCurrentSelection(final E element) {
+        currentElementIndex = IntStream.range(0, elements.size())
+                                       .filter(i -> elements.get(i).element() == element)
+                                       .findFirst()
+                                       .orElse(currentElementIndex);
+        return this;
+    }
+
     public ButtonElements<E> addElement(final E element, final TextureProperties texture) {
         elements.add(new ElementInfo(element, texture));
         return this;
     }
 
-    public ButtonElements<E> setCurrentSelection(final E element) {
-        currentElementIndex = IntStream.range(0, elements.size())
-                .filter(i -> elements.get(i).element() == element)
-                .findFirst()
-                .orElse(currentElementIndex);
-        return this;
-    }
-
     public final class ElementInfo {
 
-        private final E element;
+        private final E                 element;
         private final TextureProperties texture;
 
         public ElementInfo(E element, final TextureProperties texture) {

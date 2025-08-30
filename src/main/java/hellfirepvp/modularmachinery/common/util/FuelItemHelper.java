@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
 public class FuelItemHelper {
 
     private static List<ItemStack> knownFuelStacks = null;
-    private static Future<Void> future = null;
+    private static Future<Void>    future          = null;
 
     public static void initialize() {
         future = CompletableFuture.runAsync(() -> {

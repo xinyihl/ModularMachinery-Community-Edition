@@ -7,6 +7,7 @@ public interface IOneToOneFluidHandler {
 
     /**
      * Returns whether distinct slots map to distinct types of fluids.
+     *
      * @return true if the mapping is one-to-one
      */
     boolean isOneFluidOneSlot();

@@ -181,9 +181,9 @@ public class HybridFluidUtils {
             Object providedComponent = component.getProvidedComponent();
             if (providedComponent instanceof IFluidHandler) {
                 ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                        (MachineComponent<Object>) component.component(),
-                        new MultiFluidTank((IFluidHandler) providedComponent),
-                        component.getTag());
+                    (MachineComponent<Object>) component.component(),
+                    new MultiFluidTank((IFluidHandler) providedComponent),
+                    component.getTag());
                 list.add(objectProcessingComponent);
             }
         }
@@ -198,9 +198,9 @@ public class HybridFluidUtils {
             Object providedComponent = component.getProvidedComponent();
             if (providedComponent instanceof IGasHandler) {
                 ProcessingComponent<Object> objectProcessingComponent = new ProcessingComponent<>(
-                        (MachineComponent<Object>) component.component(),
-                        new MultiGasTank((IGasHandler) providedComponent),
-                        component.getTag());
+                    (MachineComponent<Object>) component.component(),
+                    new MultiGasTank((IGasHandler) providedComponent),
+                    component.getTag());
                 list.add(objectProcessingComponent);
             }
         }

@@ -36,13 +36,27 @@ public class MixinRecipesGui extends GuiScreen {
     private List<RecipeLayout> recipeLayouts;
     @Final
     @Shadow(remap = false)
-    private IRecipeGuiLogic logic;
+    private IRecipeGuiLogic    logic;
 
-    @Redirect(method = "actionPerformed",at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
+    @Unique
+    @Nonnull
+    private static List<StructurePreviewWrapper> getStructurePreviewWrappers(final List<RecipeLayout> layouts) {
+        List<StructurePreviewWrapper> wrappers = new ArrayList<>();
+        for (RecipeLayout layout : layouts) {
+            IRecipeWrapper wrapper = StructurePreviewWrapper.getWrapper(layout);
+            if (!(wrapper instanceof StructurePreviewWrapper previewWrapper)) {
+                continue;
+            }
+            wrappers.add(previewWrapper);
+        }
+        return wrappers;
+    }
+
+    @Redirect(method = "actionPerformed", at = @At(value = "INVOKE", target = "Ljava/util/List;get(I)Ljava/lang/Object;"))
     protected Object actionPerformedMixin(List<RecipeLayout> instance, int i) {
         boolean isPreview = false;
         for (RecipeLayout recipeLayout : recipeLayouts) {
-            if (((AccessorRecipeLayout)recipeLayout).getRecipeWrapper() instanceof StructurePreviewWrapper s){
+            if (((AccessorRecipeLayout) recipeLayout).getRecipeWrapper() instanceof StructurePreviewWrapper s) {
                 return randomComplement$getRecipe(s);
             }
         }
@@ -50,24 +64,10 @@ public class MixinRecipesGui extends GuiScreen {
     }
 
     @Unique
-    private RecipeLayout randomComplement$getRecipe(StructurePreviewWrapper preview){
+    private RecipeLayout randomComplement$getRecipe(StructurePreviewWrapper preview) {
         ItemStack bOut = new ItemStack(ItemsMM.blueprint);
-        ItemBlueprint.setAssociatedMachine(bOut,((AccessorStructurePreviewWrapper)preview).getMachine());
-        return RecipeLayout.create(0,this.logic.getSelectedRecipeCategory(),preview, new Focus<>(IFocus.Mode.OUTPUT, bOut),0,0);
-    }
-
-    @Mixin(value = StructurePreviewWrapper.class,remap = false)
-    public interface AccessorStructurePreviewWrapper {
-
-        @Accessor
-        DynamicMachine getMachine();
-    }
-
-    @Mixin(value = RecipeLayout.class,remap = false)
-    public interface AccessorRecipeLayout {
-
-        @Accessor
-        IRecipeWrapper getRecipeWrapper();
+        ItemBlueprint.setAssociatedMachine(bOut, ((AccessorStructurePreviewWrapper) preview).getMachine());
+        return RecipeLayout.create(0, this.logic.getSelectedRecipeCategory(), preview, new Focus<>(IFocus.Mode.OUTPUT, bOut), 0, 0);
     }
 
     @Inject(method = "handleMouseInput", at = @At("HEAD"), cancellable = true)
@@ -123,17 +123,17 @@ public class MixinRecipesGui extends GuiScreen {
         }
     }
 
-    @Unique
-    @Nonnull
-    private static List<StructurePreviewWrapper> getStructurePreviewWrappers(final List<RecipeLayout> layouts) {
-        List<StructurePreviewWrapper> wrappers = new ArrayList<>();
-        for (RecipeLayout layout : layouts) {
-            IRecipeWrapper wrapper = StructurePreviewWrapper.getWrapper(layout);
-            if (!(wrapper instanceof StructurePreviewWrapper previewWrapper)) {
-                continue;
-            }
-            wrappers.add(previewWrapper);
-        }
-        return wrappers;
+    @Mixin(value = StructurePreviewWrapper.class, remap = false)
+    public interface AccessorStructurePreviewWrapper {
+
+        @Accessor
+        DynamicMachine getMachine();
+    }
+
+    @Mixin(value = RecipeLayout.class, remap = false)
+    public interface AccessorRecipeLayout {
+
+        @Accessor
+        IRecipeWrapper getRecipeWrapper();
     }
 }

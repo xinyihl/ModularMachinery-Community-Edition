@@ -38,14 +38,14 @@ public record TextureProperties(@Nullable ResourceLocation texRes, int texX, int
         return of(null, texX, texY);
     }
 
+    private static void bind(final TextureManager textureManager, final ResourceLocation texRes) {
+        textureManager.bindTexture(texRes);
+    }
+
     public void bind(final TextureManager textureManager) {
         if (texRes != null) {
             bind(textureManager, texRes);
         }
-    }
-
-    private static void bind(final TextureManager textureManager, final ResourceLocation texRes) {
-        textureManager.bindTexture(texRes);
     }
 
     // Default render

@@ -17,8 +17,8 @@ import java.util.Map;
 @ZenClass("mods.modularmachinery.RegistryUpgrade")
 public class RegistryUpgrade {
 
-    public static final HashMap<String, MachineUpgrade> UPGRADES = new HashMap<>();
-    public static final Map<Item, UpgradeInfo> ITEM_UPGRADES = new Reference2ObjectOpenHashMap<>();
+    public static final HashMap<String, MachineUpgrade> UPGRADES      = new HashMap<>();
+    public static final Map<Item, UpgradeInfo>          ITEM_UPGRADES = new Reference2ObjectOpenHashMap<>();
 
     public static void clearAll() {
         RegistryUpgrade.UPGRADES.clear();

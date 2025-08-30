@@ -14,15 +14,13 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class LayerRenderScrollbar extends Column {
-    protected int scrollBgTexX = 244;
-    protected int scrollBgTexY = 0;
-    protected int scrollBgTexYOffset = 12;
-    protected int scrollBgTexWidth = 9;
-    protected int scrollBgTexHeight = 90;
-
-    protected Consumer<Integer> onScrollChanged = null;
-
-    protected final Scrollbar scrollbar;
+    protected final Scrollbar         scrollbar;
+    protected       int               scrollBgTexX       = 244;
+    protected       int               scrollBgTexY       = 0;
+    protected       int               scrollBgTexYOffset = 12;
+    protected       int               scrollBgTexWidth   = 9;
+    protected       int               scrollBgTexHeight  = 90;
+    protected       Consumer<Integer> onScrollChanged    = null;
 
     public LayerRenderScrollbar(final WorldSceneRendererWidget renderer) {
         scrollbar = (Scrollbar) new Scrollbar().setMarginVertical(2);
@@ -30,57 +28,57 @@ public class LayerRenderScrollbar extends Column {
         Button4State down = new Button4State();
 
         up.setMouseDownTexture(184 + 11 + 11, 121)
-                .setHoveredTexture(184 + 11, 121)
-                .setTexture(184, 121)
-                .setUnavailableTexture(184 + 11 + 11 + 11, 121)
-                .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
-                .setTooltipFunction(btn -> {
-                    int minY = renderer.getPattern().getMin().getY();
-                    int maxY = renderer.getPattern().getMax().getY();
-                    int renderLayer = scrollbar.getCurrentScroll();
-                    return Arrays.asList(
-                            I18n.format("gui.preview.button.layer_render_scrollbar.up.tip"),
-                            I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
-                                    (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
-                    );
-                })
-                .setWidthHeight(9, 9);
+          .setHoveredTexture(184 + 11, 121)
+          .setTexture(184, 121)
+          .setUnavailableTexture(184 + 11 + 11 + 11, 121)
+          .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
+          .setTooltipFunction(btn -> {
+              int minY = renderer.getPattern().getMin().getY();
+              int maxY = renderer.getPattern().getMax().getY();
+              int renderLayer = scrollbar.getCurrentScroll();
+              return Arrays.asList(
+                  I18n.format("gui.preview.button.layer_render_scrollbar.up.tip"),
+                  I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
+                      (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
+              );
+          })
+          .setWidthHeight(9, 9);
         down.setMouseDownTexture(184 + 11 + 11, 132)
-                .setHoveredTexture(184 + 11, 132)
-                .setTexture(184, 132)
-                .setUnavailableTexture(184 + 11 + 11 + 11, 132)
-                .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
-                .setTooltipFunction(btn -> {
-                    int minY = renderer.getPattern().getMin().getY();
-                    int maxY = renderer.getPattern().getMax().getY();
-                    int renderLayer = scrollbar.getCurrentScroll();
-                    return Arrays.asList(
-                            I18n.format("gui.preview.button.layer_render_scrollbar.down.tip"),
-                            I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
-                                    (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
-                    );
-                })
-                .setWidthHeight(9, 9);
+            .setHoveredTexture(184 + 11, 132)
+            .setTexture(184, 132)
+            .setUnavailableTexture(184 + 11 + 11 + 11, 132)
+            .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
+            .setTooltipFunction(btn -> {
+                int minY = renderer.getPattern().getMin().getY();
+                int maxY = renderer.getPattern().getMax().getY();
+                int renderLayer = scrollbar.getCurrentScroll();
+                return Arrays.asList(
+                    I18n.format("gui.preview.button.layer_render_scrollbar.down.tip"),
+                    I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
+                        (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
+                );
+            })
+            .setWidthHeight(9, 9);
         scrollbar.getScroll()
-                .setMouseDownTexture(202, 158)
-                .setHoveredTexture(193, 158)
-                .setTexture(184, 158)
-                .setUnavailableTexture(211, 158)
-                .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
-                .setTooltipFunction(btn -> {
-                    int minY = renderer.getPattern().getMin().getY();
-                    int maxY = renderer.getPattern().getMax().getY();
-                    int renderLayer = scrollbar.getCurrentScroll();
-                    return Arrays.asList(
-                            I18n.format("gui.preview.button.layer_render_scrollbar.tip"),
-                            I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
-                                    (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
-                    );
-                })
-                .setWidthHeight(7, 15);
+                 .setMouseDownTexture(202, 158)
+                 .setHoveredTexture(193, 158)
+                 .setTexture(184, 158)
+                 .setUnavailableTexture(211, 158)
+                 .setTextureLocation(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION)
+                 .setTooltipFunction(btn -> {
+                     int minY = renderer.getPattern().getMin().getY();
+                     int maxY = renderer.getPattern().getMax().getY();
+                     int renderLayer = scrollbar.getCurrentScroll();
+                     return Arrays.asList(
+                         I18n.format("gui.preview.button.layer_render_scrollbar.tip"),
+                         I18n.format("gui.preview.button.layer_render_scrollbar.state.tip",
+                             (maxY - renderLayer) + minY, scrollbar.getMaxScroll())
+                     );
+                 })
+                 .setWidthHeight(7, 15);
         scrollbar.setWidthHeight(7, 88)
-                .setMarginHorizontal(1)
-                .setMarginVertical(4);
+                 .setMarginHorizontal(1)
+                 .setMarginVertical(4);
 
         up.setOnClickedListener(btn -> scrollbar.setCurrentScroll(scrollbar.getCurrentScroll() - 1));
         down.setOnClickedListener(btn -> scrollbar.setCurrentScroll(scrollbar.getCurrentScroll() + 1));
@@ -105,9 +103,9 @@ public class LayerRenderScrollbar extends Column {
         GuiScreen gui = widgetGui.getGui();
         gui.mc.getTextureManager().bindTexture(MachineStructurePreviewPanel.WIDGETS_TEX_LOCATION);
         gui.drawTexturedModalRect(
-                renderPos.posX(), renderPos.posY() + scrollBgTexYOffset,
-                scrollBgTexX, scrollBgTexY,
-                scrollBgTexWidth, scrollBgTexHeight
+            renderPos.posX(), renderPos.posY() + scrollBgTexYOffset,
+            scrollBgTexX, scrollBgTexY,
+            scrollBgTexWidth, scrollBgTexHeight
         );
     }
 

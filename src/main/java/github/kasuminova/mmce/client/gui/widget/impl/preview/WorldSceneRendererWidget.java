@@ -44,42 +44,39 @@ import org.lwjgl.input.Mouse;
 
 import javax.vecmath.Vector3f;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class WorldSceneRendererWidget extends DynamicWidget {
-    protected final DynamicMachine machine;
-    protected final WorldSceneRenderer renderer = new ImmediateWorldSceneRenderer(
-            new LRDummyWorld(new TrackedDummyWorld(), new TrackedDummyWorld())
+    protected final DynamicMachine       machine;
+    protected final WorldSceneRenderer   renderer           = new ImmediateWorldSceneRenderer(
+        new LRDummyWorld(new TrackedDummyWorld(), new TrackedDummyWorld())
     );
+    protected final Map<BlockPos, Color> blockOverlayMap    = new BlockPos2ValueMap<>();
+    protected final Vector3f             defaultCenter      = new Vector3f();
+    protected final Vector3f             center             = new Vector3f();
+    protected       BlockArray           pattern            = null;
+    protected       BlockPos             offset             = BlockPos.ORIGIN;
+    protected       BlockPos             selected           = null;
+    protected       boolean              useLayerRender     = false;
+    protected       int                  renderLayer        = 0;
+    protected       int                  dynamicPatternSize = 0;
+    protected       boolean              resetZoom          = false;
+    protected       boolean              structureFormed    = false;
+    protected       float                rotationYaw        = 25;
+    protected       float                rotationPitch      = -135;
 
-    protected BlockArray pattern = null;
-
-    protected BlockPos offset = BlockPos.ORIGIN;
-
-    protected BlockPos selected = null;
-    protected final Map<BlockPos, Color> blockOverlayMap = new BlockPos2ValueMap<>();
-
-    protected boolean useLayerRender = false;
-    protected int renderLayer = 0;
-
-    protected int dynamicPatternSize = 0;
-    protected boolean resetZoom = false;
-
-    protected boolean structureFormed = false;
-
-    protected final Vector3f defaultCenter = new Vector3f();
-    protected final Vector3f center = new Vector3f();
-    protected float rotationYaw = 25;
-    protected float rotationPitch = -135;
-
-    protected AnimationValue zoom = AnimationValue.ofFinished(5, 200, .25, .1, .25, 1);
-    protected double defaultZoom = 5;
+    protected AnimationValue zoom        = AnimationValue.ofFinished(5, 200, .25, .1, .25, 1);
+    protected double         defaultZoom = 5;
 
     protected boolean dragging;
-    protected int mouseButton = 0;
+    protected int     mouseButton = 0;
 
     protected int lastClickedMouseX = 0;
     protected int lastClickedMouseY = 0;
@@ -90,22 +87,16 @@ public class WorldSceneRendererWidget extends DynamicWidget {
     protected boolean requireRefreshPattern = false;
 
     protected boolean cycleBlocks = true;
-    protected long tickSnap = ClientScheduler.getClientTick();
+    protected long    tickSnap    = ClientScheduler.getClientTick();
 
     protected long lastPatternUpdate = -1;
-    protected long lastTraceUpdate = -1;
+    protected long lastTraceUpdate   = -1;
 
     protected Consumer<WorldSceneRendererWidget> onPatternUpdate = null;
-    protected Consumer<BlockPos> onBlockSelected = null;
+    protected Consumer<BlockPos>                 onBlockSelected = null;
 
     public WorldSceneRendererWidget(final DynamicMachine machine) {
         this.machine = machine;
-    }
-
-    @Override
-    public void initWidget(final WidgetGui gui) {
-        super.initWidget(gui);
-        initRenderer();
     }
 
     /**
@@ -117,6 +108,12 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             return -y;
         }
         return 0;
+    }
+
+    @Override
+    public void initWidget(final WidgetGui gui) {
+        super.initWidget(gui);
+        initRenderer();
     }
 
     protected void initPattern(final DynamicMachine machine, final boolean resetZoom) {
@@ -156,7 +153,8 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             // Hide controller.
             converted.remove(BlockPos.ORIGIN.add(offset));
         }
-        preInitNextRenderedCore(min.add(offset), max.add(offset), converted.keySet(), (_1, _2, _3) -> {}, this.resetZoom || resetZoom);
+        preInitNextRenderedCore(min.add(offset), max.add(offset), converted.keySet(), (_1, _2, _3) -> {
+        }, this.resetZoom || resetZoom);
         this.resetZoom = false;
         if (onPatternUpdate != null) {
             onPatternUpdate.accept(this);
@@ -194,10 +192,10 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         }
         for (final DynamicPattern pattern : dynamicPatterns.values()) {
             pattern.addPatternToBlockArray(
-                    this.pattern,
-                    Math.min(Math.max(pattern.getMinSize(), dynamicPatternSize), pattern.getMaxSize()),
-                    pattern.getFaces().iterator().next(),
-                    EnumFacing.NORTH);
+                this.pattern,
+                Math.min(Math.max(pattern.getMinSize(), dynamicPatternSize), pattern.getMaxSize()),
+                pattern.getFaces().iterator().next(),
+                EnumFacing.NORTH);
         }
     }
 
@@ -205,9 +203,11 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         // Factory Only
         if (machine.isHasFactory() && machine.isFactoryOnly()) {
             BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(machine);
-            if (factory == null) factory = BlocksMM.blockFactoryController;
+            if (factory == null) {
+                factory = BlocksMM.blockFactoryController;
+            }
             pattern.addBlock(BlockPos.ORIGIN, new BlockArray.BlockInformation(
-                    Collections.singletonList(new IBlockStateDescriptor(factory.getDefaultState()))));
+                Collections.singletonList(new IBlockStateDescriptor(factory.getDefaultState()))));
             return;
         }
 
@@ -215,13 +215,17 @@ public class WorldSceneRendererWidget extends DynamicWidget {
 
         // Controller
         BlockController ctrl = BlockController.getControllerWithMachine(machine);
-        if (ctrl == null) ctrl = BlocksMM.blockController;
+        if (ctrl == null) {
+            ctrl = BlocksMM.blockController;
+        }
         descriptors.add(new IBlockStateDescriptor(ctrl.getDefaultState()));
 
         // Factory
         if (machine.isHasFactory()) {
             BlockFactoryController factory = BlockFactoryController.getControllerWithMachine(machine);
-            if (factory == null) factory = BlocksMM.blockFactoryController;
+            if (factory == null) {
+                factory = BlocksMM.blockFactoryController;
+            }
             descriptors.add(new IBlockStateDescriptor(factory.getDefaultState()));
         }
 
@@ -230,18 +234,19 @@ public class WorldSceneRendererWidget extends DynamicWidget {
 
     protected void initRenderer() {
         initPattern(machine, true);
-        renderer.setOnLookingAt(ray -> {});
+        renderer.setOnLookingAt(ray -> {
+        });
         renderer.setAfterWorldRender(worldRenderer -> {
             if (selected != null) {
                 RenderUtils.renderBlockOverLay(selected, .6f, 0f, 0f, .5f, 1.01f);
             }
             blockOverlayMap.forEach((pos, color) ->
-                    RenderUtils.renderBlockOverLay(pos.add(offset),
-                            color.getRed() / 255f,
-                            color.getGreen() / 255f,
-                            color.getBlue() / 255f,
-                            color.getAlpha() / 255f,
-                            1.01f)
+                RenderUtils.renderBlockOverLay(pos.add(offset),
+                    color.getRed() / 255f,
+                    color.getGreen() / 255f,
+                    color.getBlue() / 255f,
+                    color.getAlpha() / 255f,
+                    1.01f)
             );
             if (!structureFormed) {
                 return;
@@ -319,10 +324,10 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         }
 
         renderer.render(
-                realRenderPos.posX(), realRenderPos.posY(),
-                renderSize.width(), renderSize.height(),
-                realMousePos.mouseX(), realMousePos.mouseY(),
-                traceBlock);
+            realRenderPos.posX(), realRenderPos.posY(),
+            renderSize.width(), renderSize.height(),
+            realMousePos.mouseX(), realMousePos.mouseY(),
+            traceBlock);
     }
 
     @Override
@@ -382,9 +387,9 @@ public class WorldSceneRendererWidget extends DynamicWidget {
             double radianPitch = Math.toRadians((rotationPitch + 90) % 360);
             double radianYaw = Math.toRadians(rotationYaw);
 
-            double motionX =  Math.cos(radianPitch) * mouseOffsetX + Math.sin(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
-            double motionY = -Math.cos(radianYaw)   * mouseOffsetY;
-            double motionZ =  Math.sin(radianPitch) * mouseOffsetX - Math.cos(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
+            double motionX = Math.cos(radianPitch) * mouseOffsetX + Math.sin(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
+            double motionY = -Math.cos(radianYaw) * mouseOffsetY;
+            double motionZ = Math.sin(radianPitch) * mouseOffsetX - Math.cos(radianPitch) * Math.sin(radianYaw) * mouseOffsetY;
 
             center.x += (float) motionX;
             center.y += (float) motionY;
@@ -425,9 +430,9 @@ public class WorldSceneRendererWidget extends DynamicWidget {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
         defaultCenter.set(
-                (minX + maxX) / 2f + 0.5F,
-                (minY + maxY) / 2f + 0.5F,
-                (minZ + maxZ) / 2f + 0.5F
+            (minX + maxX) / 2f + 0.5F,
+            (minY + maxY) / 2f + 0.5F,
+            (minZ + maxZ) / 2f + 0.5F
         );
         renderer.addRenderedBlocksToAnotherWorld(blocks, renderHook);
 

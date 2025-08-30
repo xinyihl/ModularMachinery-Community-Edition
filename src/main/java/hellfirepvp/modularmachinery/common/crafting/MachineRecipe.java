@@ -10,7 +10,12 @@ package hellfirepvp.modularmachinery.common.crafting;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import crafttweaker.util.IEventHandler;
 import github.kasuminova.mmce.common.event.recipe.RecipeEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
@@ -35,7 +40,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,20 +61,20 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
     protected static int counter = 0;
 
-    protected final int sortId;
-    protected final String recipeFilePath;
+    protected final int              sortId;
+    protected final String           recipeFilePath;
     protected final ResourceLocation owningMachine, registryName;
-    protected final int tickTime;
-    protected final List<ComponentRequirement<?, ?>> recipeRequirements = Lists.newArrayList();
-    protected final RecipeCommandContainer commandContainer = new RecipeCommandContainer();
-    protected final int configuredPriority;
-    protected final boolean voidPerTickFailure;
+    protected final int                                             tickTime;
+    protected final List<ComponentRequirement<?, ?>>                recipeRequirements = Lists.newArrayList();
+    protected final RecipeCommandContainer                          commandContainer   = new RecipeCommandContainer();
+    protected final int                                             configuredPriority;
+    protected final boolean                                         voidPerTickFailure;
     protected final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers;
-    protected final List<String> tooltipList;
+    protected final List<String>                                    tooltipList;
 
     protected boolean parallelized;
-    protected String threadName;
-    protected int maxThreads;
+    protected String  threadName;
+    protected int     maxThreads;
     protected boolean loadJEI;
 
     public MachineRecipe(String path, ResourceLocation registryName, ResourceLocation owningMachine,
@@ -149,8 +159,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
     @SideOnly(Side.CLIENT)
     public List<String> getFormattedTooltip() {
         return tooltipList.stream()
-                .map(tip -> I18n.hasKey(tip) ? I18n.format(tip) : tip)
-                .collect(Collectors.toList());
+                          .map(tip -> I18n.hasKey(tip) ? I18n.format(tip) : tip)
+                          .collect(Collectors.toList());
     }
 
     public <H extends RecipeEvent> void addRecipeEventHandler(Class<?> hClass, IEventHandler<H> handler) {
@@ -175,7 +185,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
         return recipeFilePath;
     }
 
-    public boolean getLoadJEI(){
+    public boolean getLoadJEI() {
         return loadJEI;
     }
 
@@ -235,17 +245,17 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
                               ResourceLocation newOwningMachineIdentifier,
                               List<RecipeModifier> modifiers) {
         MachineRecipe copy = new MachineRecipe(this.recipeFilePath,
-                registryNameChange.apply(this.registryName),
-                newOwningMachineIdentifier,
-                Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, this.tickTime, false)),
-                this.configuredPriority,
-                this.doesCancelRecipeOnPerTickFailure(),
-                this.parallelized,
-                this.recipeEventHandlers,
-                this.tooltipList,
-                this.threadName,
-                this.maxThreads,
-                this.loadJEI
+            registryNameChange.apply(this.registryName),
+            newOwningMachineIdentifier,
+            Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_DURATION, null, this.tickTime, false)),
+            this.configuredPriority,
+            this.doesCancelRecipeOnPerTickFailure(),
+            this.parallelized,
+            this.recipeEventHandlers,
+            this.tooltipList,
+            this.threadName,
+            this.maxThreads,
+            this.loadJEI
         );
 
         for (ComponentRequirement<?, ?> requirement : this.getCraftingRequirements()) {
@@ -273,7 +283,7 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
 
     public static class MachineRecipeContainer {
 
-        private final MachineRecipe parent;
+        private final MachineRecipe          parent;
         private final List<ResourceLocation> recipeOwnerList = Lists.newLinkedList();
 
         private MachineRecipeContainer(MachineRecipe copyParent) {
@@ -285,8 +295,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             for (int i = 0; i < recipeOwnerList.size(); i++) {
                 ResourceLocation location = recipeOwnerList.get(i);
                 MachineRecipe rec = new MachineRecipe(parent.recipeFilePath + "_sub_" + i,
-                        new ResourceLocation(parent.registryName.getNamespace(), parent.registryName.getPath() + "_sub_" + i),
-                        location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.parallelized);
+                    new ResourceLocation(parent.registryName.getNamespace(), parent.registryName.getPath() + "_sub_" + i),
+                    location, parent.tickTime, parent.configuredPriority, parent.voidPerTickFailure, parent.parallelized);
                 for (ComponentRequirement<?, ?> req : parent.recipeRequirements) {
                     rec.recipeRequirements.add(req.deepCopy().postDeepCopy(req));
                 }
@@ -386,8 +396,8 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             String registryName = elementRegistryName.getAsJsonPrimitive().getAsString();
             int recipeTime = elementTime.getAsJsonPrimitive().getAsInt();
             MachineRecipe recipe = new MachineRecipe(RecipeLoader.CURRENTLY_READING_PATH.get(),
-                    new ResourceLocation(ModularMachinery.MODID, registryName),
-                    parentName, recipeTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
+                new ResourceLocation(ModularMachinery.MODID, registryName),
+                parentName, recipeTime, priority, voidPerTickFailure, Config.recipeParallelizeEnabledByDefault);
 
             MachineRecipeContainer outContainer = new MachineRecipeContainer(recipe);
             outContainer.recipeOwnerList.addAll(qualifiedMachineNames);
@@ -429,12 +439,12 @@ public class MachineRecipe implements Comparable<MachineRecipe> {
             JsonObject requirement = json.getAsJsonObject();
 
             if (!requirement.has("type") || !requirement.get("type").isJsonPrimitive() ||
-                    !requirement.get("type").getAsJsonPrimitive().isString()) {
+                !requirement.get("type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'type' of a requirement is missing or isn't a string!");
             }
             String type = requirement.getAsJsonPrimitive("type").getAsString();
             if (!requirement.has("io-type") || !requirement.get("io-type").isJsonPrimitive() ||
-                    !requirement.get("io-type").getAsJsonPrimitive().isString()) {
+                !requirement.get("io-type").getAsJsonPrimitive().isString()) {
                 throw new JsonParseException("'io-type' of a requirement is missing or isn't a string!");
             }
             String ioType = requirement.getAsJsonPrimitive("io-type").getAsString();

@@ -11,11 +11,11 @@ import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineContr
 
 public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
     protected final TileMultiblockMachineController controller;
-    protected final DynamicMachine currentMachine;
-    protected final int maxParallelism;
-    protected final Iterable<MachineRecipe> recipeList;
-    protected CraftingStatus status = CraftingStatus.IDLE;
-    private final RecipeThread thread;
+    protected final DynamicMachine                  currentMachine;
+    protected final int                             maxParallelism;
+    protected final Iterable<MachineRecipe>         recipeList;
+    private final   RecipeThread                    thread;
+    protected       CraftingStatus                  status = CraftingStatus.IDLE;
 
     public RecipeSearchTask(TileMultiblockMachineController controller, DynamicMachine currentMachine, int maxParallelism, Iterable<MachineRecipe> recipeList, final RecipeThread thread) {
         this.controller = controller;
@@ -28,7 +28,9 @@ public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
     @Override
     protected RecipeCraftingContext computeTask() {
         DynamicMachine foundMachine = controller.getFoundMachine();
-        if (foundMachine == null) return null;
+        if (foundMachine == null) {
+            return null;
+        }
 
         MachineRecipe highestValidity = null;
         RecipeCraftingContext.CraftingCheckResult highestValidityResult = null;
@@ -59,10 +61,10 @@ public class RecipeSearchTask extends TimeRecordingTask<RecipeCraftingContext> {
 
         if (highestValidity != null) {
             status = CraftingStatus.failure(
-                    highestValidityResult.getFirstErrorMessage(""));
+                highestValidityResult.getFirstErrorMessage(""));
         } else {
             status = CraftingStatus.failure(
-                    TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
+                TileMultiblockMachineController.Type.NO_RECIPE.getUnlocalizedDescription());
         }
 
         return null;

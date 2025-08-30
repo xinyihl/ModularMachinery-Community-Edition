@@ -4,10 +4,10 @@ import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 
 public class TimeRecorder {
-    private final IntArrayFIFOQueue usedTimeList = new IntArrayFIFOQueue();
-    private final IntArrayFIFOQueue searchUsedTimeList = new IntArrayFIFOQueue();
-    private int usedTimeCache = 0;
-    private int searchUsedTimeCache = 0;
+    private final IntArrayFIFOQueue usedTimeList        = new IntArrayFIFOQueue();
+    private final IntArrayFIFOQueue searchUsedTimeList  = new IntArrayFIFOQueue();
+    private       int               usedTimeCache       = 0;
+    private       int               searchUsedTimeCache = 0;
 
     public void updateUsedTime(ActionExecutor executor) {
         addUsedTime(executor == null ? 0 : executor.usedTime);

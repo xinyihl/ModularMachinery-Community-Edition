@@ -36,12 +36,12 @@ public class IngredientList extends ScrollingColumn {
         scrollbar.setMargin(3, 1, 1, 1);
         scrollbar.setWidthHeight(8, 34);
         scrollbar.getScroll()
-                .setMouseDownTexture(204, 143)
-                .setHoveredTexture(194, 143)
-                .setTexture(184, 143)
-                .setUnavailableTexture(214, 143)
-                .setTextureLocation(WIDGETS_TEX_LOCATION)
-                .setWidthHeight(8, 13);
+                 .setMouseDownTexture(204, 143)
+                 .setHoveredTexture(194, 143)
+                 .setTexture(184, 143)
+                 .setUnavailableTexture(214, 143)
+                 .setTextureLocation(WIDGETS_TEX_LOCATION)
+                 .setWidthHeight(8, 13);
     }
 
     public Scrollbar getScrollbar() {
@@ -57,7 +57,7 @@ public class IngredientList extends ScrollingColumn {
         for (int i = 0; i < list.size(); i++) {
             final ItemStack stack = list.get(i);
             row.addWidget(SlotItemVirtual.ofJEI(stack)
-                    .setSlotTex(TextureProperties.of(WIDGETS_TEX_LOCATION, 184, 194))
+                                         .setSlotTex(TextureProperties.of(WIDGETS_TEX_LOCATION, 184, 194))
             );
             stackPerRow++;
             if (stackPerRow >= maxStackPerRow && i + 1 < totalSize) {
@@ -69,7 +69,7 @@ public class IngredientList extends ScrollingColumn {
         for (int i = 0; i < fluidList.size(); i++) {
             final FluidStack stack = fluidList.get(i);
             row.addWidget(SlotFluidVirtual.ofJEI(stack)
-                    .setSlotTex(TextureProperties.of(WIDGETS_TEX_LOCATION, 184, 194))
+                                          .setSlotTex(TextureProperties.of(WIDGETS_TEX_LOCATION, 184, 194))
             );
             stackPerRow++;
             if (stackPerRow >= maxStackPerRow && i + 1 < totalSize) {

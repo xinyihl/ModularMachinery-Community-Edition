@@ -29,24 +29,24 @@ import java.util.Map;
 @Mixin(value = ContainerInterfaceTerminal.class)
 public class MixinContainerInterfaceTerminal extends AEBaseContainer {
 
+    @Unique
+    private static Constructor<?>              randomComplement$constructor;
+    @Unique
+    public         boolean                     randomComplement$missing = false;
+    @Unique
+    public         int                         randomComplement$total   = 0;
     @Shadow(remap = false)
-    private IGrid grid;
-
+    private        IGrid                       grid;
     @Shadow(remap = false)
     @Final
-    private Map<IInterfaceHost,Object> diList;
+    private        Map<IInterfaceHost, Object> diList;
 
-    @Unique
-    public boolean randomComplement$missing = false;
+    public MixinContainerInterfaceTerminal(InventoryPlayer ip, TileEntity myTile, IPart myPart) {
+        super(ip, myTile, myPart);
+    }
 
-    @Unique
-    public int randomComplement$total = 0;
-
-    @Unique
-    private static Constructor<?> randomComplement$constructor;
-
-    @Inject(method = "<clinit>",at = @At("TAIL"))
-    private static void onClinit(CallbackInfo ci){
+    @Inject(method = "<clinit>", at = @At("TAIL"))
+    private static void onClinit(CallbackInfo ci) {
         try {
             Class<?> clazz = Class.forName("appeng.container.implementations.ContainerInterfaceTerminal$InvTracker");
             randomComplement$constructor = clazz.getDeclaredConstructor(DualityInterface.class, IItemHandler.class, String.class);
@@ -56,18 +56,14 @@ public class MixinContainerInterfaceTerminal extends AEBaseContainer {
         randomComplement$constructor.setAccessible(true);
     }
 
-    public MixinContainerInterfaceTerminal(InventoryPlayer ip, TileEntity myTile, IPart myPart) {
-        super(ip, myTile, myPart);
-    }
-
-    @Inject(method = "detectAndSendChanges",at = @At(value = "INVOKE", target = "Lappeng/api/networking/IGridNode;isActive()Z",ordinal = 0,remap = false,shift = At.Shift.BY,by = 2))
+    @Inject(method = "detectAndSendChanges", at = @At(value = "INVOKE", target = "Lappeng/api/networking/IGridNode;isActive()Z", ordinal = 0, remap = false, shift = At.Shift.BY, by = 2))
     public void detectAndSendChangesMixin(CallbackInfo ci) {
         randomComplement$total = 0;
         randomComplement$missing = false;
-        for(IGridNode gn : this.grid.getMachines(MEPatternProvider.class)) {
+        for (IGridNode gn : this.grid.getMachines(MEPatternProvider.class)) {
             if (gn.isActive()) {
-                IInterfaceHost ih = (IInterfaceHost)gn.getMachine();
-                var t = (AccessorInvTracker)this.diList.get(ih);
+                IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
+                var t = (AccessorInvTracker) this.diList.get(ih);
                 if (t == null) {
                     randomComplement$missing = true;
                 } else {
@@ -82,33 +78,34 @@ public class MixinContainerInterfaceTerminal extends AEBaseContainer {
         }
     }
 
-    @Inject(method = "regenList",at = @At(value = "INVOKE", target = "Lappeng/api/networking/IGridNode;isActive()Z",ordinal = 0,shift = At.Shift.BY,by = 2),remap = false)
+    @Inject(method = "regenList", at = @At(value = "INVOKE", target = "Lappeng/api/networking/IGridNode;isActive()Z", ordinal = 0, shift = At.Shift.BY, by = 2), remap = false)
     public void regenListMixin(CallbackInfo ci) {
-        for(IGridNode gn : this.grid.getMachines(MEPatternProvider.class)) {
+        for (IGridNode gn : this.grid.getMachines(MEPatternProvider.class)) {
             if (gn.isActive()) {
                 try {
-                    IInterfaceHost ih = (IInterfaceHost)gn.getMachine();
+                    IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
                     DualityInterface dual = ih.getInterfaceDuality();
-                    var patterns = ((MEPatternProvider)ih).getPatterns();
+                    var patterns = ((MEPatternProvider) ih).getPatterns();
                     var name = dual.getTermName();
-                    Object instance = randomComplement$constructor.newInstance(dual,patterns,name);
+                    Object instance = randomComplement$constructor.newInstance(dual, patterns, name);
                     this.diList.put(ih, instance);
-                } catch (IllegalAccessException | InvocationTargetException | InstantiationException ignored) {}
+                } catch (IllegalAccessException | InvocationTargetException | InstantiationException ignored) {
+                }
             }
         }
     }
 
-    @Redirect(method = "detectAndSendChanges",at = @At(value = "INVOKE", target = "Ljava/util/Map;size()I"))
-    public int totalMixin(Map<?,?> instance){
+    @Redirect(method = "detectAndSendChanges", at = @At(value = "INVOKE", target = "Ljava/util/Map;size()I"))
+    public int totalMixin(Map<?, ?> instance) {
         return (instance.size() - randomComplement$total);
     }
 
-    @ModifyVariable(method = "detectAndSendChanges",at = @At(value = "INVOKE", target = "Ljava/util/Map;size()I",remap = false,shift = At.Shift.BY ,by = -2),name = "missing")
-    public boolean missingMixin(boolean missing){
+    @ModifyVariable(method = "detectAndSendChanges", at = @At(value = "INVOKE", target = "Ljava/util/Map;size()I", remap = false, shift = At.Shift.BY, by = -2), name = "missing")
+    public boolean missingMixin(boolean missing) {
         return randomComplement$missing || missing;
     }
 
-    @Mixin(targets = "appeng.container.implementations.ContainerInterfaceTerminal$InvTracker",remap = false)
+    @Mixin(targets = "appeng.container.implementations.ContainerInterfaceTerminal$InvTracker", remap = false)
     public interface AccessorInvTracker {
 
         @Accessor

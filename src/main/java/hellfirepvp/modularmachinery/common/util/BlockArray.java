@@ -39,7 +39,13 @@ import stanhebben.zenscript.annotations.ZenClass;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -57,9 +63,9 @@ public class BlockArray {
 
     public final long uid;
 
-    protected Map<BlockPos, BlockInformation> pattern = new BlockPos2ValueMap<>();
+    protected Map<BlockPos, BlockInformation> pattern         = new BlockPos2ValueMap<>();
     protected Map<BlockPos, BlockInformation> tileBlocksArray = new BlockPos2ValueMap<>();
-    private BlockPos min = new BlockPos(0, 0, 0), max = new BlockPos(0, 0, 0), size = new BlockPos(0, 0, 0);
+    private   BlockPos                        min             = new BlockPos(0, 0, 0), max = new BlockPos(0, 0, 0), size = new BlockPos(0, 0, 0);
 
     public BlockArray() {
         this.uid = BlockArrayCache.nextUID();
@@ -443,13 +449,13 @@ public class BlockArray {
         private static final ObjectOpenHashSet<BlockInformation> POOL = new ObjectOpenHashSet<>();
 
         private List<IBlockStateDescriptor> matchingStates = new ObjectArrayList<>();
-        private List<IBlockState> samples = new ObjectArrayList<>();
+        private List<IBlockState>           samples        = new ObjectArrayList<>();
 
         private boolean hasTileEntity;
         private boolean hasStateMachineComponent;
 
         private NBTTagCompound matchingTag = null;
-        private NBTTagCompound previewTag = null;
+        private NBTTagCompound previewTag  = null;
 
         private AdvancedBlockChecker nbtChecker = null;
 
@@ -468,6 +474,33 @@ public class BlockArray {
 
         public static void clearPool() {
             POOL.clear();
+        }
+
+        public static IBlockStateDescriptor getDescriptor(String strElement) throws JsonParseException {
+            int meta = -1;
+            int indexMeta = strElement.indexOf('@');
+            if (indexMeta != -1 && indexMeta != strElement.length() - 1) {
+                try {
+                    meta = Integer.parseInt(strElement.substring(indexMeta + 1));
+                } catch (NumberFormatException exc) {
+                    throw new JsonParseException("Expected a metadata number, got " + strElement.substring(indexMeta + 1), exc);
+                }
+                strElement = strElement.substring(0, indexMeta);
+            }
+            ResourceLocation res = new ResourceLocation(strElement);
+            Block block = ForgeRegistries.BLOCKS.getValue(res);
+            if (block == null) {
+                throw new JsonParseException("Couldn't find block with registryName '" + res + "' !");
+            }
+            if (meta == -1) {
+                return IBlockStateDescriptor.of(block);
+            } else {
+                return IBlockStateDescriptor.of(block.getStateFromMeta(meta));
+            }
+        }
+
+        public static Tuple<ItemStack, IBlockState> getTupleIngredientFromBlockState(IBlockState state) {
+            return new Tuple<>(StackUtils.getStackFromBlockState(state), state);
         }
 
         public BlockInformation canonicalize() {
@@ -501,29 +534,6 @@ public class BlockArray {
 
         public boolean hasStatedMachineComponent() {
             return hasStateMachineComponent;
-        }
-
-        public static IBlockStateDescriptor getDescriptor(String strElement) throws JsonParseException {
-            int meta = -1;
-            int indexMeta = strElement.indexOf('@');
-            if (indexMeta != -1 && indexMeta != strElement.length() - 1) {
-                try {
-                    meta = Integer.parseInt(strElement.substring(indexMeta + 1));
-                } catch (NumberFormatException exc) {
-                    throw new JsonParseException("Expected a metadata number, got " + strElement.substring(indexMeta + 1), exc);
-                }
-                strElement = strElement.substring(0, indexMeta);
-            }
-            ResourceLocation res = new ResourceLocation(strElement);
-            Block block = ForgeRegistries.BLOCKS.getValue(res);
-            if (block == null) {
-                throw new JsonParseException("Couldn't find block with registryName '" + res + "' !");
-            }
-            if (meta == -1) {
-                return IBlockStateDescriptor.of(block);
-            } else {
-                return IBlockStateDescriptor.of(block.getStateFromMeta(meta));
-            }
         }
 
         public NBTTagCompound getMatchingTag() {
@@ -563,29 +573,25 @@ public class BlockArray {
         public List<ItemStack> getIngredientList() {
             List<ItemStack> list = new ArrayList<>();
             samples.stream()
-                    .map(StackUtils::getStackFromBlockState)
-                    .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
-                    .forEach(list::add);
+                   .map(StackUtils::getStackFromBlockState)
+                   .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
+                   .forEach(list::add);
             return list;
         }
 
         public List<ItemStack> getIngredientList(BlockPos pos, World world) {
             List<ItemStack> list = new ArrayList<>();
             samples.stream()
-                    .map(state -> StackUtils.getStackFromBlockState(state, pos, world))
-                    .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
-                    .forEach(list::add);
+                   .map(state -> StackUtils.getStackFromBlockState(state, pos, world))
+                   .filter(stackFromBlockState -> ItemUtils.stackNotInList(list, stackFromBlockState))
+                   .forEach(list::add);
             return list;
         }
 
         public List<Tuple<ItemStack, IBlockState>> getBlockStateIngredientList() {
             return samples.stream()
-                    .map(BlockInformation::getTupleIngredientFromBlockState)
-                    .collect(Collectors.toList());
-        }
-
-        public static Tuple<ItemStack, IBlockState> getTupleIngredientFromBlockState(IBlockState state) {
-            return new Tuple<>(StackUtils.getStackFromBlockState(state), state);
+                          .map(BlockInformation::getTupleIngredientFromBlockState)
+                          .collect(Collectors.toList());
         }
 
         public BlockInformation copyRotateYCCW() {
@@ -637,7 +643,9 @@ public class BlockArray {
                         continue;
                     }
 
-                    if (!isNBTCheckerMatch(world, at, applicable)) return false;
+                    if (!isNBTCheckerMatch(world, at, applicable)) {
+                        return false;
+                    }
 
                     if (matchingTag != null) {
                         TileEntity te = world.getTileEntity(at);
@@ -686,9 +694,9 @@ public class BlockArray {
         public boolean equals(Object o) {
             if (o instanceof BlockInformation another) {
                 return matchingStates.equals(another.matchingStates) &&
-                       Objects.equals(matchingTag, another.matchingTag) &&
-                       Objects.equals(previewTag, another.previewTag) &&
-                       Objects.equals(nbtChecker, another.nbtChecker);
+                    Objects.equals(matchingTag, another.matchingTag) &&
+                    Objects.equals(previewTag, another.previewTag) &&
+                    Objects.equals(nbtChecker, another.nbtChecker);
             }
             return false;
         }

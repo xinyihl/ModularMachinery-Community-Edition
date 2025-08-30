@@ -22,7 +22,12 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class InsolatorRecipeAdapter extends RecipeAdapter {
 
@@ -35,14 +40,17 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
         this.tree = tree;
     }
 
+    private static boolean isFertilizer(final ItemStack primaryInput) {
+        return InsolatorManager.isItemFertilizer(primaryInput) || primaryInput.getItem() == Items.GLOWSTONE_DUST; // AE2 Seeds
+    }
+
     @Nonnull
     @Override
     public Collection<MachineRecipe> createRecipesFor(final ResourceLocation owningMachineName,
                                                       final List<RecipeModifier> modifiers,
                                                       final List<ComponentRequirement<?, ?>> additionalRequirements,
                                                       final Map<Class<?>, List<IEventHandler<RecipeEvent>>> eventHandlers,
-                                                      final List<String> recipeTooltips)
-    {
+                                                      final List<String> recipeTooltips) {
         List<MachineRecipe> recipes = new ArrayList<>();
         InsolatorManager.InsolatorRecipe[] insolatorRecipes = InsolatorManager.getRecipeList();
 
@@ -69,9 +77,9 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
             boolean hasFertilizer = insolatorRecipe.hasFertilizer();
 
             // Don't add fertilizers as input.
-            ItemStack input = hasFertilizer 
-                    ? isFertilizer(primaryInput) ? secondaryInput : primaryInput 
-                    : primaryInput;
+            ItemStack input = hasFertilizer
+                ? isFertilizer(primaryInput) ? secondaryInput : primaryInput
+                : primaryInput;
             // Skip duplicated inputs.
             HashedItemStack hashed = HashedItemStack.ofUnsafe(input);
             if (inputs.contains(hashed)) {
@@ -87,14 +95,14 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
             int energy = insolatorRecipe.getEnergy();
 
             MachineRecipe recipe = createRecipeShell(new ResourceLocation("thermalexpansion", (tree ? "insolator_tree_" : "insolator_") + incId),
-                    owningMachineName, Math.round(RecipeModifier.applyModifiers(
-                            modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, (float) energy / ENERGY_PER_TICK, false)),
-                    incId, false
+                owningMachineName, Math.round(RecipeModifier.applyModifiers(
+                    modifiers, RequirementTypesMM.REQUIREMENT_DURATION, IOType.INPUT, (float) energy / ENERGY_PER_TICK, false)),
+                incId, false
             );
             incId++;
 
             int energyPerTick = Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ENERGY, IOType.INPUT, ENERGY_PER_TICK, false)
+                modifiers, RequirementTypesMM.REQUIREMENT_ENERGY, IOType.INPUT, ENERGY_PER_TICK, false)
             );
             // Energy
             if (energyPerTick > 0) {
@@ -102,22 +110,22 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
             }
 
             int primaryInputAmount = Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, input.getCount(), false
+                modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, input.getCount(), false
             ));
             int secondaryInputAmount = hasFertilizer ? 0 : Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, secondaryInput.getCount(), false
+                modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.INPUT, secondaryInput.getCount(), false
             ));
             int waterAmount = Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, water, false
+                modifiers, RequirementTypesMM.REQUIREMENT_FLUID, IOType.INPUT, water, false
             ));
             int primaryOutputAmount = Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, primaryOutput.getCount(), false
+                modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, primaryOutput.getCount(), false
             ));
             int secondaryOutputAmount = Math.round(RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, secondaryOutput.getCount(), false
+                modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, secondaryOutput.getCount(), false
             ));
             float secondaryOutputChanceModified = RecipeModifier.applyModifiers(
-                    modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, (float) secondaryOutputChance / 100, true
+                modifiers, RequirementTypesMM.REQUIREMENT_ITEM, IOType.OUTPUT, (float) secondaryOutputChance / 100, true
             );
 
             // Primary Input
@@ -159,10 +167,6 @@ public class InsolatorRecipeAdapter extends RecipeAdapter {
         }
 
         return recipes;
-    }
-
-    private static boolean isFertilizer(final ItemStack primaryInput) {
-        return InsolatorManager.isItemFertilizer(primaryInput) || primaryInput.getItem() == Items.GLOWSTONE_DUST; // AE2 Seeds
     }
 
 }

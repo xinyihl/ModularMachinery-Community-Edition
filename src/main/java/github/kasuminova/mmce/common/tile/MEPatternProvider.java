@@ -83,28 +83,23 @@ import java.util.stream.IntStream;
 
 public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory, MachineComponentTileNotifiable, IInterfaceHost, ICustomNameObject {
 
-    public static final int PATTERNS = 36;
-    public static final int SUB_ITEM_HANDLER_SLOTS = 2;
-
-    protected final AppEngInternalInventory subItemHandler = new AppEngInternalInventory(this, SUB_ITEM_HANDLER_SLOTS);
-    protected final AEFluidInventoryUpgradeable subFluidHandler = new AEFluidInventoryUpgradeable(this, 1, Integer.MAX_VALUE);
-    protected final InfItemFluidHandler handler = new InfItemFluidHandler(subItemHandler, subFluidHandler);
-
-    protected final AppEngInternalInventory patterns = new AppEngInternalInventory(this, PATTERNS, 1, PatternItemFilter.INSTANCE);
-    protected final List<ICraftingPatternDetails> details = new ObjectArrayList<>(PATTERNS);
-
-    protected WorkModeSetting workMode = WorkModeSetting.DEFAULT;
-    protected volatile boolean machineCompleted = true;
-    protected boolean shouldReturnItems = false;
-    protected boolean handlerDirty = false;
-
-    protected int currentPatternIdx = -1;
-    protected ICraftingPatternDetails currentPattern = null;
-
-    private final DualityInterface duality = new DualityInterface(this.proxy,this);
-    private String customName;
-    private String machineName;
-    private static final ItemStack item = new ItemStack(ItemsMM.mePatternProvider);
+    public static final  int                           PATTERNS               = 36;
+    public static final  int                           SUB_ITEM_HANDLER_SLOTS = 2;
+    private static final ItemStack                     item                   = new ItemStack(ItemsMM.mePatternProvider);
+    protected final      AppEngInternalInventory       subItemHandler         = new AppEngInternalInventory(this, SUB_ITEM_HANDLER_SLOTS);
+    protected final      AEFluidInventoryUpgradeable   subFluidHandler        = new AEFluidInventoryUpgradeable(this, 1, Integer.MAX_VALUE);
+    protected final      InfItemFluidHandler           handler                = new InfItemFluidHandler(subItemHandler, subFluidHandler);
+    protected final      AppEngInternalInventory       patterns               = new AppEngInternalInventory(this, PATTERNS, 1, PatternItemFilter.INSTANCE);
+    protected final      List<ICraftingPatternDetails> details                = new ObjectArrayList<>(PATTERNS);
+    private final        DualityInterface              duality                = new DualityInterface(this.proxy, this);
+    protected            WorkModeSetting               workMode               = WorkModeSetting.DEFAULT;
+    protected volatile   boolean                       machineCompleted       = true;
+    protected            boolean                       shouldReturnItems      = false;
+    protected            boolean                       handlerDirty           = false;
+    protected            int                           currentPatternIdx      = -1;
+    protected            ICraftingPatternDetails       currentPattern         = null;
+    private              String                        customName;
+    private              String                        machineName;
 
     public MEPatternProvider() {
         // Initialize details...
@@ -158,8 +153,8 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             return;
         }
         details.stream()
-                .filter(Objects::nonNull)
-                .forEach(detail -> craftingTracker.addCraftingOption(this, detail));
+               .filter(Objects::nonNull)
+               .forEach(detail -> craftingTracker.addCraftingOption(this, detail));
     }
 
     @Override
@@ -231,7 +226,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public boolean isBusy() {
         return (workMode == WorkModeSetting.CRAFTING_LOCK_MODE && !machineCompleted) ||
-               (workMode == WorkModeSetting.BLOCKING_MODE && !handler.isEmpty());
+            (workMode == WorkModeSetting.BLOCKING_MODE && !handler.isEmpty());
     }
 
     protected void refreshPatterns() {
@@ -320,7 +315,7 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
                         fluidStackList.set(i, null);
                     }
                 }
-                
+
                 if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
                     returnGases();
                 }
@@ -491,15 +486,15 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         }
         List<EntityPlayerMP> players = new ArrayList<>();
         world.playerEntities.stream()
-                .filter(EntityPlayerMP.class::isInstance)
-                .map(EntityPlayerMP.class::cast)
-                .forEach(playerMP -> {
-                    if (playerMP.openContainer instanceof ContainerMEPatternProvider cPatternProvider) {
-                        if (cPatternProvider.getOwner() == this) {
-                            players.add(playerMP);
-                        }
-                    }
-                });
+                            .filter(EntityPlayerMP.class::isInstance)
+                            .map(EntityPlayerMP.class::cast)
+                            .forEach(playerMP -> {
+                                if (playerMP.openContainer instanceof ContainerMEPatternProvider cPatternProvider) {
+                                    if (cPatternProvider.getOwner() == this) {
+                                        players.add(playerMP);
+                                    }
+                                }
+                            });
         if (!players.isEmpty()) {
             PktMEPatternProviderHandlerItems message = new PktMEPatternProviderHandlerItems(this);
             players.forEach(player -> ModularMachinery.NET_CHANNEL.sendTo(message, player));
@@ -558,30 +553,26 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             if (!machineCompleted) {
                 machineCompleted = true;
                 ModularMachinery.EXECUTE_MANAGER.addSyncTask(() ->
-                        event.getController().setSearchRecipeImmediately(true));
+                    event.getController().setSearchRecipeImmediately(true));
             }
         }
     }
 
-    public enum WorkModeSetting {
-        DEFAULT,
-        BLOCKING_MODE,
-        CRAFTING_LOCK_MODE,
-        ENHANCED_BLOCKING_MODE,
+    public String getMachineName() {
+        if (machineName == null) {
+            return item.getItem().getTranslationKey();
+        } else {
+            return machineName;
+        }
     }
 
-    public String getMachineName(){
-        if (machineName == null) return item.getItem().getTranslationKey();
-        else return machineName;
+    public void setMachineName(String name) {
+        this.machineName = name;
     }
 
     @Override
-    public ItemStack getVisualItemStack(){
+    public ItemStack getVisualItemStack() {
         return item;
-    }
-
-    public void setMachineName(String name){
-        this.machineName = name;
     }
 
     @Override
@@ -651,6 +642,13 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     @Override
     public IConfigManager getConfigManager() {
         return this.duality.getConfigManager();
+    }
+
+    public enum WorkModeSetting {
+        DEFAULT,
+        BLOCKING_MODE,
+        CRAFTING_LOCK_MODE,
+        ENHANCED_BLOCKING_MODE,
     }
 
 }

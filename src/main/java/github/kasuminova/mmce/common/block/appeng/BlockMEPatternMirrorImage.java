@@ -26,6 +26,8 @@ import javax.annotation.Nullable;
 
 public class BlockMEPatternMirrorImage extends BlockMachineComponent {
 
+    final String mep = "tile.modularmachinery.blockmepatternprovider";
+
     public BlockMEPatternMirrorImage() {
         super(Material.IRON);
         setHardness(2F);
@@ -35,16 +37,15 @@ public class BlockMEPatternMirrorImage extends BlockMachineComponent {
         setCreativeTab(CommonProxy.creativeTabModularMachinery);
     }
 
-    final String mep = "tile.modularmachinery.blockmepatternprovider";
-
     @Override
     public boolean onBlockActivated(
-            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
-            @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
-            @Nonnull EnumFacing facing,
-            float hitX, float hitY, float hitZ)
-    {
-        if (worldIn.isRemote || hand != EnumHand.MAIN_HAND)return false;
+        @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
+        @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
+        @Nonnull EnumFacing facing,
+        float hitX, float hitY, float hitZ) {
+        if (worldIn.isRemote || hand != EnumHand.MAIN_HAND) {
+            return false;
+        }
         final MEPatternMirrorImage tileEntity = (MEPatternMirrorImage) worldIn.getTileEntity(pos);
         if (!player.getHeldItem(hand).isEmpty()) {
             var heldItem = player.getHeldItem(hand);
@@ -68,7 +69,7 @@ public class BlockMEPatternMirrorImage extends BlockMachineComponent {
         if (tileEntity.providerPos == null) {
             player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.tip0"));
         } else {
-            player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.tip1",pPos.getX(),pPos.getY(),pPos.getZ()));
+            player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.tip1", pPos.getX(), pPos.getY(), pPos.getZ()));
         }
         return true;
     }

@@ -16,10 +16,10 @@ import javax.annotation.Nullable;
 
 public class MEPatternMirrorImage extends TileColorableMachineComponent implements SelectiveUpdateTileEntity, MachineComponentTile {
 
-    public BlockPos providerPos;
+    public BlockPos            providerPos;
     public InfItemFluidHandler handler;
 
-    public MEPatternMirrorImage(){
+    public MEPatternMirrorImage() {
         handler = new InfItemFluidHandler();
     }
 
@@ -28,7 +28,7 @@ public class MEPatternMirrorImage extends TileColorableMachineComponent implemen
     public MachineComponent<InfItemFluidHandler> provideComponent() {
         if (providerPos != null) {
             TileEntity tileEntity = this.world.getTileEntity(providerPos);
-            if (tileEntity instanceof MEPatternProvider){
+            if (tileEntity instanceof MEPatternProvider) {
                 return new MachineComponent<>(IOType.INPUT) {
                     public ComponentType getComponentType() {
                         return ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS;
@@ -54,7 +54,7 @@ public class MEPatternMirrorImage extends TileColorableMachineComponent implemen
     @Override
     public void readCustomNBT(NBTTagCompound compound) {
         super.readCustomNBT(compound);
-        if(compound.hasKey("providerPos")){
+        if (compound.hasKey("providerPos")) {
             this.providerPos = BlockPos.fromLong(compound.getLong("providerPos"));
         }
     }
@@ -62,7 +62,7 @@ public class MEPatternMirrorImage extends TileColorableMachineComponent implemen
     @Override
     public void writeCustomNBT(NBTTagCompound compound) {
         super.writeCustomNBT(compound);
-        if (providerPos != null){
+        if (providerPos != null) {
             compound.setLong("providerPos", providerPos.toLong());
         }
     }

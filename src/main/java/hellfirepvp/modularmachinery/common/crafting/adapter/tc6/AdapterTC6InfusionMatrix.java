@@ -14,17 +14,17 @@ import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import kport.modularmagic.common.crafting.requirement.RequirementAspect;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.util.ResourceLocation;
 import thaumcraft.api.ThaumcraftApi;
-import thaumcraft.api.aspects.Aspect;
-import thaumcraft.api.aspects.AspectList;
-import thaumcraft.api.crafting.IThaumcraftRecipe;
 import thaumcraft.api.crafting.InfusionRecipe;
 
 import javax.annotation.Nonnull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AdapterTC6InfusionMatrix extends RecipeAdapter {
@@ -55,28 +55,28 @@ public class AdapterTC6InfusionMatrix extends RecipeAdapter {
             }
 
             MachineRecipe machineRecipe = createRecipeShell(
-                    new ResourceLocation("thaumcraft", "auto_infusion" + incId),
-                    owningMachineName,
-                    recipe.instability == 0 ? BASE_WORK_TIME : recipe.instability * 1000,
-                    incId, false);
+                new ResourceLocation("thaumcraft", "auto_infusion" + incId),
+                owningMachineName,
+                recipe.instability == 0 ? BASE_WORK_TIME : recipe.instability * 1000,
+                incId, false);
 
             // Input Main
             ItemStack[] inputMain = recipe.getRecipeInput().getMatchingStacks();
             List<ChancedIngredientStack> inputMainList = Arrays.stream(inputMain)
-                    .map(itemStack -> new ChancedIngredientStack(ItemUtils.copyStackWithSize(itemStack, inAmount)))
-                    .collect(Collectors.toList());
+                                                               .map(itemStack -> new ChancedIngredientStack(ItemUtils.copyStackWithSize(itemStack, inAmount)))
+                                                               .collect(Collectors.toList());
             if (!inputMainList.isEmpty()) {
                 machineRecipe.addRequirement(new RequirementIngredientArray(inputMainList));
             }
 
             // Input Components
             recipe.getComponents().stream()
-                    .map(ingredient -> Arrays.stream(ingredient.getMatchingStacks())
-                    .map(ChancedIngredientStack::new)
-                    .collect(Collectors.toList()))
-                    .filter(stackList -> !stackList.isEmpty())
-                    .map(RequirementIngredientArray::new)
-                    .forEach(machineRecipe::addRequirement);
+                  .map(ingredient -> Arrays.stream(ingredient.getMatchingStacks())
+                                           .map(ChancedIngredientStack::new)
+                                           .collect(Collectors.toList()))
+                  .filter(stackList -> !stackList.isEmpty())
+                  .map(RequirementIngredientArray::new)
+                  .forEach(machineRecipe::addRequirement);
 
             // Aspect Inputs
             recipe.getAspects().aspects.forEach((aspect, amount) -> {

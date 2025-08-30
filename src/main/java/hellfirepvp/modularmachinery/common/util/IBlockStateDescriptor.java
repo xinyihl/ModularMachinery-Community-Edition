@@ -63,8 +63,8 @@ public class IBlockStateDescriptor {
 
     public IBlockStateDescriptor copy() {
         return applicable.size() == 1
-                ? new IBlockStateDescriptor(applicable.get(0))
-                : new IBlockStateDescriptor(new ReferenceArrayList<>(applicable));
+            ? new IBlockStateDescriptor(applicable.get(0))
+            : new IBlockStateDescriptor(new ReferenceArrayList<>(applicable));
     }
 
     public IBlockStateDescriptor copyRotateYCCW(final AtomicBoolean rotated) {
@@ -77,8 +77,8 @@ public class IBlockStateDescriptor {
             applicable.add(rotatedState);
         }
         return applicable.size() == 1
-                ? new IBlockStateDescriptor(applicable.get(0)).canonicalize()
-                : new IBlockStateDescriptor(applicable).canonicalize();
+            ? new IBlockStateDescriptor(applicable.get(0)).canonicalize()
+            : new IBlockStateDescriptor(applicable).canonicalize();
     }
 
     public boolean hasTileEntity() {

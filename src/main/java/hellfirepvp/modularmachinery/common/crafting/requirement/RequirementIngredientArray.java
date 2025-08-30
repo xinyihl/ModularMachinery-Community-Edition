@@ -34,10 +34,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RequirementIngredientArray extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeIngredientArray>
-        implements ComponentRequirement.ChancedRequirement {
+    implements ComponentRequirement.ChancedRequirement {
 
     protected final List<ChancedIngredientStack> ingredients;
-    public List<IngredientItemStack> cachedJEIIORequirementList = null;
+    public          List<IngredientItemStack>    cachedJEIIORequirementList = null;
 
     public float chance = 1.0F;
 
@@ -62,7 +62,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
         MachineComponent<?> cmp = component.component();
         ComponentType cmpType = cmp.getComponentType();
         return (cmpType.equals(ComponentTypesMM.COMPONENT_ITEM) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))
-               && cmp.ioType == actionType;
+            && cmp.ioType == actionType;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                     itemStack.setCount(amt);
                 }
                 case ORE_DICT ->
-                        copied.count = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.count, false));
+                    copied.count = Math.round(RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.count, false));
             }
             copied.chance = RecipeModifier.applyModifiers(modifiers, RequirementTypesMM.REQUIREMENT_ITEM, actionType, item.chance, true);
 
@@ -101,7 +101,7 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = RequirementTypesMM.KEY_REQUIREMENT_ITEM;
         return String.format("component.missing.%s.%s.%s",
-                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
+            compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
@@ -248,10 +248,10 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                             stack.setCount(maxConsume - consumed.get());
                             if (checker != null) {
                                 consumed.addAndGet(ItemUtils.consumeAll(
-                                        handler, stack, checker, context.getMachineController()) / toConsume);
+                                    handler, stack, checker, context.getMachineController()) / toConsume);
                             } else {
                                 consumed.addAndGet(ItemUtils.consumeAll(
-                                        handler, stack, ingredient.tag));
+                                    handler, stack, ingredient.tag));
                             }
                         });
                         if (consumed.get() >= maxConsume) {
@@ -266,10 +266,10 @@ public class RequirementIngredientArray extends ComponentRequirement.MultiCompPa
                         Sync.executeSyncIfPresent(handler, () -> {
                             if (checker != null) {
                                 consumed.addAndGet(ItemUtils.consumeAll(
-                                        handler, ingredient.oreDictName, maxConsume - consumed.get(), checker, context.getMachineController()));
+                                    handler, ingredient.oreDictName, maxConsume - consumed.get(), checker, context.getMachineController()));
                             } else {
                                 consumed.addAndGet(ItemUtils.consumeAll(
-                                        handler, ingredient.oreDictName, maxConsume - consumed.get(), ingredient.tag));
+                                    handler, ingredient.oreDictName, maxConsume - consumed.get(), ingredient.tag));
                             }
                         });
                         if (consumed.get() >= maxConsume) {

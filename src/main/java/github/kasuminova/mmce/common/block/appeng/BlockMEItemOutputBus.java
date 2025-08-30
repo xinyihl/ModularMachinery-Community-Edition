@@ -25,11 +25,10 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
 
     @Override
     public boolean onBlockActivated(
-            @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
-            @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand,
-            @Nonnull EnumFacing facing,
-            float hitX, float hitY, float hitZ)
-    {
+        @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
+        @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand,
+        @Nonnull EnumFacing facing,
+        float hitX, float hitY, float hitZ) {
         if (!worldIn.isRemote) {
             TileEntity te = worldIn.getTileEntity(pos);
             if (te instanceof MEItemOutputBus) {
@@ -56,8 +55,7 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
     @Override
     public void breakBlock(final World worldIn,
                            @Nonnull final BlockPos pos,
-                           @Nonnull final IBlockState state)
-    {
+                           @Nonnull final IBlockState state) {
         TileEntity te = worldIn.getTileEntity(pos);
         ItemStack dropped = new ItemStack(ItemsMM.meItemOutputBus);
 
@@ -96,8 +94,7 @@ public class BlockMEItemOutputBus extends BlockMEItemBus {
                                 @Nonnull final BlockPos pos,
                                 @Nonnull final IBlockState state,
                                 @Nonnull final EntityLivingBase placer,
-                                @Nonnull final ItemStack stack)
-    {
+                                @Nonnull final ItemStack stack) {
         super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 
         TileEntity te = worldIn.getTileEntity(pos);

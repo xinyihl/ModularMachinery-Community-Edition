@@ -28,9 +28,9 @@ import java.util.List;
 @ZenRegister
 @ZenClass("mods.modularmachinery.BlockArrayBuilder")
 public class BlockArrayBuilder {
-    private final TaggedPositionBlockArray blockArray;
-    private BlockArray.BlockInformation lastInformation = null;
-    private BlockPos lastPos = null;
+    private final TaggedPositionBlockArray    blockArray;
+    private       BlockArray.BlockInformation lastInformation = null;
+    private       BlockPos                    lastPos         = null;
 
     private BlockArrayBuilder() {
         blockArray = new TaggedPositionBlockArray();
@@ -82,9 +82,15 @@ public class BlockArrayBuilder {
             for (int y : yList) {
                 for (int z : zList) {
                     addBlock(x, y, z, ctBlockStates);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
+                    if (nbt != null) {
+                        setNBT(nbt);
+                    }
+                    if (previewNBT != null) {
+                        setPreviewNBT(previewNBT);
+                    }
+                    if (checker != null) {
+                        setBlockChecker(checker);
+                    }
                 }
             }
         }
@@ -138,7 +144,7 @@ public class BlockArrayBuilder {
                     stateDescriptorList.add(IBlockStateDescriptor.of(state));
                 } catch (Exception e) {
                     CraftTweakerAPI.logError(String.format("[ModularMachinery] Failed to get BlockState from <%s>!",
-                            stack.getItem().getRegistryName() + ":" + meta
+                        stack.getItem().getRegistryName() + ":" + meta
                     ));
                 }
             } else {
@@ -161,9 +167,15 @@ public class BlockArrayBuilder {
             for (int y : yList) {
                 for (int z : zList) {
                     addBlock(x, y, z, ctItemStacks);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
+                    if (nbt != null) {
+                        setNBT(nbt);
+                    }
+                    if (previewNBT != null) {
+                        setPreviewNBT(previewNBT);
+                    }
+                    if (checker != null) {
+                        setBlockChecker(checker);
+                    }
                 }
             }
         }
@@ -225,9 +237,15 @@ public class BlockArrayBuilder {
             for (int y : yList) {
                 for (int z : zList) {
                     addBlock(x, y, z, blockNames);
-                    if (nbt != null) setNBT(nbt);
-                    if (previewNBT != null) setPreviewNBT(previewNBT);
-                    if (checker != null) setBlockChecker(checker);
+                    if (nbt != null) {
+                        setNBT(nbt);
+                    }
+                    if (previewNBT != null) {
+                        setPreviewNBT(previewNBT);
+                    }
+                    if (checker != null) {
+                        setBlockChecker(checker);
+                    }
                 }
             }
         }
@@ -294,10 +312,10 @@ public class BlockArrayBuilder {
     public BlockArrayBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
             lastInformation.setNBTChecker((world, pos, blockState, nbt) -> checker.isMatch(
-                    CraftTweakerMC.getIWorld(world),
-                    CraftTweakerMC.getIBlockPos(pos),
-                    CraftTweakerMC.getBlockState(blockState),
-                    CraftTweakerMC.getIData(nbt)));
+                CraftTweakerMC.getIWorld(world),
+                CraftTweakerMC.getIBlockPos(pos),
+                CraftTweakerMC.getBlockState(blockState),
+                CraftTweakerMC.getIData(nbt)));
         }
         return this;
     }

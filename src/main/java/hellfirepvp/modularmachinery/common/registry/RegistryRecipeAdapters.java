@@ -53,7 +53,7 @@ public class RegistryRecipeAdapters {
             registerAdapter(new AdapterSmelteryMeltingRecipe());
             registerAdapter(new AdapterSmelteryAlloyRecipe());
         }
-        if (Mods.TC6.isPresent()){
+        if (Mods.TC6.isPresent()) {
             registerAdapter(new AdapterTC6InfusionMatrix());
         }
         if (Mods.THERMAL_EXPANSION.isPresent()) {

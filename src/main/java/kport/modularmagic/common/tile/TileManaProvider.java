@@ -16,12 +16,12 @@ import vazkii.botania.common.core.handler.ManaNetworkHandler;
 
 public abstract class TileManaProvider extends TileColorableMachineComponent implements ITickable, IManaReceiver, MachineComponentTile {
 
-    private static int manaCapacity = 100000;
-    private volatile int mana = 0;
+    private static   int manaCapacity = 100000;
+    private volatile int mana         = 0;
 
     public static void loadFromConfig(Configuration cfg) {
-        manaCapacity = cfg.getInt("Mana Capacity", "mods.botania", manaCapacity, 0, Integer.MAX_VALUE, 
-                "The maximum amount of mana this mana provider can hold."
+        manaCapacity = cfg.getInt("Mana Capacity", "mods.botania", manaCapacity, 0, Integer.MAX_VALUE,
+            "The maximum amount of mana this mana provider can hold."
         );
     }
 

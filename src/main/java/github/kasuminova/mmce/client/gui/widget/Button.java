@@ -19,15 +19,15 @@ import java.util.function.Function;
 @SuppressWarnings("unused")
 public class Button extends DynamicWidget {
 
-    protected ResourceLocation textureLocation = null;
-    protected TextureProperties texture = TextureProperties.EMPTY;
-    protected TextureProperties hoveredTexture = TextureProperties.EMPTY;
-    protected TextureProperties unavailableTexture= TextureProperties.EMPTY;
+    protected ResourceLocation  textureLocation    = null;
+    protected TextureProperties texture            = TextureProperties.EMPTY;
+    protected TextureProperties hoveredTexture     = TextureProperties.EMPTY;
+    protected TextureProperties unavailableTexture = TextureProperties.EMPTY;
 
     protected boolean available = true;
 
-    protected Consumer<Button> onClickedListener = null;
-    protected Function<Button, List<String>> tooltipFunction = null;
+    protected Consumer<Button>               onClickedListener = null;
+    protected Function<Button, List<String>> tooltipFunction   = null;
 
     @Override
     public void render(final WidgetGui gui, final RenderSize renderSize, final RenderPos renderPos, final MousePos mousePos) {
@@ -118,13 +118,13 @@ public class Button extends DynamicWidget {
         return available;
     }
 
-    public boolean isUnavailable() {
-        return !available;
-    }
-
     public Button setAvailable(final boolean available) {
         this.available = available;
         return this;
+    }
+
+    public boolean isUnavailable() {
+        return !available;
     }
 
     public Button setAvailable() {

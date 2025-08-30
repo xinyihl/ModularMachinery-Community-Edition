@@ -6,7 +6,7 @@ import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import java.util.function.BooleanSupplier;
 
 public enum Sides {
-    
+
     CLIENT(Sides::isRunningOnClient),
     SERVER(Sides::isRunningOnServer);
 
@@ -14,12 +14,6 @@ public enum Sides {
 
     Sides(final BooleanSupplier precondition) {
         this.precondition = precondition;
-    }
-
-    public void runIfPresent(final Runnable runnable) {
-        if (precondition.getAsBoolean()) {
-            runnable.run();
-        }
     }
 
     public static void accept(final Runnable serverRunnable, final Runnable clientRunnable) {
@@ -48,6 +42,12 @@ public enum Sides {
 
     public static boolean isClient() {
         return FMLLaunchHandler.side().isClient();
+    }
+
+    public void runIfPresent(final Runnable runnable) {
+        if (precondition.getAsBoolean()) {
+            runnable.run();
+        }
     }
 
 }

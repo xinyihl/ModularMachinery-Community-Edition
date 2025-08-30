@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date: 24.02.2018 / 12:35
  */
 public class RequirementItem extends ComponentRequirement.MultiCompParallelizable<ItemStack, RequirementTypeItem>
-        implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
+    implements ComponentRequirement.ChancedRequirement, ComponentRequirement.Parallelizable, Asyncable {
     public static final Random RD = new Random();
 
     public final ItemRequirementType requirementType;
@@ -59,7 +59,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     public final ItemStack required;
 
     public final String oreDictName;
-    public final int oreDictItemAmount;
+    public final int    oreDictItemAmount;
 
     public final int fuelBurntime;
 
@@ -69,11 +69,11 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
 
     public List<IngredientItemStack> cachedJEIIORequirementList = null;
 
-    public NBTTagCompound tag = null;
+    public NBTTagCompound tag               = null;
     public NBTTagCompound previewDisplayTag = null;
 
     public AdvancedItemChecker itemChecker = null;
-    public float chance = 1F;
+    public float               chance      = 1F;
 
     public int minAmount = 1;
     public int maxAmount = 1;
@@ -133,8 +133,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         float modValue = RecipeModifier.applyModifiers(modifiers, this, 1F, false);
 
         RequirementItem item = switch (this.requirementType) {
-            case OREDICT ->
-                    new RequirementItem(this.actionType, this.oreDictName, Math.round(this.oreDictItemAmount * modValue));
+            case OREDICT -> new RequirementItem(this.actionType, this.oreDictName, Math.round(this.oreDictItemAmount * modValue));
             case FUEL -> new RequirementItem(this.actionType, Math.round(this.fuelBurntime * modValue));
             default -> {
                 ItemStack inReq = this.required.copy();
@@ -224,7 +223,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = this.getRequirementType().getRegistryName();
         return String.format("component.missing.%s.%s.%s",
-                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
+            compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override
@@ -232,7 +231,7 @@ public class RequirementItem extends ComponentRequirement.MultiCompParallelizabl
         MachineComponent<?> cmp = component.component();
         ComponentType cmpType = cmp.getComponentType();
         return (cmpType.equals(ComponentTypesMM.COMPONENT_ITEM) || cmpType.equals(ComponentTypesMM.COMPONENT_ITEM_FLUID_GAS))
-               && cmp.ioType == actionType;
+            && cmp.ioType == actionType;
     }
 
     @Override

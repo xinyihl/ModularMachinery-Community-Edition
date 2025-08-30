@@ -24,11 +24,11 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
     // TODO: May cause some machine fatal error, but why?
 //    protected final BitSet changedSlots = new BitSet();
 
-    protected IOInventory inventory = buildInventory();
-    protected boolean[] changedSlots = new boolean[inventory.getSlots()];
-    protected int[] failureCounter = new int[inventory.getSlots()];
-    protected long lastFullCheckTick = 0;
-    protected boolean inTick = false;
+    protected IOInventory inventory         = buildInventory();
+    protected boolean[]   changedSlots      = new boolean[inventory.getSlots()];
+    protected int[]       failureCounter    = new int[inventory.getSlots()];
+    protected long        lastFullCheckTick = 0;
+    protected boolean     inTick            = false;
 
     public abstract IOInventory buildInventory();
 
@@ -107,7 +107,7 @@ public abstract class MEItemBus extends MEMachineComponent implements IGridTicka
         }
         return false;
     }
-    
+
     public boolean hasChangedSlots() {
         for (final boolean changed : changedSlots) {
             if (changed) {

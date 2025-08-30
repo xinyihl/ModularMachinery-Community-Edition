@@ -141,7 +141,7 @@ public class MEFluidInputBus extends MEFluidBus implements SettingsTransfer {
                     IAEFluidStack stack = extractStackFromAE(inv, invStack.copy().setStackSize(countToReceive));
                     if (stack != null) {
                         tanks.setFluidInSlot(slot, invStack.copy()
-                                .setStackSize(invStack.getStackSize() + stack.getStackSize()));
+                                                           .setStackSize(invStack.getStackSize() + stack.getStackSize()));
                         successAtLeastOnce = true;
                     }
                     continue;
@@ -151,10 +151,10 @@ public class MEFluidInputBus extends MEFluidBus implements SettingsTransfer {
                 IAEFluidStack stack = insertStackToAE(inv, invStack.copy().setStackSize(countToExtract));
                 if (stack == null) {
                     tanks.setFluidInSlot(slot, invStack.copy()
-                            .setStackSize(invStack.getStackSize() - countToExtract));
+                                                       .setStackSize(invStack.getStackSize() - countToExtract));
                 } else {
                     tanks.setFluidInSlot(slot, invStack.copy()
-                            .setStackSize(invStack.getStackSize() - countToExtract + stack.getStackSize())
+                                                       .setStackSize(invStack.getStackSize() - countToExtract + stack.getStackSize())
                     );
                 }
                 successAtLeastOnce = true;

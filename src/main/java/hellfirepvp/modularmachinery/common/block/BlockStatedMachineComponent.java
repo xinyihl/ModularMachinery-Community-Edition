@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public class BlockStatedMachineComponent extends BlockMachineComponent implements BlockVariants {
     public static final List<BlockStatedMachineComponent> WAIT_FOR_REGISTRY = new ArrayList<>();
-    public static final PropertyEnum<WorkingState> WORKING_STATE = PropertyEnum.create("working_state", WorkingState.class);
+    public static final PropertyEnum<WorkingState>        WORKING_STATE     = PropertyEnum.create("working_state", WorkingState.class);
 
     private boolean isColoured = false;
 
@@ -39,8 +39,7 @@ public class BlockStatedMachineComponent extends BlockMachineComponent implement
     }
 
 
-    public boolean isOpaqueCube(IBlockState state)
-    {
+    public boolean isOpaqueCube(IBlockState state) {
         return !Objects.equals(this.getRegistryName(), new ResourceLocation(ModularMachinery.MODID, "crushing_wheels"));
     }
 

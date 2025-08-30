@@ -20,12 +20,28 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MachineComponentManager {
-    public static final MachineComponentManager INSTANCE = new MachineComponentManager();
+    public static final MachineComponentManager                  INSTANCE     = new MachineComponentManager();
+    private final       Map<World, Map<BlockPos, ComponentInfo>> componentMap = new ConcurrentHashMap<>();
 
     private MachineComponentManager() {
     }
 
-    private final Map<World, Map<BlockPos, ComponentInfo>> componentMap = new ConcurrentHashMap<>();
+    @Optional.Method(modid = "appliedenergistics2")
+    private static Object[] getResult(TileEntity component, World world) {
+        BlockPos pos = component.getPos();
+        TileEntity te = component;
+
+        if (component instanceof MEPatternMirrorImage mepi) {
+            if (mepi.providerPos != null) {
+                TileEntity tileEntity = world.getTileEntity(mepi.providerPos);
+                if (tileEntity instanceof MEPatternProvider mep) {
+                    te = mep;
+                    pos = mep.getPos();
+                }
+            }
+        }
+        return new Object[]{pos, te};
+    }
 
     public void addWorld(World world) {
         componentMap.put(world, new ConcurrentHashMap<>());
@@ -47,7 +63,7 @@ public class MachineComponentManager {
         BlockPos pos;
         TileEntity te;
 
-        if (Loader.isModLoaded("appliedenergistics2")){
+        if (Loader.isModLoaded("appliedenergistics2")) {
             Object[] result = getResult(component, world);
             pos = (BlockPos) result[0];
             te = (TileEntity) result[1];
@@ -60,7 +76,7 @@ public class MachineComponentManager {
 
         synchronized (te) {
             ComponentInfo info = posComponentMap.computeIfAbsent(pos, v -> new ComponentInfo(
-                    te, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl)))));
+                te, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl)))));
 
             if (!info.areTileEntityEquals(te)) {
                 ComponentInfo newInfo = new ComponentInfo(te, pos, ReferenceSets.synchronize(new ReferenceOpenHashSet<>(Collections.singleton(ctrl))));
@@ -78,30 +94,13 @@ public class MachineComponentManager {
             }
 
             long groupId = owners.stream()
-                    .filter(owner -> owner.getExecuteGroupId() != -1)
-                    .findFirst()
-                    .map(TileMultiblockMachineController::getExecuteGroupId)
-                    .orElse(ExecuteGroup.newGroupId());
+                                 .filter(owner -> owner.getExecuteGroupId() != -1)
+                                 .findFirst()
+                                 .map(TileMultiblockMachineController::getExecuteGroupId)
+                                 .orElse(ExecuteGroup.newGroupId());
 
             owners.forEach(owner -> owner.setExecuteGroupId(groupId));
         }
-    }
-
-    @Optional.Method(modid = "appliedenergistics2")
-    private static Object[] getResult(TileEntity component, World world) {
-        BlockPos pos = component.getPos();
-        TileEntity te = component;
-
-        if (component instanceof MEPatternMirrorImage mepi){
-            if (mepi.providerPos != null){
-                TileEntity tileEntity = world.getTileEntity(mepi.providerPos);
-                if (tileEntity instanceof MEPatternProvider mep){
-                    te = mep;
-                    pos = mep.getPos();
-                }
-            }
-        }
-        return new Object[]{pos,te};
     }
 
     public void removeOwner(TileEntity component, TileMultiblockMachineController ctrl) {
@@ -109,7 +108,7 @@ public class MachineComponentManager {
         BlockPos pos;
         TileEntity te;
 
-        if (Loader.isModLoaded("appliedenergistics2")){
+        if (Loader.isModLoaded("appliedenergistics2")) {
             Object[] result = getResult(component, world);
             pos = (BlockPos) result[0];
             te = (TileEntity) result[1];

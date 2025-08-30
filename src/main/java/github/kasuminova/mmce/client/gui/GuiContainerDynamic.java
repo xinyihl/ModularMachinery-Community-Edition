@@ -19,7 +19,7 @@ import java.util.List;
 public abstract class GuiContainerDynamic<T extends Container> extends GuiContainerBase<T> {
 
     protected WidgetController widgetController = null;
-    protected Slot hoveredSlot = null;
+    protected Slot             hoveredSlot      = null;
 
     public GuiContainerDynamic(final ContainerBase<?> container) {
         super((T) container);
@@ -43,10 +43,10 @@ public abstract class GuiContainerDynamic<T extends Container> extends GuiContai
     public void initGui() {
         super.initGui();
         widgetController.getGui()
-                .setGuiLeft(guiLeft)
-                .setGuiTop(guiTop)
-                .setXSize(width)
-                .setYSize(height);
+                        .setGuiLeft(guiLeft)
+                        .setGuiTop(guiTop)
+                        .setXSize(width)
+                        .setYSize(height);
         widgetController.init();
     }
 
@@ -134,9 +134,9 @@ public abstract class GuiContainerDynamic<T extends Container> extends GuiContai
 
     protected void updateHoveredSlot(final int mouseX, final int mouseY) {
         hoveredSlot = this.inventorySlots.inventorySlots.stream()
-                .filter(slot -> this.isMouseOverSlot(slot, mouseX, mouseY) && slot.isEnabled())
-                .findFirst()
-                .orElse(null);
+                                                        .filter(slot -> this.isMouseOverSlot(slot, mouseX, mouseY) && slot.isEnabled())
+                                                        .findFirst()
+                                                        .orElse(null);
     }
 
     protected boolean isMouseOverSlot(Slot slotIn, int mouseX, int mouseY) {

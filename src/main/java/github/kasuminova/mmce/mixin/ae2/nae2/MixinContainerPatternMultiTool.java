@@ -12,26 +12,25 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = ContainerPatternMultiTool.class,remap = false)
+@Mixin(value = ContainerPatternMultiTool.class, remap = false)
 public class MixinContainerPatternMultiTool {
 
     @Shadow
-    @Final
-    private IInterfaceHost iface;
-
+    public  PatternMultiToolInventories viewingInventory;
     @Shadow
-    public PatternMultiToolInventories viewingInventory;
+    @Final
+    private IInterfaceHost              iface;
 
-    @Inject(method = "getPatternInventory",at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getPatternInventory", at = @At("HEAD"), cancellable = true)
     public void getPatternInventoryMixin(CallbackInfoReturnable<IItemHandler> cir) {
-        if (this.viewingInventory == PatternMultiToolInventories.INTERFACE && iface instanceof MEPatternProvider mep){
+        if (this.viewingInventory == PatternMultiToolInventories.INTERFACE && iface instanceof MEPatternProvider mep) {
             cir.setReturnValue(mep.getPatterns());
         }
     }
 
-    @Inject(method = "getInstalledCapacityUpgrades",at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getInstalledCapacityUpgrades", at = @At("HEAD"), cancellable = true)
     public void getInstalledCapacityUpgrades(CallbackInfoReturnable<Integer> cir) {
-        if (this.viewingInventory == PatternMultiToolInventories.INTERFACE && iface instanceof MEPatternProvider){
+        if (this.viewingInventory == PatternMultiToolInventories.INTERFACE && iface instanceof MEPatternProvider) {
             cir.setReturnValue(3);
         }
     }

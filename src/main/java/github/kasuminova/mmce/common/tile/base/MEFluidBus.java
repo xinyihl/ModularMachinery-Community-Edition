@@ -33,24 +33,24 @@ import javax.annotation.Nullable;
 import java.util.stream.IntStream;
 
 public abstract class MEFluidBus extends MEMachineComponent implements
-        IAEFluidInventory,
-        IUpgradeableHost,
-        IConfigManagerHost,
-        IAEAppEngInventory,
-        IGridTickable {
+    IAEFluidInventory,
+    IUpgradeableHost,
+    IConfigManagerHost,
+    IAEAppEngInventory,
+    IGridTickable {
 
-    public static final int TANK_SLOT_AMOUNT = 9;
+    public static final int TANK_SLOT_AMOUNT      = 9;
     public static final int TANK_DEFAULT_CAPACITY = 8000;
 
-    protected final IFluidStorageChannel channel = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
-    protected final ConfigManager cm = new ConfigManager(this);
+    protected final IFluidStorageChannel        channel           = AEApi.instance().storage().getStorageChannel(IFluidStorageChannel.class);
+    protected final ConfigManager               cm                = new ConfigManager(this);
     // TODO: May cause some machine fatal error, but why?
 //    protected final BitSet changedSlots = new BitSet();
-    protected final UpgradeInventory upgrades;
+    protected final UpgradeInventory            upgrades;
     protected final AEFluidInventoryUpgradeable tanks;
-    protected boolean[] changedSlots;
-    protected long lastFullCheckTick = 0;
-    protected boolean inTick = false;
+    protected       boolean[]                   changedSlots;
+    protected       long                        lastFullCheckTick = 0;
+    protected       boolean                     inTick            = false;
 
     public MEFluidBus() {
         this.tanks = new AEFluidInventoryUpgradeable(this, TANK_SLOT_AMOUNT, TANK_DEFAULT_CAPACITY);
@@ -131,7 +131,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
         if (upgrades == null) {
             return 0;
         }
-        return upgrades.getInstalledUpgrades( u );
+        return upgrades.getInstalledUpgrades(u);
     }
 
     @Override
@@ -147,7 +147,7 @@ public abstract class MEFluidBus extends MEMachineComponent implements
 
     private void updateTankCapacity() {
         tanks.setCapacity(
-                (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEFluidBus.TANK_DEFAULT_CAPACITY / 4)));
+            (int) (Math.pow(4, getInstalledUpgrades(Upgrades.CAPACITY) + 1) * (MEFluidBus.TANK_DEFAULT_CAPACITY / 4)));
     }
 
     @Override

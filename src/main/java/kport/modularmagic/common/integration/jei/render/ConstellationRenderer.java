@@ -27,7 +27,7 @@ import java.util.Random;
 public class ConstellationRenderer implements IIngredientRenderer<Constellation> {
 
     private static final BindableResource texBlack = AssetLibrary.loadTexture(AssetLoader.TextureLocation.MISC, "black");
-    private Random rand = new Random();
+    private              Random           rand     = new Random();
 
     @Override
     public void render(Minecraft minecraft, int xPosition, int yPosition, @Nullable Constellation ingredient) {
@@ -72,10 +72,11 @@ public class ConstellationRenderer implements IIngredientRenderer<Constellation>
     @Override
     public List<String> getTooltip(Minecraft minecraft, Constellation ingredient, ITooltipFlag tooltipFlag) {
         List<String> tooltip = new ArrayList<>();
-        if (canSeeConstellation(ingredient.getConstellation()))
+        if (canSeeConstellation(ingredient.getConstellation())) {
             tooltip.add(I18n.format(ingredient.getConstellation().getUnlocalizedName()));
-        else
+        } else {
             tooltip.add(I18n.format("error.modularmachinery.requirement.constellation.unknown"));
+        }
         return tooltip;
     }
 

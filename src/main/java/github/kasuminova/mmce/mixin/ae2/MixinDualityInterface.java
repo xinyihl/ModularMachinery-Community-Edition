@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = DualityInterface.class,remap = false)
+@Mixin(value = DualityInterface.class, remap = false)
 public class MixinDualityInterface {
 
     @Shadow
@@ -28,21 +28,21 @@ public class MixinDualityInterface {
     @Mutable
     private AppEngInternalInventory patterns;
 
-    @Inject(method = "<init>",at = @At("TAIL"))
-    public void onInit(AENetworkProxy networkProxy, IInterfaceHost ih, CallbackInfo ci){
-        if (ih instanceof MEPatternProvider mep){
+    @Inject(method = "<init>", at = @At("TAIL"))
+    public void onInit(AENetworkProxy networkProxy, IInterfaceHost ih, CallbackInfo ci) {
+        if (ih instanceof MEPatternProvider mep) {
             this.patterns = mep.getPatterns();
         }
     }
 
-    @Inject(method = "getInstalledUpgrades",at = @At("RETURN"), cancellable = true)
-    public void getInstalledUpgradesMixin(Upgrades u, CallbackInfoReturnable<Integer> cir){
-        if (iHost instanceof MEPatternProvider){
+    @Inject(method = "getInstalledUpgrades", at = @At("RETURN"), cancellable = true)
+    public void getInstalledUpgradesMixin(Upgrades u, CallbackInfoReturnable<Integer> cir) {
+        if (iHost instanceof MEPatternProvider) {
             cir.setReturnValue(3);
         }
     }
 
-    @Inject(method = "getTermName",at = @At(value = "INVOKE", target = "Lappeng/helpers/IInterfaceHost;getTargets()Ljava/util/EnumSet;"), cancellable = true)
+    @Inject(method = "getTermName", at = @At(value = "INVOKE", target = "Lappeng/helpers/IInterfaceHost;getTargets()Ljava/util/EnumSet;"), cancellable = true)
     public void getTermNameMixin(CallbackInfoReturnable<String> cir) {
         TileEntity hostTile = this.iHost.getTileEntity();
         if (hostTile instanceof MEPatternProvider mep) {

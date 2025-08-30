@@ -37,7 +37,7 @@ public class IOInventory extends IItemHandlerImpl implements ReadWriteLockProvid
 
     private final TileEntitySynchronized owner;
     // TODO IntConsumer.
-    private Consumer<Integer> listener = null;
+    private       Consumer<Integer>      listener = null;
 
     private IOInventory(TileEntitySynchronized owner) {
         this.owner = owner;

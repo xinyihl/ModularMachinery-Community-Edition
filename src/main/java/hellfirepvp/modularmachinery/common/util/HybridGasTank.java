@@ -105,7 +105,7 @@ public class HybridGasTank extends HybridTank implements IExtendedGasHandler {
         }
         try {
             (doTransfer ? rwLock.writeLock() : rwLock.readLock()).lock();
-            
+
             if (fluid != null && fluid.amount > 0) {
                 return 0; //We don't collide with the internal fluids
             }

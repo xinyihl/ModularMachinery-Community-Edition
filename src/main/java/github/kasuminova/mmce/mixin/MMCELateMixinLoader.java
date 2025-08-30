@@ -12,9 +12,9 @@ public class MMCELateMixinLoader implements ILateMixinLoader {
     @Override
     public List<String> getMixinConfigs() {
         return Arrays.asList(
-                "mixins.mmce_jei_hacky.json",
-                "mixins.mmce_ae2.json",
-                "mixins.mmce_nae2.json"
+            "mixins.mmce_jei_hacky.json",
+            "mixins.mmce_ae2.json",
+            "mixins.mmce_nae2.json"
         );
     }
 

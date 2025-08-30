@@ -144,13 +144,13 @@ public class SlotItemVirtual extends SlotVirtual {
 
     // Tooltip function
 
+    public Function<ItemStack, List<String>> getTooltipFunction() {
+        return tooltipFunction;
+    }
+
     public SlotItemVirtual setTooltipFunction(final Function<ItemStack, List<String>> tooltipFunction) {
         this.tooltipFunction = tooltipFunction;
         return this;
-    }
-
-    public Function<ItemStack, List<String>> getTooltipFunction() {
-        return tooltipFunction;
     }
 
 }

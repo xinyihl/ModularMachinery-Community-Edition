@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class RequirementGas extends ComponentRequirement.MultiCompParallelizable<Object, RequirementTypeGas>
-        implements ComponentRequirement.ChancedRequirement, Asyncable {
+    implements ComponentRequirement.ChancedRequirement, Asyncable {
 
     public final GasStack required;
 
@@ -68,7 +68,7 @@ public class RequirementGas extends ComponentRequirement.MultiCompParallelizable
     public String getMissingComponentErrorMessage(IOType ioType) {
         ResourceLocation compKey = this.requirementType.getRegistryName();
         return String.format("component.missing.%s.%s.%s",
-                compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
+            compKey.getNamespace(), compKey.getPath(), ioType.name().toLowerCase());
     }
 
     @Override

@@ -33,7 +33,13 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -44,7 +50,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * This class is part of the Modular Machinery Mod
@@ -56,9 +66,9 @@ import java.util.*;
 @SuppressWarnings("deprecation")
 public class BlockController extends BlockMachineComponent implements ItemDynamicColor {
     public static final PropertyEnum<EnumFacing> FACING = PropertyEnum.create("facing", EnumFacing.class, EnumFacing.HORIZONTALS);
-    public static final PropertyBool FORMED = PropertyBool.create("formed");
+    public static final PropertyBool             FORMED = PropertyBool.create("formed");
 
-    public static final Map<DynamicMachine, BlockController> MACHINE_CONTROLLERS = new HashMap<>();
+    public static final Map<DynamicMachine, BlockController> MACHINE_CONTROLLERS     = new HashMap<>();
     public static final Map<DynamicMachine, BlockController> MOC_MACHINE_CONTROLLERS = new HashMap<>();
 
     protected DynamicMachine parentMachine = null;
@@ -77,7 +87,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         this();
         this.parentMachine = parentMachine;
         setRegistryName(new ResourceLocation(
-                ModularMachinery.MODID, parentMachine.getRegistryName().getPath() + "_controller")
+            ModularMachinery.MODID, parentMachine.getRegistryName().getPath() + "_controller")
         );
     }
 
@@ -85,7 +95,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
         this();
         this.parentMachine = parentMachine;
         setRegistryName(new ResourceLocation(
-                namespace, parentMachine.getRegistryName().getPath() + "_controller")
+            namespace, parentMachine.getRegistryName().getPath() + "_controller")
         );
     }
 
@@ -133,7 +143,7 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
     }
 
     private ItemStack getRestorableDropItem(@Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
-        Random rand = world instanceof World ? ((World)world).rand : RANDOM;
+        Random rand = world instanceof World ? ((World) world).rand : RANDOM;
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof TileMultiblockMachineController ctrl && ctrl.getOwner() != null) {
             UUID ownerUUID = ctrl.getOwner();
@@ -319,13 +329,17 @@ public class BlockController extends BlockMachineComponent implements ItemDynami
 
     @Override
     public int getColorFromItemstack(ItemStack stack, int tintIndex) {
-        if (parentMachine == null) return Config.machineColor;
+        if (parentMachine == null) {
+            return Config.machineColor;
+        }
         return parentMachine.getMachineColor();
     }
 
     @Override
     public int getColorMultiplier(IBlockState state, @Nullable IBlockAccess worldIn, @Nullable BlockPos pos, int tintIndex) {
-        if (parentMachine == null) return Config.machineColor;
+        if (parentMachine == null) {
+            return Config.machineColor;
+        }
         return parentMachine.getMachineColor();
     }
 }

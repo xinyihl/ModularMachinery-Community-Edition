@@ -32,16 +32,16 @@ import java.util.stream.Stream;
 @Optional.Interface(iface = "github.kasuminova.mmce.common.util.IExtendedGasHandler", modid = "mekanism")
 public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandler, IExtendedGasHandler {
 
-    protected final List<ItemStack> itemStackList = new ObjectArrayList<>();
+    protected final List<ItemStack>  itemStackList  = new ObjectArrayList<>();
     protected final List<FluidStack> fluidStackList = new ObjectArrayList<>();
-    protected final List<?> gasStackList = new ObjectArrayList<>();
+    protected final List<?>          gasStackList   = new ObjectArrayList<>();
 
-    protected volatile IItemHandlerModifiable subItemHandler = null;
-    protected volatile IFluidHandler subFluidHandler = null;
+    protected volatile IItemHandlerModifiable subItemHandler  = null;
+    protected volatile IFluidHandler          subFluidHandler = null;
 
-    protected volatile IntConsumer onItemChanged = null;
+    protected volatile IntConsumer onItemChanged  = null;
     protected volatile IntConsumer onFluidChanged = null;
-    protected volatile IntConsumer onGasChanged = null;
+    protected volatile IntConsumer onGasChanged   = null;
 
     public InfItemFluidHandler() {
     }
@@ -65,13 +65,13 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     public synchronized IFluidTankProperties[] getTankProperties() {
         if (subFluidHandler != null) {
             return Stream.concat(
-                    fluidStackList.stream().map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE)),
-                    Arrays.stream(subFluidHandler.getTankProperties())
+                fluidStackList.stream().map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE)),
+                Arrays.stream(subFluidHandler.getTankProperties())
             ).toArray(IFluidTankProperties[]::new);
         }
         return fluidStackList.stream()
-                .map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE))
-                .toArray(IFluidTankProperties[]::new);
+                             .map(fluidStack -> new FluidTankProperties(fluidStack, Integer.MAX_VALUE))
+                             .toArray(IFluidTankProperties[]::new);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         if (subFluidHandler != null) {
             FluidStack drained = subFluidHandler.drain(resource, false);
             if (drained != null && drained.amount >= resource.amount) {
-                if (doDrain){
+                if (doDrain) {
                     return subFluidHandler.drain(resource, true);
                 } else {
                     return drained;
@@ -354,8 +354,8 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
     public boolean isEmpty() {
         return itemStackList.stream().allMatch(ItemStack::isEmpty) &&
-               fluidStackList.stream().allMatch(Objects::isNull) &&
-               gasStackList.stream().allMatch(Objects::isNull);
+            fluidStackList.stream().allMatch(Objects::isNull) &&
+            gasStackList.stream().allMatch(Objects::isNull);
     }
 
     public List<ItemStack> getItemStackList() {
@@ -402,16 +402,16 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         NBTTagCompound subTag = new NBTTagCompound();
         final NBTTagList fluidList = new NBTTagList();
         fluidStackList.stream()
-                .filter(Objects::nonNull)
-                .map(fluidStack -> fluidStack.writeToNBT(new NBTTagCompound()))
-                .forEach(fluidList::appendTag);
+                      .filter(Objects::nonNull)
+                      .map(fluidStack -> fluidStack.writeToNBT(new NBTTagCompound()))
+                      .forEach(fluidList::appendTag);
         subTag.setTag("Fluids", fluidList);
 
         final NBTTagList itemList = new NBTTagList();
         itemStackList.stream()
-                .filter(itemStack -> !itemStack.isEmpty())
-                .map(ItemStackUtils::writeNBTOversize)
-                .forEach(itemList::appendTag);
+                     .filter(itemStack -> !itemStack.isEmpty())
+                     .map(ItemStackUtils::writeNBTOversize)
+                     .forEach(itemList::appendTag);
         subTag.setTag("Items", itemList);
 
         if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
@@ -426,18 +426,18 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         fluidStackList.clear();
         final NBTTagList fluidList = subTag.getTagList("Fluids", Constants.NBT.TAG_COMPOUND);
         IntStream.range(0, fluidList.tagCount())
-                .mapToObj(fluidList::getCompoundTagAt)
-                .map(FluidStack::loadFluidStackFromNBT)
-                .filter(Objects::nonNull)
-                .forEach(fluidStackList::add);
+                 .mapToObj(fluidList::getCompoundTagAt)
+                 .map(FluidStack::loadFluidStackFromNBT)
+                 .filter(Objects::nonNull)
+                 .forEach(fluidStackList::add);
 
         itemStackList.clear();
         final NBTTagList itemList = subTag.getTagList("Items", Constants.NBT.TAG_COMPOUND);
         IntStream.range(0, itemList.tagCount())
-                .mapToObj(itemList::getCompoundTagAt)
-                .map(ItemStackUtils::readNBTOversize)
-                .filter(itemStack -> !itemStack.isEmpty())
-                .forEach(itemStackList::add);
+                 .mapToObj(itemList::getCompoundTagAt)
+                 .map(ItemStackUtils::readNBTOversize)
+                 .filter(itemStack -> !itemStack.isEmpty())
+                 .forEach(itemStackList::add);
 
         if (Mods.MEKANISM.isPresent() && Mods.MEKENG.isPresent()) {
             readFromNBTMekGas(subTag);
@@ -451,9 +451,9 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
         final NBTTagList gasList = new NBTTagList();
         gasStackList.stream()
-                .filter(Objects::nonNull)
-                .map(gasStack -> gasStack.write(new NBTTagCompound()))
-                .forEach(gasList::appendTag);
+                    .filter(Objects::nonNull)
+                    .map(gasStack -> gasStack.write(new NBTTagCompound()))
+                    .forEach(gasList::appendTag);
         subTag.setTag("Gases", gasList);
     }
 
@@ -463,10 +463,10 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         gasStackList.clear();
         final NBTTagList gasList = subTag.getTagList("Gases", Constants.NBT.TAG_COMPOUND);
         IntStream.range(0, gasList.tagCount())
-                .mapToObj(gasList::getCompoundTagAt)
-                .map(GasStack::readFromNBT)
-                .filter(Objects::nonNull)
-                .forEach(gasStackList::add);
+                 .mapToObj(gasList::getCompoundTagAt)
+                 .map(GasStack::readFromNBT)
+                 .filter(Objects::nonNull)
+                 .forEach(gasStackList::add);
     }
 
     @Override
@@ -594,8 +594,8 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     public GasTankInfo[] getTankInfo() {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
         return gasStackList.stream()
-                .map(InfGasTankInfo::new)
-                .toArray(GasTankInfo[]::new);
+                           .map(InfGasTankInfo::new)
+                           .toArray(GasTankInfo[]::new);
     }
 
     @Desugar

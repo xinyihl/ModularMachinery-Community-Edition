@@ -16,7 +16,7 @@ import java.util.List;
 public class Row extends WidgetContainer {
     protected final List<DynamicWidget> widgets = new ArrayList<>();
 
-    protected boolean upAligned = true;
+    protected boolean upAligned   = true;
     protected boolean downAligned = false;
 
     @Override
@@ -367,6 +367,10 @@ public class Row extends WidgetContainer {
         return this;
     }
 
+    public boolean isCenterAligned() {
+        return this.upAligned && this.downAligned;
+    }
+
     public Row setCenterAligned(final boolean centerAligned) {
         if (centerAligned) {
             this.upAligned = true;
@@ -377,9 +381,5 @@ public class Row extends WidgetContainer {
         this.upAligned = true;
         this.downAligned = false;
         return this;
-    }
-
-    public boolean isCenterAligned() {
-        return this.upAligned && this.downAligned;
     }
 }

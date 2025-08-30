@@ -36,8 +36,7 @@ public class ItemBlockCustomName extends ItemBlock {
 
     @Nonnull
     @Override
-    public String getTranslationKey(@Nonnull ItemStack stack)
-    {
+    public String getTranslationKey(@Nonnull ItemStack stack) {
         Block block = getBlock();
         if (block instanceof BlockCustomName) {
             String identifier = ((BlockCustomName) block).getIdentifierForMeta(stack.getItemDamage());

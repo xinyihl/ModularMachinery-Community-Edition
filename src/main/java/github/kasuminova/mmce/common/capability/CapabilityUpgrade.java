@@ -18,15 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CapabilityUpgrade {
-    public static final ResourceLocation CAPABILITY_NAME = new ResourceLocation(ModularMachinery.MODID, "upgrade_cap");
-
+    public static final  ResourceLocation              CAPABILITY_NAME            = new ResourceLocation(ModularMachinery.MODID, "upgrade_cap");
+    private static final NBTTagCompound                EMPTY_TAG_COMPOUND         = new NBTTagCompound();
     @SuppressWarnings("NonConstantFieldWithUpperCaseName")
     @CapabilityInject(CapabilityUpgrade.class)
-    public static Capability<CapabilityUpgrade> MACHINE_UPGRADE_CAPABILITY = null;
-
-    private static final NBTTagCompound EMPTY_TAG_COMPOUND = new NBTTagCompound();
-
-    private final List<MachineUpgrade> upgrades = new ArrayList<>();
+    public static        Capability<CapabilityUpgrade> MACHINE_UPGRADE_CAPABILITY = null;
+    private final        List<MachineUpgrade>          upgrades                   = new ArrayList<>();
 
     public static void register() {
         CapabilityManager.INSTANCE.register(CapabilityUpgrade.class, new Capability.IStorage<>() {

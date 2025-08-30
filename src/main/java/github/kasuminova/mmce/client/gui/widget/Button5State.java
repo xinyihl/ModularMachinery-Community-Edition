@@ -65,7 +65,8 @@ public class Button5State extends Button4State {
     }
 
     public Button5State setClickedTexture(final TextureProperties clickedTexture) {
-        this.clickedTexture = Optional.ofNullable(clickedTexture).orElse(TextureProperties.EMPTY);;
+        this.clickedTexture = Optional.ofNullable(clickedTexture).orElse(TextureProperties.EMPTY);
+        ;
         return this;
     }
 

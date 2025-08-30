@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 public class DummyChunkProvider implements IChunkProvider {
 
-    private final World world;
+    private final World                 world;
     private final Long2ObjectMap<Chunk> loadedChunks = new Long2ObjectOpenHashMap<>();
 
     public DummyChunkProvider(World world) {
@@ -29,8 +29,9 @@ public class DummyChunkProvider implements IChunkProvider {
     @Override
     public Chunk provideChunk(int x, int z) {
         long chunkKey = ChunkPos.asLong(x, z);
-        if (loadedChunks.containsKey(chunkKey))
+        if (loadedChunks.containsKey(chunkKey)) {
             return loadedChunks.get(chunkKey);
+        }
         Chunk chunk = new Chunk(world, x, z);
         loadedChunks.put(chunkKey, chunk);
         return chunk;

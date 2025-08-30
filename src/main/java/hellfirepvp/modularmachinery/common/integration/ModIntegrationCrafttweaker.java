@@ -70,7 +70,7 @@ public class ModIntegrationCrafttweaker {
         RegistryUpgrade.clearAll();
 
         sender.sendMessage(new TextComponentTranslation(
-                "message.cleared.recipes", RecipeRegistry.registeredRecipeCount()));
+            "message.cleared.recipes", RecipeRegistry.registeredRecipeCount()));
         RecipeRegistry.getRegistry().clearAllRecipes();
         // Reset RecipeAdapterIncId
         RegistriesMM.ADAPTER_REGISTRY.getValuesCollection().forEach(RecipeAdapter::resetIncId);
@@ -94,7 +94,7 @@ public class ModIntegrationCrafttweaker {
         // Reload All Machine
         MachineRegistry.reloadMachine(MachineRegistry.loadMachines(null));
         sender.sendMessage(new TextComponentTranslation(
-                "message.reloaded.machines", MachineRegistry.getLoadedMachines().size()));
+            "message.reloaded.machines", MachineRegistry.getLoadedMachines().size()));
     }
 
     @SubscribeEvent
@@ -111,7 +111,7 @@ public class ModIntegrationCrafttweaker {
         }
 
         CompletableFuture<Void> future = CompletableFuture.runAsync(() ->
-                BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
+            BlockArrayCache.buildCache(MachineRegistry.getLoadedMachines()));
 
         MachineModifier.loadAll();
         MMEvents.registryAll();
@@ -135,7 +135,7 @@ public class ModIntegrationCrafttweaker {
         }
 
         sender.sendMessage(new TextComponentTranslation(
-                "message.reloaded.recipes", RecipeRegistry.registeredRecipeCount()));
+            "message.reloaded.recipes", RecipeRegistry.registeredRecipeCount()));
 
         sender.sendMessage(new TextComponentTranslation("message.reloaded"));
     }

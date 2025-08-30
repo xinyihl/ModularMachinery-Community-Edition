@@ -55,7 +55,12 @@ import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplaceme
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
-import hellfirepvp.modularmachinery.common.util.*;
+import hellfirepvp.modularmachinery.common.util.BlockArray;
+import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
+import hellfirepvp.modularmachinery.common.util.IOInventory;
+import hellfirepvp.modularmachinery.common.util.MiscUtils;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
+import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -91,7 +96,15 @@ import stanhebben.zenscript.annotations.ZenMethod;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -103,61 +116,46 @@ import java.util.stream.IntStream;
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController, IAnimatable {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;
-    public static boolean delayedStructureCheck = true;
+    public static boolean delayedStructureCheck                 = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
-    public static boolean enableSecuritySystem = false;
-    public static boolean enableFullDataSync = false;
+    public static boolean enableSecuritySystem                  = false;
+    public static boolean enableFullDataSync                    = false;
 
-    public static int usedTimeCache = 0;
-    public static int searchUsedTimeCache = 0;
-    public static WorkMode workModeCache = WorkMode.ASYNC;
+    public static int      usedTimeCache       = 0;
+    public static int      searchUsedTimeCache = 0;
+    public static WorkMode workModeCache       = WorkMode.ASYNC;
 
-    protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
-    protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
+    protected final Map<String, List<RecipeModifier>> foundModifiers  = new ConcurrentHashMap<>();
+    protected final Map<String, RecipeModifier>       customModifiers = new ConcurrentHashMap<>();
 
-    protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
-    protected final Map<String, List<MachineUpgrade>> foundUpgrades = new ConcurrentHashMap<>();
-    protected final List<TileUpgradeBus.UpgradeBusProvider> foundUpgradeBuses = new ArrayList<>();
+    protected final Map<TileSmartInterface.SmartInterfaceProvider, String>  foundSmartInterfaces     = new ConcurrentHashMap<>();
+    protected final Map<String, List<MachineUpgrade>>                       foundUpgrades            = new ConcurrentHashMap<>();
+    protected final List<TileUpgradeBus.UpgradeBusProvider>                 foundUpgradeBuses        = new ArrayList<>();
     protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
-    protected final Map<TileEntity, ProcessingComponent<?>> foundComponents = new ConcurrentHashMap<>();
+    protected final Map<TileEntity, ProcessingComponent<?>>                 foundComponents          = new ConcurrentHashMap<>();
 
-    protected final TimeRecorder timeRecorder = new TimeRecorder();
-
-    protected boolean searchRecipeImmediately = false;
-
-    protected EnumFacing controllerRotation = null;
-    protected DynamicMachine.ModifierReplacementMap foundReplacements = null;
-
-    protected IOInventory inventory;
-
-    protected NBTTagCompound customData = new NBTTagCompound();
-
-    protected DynamicMachine prevMachine = null;
-    protected DynamicMachine foundMachine = null;
-    protected DynamicMachine parentMachine = null;
-    protected TaggedPositionBlockArray foundPattern = null;
-
-    protected Map<String, DynamicPattern.Status> foundDynamicPatterns = new HashMap<>();
-
-    protected ActionExecutor tickExecutor = null;
-    protected WorkMode workMode = WorkMode.ASYNC;
-
-    protected UUID owner = null;
-
-    protected int structureCheckCounter = 0;
-    protected int recipeResearchRetryCounter = 0;
-
-    protected int lastStrongPower = -1;
-
-    protected int lastStructureCheckTick = -1;
-
-    protected long executeGroupId = -1;
-
-    protected Object animationFactory = null;
-
-    protected boolean loaded = false;
-
-    protected final Set<InfItemFluidHandler> componentSet = new HashSet<>();
+    protected final TimeRecorder                          timeRecorder               = new TimeRecorder();
+    protected final Set<InfItemFluidHandler>              componentSet               = new HashSet<>();
+    protected       boolean                               searchRecipeImmediately    = false;
+    protected       EnumFacing                            controllerRotation         = null;
+    protected       DynamicMachine.ModifierReplacementMap foundReplacements          = null;
+    protected       IOInventory                           inventory;
+    protected       NBTTagCompound                        customData                 = new NBTTagCompound();
+    protected       DynamicMachine                        prevMachine                = null;
+    protected       DynamicMachine                        foundMachine               = null;
+    protected       DynamicMachine                        parentMachine              = null;
+    protected       TaggedPositionBlockArray              foundPattern               = null;
+    protected       Map<String, DynamicPattern.Status>    foundDynamicPatterns       = new HashMap<>();
+    protected       ActionExecutor                        tickExecutor               = null;
+    protected       WorkMode                              workMode                   = WorkMode.ASYNC;
+    protected       UUID                                  owner                      = null;
+    protected       int                                   structureCheckCounter      = 0;
+    protected       int                                   recipeResearchRetryCounter = 0;
+    protected       int                                   lastStrongPower            = -1;
+    protected       int                                   lastStructureCheckTick     = -1;
+    protected       long                                  executeGroupId             = -1;
+    protected       Object                                animationFactory           = null;
+    protected       boolean                               loaded                     = false;
 
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
@@ -167,15 +165,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static void loadFromConfig(Configuration config) {
         //最短结构检查间隔
         structureCheckDelay = config.getInt("structure-check-delay", "general",
-                30, 1, 1200,
-                "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
+            30, 1, 1200,
+            "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
         //延迟结构检查
         delayedStructureCheck = config.getBoolean("delayed-structure-check", "general",
-                true, "When enabled, the structure check interval in the idle state is incrementally increased to ease the performance footprint.");
+            true, "When enabled, the structure check interval in the idle state is incrementally increased to ease the performance footprint.");
         //最长结构检查间隔
         maxStructureCheckDelay = config.getInt("max-structure-check-delay", "general",
-                100, 2, 1200,
-                "When delayed-structure-check is enabled, what is the maximum check interval? (TimeUnit: Tick)");
+            100, 2, 1200,
+            "When delayed-structure-check is enabled, what is the maximum check interval? (TimeUnit: Tick)");
 
         //检查最短结构检查间隔是否大于最长结构检查间隔
         if (structureCheckDelay >= maxStructureCheckDelay) {
@@ -186,12 +184,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         //当结构检查失败时，是否清空自定义数据
         cleanCustomDataOnStructureCheckFailed = config.getBoolean("clean-custom-data-on-structure-check-failed", "general",
-                false, "When enabled, the customData will be cleared when multiblock structure check failed.");
+            false, "When enabled, the customData will be cleared when multiblock structure check failed.");
 
         enableSecuritySystem = config.getBoolean("enable-security-system", "general", false,
-                "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
+            "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
         enableFullDataSync = config.getBoolean("enable-full-data-sync", "general", false,
-                "When enabled, the controller sends the full NBT to the client at the start and completion of the recipe, which can be helpful for machinery where the client needs to perform special operations.");
+            "When enabled, the controller sends the full NBT to the client at the start and completion of the recipe, which can be helpful for machinery where the client needs to perform special operations.");
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
@@ -283,16 +281,16 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         return Math.max(1, parallelism);
     }
 
+    @Nullable
+    public DynamicMachine getFoundMachine() {
+        return foundMachine;
+    }
+
     /**
      * Only for preview, DO NOT USE THIS METHOD ON TRUE WORLD!
      */
     public void setFoundMachine(final DynamicMachine foundMachine) {
         this.foundMachine = foundMachine;
-    }
-
-    @Nullable
-    public DynamicMachine getFoundMachine() {
-        return foundMachine;
     }
 
     public TaggedPositionBlockArray getFoundPattern() {
@@ -446,7 +444,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             DynamicPattern.MatchResult matchResult = dynamicPattern.matches(this, false, rotation);
             if (matchResult.isMatched()) {
                 foundDynamicPatterns.add(new DynamicPattern.Status(
-                        dynamicPattern, matchResult.matchFacing(), matchResult.size())
+                    dynamicPattern, matchResult.matchFacing(), matchResult.size())
                 );
             } else {
                 return false;
@@ -484,13 +482,13 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
         }
         //在上色的同时，对ME机械样板供应器写入控制器名称
-        if (Mods.AE2.isPresent()){
+        if (Mods.AE2.isPresent()) {
             writeName(te);
         }
     }
 
     @Method(modid = "appliedenergistics2")
-    private void writeName(TileEntity te){
+    private void writeName(TileEntity te) {
         if (te instanceof MEPatternProvider mep) {
             var machine = this.foundMachine;
             var registry = machine.getRegistryName();
@@ -571,8 +569,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
 
             getWorld().setBlockState(realPos, blockState.withProperty(
-                    BlockStatedMachineComponent.WORKING_STATE,
-                    working ? WorkingState.WORKING : WorkingState.IDLE), 2);
+                BlockStatedMachineComponent.WORKING_STATE,
+                working ? WorkingState.WORKING : WorkingState.IDLE), 2);
         });
 
         timeRecorder.addUsedTime((int) (System.nanoTime() / 1000 - start));
@@ -625,8 +623,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         IBlockState newState = state.getBlock().getDefaultState()
-                .withProperty(BlockController.FACING, controllerRotation)
-                .withProperty(BlockController.FORMED, formed);
+                                    .withProperty(BlockController.FACING, controllerRotation)
+                                    .withProperty(BlockController.FORMED, formed);
 
         if (world.isRemote) {
             world.setBlockState(getPos(), newState, 8);
@@ -666,7 +664,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
             } else if (
-                    !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
+                !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
                     !matchesDynamicPattern(foundMachine)) {
                 resetMachine(true);
             }
@@ -682,8 +680,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         DynamicMachine blueprint = getBlueprintMachine();
         if (blueprint != null) {
             if (matchesRotation(
-                    BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation),
-                    blueprint, controllerRotation)) {
+                BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation),
+                blueprint, controllerRotation)) {
                 onStructureFormed();
                 return true;
             }
@@ -696,8 +694,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 return true;
             }
             if (matchesRotation(
-                    BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation),
-                    parentMachine, controllerRotation)) {
+                BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation),
+                parentMachine, controllerRotation)) {
                 onStructureFormed();
                 return true;
             }
@@ -717,9 +715,11 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected void checkAllPatterns() {
         BlockPos ctrlPos = getPos();
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-            if (machine.isRequiresBlueprint()) continue;
+            if (machine.isRequiresBlueprint()) {
+                continue;
+            }
             TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(
-                    machine.getPattern(), controllerRotation);
+                machine.getPattern(), controllerRotation);
 
             if (!getWorld().isAreaLoaded(pattern.getPatternBoundingBox(ctrlPos))) {
                 continue;
@@ -954,7 +954,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult failure = checkPreStartResult(context);
-        if (failure != null) return failure;
+        if (failure != null) {
+            return failure;
+        }
 
         RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canStartCrafting(context);
         return checkStartResult(context, result);
@@ -968,7 +970,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onRestartCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult failure = checkPreStartResult(context);
-        if (failure != null) return failure;
+        if (failure != null) {
+            return failure;
+        }
 
         RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canRestartCrafting(context);
         return checkStartResult(context, result);
@@ -1383,10 +1387,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (compound.hasKey("dynamicPatterns", Constants.NBT.TAG_LIST)) {
             NBTTagList dynPatterns = compound.getTagList("dynamicPatterns", Constants.NBT.TAG_COMPOUND);
             IntStream.range(0, dynPatterns.tagCount())
-                    .mapToObj(dynPatterns::getCompoundTagAt)
-                    .map(tag -> DynamicPattern.Status.readFromNBT(tag, foundMachine))
-                    .filter(Objects::nonNull)
-                    .forEach(patternStatus -> foundDynamicPatterns.put(patternStatus.getPatternName(), patternStatus));
+                     .mapToObj(dynPatterns::getCompoundTagAt)
+                     .map(tag -> DynamicPattern.Status.readFromNBT(tag, foundMachine))
+                     .filter(Objects::nonNull)
+                     .forEach(patternStatus -> foundDynamicPatterns.put(patternStatus.getPatternName(), patternStatus));
             if (!foundDynamicPatterns.isEmpty()) {
                 addDynamicPatternToBlockArray();
             }
@@ -1488,7 +1492,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         AnimationBuilder animationBuilder = new AnimationBuilder();
         for (final ControllerModelAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
             animationBuilder.addAnimation(animation.animationName(),
-                    animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.PLAY_ONCE);
+                animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.PLAY_ONCE);
         }
         event.getController().setAnimation(animationBuilder);
 

@@ -13,10 +13,10 @@ import stanhebben.zenscript.annotations.ZenMethod;
 @ZenRegister
 @ZenClass("mods.modularmachinery.RecipeModifierBuilder")
 public class RecipeModifierBuilder {
-    private String type = "";
-    private String ioTypeStr = "";
-    private float value = 0.0f;
-    private int operation = 0;
+    private String  type         = "";
+    private String  ioTypeStr    = "";
+    private float   value        = 0.0f;
+    private int     operation    = 0;
     private boolean affectChance = false;
 
     @ZenMethod

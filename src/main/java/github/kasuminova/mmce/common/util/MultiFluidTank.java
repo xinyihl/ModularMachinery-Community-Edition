@@ -12,9 +12,9 @@ import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class MultiFluidTank implements IFluidHandler, IOneToOneFluidHandler {
-    private final FluidStack[] contents;
+    private final FluidStack[]           contents;
     private final IFluidTankProperties[] props;
-    private int capacity;
+    private       int                    capacity;
 
     private boolean oneToOne;
 
@@ -215,10 +215,10 @@ public class MultiFluidTank implements IFluidHandler, IOneToOneFluidHandler {
         }
 
         FluidStack toDrain = Arrays.stream(contents)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .map(FluidStack::copy)
-                .orElse(null);
+                                   .filter(Objects::nonNull)
+                                   .findFirst()
+                                   .map(FluidStack::copy)
+                                   .orElse(null);
 
         if (toDrain == null) {
             return null;
