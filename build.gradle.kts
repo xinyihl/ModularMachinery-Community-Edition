@@ -203,9 +203,10 @@ dependencies {
 
     // AE2 Compat
 //    implementation(rfg.deobf("curse.maven:applied-energistics-2-223794:2747063"))
-    implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:5378163"))
+    implementation(rfg.deobf("curse.maven:ae2-extended-life-570458:6302098"))
     implementation(rfg.deobf("curse.maven:ae2-fluid-crafting-rework-623955:5504001"))
     implementation(rfg.deobf("curse.maven:mekanism-energistics-1027681:5408319"))
+    implementation(rfg.deobf("curse.maven:nae2-884359:5380800"))
 
     // GeckoLib
     implementation("software.bernie.geckolib:geckolib-forge-1.12.2:3.0.31")

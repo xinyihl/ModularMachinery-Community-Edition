@@ -127,9 +127,13 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         }
 
         if (subFluidHandler != null) {
-            FluidStack drained = subFluidHandler.drain(resource, doDrain);
-            if (drained != null) {
-                return drained;
+            FluidStack drained = subFluidHandler.drain(resource, false);
+            if (drained != null && drained.amount >= resource.amount) {
+                if (doDrain){
+                    return subFluidHandler.drain(resource, true);
+                } else {
+                    return drained;
+                }
             }
         }
 
@@ -291,7 +295,9 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         }
 
         if (toAppend > 0) {
-            itemStackList.add(stack.copy());
+            var item = stack.copy();
+            item.setCount(toAppend);
+            itemStackList.add(item);
             if (onItemChanged != null) {
                 onItemChanged.accept(itemStackList.size() - 1);
             }
@@ -440,7 +446,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
     // MekEng Support
 
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public void writeNBTMekGas(final NBTTagCompound subTag) {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
@@ -452,7 +457,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         subTag.setTag("Gases", gasList);
     }
 
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public void readFromNBTMekGas(final NBTTagCompound subTag) {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
@@ -466,7 +470,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public GasStack drawGas(final GasStack toDraw, final boolean doTransfer) {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
@@ -501,7 +504,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public int receiveGas(@Nullable final EnumFacing ignored, final GasStack toReceive, final boolean doTransfer) {
         if (!doTransfer) {
@@ -548,7 +550,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public GasStack drawGas(@Nullable final EnumFacing ignored, final int drawAmount, final boolean doTransfer) {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;
@@ -589,7 +590,6 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
 
     @Nonnull
     @Override
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekanism")
     public GasTankInfo[] getTankInfo() {
         List<GasStack> gasStackList = (List<GasStack>) this.gasStackList;

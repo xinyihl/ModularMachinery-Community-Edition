@@ -185,12 +185,16 @@ message.assembly.tip.or=or
 message.assembly.tip.partial_assembly=Modular Assembly: despite the absence of some materials, the assembly §cwill continue using the existing materials!
 message.assembly.tip.too_quickly=Modular Assembly: You need to wait a moment before you can start assembly again.
 
-
 message.reloading=Modular Machinery: Reloading!
 message.reloaded=Modular Machinery: Reloaded recipes! Changes in JEI require a restart of the client! Machinery upgrades in the upgrade bus need to be repositioned to refresh their effects!
 message.cleared.recipes=Modular Machinery: Cleared %s recipes.
 message.reloaded.recipes=Modular Machinery: Reloaded %s recipes.
 message.reloaded.machines=Modular Machinery: Reloaded %s machines.
+
+message.blockmepatternprovider.save=Saved pattern provider coordinates!
+message.blockmepatternprovider.load=Loaded pattern provider coordinates!
+message.blockmepatternprovider.tip0=Use a memory card to bind the ME Mechanical Template Provider!
+message.blockmepatternprovider.tip1=Bound provider coordinates at X:%s, Y:%s, Z:%s.
 
 tooltip.item.controller.owner.self=§aYou are the owner of the controller.
 tooltip.item.controller.owner.not_self=§cYou are not the owner of the controller.
@@ -387,6 +391,7 @@ tile.modularmachinery.blockmefluidinputbus.name=ME Machinery Fluid Input Bus
 tile.modularmachinery.blockmegasoutputbus.name=ME Mechanical gas output bus
 tile.modularmachinery.blockmegasinputbus.name=ME Machinery Gas Input Bus
 tile.modularmachinery.blockmepatternprovider.name=ME Machinery Pattern Provider
+tile.modularmachinery.blockmepatternmirrorimage.name=ME Machinery Pattern Mirror Image
 
 error.modularmachinery.requirement.lifeessence=Error while checking Life Essence requirement
 error.modularmachinery.requirement.lifeessence.orb=Missing or Unbound Blood Orb

@@ -1,5 +1,10 @@
 package github.kasuminova.mmce.common.block.appeng;
 
+import appeng.api.implementations.items.IMemoryCard;
+import appeng.api.util.AEPartLocation;
+import appeng.core.sync.GuiBridge;
+import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
+import appeng.util.Platform;
 import github.kasuminova.mmce.common.tile.MEPatternProvider;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.CommonProxy;
@@ -13,7 +18,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,15 +30,43 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
     @Override
     public boolean onBlockActivated(
             @Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
-            @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand,
+            @Nonnull EntityPlayer player, @Nonnull EnumHand hand,
             @Nonnull EnumFacing facing,
             float hitX, float hitY, float hitZ)
     {
-        if (!worldIn.isRemote) {
-            TileEntity te = worldIn.getTileEntity(pos);
-            if (te instanceof MEPatternProvider) {
-                playerIn.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_PATTERN_PROVIDER.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
+        if (worldIn.isRemote)return false;
+        if (hand == EnumHand.MAIN_HAND && !player.getHeldItem(hand).isEmpty()) {
+            var heldItem = player.getHeldItem(hand);
+            if (player.isSneaking()) {
+                if (heldItem.getItem() instanceof IMemoryCard memoryCard) {
+                    final String name = this.getTranslationKey();
+
+                    final NBTTagCompound data = new NBTTagCompound();
+                    data.setLong("Pos",pos.toLong());
+                    memoryCard.setMemoryCardContents(heldItem, name, data);
+                    player.sendMessage(new TextComponentTranslation("message.blockmepatternprovider.save"));
+
+                    return true;
+                }
             }
+
+            if (heldItem.getItem() instanceof ToolQuartzCuttingKnife) {
+                if (ForgeEventFactory.onItemUseStart(player, heldItem, 1) <= 0) {
+                    return false;
+                }
+
+                TileEntity te = worldIn.getTileEntity(pos);
+
+                if (te instanceof MEPatternProvider) {
+                    Platform.openGUI(player, te, AEPartLocation.fromFacing(facing), GuiBridge.GUI_RENAMER);
+                    return true;
+                }
+                return false;
+            }
+        }
+        TileEntity te = worldIn.getTileEntity(pos);
+        if (te instanceof MEPatternProvider) {
+            player.openGui(ModularMachinery.MODID, CommonProxy.GuiType.ME_PATTERN_PROVIDER.ordinal(), worldIn, pos.getX(), pos.getY(), pos.getZ());
         }
         return true;
     }
@@ -86,5 +121,4 @@ public class BlockMEPatternProvider extends BlockMEMachineComponent {
             provider.readProviderNBT(tag.getCompoundTag("patternProvider"));
         }
     }
-
 }

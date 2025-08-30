@@ -1,7 +1,10 @@
 package github.kasuminova.mmce.common.tile;
 
 import appeng.api.AEApi;
+import appeng.api.config.Actionable;
+import appeng.api.config.Upgrades;
 import appeng.api.implementations.ICraftingPatternItem;
+import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
@@ -15,8 +18,12 @@ import appeng.api.storage.channels.IItemStorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.IConfigManager;
 import appeng.fluids.util.IAEFluidInventory;
 import appeng.fluids.util.IAEFluidTank;
+import appeng.helpers.DualityInterface;
+import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IInterfaceHost;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
@@ -25,6 +32,7 @@ import appeng.util.inv.InvOperation;
 import com.glodblock.github.common.item.fake.FakeFluids;
 import com.glodblock.github.common.item.fake.FakeItemRegister;
 import com.glodblock.github.integration.mek.FakeGases;
+import com.google.common.collect.ImmutableSet;
 import com.mekeng.github.common.me.data.IAEGasStack;
 import com.mekeng.github.common.me.storage.IGasStorageChannel;
 import github.kasuminova.mmce.client.gui.GuiMEPatternProvider;
@@ -55,6 +63,7 @@ import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
@@ -67,11 +76,12 @@ import net.minecraftforge.items.IItemHandler;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
 
-public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory, MachineComponentTileNotifiable {
+public class MEPatternProvider extends MEMachineComponent implements ICraftingProvider, IAEAppEngInventory, IAEFluidInventory, MachineComponentTileNotifiable, IInterfaceHost, ICustomNameObject {
 
     public static final int PATTERNS = 36;
     public static final int SUB_ITEM_HANDLER_SLOTS = 2;
@@ -91,6 +101,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
     protected int currentPatternIdx = -1;
     protected ICraftingPatternDetails currentPattern = null;
 
+    private final DualityInterface duality = new DualityInterface(this.proxy,this);
+    private String customName;
+    private String machineName;
+    private static final ItemStack item = new ItemStack(ItemsMM.mePatternProvider);
+
     public MEPatternProvider() {
         // Initialize details...
         IntStream.range(0, 36).<ICraftingPatternDetails>mapToObj(i -> null).forEach(details::add);
@@ -109,11 +124,6 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
                 markChunkDirty();
             });
         }
-    }
-
-    @Override
-    public ItemStack getVisualItemStack() {
-        return new ItemStack(ItemsMM.mePatternProvider, 1);
     }
 
     @Nullable
@@ -322,7 +332,6 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         markChunkDirty();
     }
 
-    @SuppressWarnings("unchecked")
     @Optional.Method(modid = "mekeng")
     private void returnGases() throws GridAccessException {
         List<GasStack> gasStackList = (List<GasStack>) handler.getGasStackList();
@@ -418,6 +427,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         if (Sides.isRunningOnClient()) {
             processClientGUIUpdate();
         }
+        if (compound.hasKey("customName")) {
+            this.customName = compound.getString("customName");
+        } else {
+            this.customName = null;
+        }
     }
 
     public void readProviderNBT(final NBTTagCompound compound) {
@@ -439,6 +453,9 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         super.writeCustomNBT(compound);
         writeProviderNBT(compound);
         compound.setBoolean("machineCompleted", machineCompleted);
+        if (this.customName != null) {
+            compound.setString("customName", this.customName);
+        }
     }
 
     public NBTTagCompound writeProviderNBT(final NBTTagCompound compound) {
@@ -551,6 +568,89 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         BLOCKING_MODE,
         CRAFTING_LOCK_MODE,
         ENHANCED_BLOCKING_MODE,
+    }
+
+    public String getMachineName(){
+        if (machineName == null) return item.getItem().getTranslationKey();
+        else return machineName;
+    }
+
+    @Override
+    public ItemStack getVisualItemStack(){
+        return item;
+    }
+
+    public void setMachineName(String name){
+        this.machineName = name;
+    }
+
+    @Override
+    public String getCustomInventoryName() {
+        if (this.hasCustomInventoryName()) {
+            return this.customName;
+        } else {
+            return item.getItem().getTranslationKey();
+        }
+    }
+
+    @Override
+    public boolean hasCustomInventoryName() {
+        return this.customName != null && !this.customName.isEmpty();
+    }
+
+    @Override
+    public void setCustomName(@Nullable String customName) {
+        this.customName = customName;
+    }
+
+    @Override
+    public DualityInterface getInterfaceDuality() {
+        return duality;
+    }
+
+    @Override
+    public EnumSet<EnumFacing> getTargets() {
+        return EnumSet.allOf(EnumFacing.class);
+    }
+
+    @Override
+    public TileEntity getTileEntity() {
+        return this;
+    }
+
+    @Override
+    public int getInstalledUpgrades(Upgrades upgrades) {
+        return 3;
+    }
+
+    @Override
+    public TileEntity getTile() {
+        return this;
+    }
+
+    @Override
+    public IItemHandler getInventoryByName(String name) {
+        return this.duality.getInventoryByName(name);
+    }
+
+    @Override
+    public ImmutableSet<ICraftingLink> getRequestedJobs() {
+        return this.duality.getRequestedJobs();
+    }
+
+    @Override
+    public IAEItemStack injectCraftedItems(ICraftingLink link, IAEItemStack items, Actionable mode) {
+        return this.duality.injectCraftedItems(link, items, mode);
+    }
+
+    @Override
+    public void jobStateChange(ICraftingLink iCraftingLink) {
+        this.duality.jobStateChange(iCraftingLink);
+    }
+
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.duality.getConfigManager();
     }
 
 }

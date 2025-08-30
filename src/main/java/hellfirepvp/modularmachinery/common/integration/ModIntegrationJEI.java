@@ -98,6 +98,7 @@ public class ModIntegrationJEI implements IModPlugin {
             Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(machine);
             Map<ResourceLocation, DynamicRecipeWrapper> wrappers = MACHINE_RECIPE_WRAPPERS.computeIfAbsent(machine, v -> new LinkedHashMap<>());
             for (MachineRecipe recipe : recipes) {
+                if (!recipe.getLoadJEI())continue;
                 DynamicRecipeWrapper wrapper = wrappers.get(recipe.getRegistryName());
                 if (wrapper != null) {
                     wrapper.reloadWrapper(recipe);
@@ -202,6 +203,7 @@ public class ModIntegrationJEI implements IModPlugin {
             Iterable<MachineRecipe> recipes = RecipeRegistry.getRecipesFor(machine);
             Map<ResourceLocation, DynamicRecipeWrapper> wrappers = MACHINE_RECIPE_WRAPPERS.computeIfAbsent(machine, v -> new LinkedHashMap<>());
             for (MachineRecipe recipe : recipes) {
+                if (!recipe.getLoadJEI())continue;
                 wrappers.put(recipe.getRegistryName(), new DynamicRecipeWrapper(recipe));
             }
             registry.addRecipes(wrappers.values(), getCategoryStringFor(machine));

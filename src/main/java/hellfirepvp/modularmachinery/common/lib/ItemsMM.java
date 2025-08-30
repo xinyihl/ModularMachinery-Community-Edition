@@ -35,5 +35,6 @@ public class ItemsMM {
     public static Item meGasOutputBus;
     public static Item meGasInputBus;
     public static Item mePatternProvider;
+    public static Item mePatternMirrorImage;
 
 }

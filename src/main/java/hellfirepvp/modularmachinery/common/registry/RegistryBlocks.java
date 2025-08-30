@@ -1,6 +1,5 @@
 /*******************************************************************************
  * HellFirePvP / Modular Machinery 2019
- *
  * This project is licensed under GNU GENERAL PUBLIC LICENSE Version 3.
  * The source code is available on github: https://github.com/HellFirePvP/ModularMachinery
  * For further details, see the License file there.
@@ -129,6 +128,8 @@ public class RegistryBlocks {
 
             mePatternProvider = prepareRegister(new BlockMEPatternProvider());
             ItemsMM.mePatternProvider = prepareItemBlockRegister(mePatternProvider);
+            mePatternMirrorImage = prepareRegister(new BlockMEPatternMirrorImage());
+            ItemsMM.mePatternMirrorImage = prepareItemBlockRegister(mePatternMirrorImage);
         }
 
         if (Mods.BM2.isPresent()) {
@@ -223,6 +224,7 @@ public class RegistryBlocks {
                 registerTileWithModID(MEGasInputBus.class);
             }
             registerTileWithModID(MEPatternProvider.class);
+            registerTileWithModID(MEPatternMirrorImage.class);
         }
         if (Mods.BM2.isPresent()) {
             GameRegistry.registerTileEntity(TileWillProvider.Input.class, new ResourceLocation(ModularMachinery.MODID, "tilewillproviderinput"));
