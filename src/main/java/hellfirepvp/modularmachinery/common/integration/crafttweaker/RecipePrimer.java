@@ -69,6 +69,7 @@ public class RecipePrimer implements PreparedRecipe {
     private final Map<Class<?>, List<IEventHandler<RecipeEvent>>> recipeEventHandlers = new HashMap<>();
 
     private boolean parallelized = Config.recipeParallelizeEnabledByDefault;
+    private boolean loadJEI = true;
     private int maxThreads = -1;
     private String threadName = "";
     private ComponentRequirement<?, ?> lastComponent = null;
@@ -374,7 +375,6 @@ public class RecipePrimer implements PreparedRecipe {
         return this;
     }
 
-    @SuppressWarnings("unchecked")
     private <H extends RecipeEvent> void addRecipeEventHandler(Class<H> hClass, IEventHandler<H> handler) {
         recipeEventHandlers.putIfAbsent(hClass, new ArrayList<>());
         recipeEventHandlers.get(hClass).add((IEventHandler<RecipeEvent>) handler);
@@ -646,6 +646,16 @@ public class RecipePrimer implements PreparedRecipe {
     @ZenMethod
     public RecipePrimer addIngredientArrayInput(IngredientArrayPrimer ingredientArrayPrimer) {
         appendComponent(new RequirementIngredientArray(ingredientArrayPrimer.getIngredientStackList()));
+        return this;
+    }
+
+    /**
+     * <p>设置为false时不再为JEI注册对应配方</p>
+     * <p>默认情况在为true</p>
+     */
+    @ZenMethod
+    public RecipePrimer setLoadJEI(boolean load) {
+        this.loadJEI = load;
         return this;
     }
 
@@ -935,5 +945,10 @@ public class RecipePrimer implements PreparedRecipe {
         for (Action needAfterInitAction : needAfterInitActions) {
             needAfterInitAction.doAction();
         }
+    }
+
+    @Override
+    public boolean getLoadJEI() {
+        return loadJEI;
     }
 }

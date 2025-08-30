@@ -83,6 +83,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
         int widestTooltip = 0;
 
         for (MachineRecipe recipe : recipes) {
+            if (!recipe.getLoadJEI())continue;
             Map<IOType, Object2IntOpenHashMap<Class<?>>> tempComp = new EnumMap<>(IOType.class);
             for (ComponentRequirement<?, ?> req : recipe.getCraftingRequirements()) {
                 req.initializeJEIRequirements();
@@ -264,7 +265,7 @@ public class CategoryDynamicRecipe implements IRecipeCategory<DynamicRecipeWrapp
     }
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes"})
     public void setRecipe(@Nonnull IRecipeLayout recipeLayout, @Nonnull DynamicRecipeWrapper recipeWrapper, @Nonnull IIngredients ingredients) {
         List<Class<?>> foundClasses = new LinkedList<>();
 

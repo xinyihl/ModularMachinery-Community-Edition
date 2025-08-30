@@ -44,6 +44,7 @@ public class BlocksMM {
     public static BlockMEGasOutputBus meGasOutputBus;
     public static BlockMEGasInputBus meGasInputBus;
     public static BlockMEPatternProvider mePatternProvider;
+    public static BlockMEPatternMirrorImage mePatternMirrorImage;
 
     public static BlockWillProviderInput blockWillProviderInput;
     public static BlockWillProviderOutput blockWillProviderOutput;

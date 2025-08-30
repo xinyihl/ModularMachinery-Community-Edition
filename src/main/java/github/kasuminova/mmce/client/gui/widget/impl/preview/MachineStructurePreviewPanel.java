@@ -48,6 +48,10 @@ public class MachineStructurePreviewPanel extends Row {
 
     protected final WorldSceneRendererWidget renderer;
 
+    public WorldSceneRendererWidget getRenderer(){
+        return renderer;
+    }
+
     public MachineStructurePreviewPanel(final DynamicMachine machine) {
         renderer = (WorldSceneRendererWidget) new WorldSceneRendererWidget(machine)
                 .setWidthHeight(WORLD_RENDERER_WIDTH, WORLD_RENDERER_HEIGHT)

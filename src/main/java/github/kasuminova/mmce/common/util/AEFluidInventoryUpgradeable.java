@@ -7,6 +7,7 @@ import appeng.fluids.util.IAEFluidInventory;
 import appeng.fluids.util.IAEFluidTank;
 import appeng.util.Platform;
 import github.kasuminova.mmce.common.util.concurrent.ReadWriteLockProvider;
+import hellfirepvp.modularmachinery.common.util.HybridFluidUtils;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
@@ -21,7 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * From: <a href="https://github.com/PrototypeTrousers/Applied-Energistics-2/blob/AE2-Omnifactory/src/main/java/appeng/fluids/util/AEFluidInventory.java">...</a>
  */
 @SuppressWarnings("unchecked")
-public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockProvider {
+public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockProvider, IOneToOneFluidHandler {
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final AtomicReference<IAEFluidStack>[] fluids;
@@ -54,6 +55,7 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
         }
     }
 
+    @Override
     public boolean isOneFluidOneSlot() {
         return oneFluidOneSlot;
     }
@@ -203,18 +205,9 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
         try {
             (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
 
-            if (oneFluidOneSlot) {
-                int found = -1;
-                for (int i = 0; i < fluids.length; i++) {
-                    final IAEFluidStack fluidInSlot = getFluid(i);
-                    if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
-                        found = i;
-                        break;
-                    }
-                }
-                if (found != -1) {
-                    return this.fill(found, insert, doFill);
-                }
+            int found = HybridFluidUtils.findSlotWithFluid(this, getTankProperties(), insert);
+            if (found >= 0) {
+                return this.fill(found, insert, doFill);
             }
 
             int totalFillAmount = 0;
