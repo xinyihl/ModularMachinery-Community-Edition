@@ -200,7 +200,7 @@ public class MEGasInputBus extends MEGasBus implements SettingsTransfer {
 
     @Override
     public void markNoUpdate() {
-        if (proxy.isActive() && needsUpdate()) {
+        if (needsUpdate()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {

@@ -109,7 +109,7 @@ public class MEFluidOutputBus extends MEFluidBus {
 
     @Override
     public void markNoUpdate() {
-        if (proxy.isActive() && hasFluid()) {
+        if (hasFluid()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {
