@@ -180,14 +180,7 @@ public class TaskExecutor {
 
     @SuppressWarnings({"BusyWait", "SameParameterValue"})
     private static void loopWait(final long nanos) {
-        long startTime = System.nanoTime();
-        while (System.nanoTime() - startTime < nanos) {
-            try {
-                Thread.sleep(0);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
+        LockSupport.parkNanos(nanos);
     }
 
     private void updateTileEntity() {
