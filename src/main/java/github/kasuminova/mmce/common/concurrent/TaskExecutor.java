@@ -178,7 +178,7 @@ public class TaskExecutor {
         return executed;
     }
 
-    @SuppressWarnings({"BusyWait", "SameParameterValue"})
+    @SuppressWarnings({"SameParameterValue"})
     private static void loopWait(final long nanos) {
         LockSupport.parkNanos(nanos);
     }
