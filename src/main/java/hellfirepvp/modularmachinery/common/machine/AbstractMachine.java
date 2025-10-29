@@ -15,18 +15,20 @@ public abstract class AbstractMachine {
     protected final ResourceLocation registryName;
 
     protected String localizedName = "";
-    protected String prefix        = "";
-    protected int    definedColor  = Config.machineColor;
+    protected String prefix = "";
+    protected int definedColor = Config.machineColor;
 
-    protected int maxParallelism      = Config.maxMachineParallelism;
+    protected int maxParallelism = Config.maxMachineParallelism;
     protected int internalParallelism = 0;
+    protected int additionalParallelism = 0;
 
-    protected int                  maxThreads        = Config.defaultFactoryMaxThread;
-    protected boolean              requiresBlueprint = false;
-    protected boolean              parallelizable    = Config.machineParallelizeEnabledByDefault;
-    protected boolean              hasFactory        = Config.enableFactoryControllerByDefault;
-    protected boolean              factoryOnly       = false;
-    protected RecipeFailureActions failureAction     = RecipeFailureActions.getDefaultAction();
+    protected int maxThreads = Config.defaultFactoryMaxThread;
+    protected boolean requiresBlueprint = false;
+    protected boolean parallelizable = Config.machineParallelizeEnabledByDefault;
+    protected boolean hasFactory = Config.enableFactoryControllerByDefault;
+    protected boolean factoryOnly = false;
+    protected boolean canToggleInputMode = Config.enableControllercanToggleInputModeByDefault;
+    protected RecipeFailureActions failureAction = RecipeFailureActions.getDefaultAction();
 
     public AbstractMachine(String registryName) {
         this.registryName = new ResourceLocation(ModularMachinery.MODID, registryName);
@@ -40,19 +42,19 @@ public abstract class AbstractMachine {
         this.failureAction = failureAction;
     }
 
-    public boolean isRequiresBlueprint() {
-        return requiresBlueprint;
-    }
-
     public void setRequiresBlueprint(boolean requiresBlueprint) {
         this.requiresBlueprint = requiresBlueprint;
+    }
+
+    public boolean isRequiresBlueprint() {
+        return requiresBlueprint;
     }
 
     @SideOnly(Side.CLIENT)
     public String getPrefix() {
         String localizationKey = registryName.getNamespace() + "." + registryName.getPath() + ".prefix";
         return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :
-            prefix != null ? prefix : localizationKey;
+                prefix != null ? prefix : localizationKey;
     }
 
     public void setPrefix(final String prefix) {
@@ -63,7 +65,7 @@ public abstract class AbstractMachine {
     public String getLocalizedName() {
         String localizationKey = registryName.getNamespace() + "." + registryName.getPath();
         return I18n.hasKey(localizationKey) ? I18n.format(localizationKey) :
-            localizedName != null ? localizedName : localizationKey;
+                localizedName != null ? localizedName : localizationKey;
     }
 
     public void setLocalizedName(String localizedName) {
@@ -114,6 +116,18 @@ public abstract class AbstractMachine {
         this.internalParallelism = internalParallelism;
     }
 
+    public int getAdditionalParallelism() {
+        return additionalParallelism;
+    }
+
+    public void setAdditionalParallelism(final int additionalParallelism) {
+        this.additionalParallelism = additionalParallelism;
+    }
+
+    public int getTotalParallelism() {
+        return internalParallelism + additionalParallelism;
+    }
+
     public boolean isHasFactory() {
         return hasFactory;
     }
@@ -130,6 +144,14 @@ public abstract class AbstractMachine {
         this.factoryOnly = factoryOnly;
     }
 
+    public void setCanToggleInputMode(boolean canToggleInputMode) {
+        this.canToggleInputMode = canToggleInputMode;
+    }
+
+    public boolean canToggleInputMode() {
+        return  this.canToggleInputMode;
+    }
+
     public int getMaxThreads() {
         return maxThreads;
     }
@@ -140,9 +162,7 @@ public abstract class AbstractMachine {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof final AbstractMachine machine)) {
-            return false;
-        }
+        if (!(obj instanceof final AbstractMachine machine)) return false;
         return machine.registryName.toString().equals(registryName.toString());
     }
 

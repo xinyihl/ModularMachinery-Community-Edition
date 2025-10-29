@@ -163,6 +163,102 @@ public class MMEvents {
         });
     }
 
+    @ZenMethod
+    public static void onMachineRecipePreCheck(String machineRegistryName, IEventHandler<RecipeCheckEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeCheckEvent.class, event -> {
+                    if (event.phase != Phase.START) return;
+                    function.handle(event);
+                });
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipePostCheck(String machineRegistryName, IEventHandler<RecipeCheckEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeCheckEvent.class, event -> {
+                    if (event.phase != Phase.END) return;
+                    function.handle(event);
+                });
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipeStart(String machineRegistryName, IEventHandler<RecipeStartEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeStartEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipePreTick(String machineRegistryName, IEventHandler<RecipeTickEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeTickEvent.class, event -> {
+                    if (event.phase != Phase.START) return;
+                    function.handle(event);
+                });
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipePostTick(String machineRegistryName, IEventHandler<RecipeTickEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeTickEvent.class, event -> {
+                    if (event.phase != Phase.END) return;
+                    function.handle(event);
+                });
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipeFailure(String machineRegistryName, IEventHandler<RecipeFailureEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeFailureEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
+    @ZenMethod
+    public static void onMachineRecipeFinish(String machineRegistryName, IEventHandler<RecipeFinishEvent> function) {
+        WAIT_FOR_MODIFY.add(() -> {
+            DynamicMachine machine = MachineRegistry.getRegistry().getMachine(new ResourceLocation(ModularMachinery.MODID, machineRegistryName));
+            if (machine != null) {
+                machine.addMachineEventHandler(RecipeFinishEvent.class, function);
+            } else {
+                CraftTweakerAPI.logError("Could not find machine `" + machineRegistryName + "`!");
+            }
+        });
+    }
+
     //----------------------------------------------------------------------------------------------
     // 让我们谈谈这段转换的问题...
     // ZenScript 的强制转换存在问题，即时目标类能够转换，它依然会抛出错误。

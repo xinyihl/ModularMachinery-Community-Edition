@@ -21,12 +21,7 @@ import hellfirepvp.modularmachinery.common.command.CommandHand;
 import hellfirepvp.modularmachinery.common.command.CommandPerformanceReport;
 import hellfirepvp.modularmachinery.common.command.CommandSyntax;
 import hellfirepvp.modularmachinery.common.integration.crafttweaker.command.CommandCTReload;
-import hellfirepvp.modularmachinery.common.network.PktAssemblyReport;
-import hellfirepvp.modularmachinery.common.network.PktCopyToClipboard;
-import hellfirepvp.modularmachinery.common.network.PktInteractFluidTankGui;
-import hellfirepvp.modularmachinery.common.network.PktParallelControllerUpdate;
-import hellfirepvp.modularmachinery.common.network.PktSmartInterfaceUpdate;
-import hellfirepvp.modularmachinery.common.network.PktSyncSelection;
+import hellfirepvp.modularmachinery.common.network.*;
 import kport.modularmagic.common.event.RegistrationEvent;
 import kport.modularmagic.common.network.StarlightMessage;
 import net.minecraft.launchwrapper.Launch;
@@ -105,6 +100,9 @@ public class ModularMachinery {
         NET_CHANNEL.registerMessage(PktSyncSelection.class, PktSyncSelection.class, 1, Side.CLIENT);
         NET_CHANNEL.registerMessage(PktPerformanceReport.class, PktPerformanceReport.class, 2, Side.CLIENT);
         NET_CHANNEL.registerMessage(PktAssemblyReport.class, PktAssemblyReport.class, 3, Side.CLIENT);
+        NET_CHANNEL.registerMessage(PktTileMachineControllerAction.class, PktTileMachineControllerAction.class, 201, Side.SERVER);
+        NET_CHANNEL.registerMessage(PktTileFactoryControllerAction.class, PktTileFactoryControllerAction.class, 202, Side.SERVER);
+
         if (Mods.AE2.isPresent()) {
             NET_CHANNEL.registerMessage(PktMEPatternProviderHandlerItems.class, PktMEPatternProviderHandlerItems.class, 4, Side.CLIENT);
         }

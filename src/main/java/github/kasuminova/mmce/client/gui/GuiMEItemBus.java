@@ -1,27 +1,18 @@
 package github.kasuminova.mmce.client.gui;
 
-import appeng.client.gui.AEBaseGui;
 import appeng.client.render.StackSizeRenderer;
 import appeng.container.slot.AppEngSlot;
-import appeng.container.slot.SlotDisabled;
 import appeng.util.item.AEItemStack;
 import github.kasuminova.mmce.client.gui.slot.Size1Slot;
+import github.kasuminova.mmce.client.gui.util.MousePos;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.base.Mods;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.client.config.GuiUtils;
-
-import javax.annotation.Nonnull;
-import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 
-public abstract class GuiMEItemBus extends AEBaseGui {
+public abstract class GuiMEItemBus extends AEBaseGuiContainerDynamic {
 
     protected final StackSizeRenderer stackSizeRenderer = Mods.AE2EL.isPresent() ? null : new StackSizeRenderer();
 
@@ -58,19 +49,20 @@ public abstract class GuiMEItemBus extends AEBaseGui {
     }
 
     @Override
-    protected void renderToolTip(@Nonnull final ItemStack stack, final int x, final int y) {
-        final FontRenderer font = stack.getItem().getFontRenderer(stack);
-        GuiUtils.preItemToolTip(stack);
+    protected void renderHoveredToolTip(final int mouseX, final int mouseY) {
+        updateHoveredSlot(mouseX, mouseY);
 
-        final List<String> tooltip = this.getItemToolTip(stack);
-        final Slot slot = getSlot(x, y);
-        if (slot instanceof SlotDisabled) {
-            final String formattedAmount = NumberFormat.getNumberInstance(Locale.US).format(stack.getCount());
-            final String formatted = I18n.format("gui.meitembus.item_cached", formattedAmount);
-            tooltip.add(TextFormatting.GRAY + formatted);
+        final Slot slot = hoveredSlot;
+        final ItemStack stackInSlot = (slot == null || !slot.getHasStack()) ? ItemStack.EMPTY : slot.getStack();
+
+        if (!stackInSlot.isEmpty()) {
+            renderToolTip(stackInSlot, mouseX, mouseY);
+        } else {
+            final List<String> hoverTooltips = widgetController.getHoverTooltips(new MousePos(mouseX, mouseY));
+            if (!hoverTooltips.isEmpty()) {
+                this.drawHoveringText(hoverTooltips, mouseX, mouseY);
+            }
         }
-
-        this.drawHoveringText(tooltip, x, y, (font == null ? fontRenderer : font));
-        GuiUtils.postItemToolTip();
     }
+
 }

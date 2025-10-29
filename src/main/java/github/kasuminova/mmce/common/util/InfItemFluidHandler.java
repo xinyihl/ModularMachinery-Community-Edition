@@ -3,6 +3,7 @@ package github.kasuminova.mmce.common.util;
 import com.github.bsideup.jabel.Desugar;
 import github.kasuminova.mmce.client.util.ItemStackUtils;
 import hellfirepvp.modularmachinery.common.base.Mods;
+import hellfirepvp.modularmachinery.common.util.EmptinessCheckable;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mekanism.api.gas.Gas;
@@ -30,7 +31,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Optional.Interface(iface = "github.kasuminova.mmce.common.util.IExtendedGasHandler", modid = "mekanism")
-public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandler, IExtendedGasHandler {
+public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandler, IExtendedGasHandler, EmptinessCheckable {
 
     protected final List<ItemStack>  itemStackList  = new ObjectArrayList<>();
     protected final List<FluidStack> fluidStackList = new ObjectArrayList<>();
@@ -352,6 +353,7 @@ public class InfItemFluidHandler implements IItemHandlerModifiable, IFluidHandle
         return Integer.MAX_VALUE;
     }
 
+    @Override
     public boolean isEmpty() {
         return itemStackList.stream().allMatch(ItemStack::isEmpty) &&
             fluidStackList.stream().allMatch(Objects::isNull) &&

@@ -29,12 +29,15 @@ import github.kasuminova.mmce.common.upgrade.MachineUpgrade;
 import github.kasuminova.mmce.common.upgrade.UpgradeType;
 import github.kasuminova.mmce.common.util.DynamicPattern;
 import github.kasuminova.mmce.common.util.InfItemFluidHandler;
+import github.kasuminova.mmce.common.util.Sides;
 import github.kasuminova.mmce.common.util.TimeRecorder;
 import github.kasuminova.mmce.common.util.concurrent.ActionExecutor;
 import github.kasuminova.mmce.common.world.MMWorldEventListener;
 import github.kasuminova.mmce.common.world.MachineComponentManager;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.client.ClientProxy;
+import hellfirepvp.modularmachinery.client.gui.GuiFactoryController;
+import hellfirepvp.modularmachinery.client.gui.GuiMachineController;
 import hellfirepvp.modularmachinery.common.base.Mods;
 import hellfirepvp.modularmachinery.common.block.BlockController;
 import hellfirepvp.modularmachinery.common.block.BlockStatedMachineComponent;
@@ -45,24 +48,18 @@ import hellfirepvp.modularmachinery.common.crafting.helper.CraftingStatus;
 import hellfirepvp.modularmachinery.common.crafting.helper.ProcessingComponent;
 import hellfirepvp.modularmachinery.common.crafting.helper.RecipeCraftingContext;
 import hellfirepvp.modularmachinery.common.item.ItemBlueprint;
-import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
-import hellfirepvp.modularmachinery.common.machine.MachineComponent;
-import hellfirepvp.modularmachinery.common.machine.MachineRegistry;
-import hellfirepvp.modularmachinery.common.machine.TaggedPositionBlockArray;
+import hellfirepvp.modularmachinery.common.machine.*;
 import hellfirepvp.modularmachinery.common.modifier.MultiBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.modifier.RecipeModifier;
 import hellfirepvp.modularmachinery.common.modifier.SingleBlockModifierReplacement;
 import hellfirepvp.modularmachinery.common.tiles.TileParallelController;
 import hellfirepvp.modularmachinery.common.tiles.TileSmartInterface;
 import hellfirepvp.modularmachinery.common.tiles.TileUpgradeBus;
-import hellfirepvp.modularmachinery.common.util.BlockArray;
-import hellfirepvp.modularmachinery.common.util.BlockArrayCache;
-import hellfirepvp.modularmachinery.common.util.IOInventory;
-import hellfirepvp.modularmachinery.common.util.MiscUtils;
-import hellfirepvp.modularmachinery.common.util.SmartInterfaceData;
-import hellfirepvp.modularmachinery.common.util.SmartInterfaceType;
+import hellfirepvp.modularmachinery.common.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -82,6 +79,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.Optional.Method;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.oredict.OreDictionary;
 import software.bernie.geckolib3.core.IAnimatable;
@@ -109,6 +108,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @SuppressWarnings("unused")
@@ -116,23 +116,23 @@ import java.util.stream.IntStream;
 public abstract class TileMultiblockMachineController extends TileEntityRestrictedTick implements SelectiveUpdateTileEntity, IMachineController, IAnimatable {
     public static final int BLUEPRINT_SLOT = 0, ACCELERATOR_SLOT = 1;
     public static int structureCheckDelay = 30, maxStructureCheckDelay = 200;
-    public static boolean delayedStructureCheck                 = true;
+    public static boolean delayedStructureCheck = true;
     public static boolean cleanCustomDataOnStructureCheckFailed = false;
-    public static boolean enableSecuritySystem                  = false;
-    public static boolean enableFullDataSync                    = false;
+    public static boolean enableSecuritySystem = false;
+    public static boolean enableFullDataSync = false;
 
-    public static int      usedTimeCache       = 0;
-    public static int      searchUsedTimeCache = 0;
-    public static WorkMode workModeCache       = WorkMode.ASYNC;
+    public static int usedTimeCache = 0;
+    public static int searchUsedTimeCache = 0;
+    public static WorkMode workModeCache = WorkMode.ASYNC;
 
-    protected final Map<String, List<RecipeModifier>> foundModifiers  = new ConcurrentHashMap<>();
-    protected final Map<String, RecipeModifier>       customModifiers = new ConcurrentHashMap<>();
+    protected final Map<String, List<RecipeModifier>> foundModifiers = new ConcurrentHashMap<>();
+    protected final Map<String, RecipeModifier> customModifiers = new ConcurrentHashMap<>();
 
-    protected final Map<TileSmartInterface.SmartInterfaceProvider, String>  foundSmartInterfaces     = new ConcurrentHashMap<>();
-    protected final Map<String, List<MachineUpgrade>>                       foundUpgrades            = new ConcurrentHashMap<>();
-    protected final List<TileUpgradeBus.UpgradeBusProvider>                 foundUpgradeBuses        = new ArrayList<>();
+    protected final Map<TileSmartInterface.SmartInterfaceProvider, String> foundSmartInterfaces = new ConcurrentHashMap<>();
+    protected final Map<String, List<MachineUpgrade>> foundUpgrades = new ConcurrentHashMap<>();
+    protected final List<TileUpgradeBus.UpgradeBusProvider> foundUpgradeBuses = new ArrayList<>();
     protected final List<TileParallelController.ParallelControllerProvider> foundParallelControllers = new ArrayList<>();
-    protected final Map<TileEntity, ProcessingComponent<?>>                 foundComponents          = new ConcurrentHashMap<>();
+    protected final Map<TileEntity, ProcessingComponent<?>> foundComponents = new ConcurrentHashMap<>();
 
     protected final TimeRecorder                          timeRecorder               = new TimeRecorder();
     protected final Set<InfItemFluidHandler>              componentSet               = new HashSet<>();
@@ -157,6 +157,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected       Object                                animationFactory           = null;
     protected       boolean                               loaded                     = false;
 
+    protected InputMode inputMode = InputMode.DEFAULT;
+
     public TileMultiblockMachineController() {
         this.inventory = buildInventory();
         this.inventory.setStackLimit(1, BLUEPRINT_SLOT);
@@ -165,15 +167,15 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     public static void loadFromConfig(Configuration config) {
         //最短结构检查间隔
         structureCheckDelay = config.getInt("structure-check-delay", "general",
-            30, 1, 1200,
-            "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
+                30, 1, 1200,
+                "The multiblock structure checks the structural integrity at how often? (TimeUnit: Tick)");
         //延迟结构检查
         delayedStructureCheck = config.getBoolean("delayed-structure-check", "general",
-            true, "When enabled, the structure check interval in the idle state is incrementally increased to ease the performance footprint.");
+                true, "When enabled, the structure check interval in the idle state is incrementally increased to ease the performance footprint.");
         //最长结构检查间隔
         maxStructureCheckDelay = config.getInt("max-structure-check-delay", "general",
-            100, 2, 1200,
-            "When delayed-structure-check is enabled, what is the maximum check interval? (TimeUnit: Tick)");
+                100, 2, 1200,
+                "When delayed-structure-check is enabled, what is the maximum check interval? (TimeUnit: Tick)");
 
         //检查最短结构检查间隔是否大于最长结构检查间隔
         if (structureCheckDelay >= maxStructureCheckDelay) {
@@ -184,12 +186,12 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         //当结构检查失败时，是否清空自定义数据
         cleanCustomDataOnStructureCheckFailed = config.getBoolean("clean-custom-data-on-structure-check-failed", "general",
-            false, "When enabled, the customData will be cleared when multiblock structure check failed.");
+                false, "When enabled, the customData will be cleared when multiblock structure check failed.");
 
         enableSecuritySystem = config.getBoolean("enable-security-system", "general", false,
-            "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
+                "When enabled, players using the controller will have their owner checked and non-owners will be denied access.");
         enableFullDataSync = config.getBoolean("enable-full-data-sync", "general", false,
-            "When enabled, the controller sends the full NBT to the client at the start and completion of the recipe, which can be helpful for machinery where the client needs to perform special operations.");
+                "When enabled, the controller sends the full NBT to the client at the start and completion of the recipe, which can be helpful for machinery where the client needs to perform special operations.");
     }
 
     public <T> void addComponent(MachineComponent<T> component, @Nullable ComponentSelectorTag tag, TileEntity te, Map<TileEntity, ProcessingComponent<?>> components) {
@@ -268,9 +270,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         this.searchRecipeImmediately = searchRecipeImmediately;
     }
 
+    public void setAdditionalParallelism(int additionalParallelism) {
+        foundMachine.setAdditionalParallelism(additionalParallelism);
+    }
+
+    public int getAdditionalParallelism() {
+        return foundMachine.getAdditionalParallelism();
+    }
+
     public int getMaxParallelism() {
-        int parallelism = foundMachine.getInternalParallelism();
+        int parallelism = foundMachine.getTotalParallelism();
         int maxParallelism = foundMachine.getMaxParallelism();
+
         for (TileParallelController.ParallelControllerProvider provider : foundParallelControllers) {
             parallelism += provider.getParallelism();
 
@@ -444,7 +455,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             DynamicPattern.MatchResult matchResult = dynamicPattern.matches(this, false, rotation);
             if (matchResult.isMatched()) {
                 foundDynamicPatterns.add(new DynamicPattern.Status(
-                    dynamicPattern, matchResult.matchFacing(), matchResult.size())
+                        dynamicPattern, matchResult.matchFacing(), matchResult.size())
                 );
             } else {
                 return false;
@@ -569,8 +580,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             }
 
             getWorld().setBlockState(realPos, blockState.withProperty(
-                BlockStatedMachineComponent.WORKING_STATE,
-                working ? WorkingState.WORKING : WorkingState.IDLE), 2);
+                    BlockStatedMachineComponent.WORKING_STATE,
+                    working ? WorkingState.WORKING : WorkingState.IDLE), 2);
         });
 
         timeRecorder.addUsedTime((int) (System.nanoTime() / 1000 - start));
@@ -623,8 +634,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         }
 
         IBlockState newState = state.getBlock().getDefaultState()
-                                    .withProperty(BlockController.FACING, controllerRotation)
-                                    .withProperty(BlockController.FORMED, formed);
+                .withProperty(BlockController.FACING, controllerRotation)
+                .withProperty(BlockController.FORMED, formed);
 
         if (world.isRemote) {
             world.setBlockState(getPos(), newState, 8);
@@ -664,7 +675,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             if (this.foundMachine.isRequiresBlueprint() && !this.foundMachine.equals(getBlueprintMachine())) {
                 resetMachine(true);
             } else if (
-                !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
+                    !foundPattern.matches(getWorld(), ctrlPos, true, this.foundReplacements) ||
                     !matchesDynamicPattern(foundMachine)) {
                 resetMachine(true);
             }
@@ -680,8 +691,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         DynamicMachine blueprint = getBlueprintMachine();
         if (blueprint != null) {
             if (matchesRotation(
-                BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation),
-                blueprint, controllerRotation)) {
+                    BlockArrayCache.getBlockArrayCache(blueprint.getPattern(), controllerRotation),
+                    blueprint, controllerRotation)) {
                 onStructureFormed();
                 return true;
             }
@@ -694,8 +705,8 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 return true;
             }
             if (matchesRotation(
-                BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation),
-                parentMachine, controllerRotation)) {
+                    BlockArrayCache.getBlockArrayCache(parentMachine.getPattern(), controllerRotation),
+                    parentMachine, controllerRotation)) {
                 onStructureFormed();
                 return true;
             }
@@ -715,11 +726,9 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     protected void checkAllPatterns() {
         BlockPos ctrlPos = getPos();
         for (DynamicMachine machine : MachineRegistry.getRegistry()) {
-            if (machine.isRequiresBlueprint()) {
-                continue;
-            }
+            if (machine.isRequiresBlueprint()) continue;
             TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(
-                machine.getPattern(), controllerRotation);
+                    machine.getPattern(), controllerRotation);
 
             if (!getWorld().isAreaLoaded(pattern.getPatternBoundingBox(ctrlPos))) {
                 continue;
@@ -756,7 +765,18 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         componentSet.clear();
         this.foundPattern.getTileBlocksArray().forEach((pos, info) -> checkAndAddComponents(pos, getPos(), found));
-        this.foundComponents.putAll(found);
+        // Find components based on input mode
+        if (!canToggleInputMode()) {
+            putAllDefault(found);
+        } else {
+            if (inputMode == InputMode.SEPARATE_INPUT) {
+                putAllSeparateInput(found);
+            } else {
+                putAllDefault(found);
+            }
+        }
+
+
         this.foundModifiers.clear();
         updateModifiers();
         updateMultiBlockModifiers();
@@ -765,6 +785,97 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         } else {
             ModularMachinery.EXECUTE_MANAGER.addSyncTask(this::distributeCasingColor);
         }
+    }
+
+    private int lastUsedIndex = -1;
+
+    public void searchForNewLastUsedIndex(int inputEntriesSize) {
+        if (++lastUsedIndex >= inputEntriesSize) {
+            lastUsedIndex = 0;
+        }
+    }
+
+    private boolean isContainerEmpty(ProcessingComponent<?> processingComponent) {
+        Object component = processingComponent.providedComponent();
+
+        if (component instanceof EmptinessCheckable) {
+            return ((EmptinessCheckable) component).isEmpty();
+        }
+        // For unknown types, consider them empty
+        return true;
+    }
+
+    private void putAllSeparateInput(Map<TileEntity, ProcessingComponent<?>> found) {
+        foundComponents.clear();
+
+        if (found.isEmpty()) {
+            return;
+        }
+
+        // Разделяем компоненты на две группы сразу при одном проходе
+        List<Map.Entry<TileEntity, ProcessingComponent<?>>> separateInputEntries = null;
+
+        for (Map.Entry<TileEntity, ProcessingComponent<?>> entry : found.entrySet()) {
+            ProcessingComponent<?> component = entry.getValue();
+
+            if (!isAffectedBySeparateMode(component)) {
+                foundComponents.put(entry.getKey(), component);
+            } else {
+                // Создаём список только если действительно нашли подходящие компоненты
+                if (separateInputEntries == null) {
+                    separateInputEntries = new ArrayList<>();
+                }
+                separateInputEntries.add(entry);
+            }
+        }
+
+        // Обрабатываем компоненты с разделённым вводом, если такие есть
+        if (separateInputEntries != null && !separateInputEntries.isEmpty()) {
+            addSingleSeparateInput(separateInputEntries);
+        }
+    }
+
+    private void addSingleSeparateInput(List<Map.Entry<TileEntity, ProcessingComponent<?>>> inputEntries) {
+        int size = inputEntries.size();
+        if (size == 0) {
+            return;
+        }
+
+        // Инициализируем lastUsedIndex при первом использовании
+        if (lastUsedIndex == -1 || lastUsedIndex >= size) {
+            lastUsedIndex = 0;
+        }
+
+        // Запоминаем начальный индекс для одного полного цикла
+        int startIndex = lastUsedIndex;
+        int currentIndex = startIndex;
+
+        do {
+            Map.Entry<TileEntity, ProcessingComponent<?>> entry = inputEntries.get(currentIndex);
+
+            if (!isContainerEmpty(entry.getValue())) {
+                foundComponents.put(entry.getKey(), entry.getValue());
+                lastUsedIndex = (currentIndex + 1) % size;
+                return;
+            }
+
+            currentIndex = (currentIndex + 1) % size;
+        } while (currentIndex != startIndex);
+
+        // Если все контейнеры пусты, просто обновляем индекс
+        lastUsedIndex = (startIndex + 1) % size;
+    }
+
+    private void putAllDefault(Map<TileEntity, ProcessingComponent<?>> found) {
+        this.foundComponents.putAll(found);
+    }
+
+    private boolean isAffectedBySeparateMode(ProcessingComponent<?> processingComponent) {
+        return processingComponent.component().isAffectedBySeparateInput();
+    }
+
+    public boolean canToggleInputMode() {
+        return this.parentMachine.canToggleInputMode();
     }
 
     private void checkAndAddComponents(final BlockPos pos, final BlockPos ctrlPos, final Map<TileEntity, ProcessingComponent<?>> found) {
@@ -954,9 +1065,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult failure = checkPreStartResult(context);
-        if (failure != null) {
-            return failure;
-        }
+        if (failure != null) return failure;
 
         RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canStartCrafting(context);
         return checkStartResult(context, result);
@@ -970,9 +1079,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
      */
     public RecipeCraftingContext.CraftingCheckResult onRestartCheck(RecipeCraftingContext context) {
         RecipeCraftingContext.CraftingCheckResult failure = checkPreStartResult(context);
-        if (failure != null) {
-            return failure;
-        }
+        if (failure != null) return failure;
 
         RecipeCraftingContext.CraftingCheckResult result = context.getActiveRecipe().canRestartCrafting(context);
         return checkStartResult(context, result);
@@ -1290,7 +1397,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             try {
                 this.owner = UUID.fromString(ownerUUIDStr);
             } catch (Exception e) {
-                ModularMachinery.log.warn("Invalid owner uuid {}", ownerUUIDStr, e);
+                ModularMachinery.log.warn("Invalid owner uuid " + ownerUUIDStr, e);
             }
         }
 
@@ -1304,6 +1411,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                     animationFactory = null;
                 }
             }, 0);
+        }
+
+        if (compound.hasKey("inputMode")) {
+            this.inputMode = InputMode.values()[compound.getByte("inputMode")];
+        }
+
+        if (Sides.isRunningOnClient()) {
+            processClientGUIUpdate();
         }
     }
 
@@ -1354,6 +1469,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
                 compound.setTag("customModifier", tagList);
             }
         }
+        compound.setByte("inputMode", (byte) inputMode.ordinal());
     }
 
     protected void readMachineNBT(NBTTagCompound compound) {
@@ -1365,7 +1481,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         ResourceLocation rl = new ResourceLocation(compound.getString("machine"));
         DynamicMachine machine = MachineRegistry.getRegistry().getMachine(rl);
         if (machine == null) {
-            ModularMachinery.log.info("Couldn't find machine named {} for controller at {}", rl, getPos());
+            ModularMachinery.log.info("Couldn't find machine named " + rl + " for controller at " + getPos());
             resetMachine(true);
             return;
         }
@@ -1378,7 +1494,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
 
         TaggedPositionBlockArray pattern = BlockArrayCache.getBlockArrayCache(machine.getPattern(), this.controllerRotation);
         if (pattern == null) {
-            ModularMachinery.log.info("{} has a empty pattern cache! Please report this to the mod author.", rl);
+            ModularMachinery.log.info(rl + " has a empty pattern cache! Please report this to the mod author.");
             resetMachine(true);
             return;
         }
@@ -1387,10 +1503,10 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         if (compound.hasKey("dynamicPatterns", Constants.NBT.TAG_LIST)) {
             NBTTagList dynPatterns = compound.getTagList("dynamicPatterns", Constants.NBT.TAG_COMPOUND);
             IntStream.range(0, dynPatterns.tagCount())
-                     .mapToObj(dynPatterns::getCompoundTagAt)
-                     .map(tag -> DynamicPattern.Status.readFromNBT(tag, foundMachine))
-                     .filter(Objects::nonNull)
-                     .forEach(patternStatus -> foundDynamicPatterns.put(patternStatus.getPatternName(), patternStatus));
+                    .mapToObj(dynPatterns::getCompoundTagAt)
+                    .map(tag -> DynamicPattern.Status.readFromNBT(tag, foundMachine))
+                    .filter(Objects::nonNull)
+                    .forEach(patternStatus -> foundDynamicPatterns.put(patternStatus.getPatternName(), patternStatus));
             if (!foundDynamicPatterns.isEmpty()) {
                 addDynamicPatternToBlockArray();
             }
@@ -1439,6 +1555,14 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
     @ZenMethod
     public int getTicksExisted() {
         return ticksExisted;
+    }
+
+    public InputMode getInputMode() {
+        return inputMode;
+    }
+
+    public void setInputMode(final InputMode inputMode) {
+        this.inputMode = inputMode;
     }
 
     public WorkMode getWorkMode() {
@@ -1492,7 +1616,7 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
         AnimationBuilder animationBuilder = new AnimationBuilder();
         for (final ControllerModelAnimationEvent.AnimationCT animation : eventMM.getAnimations()) {
             animationBuilder.addAnimation(animation.animationName(),
-                animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.PLAY_ONCE);
+                    animation.loop() ? ILoopType.EDefaultLoopTypes.LOOP : ILoopType.EDefaultLoopTypes.HOLD_ON_LAST_FRAME);
         }
         event.getController().setAnimation(animationBuilder);
 
@@ -1556,5 +1680,28 @@ public abstract class TileMultiblockMachineController extends TileEntityRestrict
             return "gui.controller.status." + this.name().toLowerCase();
         }
 
+    }
+
+    @SideOnly(Side.CLIENT)
+    protected void processClientGUIUpdate() {
+        if (world == null || !world.isRemote) {
+            return;
+        }
+
+        GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+        if (currentScreen == null) {
+            return;
+        }
+
+        if (currentScreen instanceof GuiMachineController machineController && machineController.getController() == this) {
+            machineController.updateGUIState();
+        } else if (currentScreen instanceof GuiFactoryController factoryController && factoryController.getFactory() == this) {
+            factoryController.updateGUIState();
+        }
+    }
+
+    public enum InputMode {
+        DEFAULT,
+        SEPARATE_INPUT
     }
 }

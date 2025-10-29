@@ -8,11 +8,18 @@
 
 package hellfirepvp.modularmachinery.client.gui;
 
+import github.kasuminova.mmce.client.gui.GuiContainerDynamic;
+import github.kasuminova.mmce.client.gui.util.TextureProperties;
+import github.kasuminova.mmce.client.gui.widget.ButtonElements;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetController;
+import github.kasuminova.mmce.client.gui.widget.base.WidgetGui;
+import github.kasuminova.mmce.client.gui.widget.container.Row;
 import github.kasuminova.mmce.common.event.client.ControllerGUIRenderEvent;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.container.ContainerController;
 import hellfirepvp.modularmachinery.common.crafting.ActiveMachineRecipe;
 import hellfirepvp.modularmachinery.common.machine.DynamicMachine;
+import hellfirepvp.modularmachinery.common.network.PktTileMachineControllerAction;
 import hellfirepvp.modularmachinery.common.tiles.TileMachineController;
 import hellfirepvp.modularmachinery.common.tiles.base.TileMultiblockMachineController;
 import hellfirepvp.modularmachinery.common.util.MiscUtils;
@@ -33,9 +40,11 @@ import java.util.List;
  * Created by HellFirePvP
  * Date: 12.07.2017 / 23:34
  */
-public class GuiMachineController extends GuiContainerBase<ContainerController> {
+public class GuiMachineController extends GuiContainerDynamic<ContainerController> {
 
     public static final ResourceLocation TEXTURES_CONTROLLER = new ResourceLocation(ModularMachinery.MODID, "textures/gui/guicontroller_large.png");
+
+    protected final ButtonElements<TileMultiblockMachineController.InputMode> modeButtonElements = new ButtonElements<>();
 
     private final TileMachineController controller;
 
@@ -43,11 +52,72 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         super(new ContainerController(controller, opening));
         this.controller = controller;
         this.ySize = 213;
+
+        initWidgetController();
+
+        if (controller.canToggleInputMode()) {
+            initModeButtonElements();
+        }
+
+        updateGUIState();
+    }
+
+    public TileMachineController getController() {
+        return controller;
+    }
+
+    private void initWidgetController() {
+        this.guiLeft = (this.width - this.ySize) / 2;
+        this.guiTop = (this.height - this.ySize) / 2;
+
+        this.widgetController = new WidgetController(WidgetGui.of(this, this.xSize, this.ySize, guiLeft, guiTop));
+    }
+
+    private void initModeButtonElements() {
+        modeButtonElements
+                .addElement(TileMultiblockMachineController.InputMode.DEFAULT, TextureProperties.of(0, 229, 16, 16))
+                .addElement(TileMultiblockMachineController.InputMode.SEPARATE_INPUT, TextureProperties.of(16, 229, 16, 16))
+                .setMouseDownTexture(32, 213)
+                .setHoveredTexture(16, 213)
+                .setTexture(0, 213)
+                .setTextureLocation(TEXTURES_CONTROLLER)
+                .setTooltipFunction(this::createModeTooltips)
+                .setOnClickedListener(this::handleModeButtonClick)
+                .setWidthHeight(16, 16)
+                .setEnabled(true)
+                .setVisible(true);
+
+        // Init Widget Containers...
+        Row row = new Row();
+        row.addWidgets(modeButtonElements).setAbsXY(151, 102);
+
+        this.widgetController.addWidget(row);
+    }
+
+    private void handleModeButtonClick(Object btn) {
+        TileMultiblockMachineController.InputMode current = modeButtonElements.getCurrentSelection();
+        if (current == null) {
+            return;
+        }
+        switch (current) {
+            case DEFAULT -> ModularMachinery.NET_CHANNEL.sendToServer(new PktTileMachineControllerAction(PktTileMachineControllerAction.Action.ENABLE_DEFAULT_MODE));
+            case SEPARATE_INPUT -> ModularMachinery.NET_CHANNEL.sendToServer(new PktTileMachineControllerAction(PktTileMachineControllerAction.Action.ENABLE_SEPARATE_INPUT_MODE));
+        }
+    }
+
+    private List<String> createModeTooltips(Object btn) {
+        TileMultiblockMachineController.InputMode current = modeButtonElements.getCurrentSelection();
+        List<String> tooltips = new ArrayList<>();
+        tooltips.add(I18n.format("gui.controller.input_mode.desc"));
+        tooltips.add((current == TileMultiblockMachineController.InputMode.DEFAULT ? I18n.format("gui.controller.input_mode.current") : "")
+                + I18n.format("gui.controller.input_mode.default.desc"));
+        tooltips.add((current == TileMultiblockMachineController.InputMode.SEPARATE_INPUT ? I18n.format("gui.controller.input_mode.current") : "")
+                + I18n.format("gui.controller.input_mode.separate_input.desc"));
+        return tooltips;
     }
 
     @Override
     protected void drawGuiContainerForegroundLayer(int mouseX, int mouseY) {
-        super.drawGuiContainerForegroundLayer(mouseX, mouseY);
 
         GlStateManager.pushMatrix();
         double scale = 0.72;
@@ -173,6 +243,8 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
 
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.popMatrix();
+
+        super.drawGuiContainerForegroundLayer(mouseX, mouseY);
     }
 
     @Override
@@ -182,9 +254,11 @@ public class GuiMachineController extends GuiContainerBase<ContainerController> 
         int i = (this.width - this.xSize) / 2;
         int j = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(i, j, 0, 0, this.xSize, this.ySize);
+
+        super.drawGuiContainerBackgroundLayer(partialTicks, mouseX, mouseY);
     }
 
-    @Override
-    protected void setWidthHeight() {
+    public void updateGUIState() {
+        modeButtonElements.setCurrentSelection(controller.getInputMode());
     }
 }

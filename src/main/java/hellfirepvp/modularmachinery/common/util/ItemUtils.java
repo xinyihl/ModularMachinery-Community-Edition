@@ -202,26 +202,38 @@ public class ItemUtils {
         }
 
         int inserted = 0;
+        boolean isStackable = stack.isStackable();
+
         for (int i = 0; i < handler.getSlots(); i++) {
             int maxStackSize = handler.getSlotLimit(i);
             ItemStack in = handler.getStackInSlot(i);
             int count = in.getCount();
+
+            // skip full slots
             if (count >= maxStackSize) {
                 continue;
             }
 
             if (in.isEmpty()) {
-                int toInsert = Math.min(maxInsert - inserted, maxStackSize);
+                // only one for non-stackable
+                int toInsert = isStackable ? Math.min(maxInsert - inserted, maxStackSize) : 1;
+
                 handler.setStackInSlot(i, copyStackWithSize(stack, toInsert));
                 inserted += toInsert;
-            } else {
-                if (stackEqualsNonNBT(stack, in) && matchTags(stack, in)) {
-                    int toInsert = Math.min(maxInsert - inserted, maxStackSize - count);
-                    handler.setStackInSlot(i, copyStackWithSize(stack, toInsert + count));
-                    inserted += toInsert;
+            }
+            // non-empty with match
+            else if (stackEqualsNonNBT(stack, in) && matchTags(stack, in)) {
+                // for non-stackable, skip if the slot is occupied
+                if (!isStackable) {
+                    continue;
                 }
+
+                int toInsert = Math.min(maxInsert - inserted, maxStackSize - count);
+                handler.setStackInSlot(i, copyStackWithSize(stack, toInsert + count));
+                inserted += toInsert;
             }
 
+            // if all inserted - break
             if (inserted >= maxInsert) {
                 break;
             }

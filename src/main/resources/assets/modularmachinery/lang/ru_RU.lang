@@ -1,0 +1,403 @@
+itemGroup.modularmachinery=Modular Machinery Community Edition
+
+command.modularmachinery.syntax=/mm-syntax
+command.modularmachinery.hand=/mm-hand
+command.modularmachinery.hand.empty=Пожалуйста, удерживайте предмет, чтобы получить данные.
+command.modularmachinery.get_blueprint=/mm-get_blueprint <machineName>
+command.modularmachinery.get_blueprint.player_only=§cЭта команда может быть выполнена только игроком.
+command.modularmachinery.get_blueprint.not_found=Машина с зарегистрированным именем %s не была найдена!
+command.modularmachinery.get_blueprint.success=Были даны чертежи.
+command.modularmachinery.reload=/mm-reload
+command.modularmachinery.reload_client=/mm-reload_client
+command.modularmachinery.performance_report=/mm-performance_report [reset]
+command.modularmachinery.performance_report.title=Отчеты о параллельной производительности (подсчитано %s выполнений)
+command.modularmachinery.performance_report.reset=Отчет об исполнении был сброшен.
+command.modularmachinery.performance_report.total_executed=Всего выполнено: %s
+command.modularmachinery.performance_report.tasks_avg_per_execution=Среднее количество задач на выполнение: %s
+
+command.modularmachinery.performance_report.total_used_time=Всего затрачено времени: %s ms
+command.modularmachinery.performance_report.used_time_avg_per_execution=Среднее количество, затраченное на выполнение: %.2f ms
+
+command.modularmachinery.performance_report.task_used_time=Затрачено времени на параллельную работу: %s ms
+
+command.modularmachinery.performance_report.task_used_time_avg=Среднее время параллельной работы: %s ms
+command.modularmachinery.performance_report.used_time_avg=Среднее время, затраченное на выполнение одной задачи: %s µs
+
+gui.controller.blueprint=Чертёж найден: %s
+gui.controller.blueprint.none=Отсутствует
+gui.controller.structure=Структура найдена: %s
+gui.controller.structure.none=Отсутствует
+gui.controller.status=Статус:
+gui.controller.status.redstone_stopped=Механизм остановлен входящим редстоун сигналом
+gui.controller.status.missing_structure=Неправильная структура
+gui.controller.status.no_recipe=Подходящий рецепт не найден
+gui.controller.status.chunk_unloaded=Блок в многоблочной структуре был выгружен и перестал работать
+gui.controller.status.idle=Ожидание
+gui.controller.status.crafting=Создание рецепта...
+gui.controller.status.crafting.progress=Прогресс: %s
+gui.controller.parallelism=Параллельность：%s
+gui.controller.max_parallelism=Максимальная Параллельность：%s
+gui.controller.input_mode.desc=Режим входных шин:
+gui.controller.input_mode.current=§a>
+gui.controller.input_mode.default.desc=Базовый. Все входные шины проверяются как единый инвентарь.
+gui.controller.input_mode.separate_input.desc=Раздельный. Каждая шина проверяется отдельно.
+
+gui.factory.threads=%s / %s Потоков
+gui.factory.thread=Поток #%s
+
+gui.smartinterface.title=Смарт Интерфейс (Всего: %s, Текущий: %s)
+gui.smartinterface.notfound=Не найдена связанная машина.
+gui.smartinterface.value=Значение: %.0f
+gui.smartinterface.prev=Пред.
+gui.smartinterface.next=След.
+
+gui.parallelcontroller.title=Параллельный Контроллер
+gui.parallelcontroller.max_value=Максимальная Параллельность： %s
+gui.parallelcontroller.current_value=Текущая: %s
+
+gui.upgradebus.title=Шина улучшений
+gui.upgradebus.bounded.empty=Отсутствует связанная машина
+gui.upgradebus.bounded=%s Связанных машин
+gui.upgradebus.incompatible=§eПредупреждение: %s несовместим с данной машиной.
+
+gui.meitemoutputbus.title=МЭ Шина Выхода
+gui.meiteminputbus.title=МЭ Шина Входа
+
+gui.meiteminputbus.inv_action=Используйте колесо прокрутки и комбинацию клавиш SHIFT, CONTROL, ALT, чтобы изменить количество поставляемых предметов.
+gui.meiteminputbus.inv_action.increase.normal=Прокрутите колесико вверх, чтобы увеличить количество предметов на 1.
+gui.meiteminputbus.inv_action.decrease.normal=Прокрутите колесико вниз или щелкните правой кнопкой мыши на элементе, чтобы уменьшить количество предметов на 1.
+gui.meiteminputbus.inv_action.increase=Нажмите комбинацию клавиш %s, чтобы увеличить количество предметов на %s, пока колесо прокручивается вверх.
+gui.meiteminputbus.inv_action.decrease=Нажмите комбинацию клавиш %s, чтобы уменьшить количество предметов %s, пока колесо прокручивается вниз.
+gui.meiteminputbus.current=§a>
+gui.meiteminputbus.work_mode.desc=Режим поставки предметов:
+gui.meiteminputbus.default.desc=Обычный. Предметы поставляются всегда, независимо от их количества в сети.
+gui.meiteminputbus.threshold.desc=Пороговый. Предметы не будут запрашиваться из сети, пока их количество в сети ниже порогового значения.
+gui.meiteminputbus.threshold.field.title=Пороговое знач.:
+gui.meiteminputbus.threshold.field.tooltip=Установить пороговое значение [1–1e7].
+gui.meiteminputbus.items_marked=Предметов поставляется: %s
+gui.meitembus.item_cached=Предметов хранится: %s
+gui.meitembus.nbt_stored=Предметы были сохранены внутри.
+
+gui.mefluidoutputbus.title=МЭ Жидкостный Выходной Шлюз
+gui.mefluidinputbus.title=МЭ Жидкостный Входной Шлюз
+gui.mepatternprovider.title=МЭ Шина Шаблонов
+gui.mepatternprovider.inventory=Инвентарь
+gui.mepatternprovider.cached=Буфер
+gui.mepatternprovider.single_inv=Спец. инв.
+gui.mepatternprovider.single_inv.desc=Специальный инвентарь также распознается механизмом, но при нажатии кнопки возврата предметов он не очищается.
+gui.mepatternprovider.current=§a[Включено]
+gui.mepatternprovider.default.desc=По умолчанию: Работает в нормальном режиме.
+gui.mepatternprovider.crafting_lock_mode.desc=Блокирующий режим крафта: Предметы будут поставляться только после того, как машина выполнит приготовление по рецепту.
+gui.mepatternprovider.blocking_mode.desc=Блокирующий режим: Предметы не будут поставляться, если буфер содержит предметы.
+gui.mepatternprovider.enhanced_blocking_mode.desc=Расширенный режим блокировки: Основан на обычном блокирующем режиме, но предметы могут поставляться в соответствии с текущим запущенным рецептом
+gui.mepatternprovider.work_mode.desc=Режим работы шины (нажмите, чтобы переключиться между 4 режимами)
+gui.mepatternprovider.return_items=Вернуть предметы
+gui.mepatternprovider.return_items.desc=Возвращает все предметы и жидкости из буфера обратно в МЭ Систему.
+gui.mepatternprovider.nbt_stored=Шаблоны сохранены внутри
+
+gui.preview.button.menu.tip=Нажмите, чтобы открыть меню параметров предварительного просмотра.
+gui.preview.button.machine_info=Дополнительная информация:
+gui.preview.button.machine_info.xyz.0=Длина / Высота / Ширина:
+gui.preview.button.machine_info.xyz.1=§c%s§f - §a%s§f - §9%s§f
+gui.preview.button.machine_info.controller_y_pos=Позиция Y контроллера: §6%s§f
+gui.preview.button.machine_info.internal_parallelism=Встроенный параллелизм：§2%s§f
+gui.preview.button.machine_info.max_parallelism=Максимальный параллелизм：§a%s§f
+gui.preview.button.machine_info.max_threads=Макс. потоков：§b%s§f
+gui.preview.button.machine_info.core_threads=Специальных потоков：§9%s§f
+gui.preview.button.machine_info.dynamic_pattern=§eСуществуют динамические структуры.
+gui.preview.button.machine_info.requires_blueprint=§cТребуется чертёж.
+gui.preview.button.toggle_layer_render.tip=Нажмите, чтобы переключиться в режим по слоям.
+gui.preview.button.toggle_3d_render.tip=Нажмите, чтобы переключиться в 3D режим.
+gui.preview.button.place_world_preview.tip=Нажмите, чтобы спроецировать текущий предварительный просмотр в мире.
+gui.preview.button.enable_cycle_replaceable_blocks.tip.0=Нажмите, чтобы включить циклическую смену блоков по времени.
+gui.preview.button.enable_cycle_replaceable_blocks.tip.1=Возможность циклической замены: последовательно перебирает все доступные блоки в каждом положении каждые 1,5 секунды.
+gui.preview.button.disable_cycle_replaceable_blocks.tip=Нажмите, чтобы отключить циклическую смену блоков по времени.
+gui.preview.button.dynamic_pattern_plus.tip=Нажмите, чтобы уменьшить размер динамической структуры. (Текущий: §a%s§f)
+gui.preview.button.dynamic_pattern_subtract.tip=Нажмите, чтобы увеличить размер динамической структуры. (Текущий: §a%s§f)
+gui.preview.button.toggle_unformed.tip=Нажмите, чтобы перевести структуру в несформированное состояние.
+gui.preview.button.toggle_formed.tip=Нажмите, чтобы перевести структуру в сформированное состояние.
+gui.preview.button.toggle_upgrade_display.enable.tip=Нажмите, чтобы отобразить список доступных улучшений для механизма.
+gui.preview.button.toggle_upgrade_display.disable.tip=Нажмите, чтобы скрыть список доступных улучшений для механизма.
+gui.preview.button.toggle_upgrade_display.item.enable_overlay.tip=Нажмите, чтобы выделить расположение в окне предварительного просмотра структуры зеленым цветом.
+gui.preview.button.toggle_upgrade_display.item.disable_overlay.tip=Нажмите, чтобы отключить подсветку в окне предварительного просмотра структуры.
+gui.preview.button.reset_center.tip=Нажмите, чтобы вернуться к центру предварительного просмотра.
+gui.preview.button.layer_render_scrollbar.up.tip=Нажмите, чтобы перейти на один слой выше
+gui.preview.button.layer_render_scrollbar.down.tip=Нажмите, чтобы перейти на одий слой ниже
+gui.preview.button.layer_render_scrollbar.tip=Удерживайте и перетаскивайте, чтобы быстро настроить слой для просмотра
+gui.preview.button.layer_render_scrollbar.state.tip=Текущее/Общее количество слоёв: §a%s§f / §e%s§f
+gui.preview.compiling.progress=Рендер находится в предварительной компиляции! (Прогресс：%s%%)
+gui.preview.optifine_shader_pack_warn=§4Обнаружен OptiFine шейдер, производительность снизится.
+gui.preview.vbo_unsupported_warn=§4VBO не поддерживается видеокартой! Производительность снизится.
+gui.preview.vbo_disabled_warn=§4VBO выключен! Производительность снизится.
+
+top.recipe.progress=Прогресс
+top.machine.owner=Владелец:
+top.machine.owner.self=Вы
+top.machine.owner.unknown=Неизвестный
+top.machine.working=Создание...
+top.machine.structure.found=Структура сформирована
+top.machine.structure.none=Неправильная структура
+top.max_parallelism=Максимальная Параллельность：
+top.parallelism=Параллельность：
+top.factory.thread=Поток #
+top.factory.thread.running=
+top.factory.thread.max=Потоков
+top.energy.input=Общее потребление энергии: 
+top.energy.output=Общее производство энергии: 
+
+craftcheck.failure.item.input=Отсутствуют ингредиенты для создания!
+craftcheck.failure.item.output.space=Недостаточно места в инвентаре для выхода(ов) предмета!
+craftcheck.failure.fluid.input=Отсутствует жидкость для создания!
+craftcheck.failure.fluid.output.space=Недостаточно места в резервуаре для выхода(ов) жидкости!
+craftcheck.failure.gas.input=Отсутствует газ для создания!
+craftcheck.failure.gas.output.space=Недостаточно места для выхода(ов) газа!
+craftcheck.failure.energy.input=Недостаточно энергии!
+craftcheck.failure.energy.output.space=Энергетический Выходной Шлюз заполнен!
+craftcheck.failure.interface.number.notequal=Разные значения для входных данных Смарт интерфейса!
+
+component.missing.modularmachinery.energy.output=Не найден Энергетический Выходной Шлюз!
+component.missing.modularmachinery.energy.input=Не найден Энергетический Входной Шлюз!
+component.missing.modularmachinery.fluid.output=Не найден Жидкостный Выходной Шлюз!
+component.missing.modularmachinery.fluid.input=Не найден Жидкостный Входной Шлюз!
+component.missing.modularmachinery.fluid_pertick.output=Не найден Жидкостный Выходной Шлюз!
+component.missing.modularmachinery.fluid_pertick.input=Не найден Жидкостный Входной Шлюз!
+component.missing.modularmachinery.gas.output=Не найден Жидкостный Выходной Шлюз!
+component.missing.modularmachinery.gas.input=Не найден Жидкостный Входной Шлюз!
+component.missing.modularmachinery.item.output=Не найдена Шина Выхода!
+component.missing.modularmachinery.item.input=Не найдена Шина Входа!
+component.missing.modularmachinery.interface.number=Не найден Смарт Интерфейс Данных!
+
+gui.blueprint.popout.info=Крадитесь, чтобы заморозить текущий предварительный просмотр, дабы иметь возможность просмотреть его в мире
+gui.blueprint.popout.place=Щелкать правой кнопкой мыши для размещения предварительного просмотра; отойдите от неё или откройте другую структуру предварительного просмотра (чертёж) для удаления её в мире.
+gui.blueprint.popout.placed.dynamic_pattern=При использовании автоматической сборки во время проецирования приоритет отдается размеру динамической структуры проекции.
+
+jei.category.preview=Предпросмотр Конструкции
+
+message.structurebuild.confirmrotation=Контроллер смотрит на %s
+message.structurebuild.confirmrotation.rotating=Поворот структуры для сохранения на %s градусов...
+message.structurebuild.empty=Вы ничего не выбрали для сохранения.
+message.structurebuild.warndedicated=Вы сохраняете машину на выделенном сервере! Обязательно скачайте его с сервера!
+message.structurebuild.save=Машина сохранена как %s в папке механизмов!
+message.structurebuild.fail=Не удалось сохранить машину в файл! Проверьте логи для получения дополнительной информации!
+message.machine_projector.project=Визуализация структуры: %s
+message.assembly.tip.no_machine=Мультиблочная структура не найдена!
+message.assembly.tip.already_assembly=Структура находится в очереди на сборку!
+message.assembly.tip.success=Сборка завершена!
+message.assembly.tip.cancelled=Сборка отменена!
+message.assembly.tip.cannot_replace=Не удается разместить блок в %s, пожалуйста, проверьте, существует ли блок в целевой позиции!
+message.assembly.tip.too_high=Не удается разместить блок в %s, предел высоты строительства превышен!
+message.assembly.tip.skipped=Установка блока %s пропущена.
+message.assembly.tip.missing=%s требуется для сборки, но в инвентаре отсутствует блок или ведро!
+message.assembly.tip.required=Недостаточно ингредиентов, требуются следующие ингредиенты:
+message.assembly.tip.or=или
+message.assembly.tip.partial_assembly=Несмотря на отсутствие некоторых материалов, §cсборка будет продолжена с использованием существующих материалов!
+message.assembly.tip.too_quickly=Вам нужно подождать, прежде чем вы сможете начать сборку снова
+
+message.reloading=Modular Machinery: Перезагрузка!
+message.reloaded=Modular Machinery: Рецепты перезагружены! Изменения в JEI требуют перезапуска клиента! Для обновления эффектов Шины Обновления необходимо переложить предметы в ней!
+message.cleared.recipes=Modular Machinery: Очищено %s рецептов.
+message.reloaded.recipes=Modular Machinery: Перезагружено %s рецептов.
+message.reloaded.machines=Modular Machinery: Перезагружено %s механизмов.
+
+tooltip.item.controller.owner.self=§aВы являетесь владельцем контроллера.
+tooltip.item.controller.owner.not_self=§cВы не являетесь владельцем контроллера.
+
+tooltip.machinery.empty=Пустой
+
+tooltip.machinery.ingredient_array_input=Принимает следующие входные данные (используется только один из них):
+tooltip.machinery.ingredient_array_output=Выводит следующие предметы: %s
+tooltip.machinery.ingredient_array_output.weight=Вес: %s
+tooltip.machinery.catalyst=§aВ качестве входного катализатора (опциональный ввод)
+tooltip.machinery.catalyst.effect=Эффект катализатора:
+
+tooltip.machinery.fuel=Принимает любое топливо.
+tooltip.machinery.fuel.item=Время горения: %s
+tooltip.machinery.fuel.in=Требуемое общее время горения топлива:
+tooltip.machinery.fuel.in.total=%s тиков.
+
+tooltip.machinery.blueprint.required=Требуется чертёж
+tooltip.machinery.blueprint.upgrades=Улучшения
+
+tooltip.machinery.duration.seconds=Время Обработки:%.1f секунд 
+tooltip.machinery.duration.tick=(%s тиков)
+
+tooltip.machinery.chance.in=Шанс потребления: %s
+tooltip.machinery.chance.out=Шанс производства: %s
+tooltip.machinery.chance.in.never=Не может быть поглощен.
+tooltip.machinery.chance.out.never=Никогда не производится.
+
+tooltip.machinery.min_max_amount.input=Потребление: %s ~ %s
+tooltip.machinery.min_max_amount.output=Выходное количество: %s ~ %s
+
+tooltip.machinery.energy.in=Требуется Энергии: 
+tooltip.machinery.energy.out=Произведено Энергии: 
+tooltip.machinery.energy.tick=%s %s/t
+tooltip.machinery.energy.total=Всего：%s %s
+
+tooltip.machinery.smartinterface.value=Значение Смарт интерфейса：%s
+tooltip.machinery.smartinterface.minvalue=Минимальное значение Смарт интерфейса：%s
+tooltip.machinery.smartinterface.maxvalue=Максимальное значение Смарт интерфейса：%s
+
+tooltip.energy.type.fe=FE
+tooltip.energy.type.rf=RF
+tooltip.energy.type.ic2_eu=EU
+tooltip.energy.type.gt_eu=EU
+
+tooltip.fluid_pertick.in=Потребление в тик: %smB
+tooltip.fluid_pertick.out=Производство в тик: %smB
+
+tooltip.constructtool.creative=Конвентер структуры в JSON
+
+tooltip.itembus.slot=1 слот
+tooltip.itembus.slots=%s слотов
+
+tooltip.fluidhatch.empty=Пустой
+tooltip.fluidhatch.fluid=[Жидкостный]
+tooltip.fluidhatch.gas=[Газ]
+tooltip.fluidhatch.tank=%smb / %smb
+tooltip.fluidhatch.tank.gas=%s / %s
+tooltip.fluidhatch.tank.info=Содержит %s mb
+tooltip.fluidhatch.tank.mek=Принимает газы Mekanism
+
+tooltip.energyhatch.charge=%s / %s %s
+tooltip.energyhatch.storage=Содержит %s FE
+tooltip.energyhatch.out.transfer=Передаёт %s FE в Тик
+tooltip.energyhatch.in.accept=Принимает %s FE в Тик
+
+tooltip.energyhatch.ic2.powerrate=EU/t
+tooltip.energyhatch.ic2.any=Любой
+tooltip.energyhatch.ic2.out.voltage=Выходное Напряжение EU: %s
+tooltip.energyhatch.ic2.out.transfer=Выходная Передача EU: %s %s
+tooltip.energyhatch.ic2.in.voltage=Входное Напряжение EU: %s
+tooltip.energyhatch.ic2.in.transfer=Входная Передача EU: %s %s
+
+tooltip.energyhatch.gregtech.voltage.in=Входное напряжение: §a%s §7(§a%s§7)
+tooltip.energyhatch.gregtech.voltage.out=Выходное напряжение: §a%s §7(§a%s§7)
+tooltip.energyhatch.gregtech.amperage=Сила тока: §e%s
+tooltip.energyhatch.gregtech.storage=Внутрренняя ёмкость энергии: §9%s
+
+tooltip.ic2.powertier.0.name=ULV
+tooltip.ic2.powertier.1.name=LV
+tooltip.ic2.powertier.2.name=MV
+tooltip.ic2.powertier.3.name=HV
+tooltip.ic2.powertier.4.name=EV
+tooltip.ic2.powertier.5.name=IV
+tooltip.ic2.powertier.6.name=LuV
+tooltip.ic2.powertier.7.name=ZPM
+tooltip.ic2.powertier.8.name=UV
+tooltip.ic2.powertier.9.name=UHV
+tooltip.ic2.powertier.10.name=UEV
+tooltip.ic2.powertier.11.name=UIV
+tooltip.ic2.powertier.12.name=UXV
+
+tooltip.modularmachinery.machine_projector=SHIFT+ПКМ по контроллеру, чтобы показать голограмму механизма
+
+item.modularmachinery.itemblueprint.name=Чертёж механизма
+item.modularmachinery.itemmodularium.name=Модуляриум
+item.modularmachinery.itemconstructtool.name=Инструмент выбора конструкции
+item.modularmachinery.machine_projector.name=Проектор мультиблочной структуры
+
+block.modularmachinery.crushing_wheels.name=Дробильные колеса
+
+tile.modularmachinery.blockcontroller.name=Контроллер Механизма
+tile.modularmachinery.machinecontroller.name=Контроллер "%s"
+tile.modularmachinery.machinecontroller.deprecated.tip.0=Совместимость с Modular Controller будет устранена в следующем выпуске.
+tile.modularmachinery.machinecontroller.deprecated.tip.1=Пожалуйста, свяжитесь с автором модпака, чтобы перенести контроллер на MMCE контроллер.
+
+tile.modularmachinery.blockfactorycontroller.name=Контроллер Фабрики
+
+# Честно говоря, система фабрик настолько масштабируема, что, по-моему, называть ее
+# фабричным контроллером выглядит недостаточно научно.
+# Вы также можете изменить название самостоятельно.
+tile.modularmachinery.machinefactorycontroller.name=Контроллер Фабрики "%s"
+
+tile.modularmachinery.blockcasing.plain.name=Корпус Механизма
+tile.modularmachinery.blockcasing.vent.name=Люк Механизма
+tile.modularmachinery.blockcasing.firebox.name=Огнеупорный корпус
+tile.modularmachinery.blockcasing.gearbox.name=Редуктор Механизма
+tile.modularmachinery.blockcasing.reinforced.name=Усиленный Корпус Механизма
+tile.modularmachinery.blockcasing.circuitry.name=Блок-Схема Механизма
+tile.modularmachinery.blockcasing.upgrade.name=Улучшение производства энергии I
+tile.modularmachinery.blockcasing.adv_upgrade.name=Улучшение производства энергии II
+tile.modularmachinery.blockcasing.industrial_casing1.name=Промышленная обшивка 1-го уровня
+tile.modularmachinery.blockcasing.industrial_casing2.name=Промышленная обшивка 2-го уровня
+
+tile.modularmachinery.blockinputbus.tiny.name=Крошечная Шина Входа
+tile.modularmachinery.blockinputbus.small.name=Маленькая Шина Входа
+tile.modularmachinery.blockinputbus.normal.name=Нормальная Шина Входа
+tile.modularmachinery.blockinputbus.reinforced.name=Укреплённая Шина Входа
+tile.modularmachinery.blockinputbus.big.name=Большая Шина Входа
+tile.modularmachinery.blockinputbus.huge.name=Огромная Шина Входа
+tile.modularmachinery.blockinputbus.ludicrous.name=Гигантская Шина Входа
+
+tile.modularmachinery.blockoutputbus.tiny.name=Крошечная Шина Выхода
+tile.modularmachinery.blockoutputbus.small.name=Маленькая Шина Выхода
+tile.modularmachinery.blockoutputbus.normal.name=Нормальная Шина Выхода
+tile.modularmachinery.blockoutputbus.reinforced.name=Укреплённая Шина Выхода
+tile.modularmachinery.blockoutputbus.big.name=Большая Шина Выхода
+tile.modularmachinery.blockoutputbus.huge.name=Огромная Шина Выхода
+tile.modularmachinery.blockoutputbus.ludicrous.name=Гигантская Шина Выхода
+
+tile.modularmachinery.blockfluidinputhatch.tiny.name=Крошечный Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.small.name=Маленький Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.normal.name=Нормальный Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.reinforced.name=Укреплённый Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.big.name=Большой Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.huge.name=Огромный Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.ludicrous.name=Гигантский Жидкостный Входной Шлюз
+tile.modularmachinery.blockfluidinputhatch.vacuum.name=Ультимативный Жидкостный Входной Шлюз
+
+tile.modularmachinery.blockfluidoutputhatch.tiny.name=Крошечный Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.small.name=Маленький Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.normal.name=Нормальный Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.reinforced.name=Укреплённый Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.big.name=Большой Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.huge.name=Огромный Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.ludicrous.name=Гигантский Жидкостный Выходной Шлюз
+tile.modularmachinery.blockfluidoutputhatch.vacuum.name=Ультимативный Жидкостный Выходной Шлюз
+
+tile.modularmachinery.blockenergyinputhatch.tiny.name=Крошечный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.small.name=Маленький Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.normal.name=Нормальный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.reinforced.name=Укреплённый Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.big.name=Большой Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.huge.name=Огромный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.ludicrous.name=Громадный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.ultimate.name=Гигантский Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.enormous.name=Гибридный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.immeasurable.name=Квантовый Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.incredible.name=Ультимативный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.maximum.name=Максимальный Энергетический Входной Шлюз
+tile.modularmachinery.blockenergyinputhatch.infinity.name=Бесконечный Энергетический Входной Шлюз
+
+tile.modularmachinery.blockenergyoutputhatch.tiny.name=Крошечный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.small.name=Маленький Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.normal.name=Нормальный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.reinforced.name=Укреплённый Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.big.name=Большой Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.huge.name=Огромный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.ludicrous.name=Громадный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.ultimate.name=Гигантский Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.enormous.name=Гибридный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.immeasurable.name=Квантовый Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.incredible.name=Ультимативный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.maximum.name=Максимальный Энергетический Выходной Шлюз
+tile.modularmachinery.blockenergyoutputhatch.infinity.name=Бесконечный Энергетический Выходной Шлюз
+
+tile.modularmachinery.blocksmartinterface.number.name=Смарт Интерфейс Данных (Число)
+tile.modularmachinery.blocksmartinterface.string.name=Смарт Интерфейс Данных (Строка)
+
+tile.modularmachinery.blockparallelcontroller.normal.name=§aНормальный Параллельный Контроллер
+tile.modularmachinery.blockparallelcontroller.reinforced.name=§6Укреплённый Параллельный Контроллер
+tile.modularmachinery.blockparallelcontroller.elite.name=§bЭлитный Параллельный Контроллер
+tile.modularmachinery.blockparallelcontroller.super.name=§5Супер Параллельный Контроллер
+tile.modularmachinery.blockparallelcontroller.ultimate.name=§cУльтимативный Параллельный Контроллер
+tile.modularmachinery.blockparallelcontroller.tip=Увеличивает количество одновременных идентичных рецептов до §a%s§7 штук за раз
+
+tile.modularmachinery.blockmeitemoutputbus.name=МЭ Шина Выхода
+tile.modularmachinery.blockmeiteminputbus.name=МЭ Шина Входа
+tile.modularmachinery.blockmefluidoutputbus.name=МЭ Жидкостный Выходной Шлюз
+tile.modularmachinery.blockmefluidinputbus.name=МЭ Жидкостный Входной Шлюз
+tile.modularmachinery.blockmepatternprovider.name=МЭ Шина Шаблонов
+
+tooltip.modularcontroller.machine_projector=Shift+ПКМ по контроллеру, чтобы спроецировать его план постройки в мире

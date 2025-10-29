@@ -134,6 +134,11 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
             public InfItemFluidHandler getContainerProvider() {
                 return handler;
             }
+
+            @Override
+            public boolean isAffectedBySeparateInput() {
+                return true;
+            }
         };
     }
 
@@ -502,7 +507,6 @@ public class MEPatternProvider extends MEMachineComponent implements ICraftingPr
         handlerDirty = false;
     }
 
-    @SideOnly(Side.CLIENT)
     protected void processClientGUIUpdate() {
         if (world != null && world.isRemote) {
             GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;

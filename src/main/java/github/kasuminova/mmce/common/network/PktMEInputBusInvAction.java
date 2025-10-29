@@ -2,6 +2,8 @@ package github.kasuminova.mmce.common.network;
 
 import appeng.container.slot.SlotFake;
 import github.kasuminova.mmce.common.container.ContainerMEItemInputBus;
+import github.kasuminova.mmce.common.tile.MEItemInputBus;
+import hellfirepvp.modularmachinery.ModularMachinery;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.Slot;
@@ -11,13 +13,25 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEInputBusInvAction, IMessage> {
+    private Action action = null;
     private int addAmount = 0;
-    private int slotID    = 0;
+    private int slotID = 0;
+    private int thresholdValue = 0;
 
     public PktMEInputBusInvAction() {
     }
 
-    public PktMEInputBusInvAction(final int addAmount, final int slotID) {
+    public PktMEInputBusInvAction(final Action action) {
+        this.action = action;
+    }
+
+    public PktMEInputBusInvAction(final Action action, final int thresholdValue) {
+        this.action = action;
+        this.thresholdValue = thresholdValue;
+    }
+
+    public PktMEInputBusInvAction(final Action action, int addAmount, final int slotID) {
+        this.action = action;
         this.addAmount = addAmount;
         this.slotID = slotID;
     }
@@ -26,12 +40,16 @@ public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEIn
     public void fromBytes(final ByteBuf buf) {
         this.addAmount = buf.readInt();
         this.slotID = buf.readInt();
+        this.action = PktMEInputBusInvAction.Action.values()[buf.readByte()];
+        this.thresholdValue = buf.readInt();
     }
 
     @Override
     public void toBytes(final ByteBuf buf) {
         buf.writeInt(addAmount);
         buf.writeInt(slotID);
+        buf.writeByte(action.ordinal());
+        buf.writeInt(thresholdValue);
     }
 
     @Override
@@ -40,6 +58,15 @@ public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEIn
         if (!(player.openContainer instanceof final ContainerMEItemInputBus inputBus)) {
             return null;
         }
+
+        ModularMachinery.EXECUTE_MANAGER.addSyncTask(() -> {
+            MEItemInputBus provider = inputBus.getOwner();
+            switch (message.action) {
+                case ENABLE_THRESHOLD_MODE -> provider.setMERequestMode(MEItemInputBus.MERequestMode.THRESHOLD);
+                case ENABLE_DEFAULT_MODE -> provider.setMERequestMode(MEItemInputBus.MERequestMode.DEFAULT);
+                case SET_THRESHOLD -> provider.setThresholdValue(message.thresholdValue);
+            }
+        });
 
         Slot slot = inputBus.getSlot(message.slotID);
         if (!(slot instanceof SlotFake)) {
@@ -67,5 +94,12 @@ public class PktMEInputBusInvAction implements IMessage, IMessageHandler<PktMEIn
         }
 
         return null;
+    }
+
+    public enum Action {
+        ENABLE_THRESHOLD_MODE,
+        ENABLE_DEFAULT_MODE,
+        SET_THRESHOLD,
+        ADD_AMOUNT
     }
 }

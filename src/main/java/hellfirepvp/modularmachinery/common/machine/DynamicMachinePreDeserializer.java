@@ -1,15 +1,59 @@
 package hellfirepvp.modularmachinery.common.machine;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import net.minecraft.util.JsonUtils;
 
 import java.lang.reflect.Type;
 
 public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMachine> {
+    @Override
+    public DynamicMachine deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        JsonObject root = json.getAsJsonObject();
+
+        String registryName = getRegistryName(root);
+        String localized = getLocalizedName(root);
+
+        DynamicMachine machine = new DynamicMachine(registryName);
+        machine.setLocalizedName(localized);
+
+        // Prefix
+        if (root.has("prefix")) {
+            machine.setPrefix(getPrefix(root));
+        }
+
+        // Failure Action
+        if (root.has("failure-action")) {
+            machine.setFailureAction(getFailureActions(root));
+        }
+
+        // Requires Blueprint
+        if (root.has("requires-blueprint")) {
+            machine.setRequiresBlueprint(getRequireBlueprint(root));
+        }
+
+        // Color
+        if (root.has("color")) {
+            machine.setDefinedColor(getColor(root));
+        }
+
+        // Has Factory
+        if (root.has("has-factory")) {
+            machine.setHasFactory(getHasFactory(root));
+        }
+
+        // Factory Only
+        if (root.has("factory-only")) {
+            machine.setFactoryOnly(getFactoryOnly(root));
+        }
+
+        // Input Mode Toggle
+        if (root.has("toggle-input-mode")) {
+            machine.setCanToggleInputMode(getCanToggleInputMode(root));
+        }
+
+        return machine;
+    }
+
     public static String getRegistryName(JsonObject root) throws JsonParseException {
         String registryName = JsonUtils.getString(root, "registryname", "");
         if (registryName.isEmpty()) {
@@ -89,46 +133,11 @@ public class DynamicMachinePreDeserializer implements JsonDeserializer<DynamicMa
         return elementFactoryOnly.getAsJsonPrimitive().getAsBoolean();
     }
 
-    @Override
-    public DynamicMachine deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        JsonObject root = json.getAsJsonObject();
-
-        String registryName = getRegistryName(root);
-        String localized = getLocalizedName(root);
-
-        DynamicMachine machine = new DynamicMachine(registryName);
-        machine.setLocalizedName(localized);
-
-        // Prefix
-        if (root.has("prefix")) {
-            machine.setPrefix(getPrefix(root));
+    public static boolean getCanToggleInputMode(JsonObject root) throws JsonParseException {
+        JsonElement elementCanToggleInputMode = root.get("toggle-input-mode");
+        if (!elementCanToggleInputMode.isJsonPrimitive() || !elementCanToggleInputMode.getAsJsonPrimitive().isBoolean()) {
+            throw new JsonParseException("'toggle-input-mode' has to be either 'true' or 'false'!");
         }
-
-        // Failure Action
-        if (root.has("failure-action")) {
-            machine.setFailureAction(getFailureActions(root));
-        }
-
-        // Requires Blueprint
-        if (root.has("requires-blueprint")) {
-            machine.setRequiresBlueprint(getRequireBlueprint(root));
-        }
-
-        // Color
-        if (root.has("color")) {
-            machine.setDefinedColor(getColor(root));
-        }
-
-        // Has Factory
-        if (root.has("has-factory")) {
-            machine.setHasFactory(getHasFactory(root));
-        }
-
-        // Factory Only
-        if (root.has("factory-only")) {
-            machine.setFactoryOnly(getFactoryOnly(root));
-        }
-
-        return machine;
+        return elementCanToggleInputMode.getAsJsonPrimitive().getAsBoolean();
     }
 }

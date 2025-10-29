@@ -39,21 +39,17 @@ import net.minecraftforge.fml.common.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @ZenRegister
 @ZenClass("mods.modularmachinery.MachineBuilder")
 public class MachineBuilder {
-    public static final List<DynamicMachine>                  WAIT_FOR_LOAD     = new ArrayList<>();
+    public static final List<DynamicMachine> WAIT_FOR_LOAD = new ArrayList<>();
     public static final Map<ResourceLocation, MachineBuilder> PRE_LOAD_MACHINES = new HashMap<>();
-    private final       DynamicMachine                        machine;
-    private final       TaggedPositionBlockArray              pattern;
-    private             BlockPos                              lastPos           = null;
-    private             BlockArray.BlockInformation           lastInformation   = null;
+    private final DynamicMachine machine;
+    private final TaggedPositionBlockArray pattern;
+    private BlockPos lastPos = null;
+    private BlockArray.BlockInformation lastInformation = null;
 
     private MachineBuilder(String registryName, String localizedName) {
         this.machine = new DynamicMachine(registryName);
@@ -63,10 +59,11 @@ public class MachineBuilder {
     }
 
     private MachineBuilder(
-        String registryName,
-        String localizedName,
-        boolean hasFactory,
-        boolean factoryOnly) {
+            String registryName,
+            String localizedName,
+            boolean hasFactory,
+            boolean factoryOnly)
+    {
         this.machine = new DynamicMachine(registryName);
         this.pattern = this.machine.getPattern();
 
@@ -76,11 +73,12 @@ public class MachineBuilder {
     }
 
     private MachineBuilder(
-        String registryName,
-        String localizedName,
-        boolean requiresBlueprint,
-        RecipeFailureActions failureAction,
-        int color) {
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color)
+    {
         this.machine = new DynamicMachine(registryName);
         this.pattern = this.machine.getPattern();
 
@@ -91,13 +89,15 @@ public class MachineBuilder {
     }
 
     private MachineBuilder(
-        String registryName,
-        String localizedName,
-        boolean requiresBlueprint,
-        RecipeFailureActions failureAction,
-        int color,
-        boolean hasFactory,
-        boolean factoryOnly) {
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color,
+            boolean hasFactory,
+            boolean factoryOnly,
+            boolean canToggleInputMode)
+    {
         this.machine = new DynamicMachine(registryName);
         this.pattern = this.machine.getPattern();
 
@@ -107,6 +107,7 @@ public class MachineBuilder {
         this.machine.setRequiresBlueprint(requiresBlueprint);
         this.machine.setHasFactory(hasFactory);
         this.machine.setFactoryOnly(factoryOnly);
+        this.machine.setCanToggleInputMode(canToggleInputMode);
     }
 
     /**
@@ -115,8 +116,8 @@ public class MachineBuilder {
      *
      * @param registryName  注册名
      * @param localizedName 译名
-     * @param hasFactory    是否注册工厂
-     * @param factoryOnly   是否仅注册工厂
+     * @param hasFactory 是否注册工厂
+     * @param factoryOnly 是否仅注册工厂
      */
     @ZenMethod
     public static void registerMachine(String registryName, String localizedName, boolean hasFactory, boolean factoryOnly) {
@@ -152,23 +153,25 @@ public class MachineBuilder {
      * @param requiresBlueprint 是否需要蓝图
      * @param failureAction     失败操作
      * @param color             颜色
-     * @param hasFactory        是否注册工厂
-     * @param factoryOnly       是否仅注册工厂
+     * @param hasFactory 是否注册工厂
+     * @param factoryOnly 是否仅注册工厂
      */
     @ZenMethod
     public static void registerMachine(
-        String registryName,
-        String localizedName,
-        boolean requiresBlueprint,
-        RecipeFailureActions failureAction,
-        int color,
-        boolean hasFactory,
-        boolean factoryOnly) {
+            String registryName,
+            String localizedName,
+            boolean requiresBlueprint,
+            RecipeFailureActions failureAction,
+            int color,
+            boolean hasFactory,
+            boolean factoryOnly,
+            boolean canToggleInputMode)
+    {
         if (PRE_LOAD_MACHINES.containsKey(new ResourceLocation(ModularMachinery.MODID, registryName))) {
             return;
         }
         MachineBuilder builder = new MachineBuilder(
-            registryName, localizedName, requiresBlueprint, failureAction, color, hasFactory, factoryOnly);
+                registryName, localizedName, requiresBlueprint, failureAction, color, hasFactory, factoryOnly, canToggleInputMode);
         PRE_LOAD_MACHINES.put(builder.machine.getRegistryName(), builder);
     }
 
@@ -456,10 +459,10 @@ public class MachineBuilder {
     public MachineBuilder setBlockChecker(AdvancedBlockCheckerCT checker) {
         if (lastInformation != null) {
             lastInformation.setNBTChecker((world, pos, blockState, nbt) -> checker.isMatch(
-                CraftTweakerMC.getIWorld(world),
-                CraftTweakerMC.getIBlockPos(pos),
-                CraftTweakerMC.getBlockState(blockState),
-                CraftTweakerMC.getIData(nbt)));
+                    CraftTweakerMC.getIWorld(world),
+                    CraftTweakerMC.getIBlockPos(pos),
+                    CraftTweakerMC.getBlockState(blockState),
+                    CraftTweakerMC.getIData(nbt)));
         }
         return this;
     }

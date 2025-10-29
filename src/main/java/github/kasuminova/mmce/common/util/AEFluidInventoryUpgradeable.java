@@ -26,10 +26,10 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private final AtomicReference<IAEFluidStack>[] fluids;
-    private final IAEFluidInventory                handler;
-    private       int                              capacity;
-    private       IFluidTankProperties[]           props           = null;
-    private       boolean                          oneFluidOneSlot = false;
+    private final IAEFluidInventory handler;
+    private int capacity;
+    private IFluidTankProperties[] props = null;
+    private boolean oneFluidOneSlot = false;
 
     public AEFluidInventoryUpgradeable(final IAEFluidInventory handler, final int slots, final int capacity) {
         this.fluids = new AtomicReference[slots];
@@ -205,12 +205,38 @@ public class AEFluidInventoryUpgradeable implements IAEFluidTank, ReadWriteLockP
         try {
             (doFill ? rwLock.writeLock() : rwLock.readLock()).lock();
 
-            int found = HybridFluidUtils.findSlotWithFluid(this, getTankProperties(), insert);
-            if (found >= 0) {
-                return this.fill(found, insert, doFill);
+            int totalFillAmount = 0;
+
+            if (oneFluidOneSlot) {
+                // Looking for the slots with same liquid
+                for (int i = 0; i < fluids.length; i++) {
+                    final IAEFluidStack fluidInSlot = getFluid(i);
+                    if (fluidInSlot != null && fluidInSlot.getFluid() == insert.getFluid()) {
+                        int fillAmount = this.fill(i, insert, doFill);
+                        totalFillAmount += fillAmount;
+                        insert.amount -= fillAmount;
+                        if (insert.amount <= 0) {
+                            return totalFillAmount;
+                        }
+                    }
+                }
+
+                if (insert.amount > 0) {
+                    for (int i = 0; i < fluids.length; i++) {
+                        final IAEFluidStack fluidInSlot = getFluid(i);
+                        if (fluidInSlot == null) {
+                            int fillAmount = this.fill(i, insert, doFill);
+                            totalFillAmount += fillAmount;
+                            insert.amount -= fillAmount;
+                            if (insert.amount <= 0) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                return totalFillAmount;
             }
 
-            int totalFillAmount = 0;
             for (int slot = 0; slot < this.getSlots(); ++slot) {
                 int fillAmount = this.fill(slot, insert, doFill);
                 totalFillAmount += fillAmount;

@@ -37,6 +37,10 @@ gui.controller.status.crafting=工作中...
 gui.controller.status.crafting.progress=进度：%s
 gui.controller.parallelism=并行数：%s
 gui.controller.max_parallelism=最大并行数：%s
+gui.controller.input_mode.desc=输入模式:
+gui.controller.input_mode.current=§a>
+gui.controller.input_mode.default.desc=标准输入模式
+gui.controller.input_mode.separate_input.desc=隔离输入模式
 
 gui.factory.threads=%s 线程运行中 / %s 最大线程数
 gui.factory.thread=线程 #%s
@@ -64,6 +68,12 @@ gui.meiteminputbus.inv_action.increase.normal=滚轮向上滚动增加 1 个物�
 gui.meiteminputbus.inv_action.decrease.normal=滚轮向下滚动或右击物品减少 1 个物品数量。
 gui.meiteminputbus.inv_action.increase=滚轮向上滚动时，按 %s 组合键增加 %s 个物品数量。
 gui.meiteminputbus.inv_action.decrease=滚轮向下滚动时，按 %s 组合键减少 %s 个物品数量。
+gui.meiteminputbus.current=§a>
+gui.meiteminputbus.work_mode.desc=物品供应模式:
+gui.meiteminputbus.default.desc=标准物品供应
+gui.meiteminputbus.threshold.desc=如果物品网络数量低于阈值，则不会从网络请求物品。
+gui.meiteminputbus.threshold.field.title=阈值:
+gui.meiteminputbus.threshold.field.tooltip=设置阈值 [1–1e7].
 gui.meiteminputbus.items_marked=已标记物品：%s
 gui.meitembus.item_cached=已缓存物品: %s
 gui.meitembus.nbt_stored=内部已存储物品。
@@ -446,5 +456,3 @@ tile.modularmachinery.blockimpetusproviderinput.name=元动输入接口
 tile.modularmachinery.blockimpetusprovideroutput.name=元动输出接口
 
 tooltip.modularcontroller.machine_projector=蹲下时右击控制器以投影其机器的蓝图至世界。
-
-

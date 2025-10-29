@@ -7,20 +7,25 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.me.GridAccessException;
 import appeng.util.Platform;
+import github.kasuminova.mmce.client.gui.GuiMEItemInputBus;
 import github.kasuminova.mmce.common.tile.base.MEItemBus;
+import github.kasuminova.mmce.common.util.Sides;
 import hellfirepvp.modularmachinery.ModularMachinery;
 import hellfirepvp.modularmachinery.common.lib.ItemsMM;
 import hellfirepvp.modularmachinery.common.machine.IOType;
 import hellfirepvp.modularmachinery.common.machine.MachineComponent;
 import hellfirepvp.modularmachinery.common.util.IOInventory;
 import hellfirepvp.modularmachinery.common.util.ItemUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 
 public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
@@ -28,12 +33,17 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
     private static final String CONFIG_TAG_KEY = "configInventory";
 
     // A simple cache for AEItemStack.
-    private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE  = new WeakHashMap<>();
-    private              IOInventory                  configInventory = buildConfigInventory();
+    private static final Map<ItemStack, IAEItemStack> AE_STACK_CACHE = new WeakHashMap<>();
+
+    private IOInventory configInventory = buildConfigInventory();
+
+    private MERequestMode meRequestMode = MERequestMode.DEFAULT;
+
+    private int thresholdValue = 256;
 
     @Override
     public IOInventory buildInventory() {
-        int size = 16;
+        int size = 30;
         int[] slotIDs = new int[size];
         for (int slotID = 0; slotID < size; slotID++) {
             slotIDs[slotID] = slotID;
@@ -54,7 +64,7 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
     }
 
     public IOInventory buildConfigInventory() {
-        int size = 16;
+        int size = 30;
 
         int[] slotIDs = new int[size];
         for (int slotID = 0; slotID < size; slotID++) {
@@ -78,6 +88,18 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
         if (compound.hasKey(CONFIG_TAG_KEY)) {
             readConfigInventoryNBT(compound.getCompoundTag(CONFIG_TAG_KEY));
         }
+
+        if (compound.hasKey("meRequestMode")) {
+            meRequestMode = MERequestMode.fromName(compound.getString("meRequestMode"));
+        }
+
+        if (compound.hasKey("thresholdValue")) {
+            thresholdValue = (compound.getInteger("thresholdValue"));
+        }
+
+        if (Sides.isRunningOnClient()) {
+            processClientGUIUpdate();
+        }
     }
 
     @Override
@@ -85,10 +107,30 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
         super.writeCustomNBT(compound);
 
         compound.setTag(CONFIG_TAG_KEY, configInventory.writeNBT());
+
+        compound.setString("meRequestMode", meRequestMode.getName());
+
+        compound.setInteger("thresholdValue", thresholdValue);
     }
 
     public IOInventory getConfigInventory() {
         return configInventory;
+    }
+
+    public void setMERequestMode(MERequestMode mode) {
+        this.meRequestMode = mode;
+    }
+
+    public MERequestMode getMERequestMode() {
+        return meRequestMode;
+    }
+
+    public int getThresholdValue() {
+        return thresholdValue;
+    }
+
+    public void setThresholdValue(final int thresholdValue) {
+        this.thresholdValue =  thresholdValue;
     }
 
     @Nullable
@@ -98,6 +140,11 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
             @Override
             public IOInventory getContainerProvider() {
                 return inventory;
+            }
+
+            @Override
+            public boolean isAffectedBySeparateInput() {
+                return true;
             }
         };
     }
@@ -156,6 +203,15 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
                 ItemStack cfgStack = configInventory.getStackInSlot(slot);
                 ItemStack invStack = inventory.getStackInSlot(slot);
 
+                int stackAmountInAE = getStackAmountFromAE(inv, cfgStack);
+
+                if (meRequestMode == MEItemInputBus.MERequestMode.THRESHOLD) {
+                    if (stackAmountInAE < thresholdValue) {
+                        // skip request if below amount
+                        continue;
+                    }
+                }
+
                 if (cfgStack.isEmpty()) {
                     if (invStack.isEmpty()) {
                         continue;
@@ -166,8 +222,11 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
 
                 if (!ItemUtils.matchStacks(cfgStack, invStack)) {
                     if (invStack.isEmpty() || insertStackToAE(inv, invStack).isEmpty()) {
+
                         ItemStack stack = extractStackFromAE(inv, cfgStack);
+
                         inventory.setStackInSlot(slot, stack);
+
                         if (!stack.isEmpty()) {
                             successAtLeastOnce = true;
                         }
@@ -196,11 +255,11 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
                     ItemStack stack = insertStackToAE(inv, ItemUtils.copyStackWithSize(invStack, countToExtract));
                     if (stack.isEmpty()) {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                            invStack, invStack.getCount() - countToExtract)
+                                invStack, invStack.getCount() - countToExtract)
                         );
                     } else {
                         inventory.setStackInSlot(slot, ItemUtils.copyStackWithSize(
-                            invStack, invStack.getCount() - countToExtract + stack.getCount())
+                                invStack, invStack.getCount() - countToExtract + stack.getCount())
                         );
                     }
                     successAtLeastOnce = true;
@@ -216,6 +275,15 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
             rwLock.writeLock().unlock();
             return TickRateModulation.IDLE;
         }
+    }
+
+
+    private int getStackAmountFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) {
+        IAEItemStack aeStack = createStack(stack);
+        if (aeStack == null) return 0;
+
+        IAEItemStack found = inv.getStorageList().findPrecise(aeStack);
+        return found != null ? (int) found.getStackSize() : 0;
     }
 
     private ItemStack extractStackFromAE(final IMEMonitor<IAEItemStack> inv, final ItemStack stack) throws GridAccessException {
@@ -250,7 +318,7 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
 
     @Override
     public void markNoUpdate() {
-        if (hasChangedSlots()) {
+        if (proxy.isActive() && hasChangedSlots()) {
             try {
                 proxy.getTick().alertDevice(proxy.getNode());
             } catch (GridAccessException e) {
@@ -286,6 +354,16 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
         configInventory.setStackLimit(Integer.MAX_VALUE, slotIDs);
     }
 
+    @SideOnly(Side.CLIENT)
+    protected void processClientGUIUpdate() {
+        if (world != null && world.isRemote) {
+            GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
+            if (currentScreen instanceof GuiMEItemInputBus busGUI && busGUI.getOwner() == this) {
+                busGUI.updateGUIState();
+            }
+        }
+    }
+
     @Override
     public NBTTagCompound downloadSettings() {
         NBTTagCompound tag = new NBTTagCompound();
@@ -300,6 +378,30 @@ public class MEItemInputBus extends MEItemBus implements SettingsTransfer {
             proxy.getTick().alertDevice(proxy.getNode());
         } catch (GridAccessException e) {
             ModularMachinery.log.warn("Error while uploading settings", e);
+        }
+    }
+
+    public enum MERequestMode {
+        DEFAULT("default"),
+        THRESHOLD("threshold");
+
+        private final String name;
+
+        MERequestMode(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public static MERequestMode fromName(String name) {
+            for (MERequestMode mode : values()) {
+                if (mode.name.equals(name)) {
+                    return mode;
+                }
+            }
+            return DEFAULT;
         }
     }
 }
